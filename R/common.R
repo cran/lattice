@@ -279,18 +279,16 @@ banking <- function(dx, dy = 1)
 
 
 
-
-
 ## modified from axis.POSIXct. This aims to be a general function
 ## which given a general 'range' x and optional at, generates the
 ## locations of tick marks and corresponding labels. Ultimately will
-## be a replacement for lpretty
+## also obviate the need for lpretty
 
 calculateAxisComponents <-
     function (x, at = FALSE, labels = FALSE,
               have.log = FALSE, logbase = NULL, logpaste = "",
               abbreviate = NULL, minlength = 4,
-              format, ...) 
+              format.posixt, ...) 
 {
 
     ## x is guaranteed to be given (possibly NA), though it might not
@@ -346,28 +344,28 @@ calculateAxisComponents <-
         z <- c(range, x[is.finite(x)])
         if (d < 1.1 * 60) {
             sc <- 1
-            if (missing(format)) 
-                format <- "%S"
+            if (missing(format.posixt)) 
+                format.posixt <- "%S"
         }
         else if (d < 1.1 * 60 * 60) {
             sc <- 60
-            if (missing(format)) 
-                format <- "%M:%S"
+            if (missing(format.posixt)) 
+                format.posixt <- "%M:%S"
         }
         else if (d < 1.1 * 60 * 60 * 24) {
             sc <- 60 * 24
-            if (missing(format)) 
-                format <- "%H:%M"
+            if (missing(format.posixt)) 
+                format.posixt <- "%H:%M"
         }
         else if (d < 2 * 60 * 60 * 24) {
             sc <- 60 * 24
-            if (missing(format)) 
-                format <- "%a %H:%M"
+            if (missing(format.posixt)) 
+                format.posixt <- "%a %H:%M"
         }
         else if (d < 7 * 60 * 60 * 24) {
             sc <- 60 * 60 * 24
-            if (missing(format)) 
-                format <- "%a"
+            if (missing(format.posixt)) 
+                format.posixt <- "%a"
         }
         else {
             sc <- 60 * 60 * 24
@@ -376,8 +374,8 @@ calculateAxisComponents <-
             zz <- lpretty(z/sc, ...)
             z <- zz * sc
             class(z) <- c("POSIXt", "POSIXct")
-            if (missing(format)) 
-                format <- "%b %d"
+            if (missing(format.posixt)) 
+                format.posixt <- "%b %d"
         }
         else if (d < 1.1 * 60 * 60 * 24 * 365) {
             class(z) <- c("POSIXt", "POSIXct")
@@ -389,8 +387,8 @@ calculateAxisComponents <-
             m <- rep(zz$year[1], m)
             zz$year <- c(m, m + 1)
             z <- as.POSIXct(zz)
-            if (missing(format)) 
-                format <- "%b"
+            if (missing(format.posixt)) 
+                format.posixt <- "%b"
         }
         else {
             class(z) <- c("POSIXt", "POSIXct")
@@ -399,13 +397,13 @@ calculateAxisComponents <-
             zz$isdst <- zz$mon <- zz$hour <- zz$min <- zz$sec <- 0
             zz$year <- lpretty(zz$year, ...)
             z <- as.POSIXct(zz)
-            if (missing(format)) 
-                format <- "%Y"
+            if (missing(format.posixt)) 
+                format.posixt <- "%Y"
         }
         if (!mat) 
             z <- x[is.finite(x)]
         z <- z[z >= range[1] & z <= range[2]]
-        labels <- format(z, format = format)
+        labels <- format(z, format = format.posixt)
         ans <- list(at = as.numeric(z), labels = labels,
                     check.overlap = FALSE,
                     num.limit = num.lim)
@@ -428,15 +426,14 @@ calculateAxisComponents <-
             #             round(at, 3), 
             #             at)
         }
-        else if (have.log) { ## i.e., at specified
+        else if (have.log) { ## and at specified
             if (is.logical(labels)) labels <- as.character(at)
             at <- log(at, base = logbase)
         }
-        ans <- list(at = at,
-                    labels = if (is.logical(labels)) paste(logpaste,
-                    as.character(at), sep = "") else labels,
-                    check.overlap = check.overlap,
-                    num.limit = range(x))
+        ans <- list(at = at, labels = if (is.logical(labels))
+                    paste(logpaste, format(at), sep = "") else labels,
+                    check.overlap = check.overlap, num.limit =
+                    range(x))
     }
     if (is.logical(abbreviate) && abbreviate)
         ans$labels <- abbreviate(ans$labels, minlength)

@@ -1,10 +1,11 @@
-Lattice                 Lattice Graphics
 banking                 Banking
 cloud                   3d Scatter Plot
 draw.colorkey           Produce a Colorkey for levelplot
 draw.key                Produce a Legend or Key
 histogram               Histograms and Kernel Density Plots
+lattice-Internal        Miscellaneous Functions used within Lattice
 latticeParseFormula     Parse Trellis formula
+Lattice                 Lattice Graphics
 levelplot               Level Plots
 llines                  Lattice Replacements of base graphics
                         functions
@@ -27,8 +28,8 @@ panel.tmd               Panel function for tmd
 panel.xyplot            Default Panel Function for xyplot
 prepanel.functions      Useful Prepanel Function for Lattice
 print.trellis           Print Trellis Objects
-qq                      Quantile-Quantile Plots of Two Samples
 qqmath                  Q-Q Plot with Theoretical Distribution
+qq                      Quantile-Quantile Plots of Two Samples
 rfs                     Residual and Fit Spread Plots
 shingles                shingles
 simpleKey               Function to generate a simple key

@@ -56,6 +56,7 @@ prepanel.default.levelplot <-
 
 
 
+
 panel.levelplot <-
     function(x, y, z, zcol,
              subscripts,
@@ -77,11 +78,12 @@ panel.levelplot <-
     label.style <- match.arg(label.style)
     x <- as.numeric(x[subscripts])
     y <- as.numeric(y[subscripts])
+
+    fullZrange <- range(as.numeric(z), na.rm = TRUE) # for shrinking
     z <- as.numeric(z[subscripts])
     zcol <- as.numeric(zcol[subscripts])
 
     ## Do we need a zlim-like argument ?
-
 
     shrinkx <- c(1, 1)
     shrinky <- c(1, 1)
@@ -99,9 +101,9 @@ panel.levelplot <-
         else warning("Invalid shrink, ignored")
     }
 
-    scaleWidth <- function(z, min = .8, max = .8) {
-        zl <- range(z)
-        min + (max - min) * (z - zl[1]) / diff(zl)
+    scaleWidth <- function(z, min = .8, max = .8, zl = range(z, na.rm = TRUE)) {
+        if (diff(zl) == 0) rep(.5 * (min + max), length(z))
+        else min + (max - min) * (z - zl[1]) / diff(zl)
     }
 
     
@@ -133,8 +135,8 @@ panel.levelplot <-
         if (region) 
             grid.rect(x = cx[idx],
                       y = cy[idy],
-                      width = lx[idx] * scaleWidth(z, shrinkx[1], shrinkx[2]),
-                      height = ly[idy] * scaleWidth(z, shrinky[1], shrinky[2]),
+                      width = lx[idx] * scaleWidth(z, shrinkx[1], shrinkx[2], fullZrange),
+                      height = ly[idy] * scaleWidth(z, shrinky[1], shrinky[2], fullZrange),
                       default.units = "native",
                       gp = gpar(fill=col.regions[zcol], col = NULL))
 
@@ -240,6 +242,18 @@ panel.levelplot <-
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
