@@ -1,6 +1,33 @@
 
 
 
+Changes in lattice 0.5
+======================
+
+Not many. 
+
+ o Biggest change in the way settings are handled. Settings are now
+   stored in a global list called lattice.theme, and is truly
+   device-specific (i.e., settings for more than one device can be
+   used concurrently). Improved theme management via lset and
+   show.settings. Changed defaults for color postscript/pdf.
+
+ o bwplot and friends which had to have the grouping factor/shingle on
+   the y-axis, can now have it on the x-axis as well. Far from
+   perfect, though, since long labels can overlap with default
+   settings.
+
+ o panel.superpose now accepts an additional argument called
+   panel.groups (by default panel.xyplot), which is the panel function
+   actually called for each subset of the data determined by
+   groups. Avoids having to write something as big as panel.superpose
+   for natural generalizations like interaction plots. (Related new
+   panel function: panel.linejoin)
+
+ o colorkey in levelplot on all sides. Rendering of large key's much
+   much faster (using grid.place suggested by Paul)
+
+ o Other minor changes (doc, more arguments etc)
 
   
 
@@ -13,10 +40,14 @@ cause some old code to fail, though no such instances are known.
 No significant new features have been added, but there are several
 bugfixes (notably in levelplot). The important changes are:
 
-
  o documentation restructured. There is no topic called `trellis.args'
    any more. The detailed description of the arguments common to all
    high level trellis functions can be found under help(xyplot)
+
+ o once trellis.device() is called, Lattice graphics and base R
+   graphics should mix more or less seamlessly. There is an optional
+   argument in trellis.device() that can deal with the first blank
+   page problem, with certain restrictions.
 
  o a (as yet very small) demo, called by demo("lattice")
 
@@ -45,10 +76,15 @@ bugfixes (notably in levelplot). The important changes are:
 
  o new panel.superpose.2 (suggested by Neil Klepeis)
 
- o the default colour settings are sometimes not appropriate on a
-   white background. There is a new setting with some darker colours 
-   that can be set by calling lset(theme = "white.bg"). see ?lset
-   for details.
+ o the default colour settings sometimes seem too light on a white
+   background. To deal with this, there is a new setting with some
+   darker colours that can be set by calling lset(theme =
+   "white.bg"). see ?lset for details. This is currently in a
+   proof-of-concept stage (the colors in "white.bg" were chosen just
+   because I liked their names), and suggestions for better color
+   schemes would be most welcome.
+
+ o show.settings() added
 
 
 

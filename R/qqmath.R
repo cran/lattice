@@ -87,6 +87,7 @@ qqmath <-
         else if (is.character(prepanel)) get(prepanel)
         else eval(prepanel)
 
+    distribution.name <- deparse(substitute(distribution))
     distribution <-
         if (is.function(distribution)) distribution 
         else if (is.character(distribution)) get(distribution)
@@ -113,7 +114,7 @@ qqmath <-
     if (subscripts) subscr <- subscr[subset, drop = TRUE]
 
     if(missing(ylab)) ylab <- form$right.name
-    if(missing(xlab)) xlab <- deparse(substitute(distribution))
+    if(missing(xlab)) xlab <- distribution.name
     if (is.shingle(x)) stop("x cannot be a shingle")
     x <- as.numeric(x)
 

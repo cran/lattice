@@ -11,7 +11,8 @@
   graphics functions in panel functions.
 }
 \synopsis{
-larrows(\dots)
+larrows(x0, y0, x1, y1, angle = 30, code = 2, length = NULL, 
+    proportion = 0.05, \dots)
 llines(x, y = NULL, type = "l", col = plot.line$col, lty = plot.line$lty, 
     lwd = plot.line$lwd, \dots)
 lplot.xy(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
@@ -25,7 +26,7 @@ ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
     cex = add.text$cex, srt = 0, font = 1, adj = 0.5, \dots)  
 }
 \usage{
-larrows(x0, y0, x1, y1, \dots)
+larrows(x0, y0, x1, y1, proportion, \dots)
 llines(x, \dots)
 lplot.xy(xy, \dots)
 lpoints(x, \dots)
@@ -33,7 +34,9 @@ lsegments(x0, y0, x1, y1, \dots)
 ltext(x, \dots)
 }
 \arguments{
-  \item{x, y, x0, y0, x1, y1, xy}{ locations}
+  \item{ x, y, x0, y0, x1, y1, xy}{ locations}
+  \item{proportion}{ The proportion of the arrow edges compared to
+  the whole line. This is different from \code{arrows}}
   \item{\dots}{ other arguments}
 }
 \details{

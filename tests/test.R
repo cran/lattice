@@ -9,7 +9,7 @@ df.test <- list(xx = x+1-min(x), yy = y, zz = z, aa = a)
 
 xyplot(y ~ x | z * a, strip = function(...) strip.default(..., style = 4),
        par.strip.text = list(cex = 2, col = "blue", font = 2),
-       ##scales = list(x = list(draw = F),  y = "sliced"))
+       ##scales = list(x = list(draw = FALSE),  y = "sliced"))
        scales = list(x = list(rot = 0), y = list(rot = 0)))
 
 
@@ -18,7 +18,7 @@ bwplot(zz ~ xx | aa, df.test)
 bwplot(aa ~ xx | zz, df.test, 
        scales =
        list(x = list(log = "e", tck = 5, rot = 90,  cex = 2),
-            y = list(col = "red", tck = 3, alternating = T, cex = 5,  rot = 0),
+            y = list(col = "red", tck = 3, alternating = TRUE, cex = 5,  rot = 0),
             tick.number = 20),
        main = list("main", cex = 5),
        sub = list("sub", cex = 5),

@@ -1,22 +1,24 @@
 \name{rfs}
 \alias{rfs}
-\title{ Residual and Fit Spread Plots }
+\title{ Residual and Fit Spread Plots}
 \description{
   Plots fitted values and residuals (via qqmath) on a common scale for
   any object that has methods for fitted values and residuals. 
 }
 \synopsis{
-rfs(model, layout=c(2, 1), xlab="f-value", ylab=NULL, panel,
-    prepanel, strip, ...)
+rfs(model, layout=c(2, 1), xlab="f-value", ylab=NULL,
+    distribution = qunif,
+    panel, prepanel, strip, ...)
 }
 \usage{
-rfs(model, layout=c(2, 1), xlab="f-value", ...)
+rfs(model, layout=c(2, 1), xlab="f-value", distribution = qunif,...)
 }
 \arguments{
   \item{model}{a fitted model object with methods \code{fitted.values}
     and \code{residuals}. Can be the value returned by \code{oneway} }
   \item{layout}{default layout is c(2,1)  }
   \item{xlab}{defaults to \code{"f.value"} }
+  \item{distribution}{the distribution function to be used for \code{qqmath}}
   \item{\dots}{other arguments}
 }
 \value{

@@ -1,4 +1,4 @@
-% $Id: levelplot.Rd,v 1.9 2002/01/11 04:04:30 deepayan Exp $
+% $Id: levelplot.Rd,v 1.11 2002/04/15 15:57:24 deepayan Exp $
 \name{levelplot}
 \title{Level Plots}
 \synopsis{
@@ -8,23 +8,50 @@ levelplot(formula, data = parent.frame(), aspect = "fill", layout = NULL,
     col.regions = terrain.colors(length(at) - 1), colorkey = NULL, 
     contour = FALSE, cuts = 15, labels = format(at), pretty = FALSE, 
     region = TRUE, ..., subscripts = TRUE, subset = TRUE) 
+contourplot(formula,
+             data = parent.frame(),
+             aspect = "fill",
+             layout = NULL,
+             panel = "panel.levelplot",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab,
+             xlim,
+             ylab,
+             ylim,
+             cuts = 7,
+             contour = TRUE,
+             pretty = TRUE,
+             region = FALSE,
+             ...,
+             subscripts = TRUE,
+             subset = TRUE)
 }
 \usage{
 levelplot(formula,
           at,
-          col.regions = terrain.colors(length(at)-1),
-          colorkey = NULL,
+          col.regions = trellis.par.get("regions")$col,
+          colorkey = region,
           contour = FALSE,
           cuts = 15,
           labels = format(at),
           pretty = FALSE,
           region = TRUE,
           ...)
+contourplot(formula, at,
+            contour = TRUE,
+            cuts = 7,
+            pretty = TRUE,
+            ...)
+
 }
 \description{
-  Draw Level Plots. Contourplots are as yet unimplemented.
+  Draw Level Plots and Contour plots.
 }
 \alias{levelplot}
+\alias{contourplot}
 \arguments{
   \item{formula}{a formula of the form \code{z ~ x * y | g1 * g2 * ...},
     where \code{z} is a numeric response, and \code{x, y} are numeric
@@ -35,7 +62,7 @@ levelplot(formula,
     Calculations are based on the assumption that all x and y values are
     evaluated on a grid (defined by \code{(unique(x))} and
     \code{(unique(y))}. The function will not return an error if this is
-    not true, but the display will contain lots of blank spaces.
+    not true, but the display might be nonsense.
 
     However, the x and y values need not be equally spaced. See example
     below with log scales.
@@ -54,7 +81,8 @@ levelplot(formula,
     alongside the plot, or a list describing the color key. The list may
     contain the following components:
 
-    \code{space} can only be "right" now.
+    \code{space} location of the colorkey, can be one of ``left'',
+    ``right'', ``top'' and ``bottom''. Defaults to ``right''.
     
     \code{x,y} location, unused
 
@@ -73,16 +101,14 @@ levelplot(formula,
 
     \code{width} width of the key in terms of character widths
 
-    \code{height} length of key w.r.t side of plot. Currently ignored,
-    using a value of 1.
+    \code{height} length of key w.r.t side of plot.
   }
-  \item{contour}{ logical, whether to draw contour lines. TRUE not
-    inplemented yet.
+  \item{contour}{ logical, whether to draw contour lines.
   }
   \item{cuts}{ number of levels the range of \code{z} would be divided into}
   \item{labels}{ character vector of labels for contour lines, not
     implemented yet.}
-  \item{pretty}{ logical, whether to use pretty labels, not implemented}
+  \item{pretty}{ logical, whether to use pretty labels}
   \item{region}{ logical, whether regions between contour lines should
     be filled
   }
@@ -108,7 +134,7 @@ levelplot(z~x*y, grid, cuts = 50, xlab="", ylab="",
           main="Weird Function", colorkey = FALSE)
 levelplot(z~x*y, grid, cuts = 50, scales=list(log="e"), xlab="",
           ylab="", main="Weird Function", sub="with log scales",
-          colorkey = FALSE)
+          colorkey = FALSE, region = TRUE)
 #S+ example
 data(environmental)
 attach(environmental)
@@ -121,8 +147,8 @@ wtr.marginal <- list(wind = w.marginal, temperature = t.marginal,
         radiation = r.marginal)
 grid <- expand.grid(wtr.marginal)
 grid[, "fit"] <- c(predict(ozo.m, grid))
-levelplot(fit ~ wind * temperature | radiation, data = grid,
-          contour = T, labels = F,
+contourplot(fit ~ wind * temperature | radiation, data = grid,
+          cuts = 10, region = TRUE,
           xlab = "Wind Speed (mph)",
           ylab = "Temperature (F)",
           main = "Cube Root Ozone (cube root ppb)",

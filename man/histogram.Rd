@@ -41,20 +41,19 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
     the conditioning variables \code{g1,g2,\dots} are missing, the
     leading \code{~} can be dropped.
     
-    \code{x} can be numeric (or factor for \code{histogram}, and each of
-    \code{g1,g2,\dots} must be either factors or shingles.
+    \code{x} can be numeric (or factor for \code{histogram}), and each
+    of \code{g1,g2,\dots} must be either factors or shingles.
   }
-  \item{data}{data frame in which variables are to be evaluated}
+  \item{data}{ optional data frame in which variables are to be
+    evaluated} 
   \item{type}{ Character string indicating type of histogram to be
-    drawn. "percent" and "count" give relative frequency and frequency
-    histograms, and can be misleading when breakpoints are not equally
-    spaced. "density" produces a density scale histogram. (See second
-    example below.) (This option appears to be missing in S-Plus.)
+    drawn. ``percent'' and ``count'' give relative frequency and
+    frequency histograms, and can be misleading when breakpoints are not
+    equally spaced. ``density'' produces a density scale histogram. (See
+    second example below.) (This option is missing in Splus.)
     
-    \code{type} defaults to "percent", except when the breakpoints
-    are unequally spaced or \code{breaks = NULL}. (The specified value of
-    \code{type} is often overridden (e.g., when \code{log=T}), sometimes
-    unnecessarily. )
+    \code{type} defaults to ``percent'', except when the breakpoints
+    are unequally spaced or \code{breaks = NULL}.
   }
   \item{nint}{ Number of bins. Applies only when \code{breaks} is
     unspecified in the call.

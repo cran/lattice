@@ -252,24 +252,24 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
         key.gf <- grid.frame(layout = key.layout, vp = vp,
                              gp = gpar(fontsize=9), # the value 9 used later
                              draw = FALSE)
-        
-        if (!key$transparent) {
-            grid.pack(key.gf,
-                      grid.rect(gp=gpar(fill = key$background, col = key$border),
-                                draw = FALSE),
-                      draw = FALSE)
-        }
 
-        grid.pack(key.gf,
-                  grid.rect(gp=gpar(col=key$border), draw = FALSE),
-                  draw = FALSE)
+        if (!key$transparent) {
+            grid.place(key.gf,
+                       grid.rect(gp=gpar(fill = key$background, col = key$border),
+                                 draw = FALSE),
+                       draw = FALSE, row = NULL, col = NULL)
+        }
+        else
+            grid.place(key.gf,
+                       grid.rect(gp=gpar(col=key$border), draw = FALSE),
+                       draw = FALSE, row = NULL, col = NULL)
 
         ## Title
         if (!(key$title == ""))
-            grid.pack(key.gf, 
-                      grid.text(label = key$title, draw = FALSE,
-                                gp = gpar(fontsize = 9 * key$cex.title)),  ## should do better than just 9
-                      row=1, draw = FALSE)
+            grid.place(key.gf, 
+                       grid.text(label = key$title, draw = FALSE,
+                                 gp = gpar(fontsize = 9 * key$cex.title)),  ## should do better than just 9
+                       row=1, col = NULL, draw = FALSE)
         
 
         
@@ -288,17 +288,17 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                 if (yy == 1) yy <- rows.per.block + 1
 
                 if (cur$type == "text") {
-                    grid.pack(key.gf, 
-                              grid.text(label = cur$pars$labels[j],
-                                        gp = gpar(col = cur$pars$col[j],
-                                        font = cur$pars$font[j],
-                                        fontsize = 9 * cur$pars$cex[j]),  ## should do better than just 9
-                                        draw = FALSE),
-                              row = yy, col = xx, draw = FALSE)
+                    grid.place(key.gf, 
+                               grid.text(label = cur$pars$labels[j],
+                                         gp = gpar(col = cur$pars$col[j],
+                                         font = cur$pars$font[j],
+                                         fontsize = 9 * cur$pars$cex[j]),  ## should do better than just 9
+                                         draw = FALSE),
+                               row = yy, col = xx, draw = FALSE)
                     
                 }
                 else if (cur$type == "rectangles") {
-                    grid.pack(key.gf, 
+                    grid.place(key.gf, 
                               grid.rect(width = cur$pars$size[j]/max(cur$pars$size),
                                         ## centred, unlike Trellis, due to aesthetic reasons !
                                         gp = gpar(fill = cur$pars$col[j], col = NULL), 
@@ -309,7 +309,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                 }
                 else if (cur$type == "lines") {
                     if (cur$pars$type[j] == "l") {
-                        grid.pack(key.gf,
+                        grid.place(key.gf,
                                   grid.lines(x = c(0,1) * cur$pars$size[j]/max(cur$pars$size),
                                              ## ^^ this should be centered as well, but since the
                                              ## chances that someone would actually use this feature
@@ -323,14 +323,14 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                     }
                     else if (cur$pars$type[j] == "p") {
                         if (is.character(cur$pars$pch[j]))
-                            grid.pack(key.gf,
+                            grid.place(key.gf,
                                       grid.text(lab = cur$pars$pch[j], x = .5, y = .5,
                                                 gp = gpar(col = cur$pars$col[j],
                                                 fontsize = cur$pars$cex[j] * 10),
                                                 draw = FALSE),
                                       row = yy, col = xx, draw = FALSE)
                         else {
-                            grid.pack(key.gf,
+                            grid.place(key.gf,
                                       grid.points(x=.5, y=.5, 
                                                   gp = gpar(col = cur$pars$col[j]),
                                                   size = unit(cur$pars$cex[j] * 2.5, "mm"),
@@ -340,7 +340,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                         }
                     }
                     else { # if (cur$pars$type[j] == "b" or "o") -- not differentiating
-                        grid.pack(key.gf, 
+                        grid.place(key.gf, 
                                   grid.lines(x = c(0,1) * cur$pars$size[j]/max(cur$pars$size),
                                              ## ^^ this should be centered as well, but since the
                                              ## chances that someone would actually use this feature
@@ -353,7 +353,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                                   row = yy, col = xx, draw = FALSE)
 
                         if (is.character(cur$pars$pch[j]))
-                            grid.pack(key.gf, 
+                            grid.place(key.gf, 
                                       grid.text(lab = cur$pars$pch[j],
                                                 x = (1:key$divide-1)/(key$divide-1),
                                                 y = rep(.5, key$divide),
@@ -362,7 +362,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                                                 draw = FALSE),
                                       row = yy, col = xx, draw = FALSE)
                         else
-                            grid.pack(key.gf, 
+                            grid.place(key.gf, 
                                       grid.points(x = (1:key$divide-1)/(key$divide-1),
                                                   y = rep(.5, key$divide),
                                                   gp = gpar(col = cur$pars$col[j]),
@@ -374,14 +374,14 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                 }
                 else if (cur$type == "points") {
                     if (is.character(cur$pars$pch[j]))
-                        grid.pack(key.gf, 
+                        grid.place(key.gf, 
                                   grid.text(lab = cur$pars$pch[j], x=.5, y=.5, 
                                             gp = gpar(col = cur$pars$col[j],
                                             fontsize = cur$pars$cex[j] * 10),
                                             draw = FALSE),
                                   row = yy, col = xx, draw = FALSE)
                     else {
-                        grid.pack(key.gf,
+                        grid.place(key.gf,
                                   grid.points(x=.5, y=.5, 
                                               gp = gpar(col = cur$pars$col[j]),
                                               size = unit(cur$pars$cex[j] * 2.5, "mm"),
@@ -404,6 +404,27 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
 
     key.gf
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -574,7 +595,7 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 
         grid.pack(frame = key.gf, row = 3,
                   grob =
-                  grid.rect(height = key$height,
+                  grid.rect(width = key$height,
                             gp=gpar(col="black"), draw = FALSE),
                   draw = FALSE)
 
@@ -619,7 +640,7 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 
         grid.pack(frame = key.gf, row = 1,
                   grob =
-                  grid.rect(height = key$height,
+                  grid.rect(width = key$height,
                             gp = gpar(col="black"), draw = FALSE),
                   draw = FALSE)
 
@@ -682,15 +703,11 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 print.trellis <-
     function(x, position, split, more = FALSE, ...)
 {
-
-    if (is.null(dev.list())) {
-        trellis.device()
-    }
-
+    if (is.null(dev.list())) trellis.device()
+    else if (is.null(trellis.par.get())) trellis.device(device = .Device, new = FALSE)
     bg = trellis.par.get("background")$col
-    
-    new <- T
-    if (.lattice.print.more) new <- F
+    new <- TRUE
+    if (.lattice.print.more) new <- FALSE
     .lattice.print.more <<- more
     usual  <- (missing(position) & missing(split))
     ##if (!new && usual)
@@ -766,6 +783,9 @@ print.trellis <-
     xaxis.col <-
         if (is.logical(x$x.scales$col)) axis.line$col
         else x$x.scales$col
+    xaxis.font <-
+        if (is.logical(x$x.scales$font)) 1
+        else x$x.scales$font
     xaxis.cex <-
         x$x.scales$cex * x$fontsize.small / x$fontsize.normal
     xaxis.rot <-
@@ -774,6 +794,9 @@ print.trellis <-
     yaxis.col <-
         if (is.logical(x$y.scales$col)) axis.line$col
         else x$y.scales$col
+    yaxis.font <-
+        if (is.logical(x$y.scales$font)) 1
+        else x$y.scales$font
     yaxis.cex <-
         x$y.scales$cex * x$fontsize.small / x$fontsize.normal
     yaxis.rot <-
@@ -852,6 +875,14 @@ print.trellis <-
         else x$x.scales$labels <- as.character(x$x.scales$labels)
     }
     else check.x.overlap <- TRUE
+
+    if (!is.null(x$x.scales$abbr)) { # this is for abbreviating long labels
+        if (x$x.scales$abbr) 
+            x$x.scales$labels <- 
+                if (is.null(x$x.scales$minlen)) abbreviate(x$x.scales$labels)
+                else abbreviate(x$x.scales$labels, x$x.scales$minlen)
+    }
+
     if (!is.logical(x$y.scales$at)) {  # i.e., at explicitly specified 
         check.y.overlap <- FALSE
         if (is.logical(x$y.scales$labels))
@@ -863,6 +894,13 @@ print.trellis <-
         else x$y.scales$labels <- as.character(x$y.scales$labels)
     }
     else check.y.overlap <- TRUE
+
+    if (!is.null(x$y.scales$abbr)) { # this is for abbreviating long labels
+        if (x$y.scales$abbr) 
+            x$y.scales$labels <- 
+                if (is.null(x$y.scales$minlen)) abbreviate(x$y.scales$labels)
+                else abbreviate(x$y.scales$labels, x$y.scales$minlen)
+    }
 
 
     if (x.relation.same && is.logical(x$x.scales$at)) {
@@ -1012,12 +1050,12 @@ print.trellis <-
                 for (ss in x$x.scales$labels)
                     if (nchar(ss) > nchar(which.name)) which.name <- ss
                 if (any(x.alternating==2)) {
-                    heights.x[4] <- xaxis.cex  # cos(rot) ?
+                    heights.x[4] <- xaxis.cex * abs(sin(xaxis.rot * pi /180))
                     heights.units[4] <- "strwidth"
                     heights.data[[4]] <- which.name
                 }
                 if (any(x.alternating==1)) {
-                    heights.x[n.row-4] <- xaxis.cex
+                    heights.x[n.row-4] <- xaxis.cex * abs(sin(xaxis.rot * pi /180))
                     heights.units[n.row-4] <- "strwidth"
                     heights.data[[n.row-4]] <- which.name
                 }
@@ -1026,7 +1064,7 @@ print.trellis <-
         else { # relation != same
 
             if (xaxis.rot == 0) {
-                
+
                 heights.x[number.of.cond + 7 + (1:rows.per.page - 1)*(number.of.cond+4)] <- x$x.scales$tck * 0.2
                 heights.x[number.of.cond + 8 + (1:rows.per.page - 1)*(number.of.cond+4)] <- xaxis.cex
 
@@ -1050,7 +1088,7 @@ print.trellis <-
                 
 
                 heights.x[number.of.cond + 7 + (1:rows.per.page - 1)*(number.of.cond+4)] <- x$x.scales$tck * 0.3
-                heights.x[number.of.cond + 8 + (1:rows.per.page - 1)*(number.of.cond+4)] <- xaxis.cex
+                heights.x[number.of.cond + 8 + (1:rows.per.page - 1)*(number.of.cond+4)] <- xaxis.cex * abs(sin(xaxis.rot * pi /180))
                 heights.units[number.of.cond + 8 + (1:rows.per.page - 1)*(number.of.cond+4)] <- "strwidth"
                 heights.data[number.of.cond + 8 + (1:rows.per.page - 1)*(number.of.cond+4)] <- which.name
 
@@ -1129,12 +1167,12 @@ print.trellis <-
                 for (ss in x$y.scales$labels)
                     if (nchar(ss) > nchar(which.name)) which.name <- ss
                 if(any(y.alternating==1)) {
-                    widths.x[4] <- yaxis.cex  # cos(rot) ?
+                    widths.x[4] <- yaxis.cex * abs(cos(yaxis.rot * pi /180))
                     widths.units[4] <- "strwidth"
                     widths.data[[4]] <- which.name
                 }
                 if (any(y.alternating==2)) {
-                    widths.x[n.col-2] <- yaxis.cex
+                    widths.x[n.col-2] <- yaxis.cex * abs(cos(yaxis.rot * pi /180))
                     widths.units[n.col-2] <- "strwidth"
                     widths.data[[n.col-2]] <- which.name
                 }
@@ -1166,7 +1204,7 @@ print.trellis <-
                 
 
                 widths.x[(1:cols.per.page - 1)*4 + 7] <- x$y.scales$tck * 0.3
-                widths.x[(1:cols.per.page - 1)*4 + 6] <- yaxis.cex
+                widths.x[(1:cols.per.page - 1)*4 + 6] <- yaxis.cex * abs(cos(yaxis.rot * pi /180))
                 widths.units[(1:cols.per.page - 1)*4 + 6] <- "strwidth"
                 widths.data[(1:cols.per.page - 1)*4 + 6] <- which.name
                 
@@ -1342,7 +1380,7 @@ print.trellis <-
                                           ## else c("right", "centre"),
                                           rot = xaxis.rot,
                                           check.overlap = check.x.overlap,
-                                          gp = gpar(col = xaxis.col,
+                                          gp = gpar(col = xaxis.col, font = xaxis.font, 
                                           fontsize = axs$cex * x$fontsize.small),
                                           vp = viewport(layout.pos.row = pos.row+2,
                                           layout.pos.col = pos.col, xscale = xscale))
@@ -1380,7 +1418,7 @@ print.trellis <-
                                           ## else c("right", "centre"),
                                           rot = yaxis.rot,
                                           check.overlap = check.y.overlap,
-                                          gp = gpar(col = yaxis.col,
+                                          gp = gpar(col = yaxis.col, font = yaxis.font, 
                                           fontsize = axs$cex * x$fontsize.small),
                                           vp = viewport(layout.pos.row = pos.row,
                                           layout.pos.col = pos.col-2, yscale = yscale))
@@ -1419,7 +1457,7 @@ print.trellis <-
                                                   else c("centre", "centre"),
                                                   rot = yaxis.rot,
                                                   check.overlap = check.y.overlap,
-                                                  gp = gpar(col = yaxis.col,
+                                                  gp = gpar(col = yaxis.col, font = yaxis.font, 
                                                   fontsize = axs$cex * x$fontsize.small),
                                                   vp = viewport(layout.pos.row = pos.row,
                                                   layout.pos.col = pos.col-4, yscale = yscale))
@@ -1455,7 +1493,7 @@ print.trellis <-
                                                   else c("centre", "centre"),
                                                   rot = yaxis.rot,
                                                   check.overlap = check.y.overlap,
-                                                  gp = gpar(col = yaxis.col,
+                                                  gp = gpar(col = yaxis.col, font = yaxis.font, 
                                                   fontsize = axs$cex * x$fontsize.small),
                                                   vp = viewport(layout.pos.row = pos.row,
                                                   layout.pos.col = pos.col+2, yscale = yscale))
@@ -1498,7 +1536,7 @@ print.trellis <-
                                                   else c("centre", "centre"),
                                                   rot = xaxis.rot,
                                                   check.overlap = check.x.overlap,
-                                                  gp = gpar(col = xaxis.col,
+                                                  gp = gpar(col = xaxis.col, font = xaxis.font, 
                                                   fontsize = axs$cex * x$fontsize.small),
                                                   vp = viewport(layout.pos.row = pos.row + 4,
                                                   layout.pos.col = pos.col, xscale = xscale))
@@ -1565,7 +1603,7 @@ print.trellis <-
                                                   else c("centre", "centre"),
                                                   rot = xaxis.rot,
                                                   check.overlap = check.x.overlap,
-                                                  gp = gpar(col = xaxis.col,
+                                                  gp = gpar(col = xaxis.col, font = xaxis.font, 
                                                   fontsize = axs$cex * x$fontsize.small),
                                                   vp = viewport(layout.pos.row = pos.row - 2 - 
                                                   number.of.cond,

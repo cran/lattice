@@ -1,5 +1,6 @@
 \name{trellis.device}
 \alias{trellis.device}
+\alias{canonical.theme}
 \title{ Initializing Trellis Displays }
 \description{
   \code{trellis.device} initializes a Trellis display device with
@@ -7,46 +8,62 @@
   \code{trellis.settings}.
 }
 \usage{
-trellis.device(device, color = T, bg, new = T, first = FALSE, ...)
+trellis.device(device = getOption("device"),
+               color = TRUE,
+               theme = NULL,
+               bg = NULL,
+               new = TRUE,
+               retain = FALSE,
+               ...)
+canonical.theme(name, color)
 }
 \arguments{
   \item{device}{ name of a function (possibly as a character string)
     that initializes a device. Admissible values include "x11",
     "windows", "mac", "postscript", "pdf", "png" etc.
-    }
+  }
   \item{color}{ whether the display should be color or black and white.
-    }
-  \item{bg}{ background color for the device. Can be changed by par(bg=).
   }
+  \item{theme}{ list of components that change the settings of the
+    device opened }
+  \item{bg}{ background color for the device.}
   \item{new}{ logical flag indicating whether a new device should be
-    startted. If \code{new = F} is specified, then the options for the
-    current device are changed to the defaults determined by the other
-    arguments.
+    started. If \code{FALSE},  the options for the current device are
+    changed to the defaults determined by the other arguments.
   }
-  \item{first}{ logical controlling whether the first page should be
-    blank. If \code{first} is FALSE (the default), then the first page on
-    the new device will be left blank. If \code{first} is TRUE, then
-    the first page will be used. However, this will work \bold{only if
-      the first plot on this device is produced by a Lattice command}.
+  \item{retain}{ logical. If \code{TRUE} and a setting for this device
+    already exists, then that is used instead of the defaults for this
+    device. By default, pre-existing settings are overwritten (and lost).
+  }
+  \item{name}{ name of the device for which the setting is required, as
+    returned by \code{.Device}
   }
   \item{\dots}{ additional parameters to be passed to the \code{device}
-    function.
-    }
+    function, most commonly \code{file} for non-screen devices.
+  }
 }
 \details{
   \code{trellis.device} calls the \code{device} function to start a
-  display, and sets the global variable \code{trellis.settings} to
-  either of two possible values depending on whether \code{color} is
-  set, and initializes the underlying \code{Grid} display.
+  display, and sets an appropriate component of the global variable
+  \code{lattice.theme} to appropriate (device-specific) values.
 
-  \code{trellis.settings} can subsequently be handled by the 
-  interface functions \code{trellis.par.get} and \code{trellis.par.set}
-  (also the fledgling \code{lset} interface).
+  The device specific settings are determined by \code{canonical.theme}
+  which returns a list (see below).
+
+  The settings can subsequently be handled by the  interface functions
+  \code{trellis.par.get} and \code{trellis.par.set} (also the
+  \code{lset} interface). 
+}
+\value{
+  \code{canonical.theme} returns a list of components defining graphical
+  parameter settings for Lattice displays. It is used internally in
+  \code{trellis.device}, and can also be used as an argument to
+  \code{lset}, or even as \code{theme} in \code{trellis.device} to use
+  the defaults for another device.
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{
-  \code{\link{trellis.par.set}}, \code{\link[grid]{Grid}},
-  \code{\link{lset}}, 
+  \code{\link{trellis.par.set}}, \code{\link{lset}}, 
   \code{\link{postscript}},\code{\link{x11}}, \code{\link{Lattice}}
 }
 \keyword{dplot}

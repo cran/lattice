@@ -92,7 +92,7 @@ panel.abline <-
 
 
 panel.fill <-
-    function(col=par("bg"), ...)
+    function(col = trellis.par.get("background")$col, ...)
 {
     grid.rect(gp=gpar(fill=col))
 }
@@ -230,7 +230,8 @@ prepanel.loess <-
 
 
 panel.superpose <-
-    function(x, y, subscripts, groups,
+    function(x, y = NULL, subscripts, groups,
+             panel.groups = "panel.xyplot",
              col,
              col.line = superpose.line$col,
              col.symbol = superpose.symbol$col,
@@ -240,9 +241,7 @@ panel.superpose <-
              lwd = superpose.line$lwd,
              ...)
 {
-
     if (length(x)>0) {
-
 
         if (!missing(col)) {
             if (missing(col.line)) col.line <- col
@@ -253,7 +252,7 @@ panel.superpose <-
         superpose.line <- trellis.par.get("superpose.line")
 
         x <- as.numeric(x)
-        y <- as.numeric(y)
+        if (!is.null(y)) y <- as.numeric(y)
 
         vals <- sort(unique(groups))
         nvals <- length(vals)
@@ -264,15 +263,24 @@ panel.superpose <-
         lwd <- rep(lwd, length=nvals)
         cex <- rep(cex, length=nvals)
 
+        panel.groups <- 
+            if (is.function(panel.groups)) panel.groups
+            else if (is.character(panel.groups)) get(panel.groups)
+            else eval(panel.groups)
+
         for (i in seq(along=vals)) {
             id <- (groups[subscripts] == vals[i])
-            if (any(id))
-                panel.xyplot(x=x[id], y=y[id],
+            if (any(id)) {
+                args <- list(x=x[id], 
                              pch = pch[i], cex = cex[i],
                              col.line = col.line[i],
                              col.symbol = col.symbol[i],
                              lty = lty[i],
                              lwd = lwd[i], ...)
+                if (!is.null(y)) args$y=y[id]
+
+                do.call("panel.groups", args)
+            }
         }
     }
 }
@@ -339,12 +347,34 @@ panel.superpose.2 <-
 
 
 
-
-
-
-
-
-
+panel.linejoin <-
+    function(x, y, fun = mean,
+             horizontal = TRUE,
+             lwd = reference.line$lwd,
+             lty = reference.line$lty,
+             col = reference.line$col,
+             col.line,
+             ...)
+{
+    reference.line = trellis.par.get("reference.line")
+    if (missing(col.line)) col.line <- col
+    if (horizontal) {
+        vals <- unique(sort(y))
+        yy <- seq(along = vals)
+        xx <- numeric(length(yy))
+        for (i in yy)
+            xx[i] <- fun(x[y == vals[i]])
+        llines(xx, yy, col = col.line, lty = lty, lwd = lwd, ...)
+    }
+    else {
+        vals <- unique(sort(x))
+        xx <- seq(along = vals)
+        yy <- numeric(length(xx))
+        for (i in xx)
+            yy[i] <- fun(y[x == vals[i]])
+        llines(xx, yy, col = col.line, lty = lty, lwd = lwd, ...)
+     }
+}
 
 
 

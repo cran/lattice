@@ -22,13 +22,21 @@
 
 
 prepanel.default.bwplot <-
-    function(x, y, box.ratio, num.l.y = length(unique(y)), ...)
+    function(x, y, box.ratio,
+             horizontal = TRUE,
+             levels.fos = length(unique(y)), ...)
 {
     temp <- .5  #* box.ratio/(box.ratio+1)
-    list(xlim = range(x[is.finite(x)]),
-         ylim = c(1-temp, num.l.y + temp),
-         dx = 1,
-         dy = 1)
+    if (horizontal)
+        list(xlim = range(x[is.finite(x)]),
+             ylim = c(1-temp, levels.fos + temp),
+             dx = 1,
+             dy = 1)
+    else 
+        list(xlim = c(1-temp, levels.fos + temp),
+             ylim = range(y[is.finite(y)]),
+             dx = 1,
+             dy = 1)
 }
 
 
@@ -36,30 +44,37 @@ prepanel.default.bwplot <-
 
 
 panel.barchart <-
-    function(x, y, box.ratio=1, col=bar.fill$col, ...)
+    function(x, y, box.ratio=1, horizontal = TRUE, col=bar.fill$col, ...)
 {
-
     bar.fill <- trellis.par.get("bar.fill")
-
-    ## I'll be working on the premise that EACH INTEGER in the y-RANGE
-    ## is a potential location of a boxplot. This should work for the default
-    ## case, and other cases (ylim non-default) are not well defined anyway.
-    
-    xmin <- current.viewport()$xscale[1]
-    yscale <- current.viewport()$yscale
-    levels.y <- floor(yscale[2])-ceiling(yscale[1])+1
-    height <- box.ratio/(1+box.ratio)
-    
-    for (i in seq(along=x)) {
-        grid.rect(gp = gpar(fill = col),
-                  y = y[i],
-                  x = unit(0,"npc"),
-                  height = height,
-                  width = x[i]-xmin,
-                  just = c("left", "centre"),
-                  default.units = "native")
+    if (horizontal) {
+        xmin <- current.viewport()$xscale[1]
+        height <- box.ratio/(1+box.ratio)
+        
+        for (i in seq(along=x)) {
+            grid.rect(gp = gpar(fill = col),
+                      y = y[i],
+                      x = unit(0,"npc"),
+                      height = height,
+                      width = x[i]-xmin,
+                      just = c("left", "centre"),
+                      default.units = "native")
+        }
     }
-    
+    else {
+        ymin <- current.viewport()$yscale[1]
+        width <- box.ratio/(1+box.ratio)
+        
+        for (i in seq(along=y)) {
+            grid.rect(gp = gpar(fill = col),
+                      x = x[i],
+                      y = unit(0,"npc"),
+                      height = y[i] - ymin,
+                      width = width,
+                      just = c("centre", "bottom"),
+                      default.units = "native")
+        }
+    }
 }
 
 
@@ -68,25 +83,30 @@ panel.barchart <-
 
 
 panel.dotplot <-
-    function(x, y, pch = dot.symbol$pch, col = dot.symbol$col, ...)
+    function(x, y, horizontal = TRUE,
+             pch = dot.symbol$pch,
+             col = dot.symbol$col,
+             lty = dot.line$lty,
+             lwd = dot.line$lwd,
+             col.line = dot.line$col,
+             levels.fos = NULL, ...)
 {
-
     dot.line <- trellis.par.get("dot.line")
     dot.symbol <- trellis.par.get("dot.symbol")
-
-    ## as in panel.bwplot I'll be working on the premise that
-    ## EACH INTEGER in the y-RANGE
-    ## is a potential location of a dot-line. This should work for the default
-    ## case, and other cases (ylim non-default) are not well defined anyway.
-    
-    yscale <- current.viewport()$yscale
-    levels.y <- floor(yscale[2])-ceiling(yscale[1])+1
-
-    panel.abline(h=1:levels.y, col=dot.line$col,
-                 lty=dot.line$lty, lwd=dot.line$lwd)
-
-    panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
-
+    if (horizontal) {
+        yscale <- current.viewport()$yscale
+        if (is.null(levels.fos)) levels.fos <- floor(yscale[2])-ceiling(yscale[1])+1
+        panel.abline(h=1:levels.fos, col=col.line,
+                     lty=lty, lwd=lwd)
+        panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+    }
+    else {
+        xscale <- current.viewport()$xscale
+        if (is.null(levels.fos)) levels.fos <- floor(xscale[2])-ceiling(xscale[1])+1
+        panel.abline(v=1:levels.fos, col=col.line,
+                     lty=lty, lwd=lwd)
+        panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+    }
 }
 
 
@@ -94,15 +114,18 @@ panel.dotplot <-
 
 
 panel.stripplot <-
-    function(x, y, jitter.data = FALSE, factor = 0.5,
+    function(x, y, jitter.data = FALSE, factor = 0.5, horizontal = TRUE,
              pch=plot.symbol$pch, col=plot.symbol$col, ...)
 {
 
     plot.symbol <- trellis.par.get("plot.symbol")
     y.jitter  <-
-        if (jitter.data) jitter(y, factor = factor)
+        if (horizontal && jitter.data) jitter(y, factor = factor)
         else y
-    panel.xyplot(x = x, y = y.jitter, pch = pch, col = col, ...)
+    x.jitter  <-
+        if (!horizontal && jitter.data) jitter(x, factor = factor)
+        else x
+    panel.xyplot(x = x.jitter, y = y.jitter, pch = pch, col = col, ...)
     
 }
 
@@ -111,85 +134,152 @@ panel.stripplot <-
 
 
 panel.bwplot <-
-    function(x, y, box.ratio=1, pch=box.dot$pch,
-             col=box.dot$col, cex = box.dot$cex, ...)
+    function(x, y, box.ratio=1, horizontal = TRUE, pch=box.dot$pch,
+             col=box.dot$col, cex = box.dot$cex,
+             levels.fos = NULL, ...)
 {
     
     box.dot <- trellis.par.get("box.dot")
     box.rectangle <- trellis.par.get("box.rectangle")
     box.umbrella <- trellis.par.get("box.umbrella")
     plot.symbol <- trellis.par.get("plot.symbol")
-    
-    ## OK. I'll be working on the premise that EACH INTEGER in the y-RANGE
-    ## is a potential location of a boxplot. This should work for the default
-    ## case, and other cases (ylim non-default) are not well defined anyway.
-    
-    yscale <- current.viewport()$yscale
-    levels.y <- floor(yscale[2])-ceiling(yscale[1])+1
-    lower <- ceiling(yscale[1])
-    height <- box.ratio/(1+box.ratio)
-    
-    xscale <- current.viewport()$xscale
-    
-    if (levels.y > 0)
-        for (i in 1:levels.y) {
-            
-            yval  <- lower+i-1
-            stats <- boxplot.stats(x[y==yval])
-            
-            if (stats$n>0)
-            {
-                push.viewport(viewport(y=unit(yval, "native"),
-                                            height = unit(height, "native"),
-                                            xscale = xscale))
+
+    ## In case levels.fos is not given (which should not happen), I'll
+    ## be working on the premise that EACH INTEGER in the y-RANGE is a
+    ## potential location of a boxplot. 
+
+    if (horizontal) {
+        yscale <- current.viewport()$yscale
+        if (is.null(levels.fos)) levels.fos <- floor(yscale[2])-ceiling(yscale[1])+1
+        lower <- ceiling(yscale[1])
+        height <- box.ratio/(1+box.ratio)
+        xscale <- current.viewport()$xscale
+        if (levels.fos > 0)
+            for (i in 1:levels.fos) {
+
+                yval  <- i
+                stats <- boxplot.stats(x[y==yval])
                 
-                r.x <- (stats$stats[2]+stats$stats[4])/2
-                r.w <- stats$stats[4]-stats$stats[2]
-                grid.rect(x = unit(r.x, "native"), width = unit(r.w, "native"),
-                          gp = gpar(lwd = box.rectangle$lwd,
-                          lty = box.rectangle$lty,
-                          col = box.rectangle$col))
                 
-                grid.lines(x = unit(stats$stats[1:2],"native"),
-                           y=unit(c(.5,.5), "npc"),
-                           gp = gpar(col = box.umbrella$col,
-                           lwd = box.umbrella$lwd,
-                           lty = box.umbrella$lty))
+                if (stats$n>0)
+                {
+                    push.viewport(viewport(y=unit(yval, "native"),
+                                           height = unit(height, "native"),
+                                           xscale = xscale))
+                    
+                    r.x <- (stats$stats[2]+stats$stats[4])/2
+                    r.w <- stats$stats[4]-stats$stats[2]
+                    grid.rect(x = unit(r.x, "native"), width = unit(r.w, "native"),
+                              gp = gpar(lwd = box.rectangle$lwd,
+                              lty = box.rectangle$lty,
+                              col = box.rectangle$col))
                 
-                grid.lines(x = unit(stats$stats[4:5],"native"),
-                           y=unit(c(.5,.5), "npc"),
-                           gp = gpar(col = box.umbrella$col,
-                           lwd = box.umbrella$lwd,
-                           lty = box.umbrella$lty))
+                    grid.lines(x = unit(stats$stats[1:2],"native"),
+                               y=unit(c(.5,.5), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.lines(x = unit(stats$stats[4:5],"native"),
+                               y=unit(c(.5,.5), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.lines(x = unit(rep(stats$stats[1],2),"native"),
+                               y=unit(c(0,1), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.lines(x = unit(rep(stats$stats[5],2),"native"),
+                               y=unit(c(0,1), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.points(x=stats$stats[3], y=.5, pch=pch, 
+                                size = unit(cex * 2.5, "mm"),
+                                gp = gpar(col = col, cex = cex))
+                    
+                    if ((l<-length(stats$out))>0)
+                        grid.points(x = stats$out, y = rep(.5,l),
+                                    size = unit(plot.symbol$cex * 2.5, "mm"),
+                                    pch = plot.symbol$pch,
+                                    gp = gpar(col = plot.symbol$col,
+                                    cex = plot.symbol$cex))
+                    
+                    pop.viewport()
                 
-                grid.lines(x = unit(rep(stats$stats[1],2),"native"),
-                           y=unit(c(0,1), "npc"),
-                           gp = gpar(col = box.umbrella$col,
-                           lwd = box.umbrella$lwd,
-                           lty = box.umbrella$lty))
-                
-                grid.lines(x = unit(rep(stats$stats[5],2),"native"),
-                           y=unit(c(0,1), "npc"),
-                           gp = gpar(col = box.umbrella$col,
-                           lwd = box.umbrella$lwd,
-                           lty = box.umbrella$lty))
-                
-                grid.points(x=stats$stats[3], y=.5, pch=pch, 
-                            size = unit(cex * 2.5, "mm"),
-                            gp = gpar(col = col, cex = cex))
-                
-                if ((l<-length(stats$out))>0)
-                    grid.points(x = stats$out, y = rep(.5,l),
-                                size = unit(plot.symbol$cex * 2.5, "mm"),
-                                pch = plot.symbol$pch,
-                                gp = gpar(col = plot.symbol$col,
-                                cex = plot.symbol$cex))
-                
-                pop.viewport()
-                
+                }
             }
-        }
     
+    }
+    else {
+        xscale <- current.viewport()$xscale
+        if (is.null(levels.fos)) levels.fos <- floor(xscale[2])-ceiling(xscale[1])+1
+        lower <- ceiling(xscale[1])
+        width <- box.ratio/(1+box.ratio)
+        yscale <- current.viewport()$yscale
+        if (levels.fos > 0)
+            for (i in 1:levels.fos) {
+                xval  <- i
+                stats <- boxplot.stats(y[x==xval])
+
+                if (stats$n>0)
+                {
+                    push.viewport(viewport(x = unit(xval, "native"),
+                                           width = unit(width, "native"),
+                                           yscale = yscale))
+                    
+                    r.x <- (stats$stats[2]+stats$stats[4])/2
+                    r.w <- stats$stats[4]-stats$stats[2]
+                    grid.rect(y = unit(r.x, "native"), height = unit(r.w, "native"),
+                              gp = gpar(lwd = box.rectangle$lwd,
+                              lty = box.rectangle$lty,
+                              col = box.rectangle$col))
+                
+                    grid.lines(y = unit(stats$stats[1:2],"native"),
+                               x = unit(c(.5,.5), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.lines(y = unit(stats$stats[4:5],"native"),
+                               x = unit(c(.5,.5), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.lines(y = unit(rep(stats$stats[1],2),"native"),
+                               x = unit(c(0,1), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.lines(y = unit(rep(stats$stats[5],2),"native"),
+                               x = unit(c(0,1), "npc"),
+                               gp = gpar(col = box.umbrella$col,
+                               lwd = box.umbrella$lwd,
+                               lty = box.umbrella$lty))
+                    
+                    grid.points(y = stats$stats[3], x = .5, pch = pch, 
+                                size = unit(cex * 2.5, "mm"),
+                                gp = gpar(col = col, cex = cex))
+                    
+                    if ((l<-length(stats$out))>0)
+                        grid.points(y = stats$out, x = rep(.5,l),
+                                    size = unit(plot.symbol$cex * 2.5, "mm"),
+                                    pch = plot.symbol$pch,
+                                    gp = gpar(col = plot.symbol$col,
+                                    cex = plot.symbol$cex))
+                    
+                    pop.viewport()
+                
+                }
+            }
+    
+    }
 }
 
 
@@ -201,9 +291,11 @@ dotplot <-
              prepanel = NULL,
              strip = TRUE,
              groups = NULL,
+             horizontal = NULL,
              ...,
              subset = TRUE)
 {
+
     ## m <- match.call(expand.dots = FALSE)
     dots <- list(...)
     groups <- eval(substitute(groups), data, parent.frame())
@@ -220,11 +312,11 @@ dotplot <-
     formname <- deparse(substitute(formula))
     form <- eval(substitute(formula), data, parent.frame())
 
-    call.list <- c(list(groups = groups, subset = subset,
+    call.list <- c(list(groups = groups, subset = subset, horizontal = horizontal,
                         panel = panel, prepanel = prepanel, strip = strip,
                         box.ratio = 0),
                    dots)
-    
+
     if (!inherits(form, "formula") && is.numeric(form)) {
         call.list$formula <- form
         if (is.null(call.list$xlab)) call.list$xlab <- formname
@@ -251,9 +343,11 @@ barchart <-
              strip = TRUE,
              box.ratio = 2,
              groups = NULL,
+             horizontal = NULL,
              ...,
              subset = TRUE)
 {
+
     ## m <- match.call(expand.dots = FALSE)
     dots <- list(...)
     groups <- eval(substitute(groups), data, parent.frame())
@@ -268,7 +362,7 @@ barchart <-
         else eval(prepanel)
 
     do.call("bwplot",
-            c(list(formula = formula, data = data,
+            c(list(formula = formula, data = data, horizontal = horizontal,
                    groups = groups, subset = subset,
                    panel = panel, prepanel = prepanel, strip = strip,
                    box.ratio = box.ratio),
@@ -287,6 +381,7 @@ stripplot <-
              factor = .5,
              box.ratio = if (jitter) 1 else 0,
              groups = NULL,
+             horizontal = NULL,
              ...,
              subset = TRUE)
 {
@@ -306,7 +401,7 @@ stripplot <-
     formname <- deparse(substitute(formula))
     form <- eval(substitute(formula), data, parent.frame())
 
-    call.list <- c(list(groups = groups, subset = subset,
+    call.list <- c(list(groups = groups, subset = subset, horizontal = horizontal,
                         panel = panel, prepanel = prepanel, strip = strip,
                         jitter = jitter, factor = factor,
                         box.ratio = 0),
@@ -344,6 +439,7 @@ bwplot <-
              ylab,
              ylim,
              box.ratio = 1,
+             horizontal = NULL,
              ...,
              subscripts = !is.null(groups),
              subset = TRUE)
@@ -382,11 +478,18 @@ bwplot <-
             }
         }
     if (is.null(form$left)) form$left <- rep("", length(form$right))
-    
+
     cond <- form$condition
     number.of.cond <- length(cond)
     y <- form$left
     x <- form$right
+
+    if (is.null(horizontal)) {
+        horizontal <-
+            if ((is.factor(x) || is.shingle(x)) && is.numeric(y)) FALSE
+            else TRUE
+    }
+
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, length(x))))
@@ -394,26 +497,39 @@ bwplot <-
         number.of.cond <- 1
     }
 
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
 
-    groups <- eval(groups, data, parent.frame())
-    subset <- eval(subset, data, parent.frame())
     if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
     if (subscripts) subscr <- seq(along=x)
     x <- x[subset, drop = TRUE]
     y <- y[subset, drop = TRUE]
     if (subscripts) subscr <- subscr[subset, drop = TRUE]
-    
 
-    if(!(is.numeric(x))) {
-        x <- as.numeric(x)
-        warning("x should be numeric")
+    if (horizontal) {
+        if (!(is.numeric(x))) {
+            x <- as.numeric(x)
+            warning("x should be numeric")
+        }
+        y <- as.factorOrShingle(y)
+        is.f.y <- is.factor(y)  # used throughout the rest of the code
+        num.l.y <- nlevels(y)
+
+        if (missing(xlab)) xlab <- form$right.name
+        if (missing(ylab)) ylab <- if (is.f.y) NULL else form$left.name
     }
-    y <- as.factorOrShingle(y)
-    is.f.y <- is.factor(y)  # used throughout the rest of the code
-    num.l.y <- nlevels(y)
+    else {
+        if (!(is.numeric(y))) {
+            y <- as.numeric(y)
+            warning("y should be numeric")
+        }
+        x <- as.factorOrShingle(x)
+        is.f.x <- is.factor(x)  # used throughout the rest of the code
+        num.l.x <- nlevels(x)
 
-    if (missing(xlab)) xlab <- form$right.name
-    if (missing(ylab)) ylab <- if (is.f.y) NULL else form$left.name
+        if (missing(ylab)) ylab <- form$left.name
+        if (missing(xlab)) xlab <- if (is.f.x) NULL else form$right.name
+    }
 
     ## create a skeleton trellis object with the
     ## less complicated components:
@@ -443,18 +559,34 @@ bwplot <-
     ##if (missing(scales)) scales 
     ##else eval(m$scales, data, parent.frame())
 
+
+    ## The following is to make the default alternating FALSE for factors
     if (is.character(scales)) scales <- list(relation = scales)
     if (is.null(scales$alternating)) {
-        if (is.null(scales$y)) scales$y <- list(alternating = FALSE)
-        else if (is.null(scales$y$alternating)) scales$y$alternating <- FALSE
-        ## bug if y="free" but who cares
+        if (horizontal) {
+            if (is.null(scales$y)) scales$y <- list(alternating = FALSE)
+            else if (is.null(scales$y$alternating)) scales$y$alternating <- FALSE
+        ## bug if y="free" ? but who cares
+        }
+        else {
+            if (is.null(scales$x)) scales$x <- list(alternating = FALSE)
+            else if (is.null(scales$x$alternating)) scales$x$alternating <- FALSE
+        ## bug if x="free" ? but who cares
+        }
     }
-    foo <- c(foo, 
+    foo <- c(foo,
              do.call("construct.scales", scales))
-    if (is.logical(foo$y.scales$at)) foo$y.scales$at <- 1:num.l.y
-    if (is.f.y && is.logical(foo$y.scales$labels))
-        foo$y.scales$labels <- levels(y)
 
+    if (horizontal) {
+        if (is.logical(foo$y.scales$at)) foo$y.scales$at <- 1:num.l.y
+        if (is.f.y && is.logical(foo$y.scales$labels))
+            foo$y.scales$labels <- levels(y)
+    }
+    else {
+        if (is.logical(foo$x.scales$at)) foo$x.scales$at <- 1:num.l.x
+        if (is.f.x && is.logical(foo$x.scales$labels))
+            foo$x.scales$labels <- levels(x)
+    }
 
     ## Step 3: Decide if limits were specified in call:
 
@@ -484,7 +616,7 @@ bwplot <-
         if (have.xlim) xlim <- log(xlim, xbase)
     }
     if (have.ylog) {
-        warning("Are you sure you want log scale for y ?")
+        ## warning("Are you sure you want log scale for y ?")
         ylog <- foo$y.scales$log
         ybase <-
             if (is.logical(ylog)) 10
@@ -511,9 +643,11 @@ bwplot <-
 
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
-
     foo$panel.args.common <- dots
     foo$panel.args.common$box.ratio <- box.ratio
+    foo$panel.args.common$horizontal <- horizontal
+    foo$panel.args.common$levels.fos <- ## fos - the factor/shingle in x/y
+        if (horizontal) num.l.y else num.l.x
     if (subscripts) foo$panel.args.common$groups <- groups
 
     layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
@@ -545,24 +679,47 @@ bwplot <-
                                 levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
-                    
-                    if (is.f.y) 
-                        foo$panel.args[[panel.number]] <-
-                            list(x = x[id],
-                                 y = as.numeric(y[id]))
+
+                    if (horizontal) {
+                        if (is.f.y) 
+                            foo$panel.args[[panel.number]] <-
+                                list(x = x[id],
+                                     y = as.numeric(y[id]))
                             
-                    else {  # shingle
-                        panel.x <- numeric(0)
-                        panel.y <- numeric(0)
-                        for (k in 1:num.l.y) {
-                            tid <- id & (y >= levels(y)[[k]][1]) & (y <= levels(y)[[k]][2])
-                            panel.x <- c(panel.x, x[tid])
-                            panel.y <- c(panel.y, rep(k,length(tid[tid])))
+                        else {  # shingle
+                            panel.x <- numeric(0)
+                            panel.y <- numeric(0)
+                            for (k in 1:num.l.y) {
+                                tid <- id & (y >= levels(y)[[k]][1]) & (y <= levels(y)[[k]][2])
+                                panel.x <- c(panel.x, x[tid])
+                                panel.y <- c(panel.y, rep(k,length(tid[tid])))
+                            }
+                            foo$panel.args[[panel.number]] <-
+                                list(x = panel.x,
+                                     y = panel.y)
                         }
-                        foo$panel.args[[panel.number]] <-
-                            list(x = panel.x,
-                                 y = panel.y)
                     }
+                    else {
+                        if (is.f.x)
+                            foo$panel.args[[panel.number]] <-
+                                list(x = as.numeric(x[id]),
+                                     y = y[id])
+                            
+                        else {  # shingle
+                            panel.x <- numeric(0)
+                            panel.y <- numeric(0)
+                            for (k in 1:num.l.x) {
+                                tid <- id & (x >= levels(x)[[k]][1]) & (x <= levels(x)[[k]][2])
+                                panel.y <- c(panel.y, y[tid])
+                                panel.x <- c(panel.x, rep(k,length(tid[tid])))
+                            }
+                            foo$panel.args[[panel.number]] <-
+                                list(x = panel.x,
+                                     y = panel.y)
+                        }
+                    }
+
+
                     if (subscripts)
                         foo$panel.args[[panel.number]]$subscripts <-
                             subscr[id]
@@ -585,8 +742,7 @@ bwplot <-
                                panel.args.common = foo$panel.args.common,
                                panel.args = foo$panel.args,
                                aspect = aspect,
-                               nplots = nplots,
-                               num.l.y = num.l.y))
+                               nplots = nplots))
 
     class(foo) <- "trellis"
     foo

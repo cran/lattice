@@ -2,7 +2,7 @@
 
 par(ask = TRUE)
 ## changing settings to new 'theme'
-lset(theme = "white.bg")
+lset(theme = col.whitebg())
 
 ## simulated example, histogram and kernel density estimate superposed
 x <- rnorm(500)
@@ -10,7 +10,7 @@ densityplot(~x)
 histogram(x, type = "density", 
           panel = function(x, ...) {
               panel.histogram(x, ...) 
-              panel.densityplot(x, col = "brown", plot.points = F)
+              panel.densityplot(x, col = "brown", plot.points = FALSE)
           })
 
 ## Using a custom panel function to superpose a fitted normal density
@@ -44,8 +44,9 @@ xyplot(Murder  ~ Population | state.region, data = states,
        main = list("Murder Rates in US states", col = "brown", font = 4))
 
 ##graphical parameters for xlab etc can also be changed permanently
-lset.textfont(xlab = 2, ylab = 2, main = 4)
-lset.textcol(main = "brown")
+lset(list(par.xlab.text = list(font = 2),
+          par.ylab.text = list(font = 2),
+          par.main.text = list(font = 4, col = "brown")))
 
 ## Same with some multiple line text
 levels(states$state.region) <- c("Northeast", "South", "North\n Central",  "West")
@@ -60,8 +61,10 @@ xyplot(Murder  ~ Population | state.region, data = states,
        main = "Murder Rates in US states")
 
 ##setting these back to their defaults
-lset.textfont(xlab = 1, ylab = 1, main = 2)
-lset.textcol(main = "black")
+lset(list(par.xlab.text = list(font = 1),
+          par.ylab.text = list(font = 1),
+          par.main.text = list(font = 2, col = "black")))
+
 
 ##levelplot
 data(volcano)
@@ -78,7 +81,9 @@ xyplot(Petal.Length~Petal.Width, data = iris, groups=Species,
        key = list(title = "Iris Data", x = .15, y=.85, corner = c(0,1),
            border = TRUE, 
            points = list(col=trellis.par.get("strip.shingle")$col[1:3],
-                         pch = 1),
+           pch = trellis.par.get("superpose.symbol")$pch,
+           cex = trellis.par.get("superpose.symbol")$cex
+           ),
            text = list(levels(iris$Species))))
 
 par(ask = FALSE)

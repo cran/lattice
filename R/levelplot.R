@@ -36,19 +36,63 @@ prepanel.default.levelplot <-
 
 
 
+
+# index2seq <- function(x) {
+#     print(x)
+#     n <- length(x)
+#     indices <- (1:n)[x==2]
+#     ans <- rep(0, n)
+#     for (i in indices)
+#         ans[1:i] <- ans[1:i] + 1
+#     ans
+# }
+
+
+
+
 panel.levelplot <-
-    function(x, y, z, wx, wy, zcol, col.regions, subscripts, ...)
+    function(x, y, z, wx, wy, zcol, col.regions, subscripts,
+             at = mean(z), labels = NULL, contour = TRUE, region = TRUE,
+             col = add.line$col,
+             lty = add.line$lty,
+             lwd = add.line$lwd,
+             ...)
 {
     ## z not really needed here, but probably would be for contourplot
     if (any(subscripts)) {
-        for (i in seq(along = col.regions)) {
-            ok <- (zcol[subscripts]==i)
-            grid.rect(x = x[subscripts][ok],
-                      y = y[subscripts][ok],
-                      width = wx[subscripts][ok],
-                      height = wy[subscripts][ok],
-                      default.units = "native",
-                      gp = gpar(fill=col.regions[i], col = NULL))
+        if (region) {
+            for (i in seq(along = col.regions)) {
+                ok <- (zcol[subscripts]==i)
+                grid.rect(x = x[subscripts][ok],
+                          y = y[subscripts][ok],
+                          width = wx[subscripts][ok],
+                          height = wy[subscripts][ok],
+                          default.units = "native",
+                          gp = gpar(fill=col.regions[i], col = NULL))
+            }
+        }
+        if (contour) {
+            add.line <- trellis.par.get("add.line")
+            ux <- as.double(sort(unique(x[subscripts])))
+            uy <- as.double(sort(unique(y[subscripts])))
+            ord <- order(x[subscripts], y[subscripts])
+            m <- z[subscripts][ord] + 10e-12
+            for (i in seq(along = at)) {
+                val <- .Call("cont", m, ux, uy, as.double(at[i]),
+                             length(ux), length(uy), PACKAGE="lattice")
+                if (is.null(labels))
+                    lsegments(val[[1]], val[[2]], val[[3]], val[[4]],
+                              col = col, lty = lty, lwd = lwd)
+                else {
+                    if (length(val[[1]]) > 3) {
+                        ltext(lab = labels$lab[i],
+                              x = .5 * (val[[1]][1]+val[[3]][1]),
+                              y = .5 * (val[[2]][1]+val[[4]][1]))
+                        lsegments(val[[1]][-(1:2)], val[[2]][-(1:2)],
+                                  val[[3]][-(1:2)], val[[4]][-(1:2)])
+                    }
+                }
+            }
         }
     }
 }
@@ -60,50 +104,52 @@ panel.levelplot <-
 
 
 
-# contourplot <-
-#     function(formula,
-#              data = parent.frame(),
-#              aspect = "fill",
-#              layout = NULL,
-#              panel = "panel.levelplot",
-#              prepanel = NULL,
-#              scales = list(),
-#              strip = TRUE,
-#              groups = NULL,
-#              xlab,
-#              xlim,
-#              ylab,
-#              ylim,
-#              contour = TRUE,
-#              pretty = TRUE,
-#              region = FALSE,
-#              ...,
-#              subscripts = TRUE,
-#              subset = TRUE)
 
-# {
-#     ## m <- match.call(expand.dots = FALSE)
-#     dots <- list(...)
-#     groups <- eval(substitute(groups), data, parent.frame())
-#     subset <- eval(substitute(subset), data, parent.frame())
+contourplot <-
+    function(formula,
+             data = parent.frame(),
+             aspect = "fill",
+             layout = NULL,
+             panel = "panel.levelplot",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab,
+             xlim,
+             ylab,
+             ylim,
+             cuts = 7,
+             contour = TRUE,
+             pretty = TRUE,
+             region = FALSE,
+             ...,
+             subscripts = TRUE,
+             subset = TRUE)
 
-#     if (!is.function(panel)) panel <- eval(panel)
-#     if (!is.function(strip)) strip <- eval(strip)
+{
+    ## m <- match.call(expand.dots = FALSE)
+    dots <- list(...)
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
 
-#     prepanel <-
-#         if (is.function(prepanel)) prepanel 
-#         else if (is.character(prepanel)) get(prepanel)
-#         else eval(prepanel)
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
 
-#     do.call("levelplot",
-#             c(list(formula = formula, data = data,
-#                    groups = groups, subset = subset,
-#                    panel = panel, prepanel = prepanel, strip = strip,
-#                    contour = contour,
-#                    pretty = pretty,
-#                    region = region),
-#               dots))
-# }
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    do.call("levelplot",
+            c(list(formula = formula, data = data,
+                   groups = groups, subset = subset,
+                   panel = panel, prepanel = prepanel, strip = strip,
+                   cuts = cuts, contour = contour,
+                   pretty = pretty,
+                   region = region),
+              dots))
+}
 
 
 
@@ -126,11 +172,11 @@ levelplot <-
              ylab,
              ylim,
              at,
-             col.regions = terrain.colors(length(at)-1),
+             col.regions = trellis.par.get("regions")$col,
              colorkey = region,
              contour = FALSE,
              cuts = 15,
-             labels = format(at),
+             labels = TRUE,
              pretty = FALSE,
              region = TRUE,
              ...,
@@ -187,7 +233,7 @@ levelplot <-
     y <- y[subset, drop = TRUE]
     z <- z[subset, drop = TRUE]
     subscr <- subscr[subset, drop = TRUE]
-    
+
     if (missing(xlab)) xlab <- form$right.x.name
     if (missing(ylab)) ylab <- form$right.y.name
 
@@ -196,6 +242,14 @@ levelplot <-
     x <- as.numeric(x)
     y <- as.numeric(y)
     z <- as.numeric(z)
+
+    zrng <- extend.limits(range(z[!is.na(z)]))
+    if (missing(at))
+        at <-
+            if (pretty) lpretty(zrng, cuts)
+            else seq(zrng[1], zrng[2], length = cuts+2)
+    
+
     ## create a skeleton trellis object with the
     ## less complicated components:
 
@@ -207,6 +261,21 @@ levelplot <-
                           ylab = ylab), dots))
                           
 
+    ## Processing the labels argument
+    if (is.logical(labels) && !labels) labels <- NULL
+    else {
+        if (is.logical(labels)) labels <- format(at)
+        text <- trellis.par.get("par.xlab.text") # something better ?
+        if (is.null(text)) text <- list(cex = 1, col = "black", font = 1, rot = 0)
+        labels <- list(label = if (is.list(labels)) labels[[1]] else labels,
+                       col = text$col, rot = text$rot,
+                       cex = text$cex, font = text$font)
+        if (is.list(labels)) labels[names(labels)] <- labels
+        if (!is.character(labels$label))
+            labels$label <- format(at)
+    }
+
+    
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
     foo$call <- match.call()
@@ -282,28 +351,16 @@ levelplot <-
 
     ## Most levelplot/contourplot specific code here
 
-    zrng <- extend.limits(range(z[!id.na]))
-    if (missing(at))
-        at <- if (pretty) pretty(zrng, cuts)
-        else seq(zrng[1], zrng[2], length = cuts+2)
 
-    if (region) {
-        numcol <- length(at)-1
-        numcol.r <- length(col.regions)
-        col.regions <-
-            if (numcol.r <= numcol)
-                rep(col.regions, length = numcol)
-            else col.regions[floor(1+(1:numcol-1)*(numcol.r-1)/(numcol-1))]
+    ## region
+    numcol <- length(at)-1
+    numcol.r <- length(col.regions)
 
-    }
-    else {
-        at <- sort(jitter(c(at, at), factor = 2))
-        col.regions <-
-            rep(c("black", trellis.par.get("background")$col),
-                length = length(at)-1)
-    }
-    ## need to handle contour = TRUE
-
+    col.regions <-
+        if (numcol.r <= numcol)
+            rep(col.regions, length = numcol)
+        else col.regions[floor(1+(1:numcol-1)*(numcol.r-1)/(numcol-1))]
+    
     if (is.logical(colorkey)) {
         if (colorkey) foo$colorkey <-
             list(space = "right", col = col.regions,
@@ -339,7 +396,8 @@ levelplot <-
         zcol[!id.na & z>=at[i] & z<at[i+1]] <- i
 
     foo$panel.args.common <-
-        c(list(x=x, y=y, z=z,
+        c(list(x=x, y=y, z=z, at=at, labels=labels,
+               region = region, contour = contour,
                wx=wx, wy=wy, zcol=zcol, col.regions=col.regions),
           dots)
 

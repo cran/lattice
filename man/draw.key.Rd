@@ -2,7 +2,7 @@
 \alias{draw.key}
 \title{Produce a Legend or Key}
 \description{
-  Produces (and possibly draws) a Grid frame grob which is a legend (or
+  Produces (and possibly draws) a Grid frame grob which is a legend (aka 
   key) that can be placed in other Grid plots.
 }
 \usage{

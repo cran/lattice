@@ -53,6 +53,9 @@ panel.densityplot <-
              darg = list(n = 30),
              plot.points = TRUE,
              ref = FALSE,
+             cex = 0.5,
+             col = plot.line$col,
+             col.line,
              ...)
 {
     if (ref) {
@@ -63,11 +66,13 @@ panel.densityplot <-
                      lwd = reference.line$lwd)
     }
     if (length(x)>1) {
+        plot.line <- trellis.par.get("plot.line")
+        if (missing(col.line)) col.line <- col
         h <- do.call("density", c(list(x=x), darg))
         lim <- current.viewport()$xscale
         id <- (h$x>=lim[1] & h$x<=lim[2])
-        llines(x = h$x[id], y = h$y[id], ...)
-        if (plot.points) panel.xyplot(x=x, y=rep(0, length(x)), cex=.5, ...) 
+        llines(x = h$x[id], y = h$y[id], col = col.line, ...)
+        if (plot.points) panel.xyplot(x = x, y = rep(0, length(x)), cex = cex, col = col, ...) 
     }
 }
 

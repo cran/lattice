@@ -1,10 +1,11 @@
-% $Id: shingles.Rd,v 1.11 2002/01/11 04:04:30 deepayan Exp $
+% $Id: shingles.Rd,v 1.13 2002/04/02 19:42:47 deepayan Exp $
 \name{shingles}
 \alias{equal.count}
 \alias{plot.shingle}
 \alias{print.shingle}
 \alias{print.shingleLevel}
 \alias{summary.shingle}
+\alias{as.data.frame.shingle}
 \alias{as.factorOrShingle}
 \alias{as.shingle}
 \alias{[.shingle}
@@ -20,6 +21,7 @@ is.shingle(x)
 \method{print}{shingle}(x, \dots)
 \method{print}{shingleLevel}(x, \dots)
 \method{summary}{shingle}(object, \dots)
+\method{as.data.frame}{shingle}(x, row.names = NULL, optional = FALSE)
 x[subset, drop = FALSE]
 as.factorOrShingle(x, subset, drop)
 }
@@ -30,7 +32,9 @@ as.factorOrShingle(x, subset, drop)
   \item{x}{ numeric variable or R object, shingle in
     \code{plot.shingle, x[]}. An object (list of intervals) of class
     "shingleLevel" in \code{print.shingleLevel}}
-  \item{object}{ shingel object to be summarized}
+  \item{object}{ shingle object to be summarized}
+  \item{row.names}{ a character vector giving the row names for the data frame}
+  \item{optional}{ logical. If `TRUE', setting row names is optional}
   \item{intervals}{ numeric vector or matrix with 2 columns}
   \item{subset}{logical vector}
   \item{drop}{whether redundant shingle levels are to be dropped}
@@ -52,11 +56,7 @@ as.factorOrShingle(x, subset, drop)
 
   The implementation of shingles is slightly different from S.
 
-  \code{plot.shingle} is not quite as it should be yet, in the sense
-  that most options allowed in Trellis is currently ignored. Should be
-  fixed soon.
-
-  \code{equal.count} Converts \code{x} to a shingle. Essentially a
+  \code{equal.count} converts \code{x} to a shingle. Essentially a
   wrapper around \code{co.intervals}. All arguments are passed to
   \code{co.intervals}
 
@@ -84,12 +84,17 @@ z <- equal.count(rnorm(50))
 plot(z)
 print(z)
 print(levels(z))
+\testonly{data.frame(x = equal.count(rnorm(100)), y = rnorm(100))}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{
   \code{\link{xyplot}},
   \code{\link{co.intervals}}, \code{\link{Lattice}} 
 }
-\keyword{dplot}
+\keyword{print}
+\keyword{hplot}
+\keyword{methods}
+\keyword{classes}
+
 
 

@@ -1,7 +1,7 @@
 \name{print.trellis}
 \title{Print Trellis Objects}
 \usage{
-\method{print}{trellis}(x, position, split, more = F, ...)
+\method{print}{trellis}(x, position, split, more = FALSE, ...)
 }
 \description{
   Print (plot) a trellis object.
@@ -25,13 +25,15 @@
   \item{\dots}{extra arguments, ignored}
 }
 \details{
-  This is the default print method for objects of type trellis, produced
-  by calls to functions like \code{xyplot, bwplot} etc. It is usually
-  called automatically when a trellis object is produced. It can also be
-  called explicitly to control plot positioning by means of the
-  arguments \code{split} and \code{position}.
+  This is the default print method for objects of class
+  \code{"trellis"}, produced by calls to functions like \code{xyplot,
+    bwplot} etc. It is usually called automatically when a trellis
+  object is produced. It can also be called explicitly to control plot
+  positioning by means of the arguments \code{split} and
+  \code{position}.
 }
-\note{ Trying to position multipage displays will mess things up.
+\note{ Trying to position multipage displays will
+mess things up.
   }
 \seealso{
   \code{\link{Lattice}}
@@ -45,12 +47,12 @@ p2 <- histogram( ~ height, data = singer, xlab = "Height")
 data(sunspot)
 p3 <- xyplot(sunspot~1:37, aspect="xy", type = "l")
 ## simple positioning by split
-print.trellis(p11, split=c(1,1,1,2), more=T)
+print.trellis(p11, split=c(1,1,1,2), more=TRUE)
 print.trellis(p2, split=c(1,2,1,2))
 ## Combining split and position:
-print.trellis(p11, position = c(0,0,.75,.75), split=c(1,1,1,2), more=T)
-print.trellis(p12, position = c(0,0,.75,.75), split=c(1,2,1,2), more=T)
-print.trellis(p3, position = c(.5,.75,1,1), more=F)
+print.trellis(p11, position = c(0,0,.75,.75), split=c(1,1,1,2), more=TRUE)
+print.trellis(p12, position = c(0,0,.75,.75), split=c(1,2,1,2), more=TRUE)
+print.trellis(p3, position = c(.5,.75,1,1), more=FALSE)
 }
 \keyword{hplot}
 

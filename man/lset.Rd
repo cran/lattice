@@ -1,43 +1,45 @@
 \name{lset}
 \alias{lset}
-\alias{lset.textfont}
-\alias{lset.textcol}
-\alias{lset.textcex}
-\title{Simple Interfaces to modify Trellis Settings and Lattice Themes}
+\alias{col.whitebg}
+\title{Simple Interfaces to modify Trellis Settings}
 \description{
-  These functions are simple interfaces to do some of the more common
-  tasks that can be achieved by \code{trellis.par.get/set}. These are
-  NOT S-compatible
+  A (hopefully) simpler alternative interface to
+  \code{trellis.par.get/set}. NOT S-compatible
 }
 \usage{
-lset(theme = c("col.bg", "white.bg", "bw"), file)
-lset.textfont(xlab, ylab, main, sub, add)
-lset.textcol(xlab, ylab, main, sub, add)
-lset.textcex(xlab, ylab, main, sub, add)
+lset(theme)
+col.whitebg()
 }
 \arguments{
-  \item{file}{ the name of a file that will be \code{source()}d.
-  }
-  \item{theme}{ a character string specifying the name of a predefined
-    `theme'. This is at a very early stage of development, and not many
-    interesting themes are available yet.
-  }
-  \item{xlab, ylab, main, sub, add}{ intended replacement values for
-    respective components of \code{trellis.settings}
+  \item{theme}{ a list decribing how to change the settings of the
+    current active device. Valid components are those in the list
+    returned by \code{trellis.par.get()}. Each component must itself be
+    a list, with one or more of the appropriate components (need not
+    have all components). Changes are made to the settings for the
+    currently active device only.
   }
 }
 \details{
-  These functions are meant to be interfaces to
-  \code{trellis.settings}. \code{lset} deals with the whole list of
-  settings. \code{lset.text*} modifies components of the various text
-  components. More similar functions should come later.
+  \code{lset} essentially does the same thing as \code{trellis.par.set},
+  but is different in that it allows setting more than one parameter at
+  a time, and also that each component need have only the components
+  that need to be changed. 
+  
+  This function is expected to be used mostly in conjunction with
+  functions that return `themes', i.e., lists which when supplied to
+  \code{lset} change the overall look and feel of the display.
 
-  \code{lset} implements a concept of `themes' in Lattice. Themes are
-  predefined values of \code{trellis.settings} that modify the overall
-  look. The only current theme significantly different from the defaults
-  is the \code{"white.bg"} theme, which hopefully 
+  \code{col.whitebg} is one such function, which returns a list which
+  when supplied to \code{lset} changes the background to transparent and
+  the other colors to something suitable. Contributions of more such
+  `themes' are welcome. 
 }
-\seealso{\code{\link{trellis.settings}}, \code{\link{Lattice}}
+\seealso{\code{\link{lattice.theme}}, \code{\link{show.settings}},
+  \code{\link{Lattice}}} 
+\examples{
+show.settings(col.whitebg())
+# The following reproduces Splus Unix black and white pch:
+#lset(list(superpose.symbol=list(pch=c("o","+",">","s","w","#","\{"))))
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \keyword{dplot}

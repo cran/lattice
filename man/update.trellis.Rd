@@ -34,23 +34,16 @@
   \code{update}. Only the following are, with certain restrictions:
   
   \item{aspect}{ Cannot be "xy", can be "fill" or numeric.}
-  \item{as.table}{ As described in \code{trellis.args}}
-  \item{between}{ As described in \code{trellis.args}}
-  \item{key}{ As described in \code{trellis.args} }
-  \item{layout}{ As described in \code{trellis.args} }
-  \item{main}{  As described in \code{trellis.args} }
-  \item{page}{  As described in \code{trellis.args} }
-  \item{panel}{ As described in \code{trellis.args} }
-  \item{par.strip.text}{  As described in \code{trellis.args} }
-  \item{scales}{ Mostly ignored if relation is not "same" }
-  \item{skip}{ As described in \code{trellis.args} }
-  \item{strip}{ As described in \code{trellis.args} }
-  \item{sub}{ As described in \code{trellis.args} }
-  \item{xlab}{ As described in \code{trellis.args} }
-  \item{xlim}{ As described in \code{trellis.args} }
-  \item{ylab}{ As described in \code{trellis.args} }
-  \item{ylim}{ As described in \code{trellis.args} }
+  \item{as.table, between, key}{}
+  \item{layout, main, page, panel}{}
+  \item{par.strip.text, scales, skip, strip}{}
+  \item{sub, xlab, ylab, xlim, ylim}{As described in \code{trellis.args}
+  }
   \item{\dots}{ extra arguments, ignored}
+}
+\details{
+  Not implemented very well yet, should work better in subsequent
+  releases 
 }
 \value{
   An object of class \code{trellis}, by default plotted by

@@ -168,6 +168,7 @@ construct.scales <-
              labels = FALSE,
              col = FALSE,
              log = FALSE,
+             font = FALSE,
              alternating = TRUE,
              relation = "same",
              x = NULL,
@@ -176,7 +177,7 @@ construct.scales <-
 {
     xfoo <- list(draw = draw, tck = tck,
                  tick.number = tick.number,
-                 cex = cex, rot = rot,
+                 cex = cex, rot = rot, font = font,
                  at = at, labels = labels,
                  col = col, log = log,
                  alternating = alternating,
@@ -199,6 +200,57 @@ construct.scales <-
             if (yfoo$alternating) c(1,2)
             else 1
     list(x.scales = xfoo, y.scales = yfoo)
+}
+
+
+
+
+
+construct.3d.scales <-
+    function(draw = TRUE,
+             tck = 1,
+             lty = 1, lwd = 1,
+             distance = c(1,1,1),
+             tick.number = 5,
+             cex = 1,
+             rot = FALSE,
+             at = FALSE,
+             labels = FALSE,
+             col = FALSE,
+             log = FALSE,
+             font = FALSE,
+             arrows = TRUE,
+             relation = "same",
+             x = NULL,
+             y = NULL,
+             z = NULL,
+             ...)
+{
+    xfoo <- list(draw = draw, tck = tck,
+                 lty = 1, lwd = 1,
+                 tick.number = tick.number,
+                 cex = cex, rot = rot, font = font,
+                 at = at, labels = labels,
+                 col = col, log = log, arrows = arrows,
+                 relation = relation)
+    yfoo <- xfoo
+    zfoo <- xfoo
+    xfoo$distance <- distance[1]
+    yfoo$distance <- distance[2]
+    zfoo$distance <- distance[3]
+    if (!is.null(x)) {
+        if (is.character(x)) x <- list(relation = x)
+        xfoo[names(x)] <- x
+    }
+    if (!is.null(y)) {
+        if (is.character(y)) y <- list(relation = y)
+        yfoo[names(y)] <- y
+    }
+    if (!is.null(z)) {
+        if (is.character(z)) z <- list(relation = z)
+        zfoo[names(z)] <- z
+    }
+    list(x.scales = xfoo, y.scales = yfoo, z.scales = zfoo)
 }
 
 
@@ -322,8 +374,9 @@ trellis.skeleton <-
                 x.between = 0,
                 y.between = 0,
                 par.strip.text = trellis.par.get("add.text"))
+    if (is.null(foo$par.strip.text)) foo$par.strip.text = list(col = "black", cex = 1, font = 1)
     foo$par.strip.text$lines <- 1
-
+    
     if (!is.null(between$x)) foo$x.between <- between$x
     if (!is.null(between$y)) foo$y.between <- between$y
 
@@ -331,25 +384,29 @@ trellis.skeleton <-
 
     if (!is.null(main)) {
         text <- trellis.par.get("par.main.text")
+        if (is.null(text)) text <- list(cex = 1.2, col = "black", font = 2)
         foo$main <- list(label = main[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(main)) foo$main[names(main)] <- main
     }
     if (!is.null(sub)) {
         text <- trellis.par.get("par.sub.text")
+        if (is.null(text)) text <- list(cex = 1, col = "black", font = 2)
         foo$sub <- list(label = sub[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(sub)) foo$sub[names(sub)] <- sub
     }
     if (!is.null(xlab)) {
         text <- trellis.par.get("par.xlab.text")
+        if (is.null(text)) text <- list(cex = 1, col = "black", font = 1)
         foo$xlab <- list(label = xlab[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(xlab)) foo$xlab[names(xlab)] <- xlab
     }
     if (!is.null(ylab)) {
         text <- trellis.par.get("par.ylab.text")
+        if (is.null(text)) text <- list(cex = 1.2, col = "black", font = 2)
         foo$ylab <- list(label = ylab[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(ylab)) foo$ylab[names(ylab)] <- ylab
     }
-    list(foo = foo, dots = list(...))
+list(foo = foo, dots = list(...))
 }
 
 

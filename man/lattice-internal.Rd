@@ -7,6 +7,7 @@
 \alias{do.breaks}
 \alias{compute.layout}
 \alias{construct.scales}
+\alias{construct.3d.scales}
 \alias{limits.and.aspect}
 \alias{trellis.skeleton}
 \alias{make.list.from.intervals}
@@ -31,8 +32,13 @@
 }
 \synopsis{
 lpretty(x, ...)
-construct.scales(draw = TRUE, tck = 1, tick.number = 5, cex = 1, rot = FALSE, 
-    at = FALSE, labels = FALSE, col = FALSE, log = FALSE, alternating = TRUE, 
+construct.3d.scales(draw = TRUE, tck = 1, lty = 1, lwd = 1, distance = c(1, 
+    1, 1), tick.number = 5, cex = 1, rot = FALSE, at = FALSE, 
+    labels = FALSE, col = FALSE, log = FALSE, font = FALSE, arrows = TRUE, 
+    relation = "same", x = NULL, y = NULL, z = NULL, ...) 
+construct.scales(draw = TRUE, tck = 1, tick.number = 5, cex = 1,
+    rot = FALSE, at = FALSE, labels = FALSE, col = FALSE, 
+    log = FALSE, font = FALSE, alternating = TRUE, 
     relation = "same", x = NULL, y = NULL, ...)  
 compute.layout(layout, cond.max.level, skip = FALSE)  
 limits.and.aspect(prepanel.default.function, prepanel = NULL, have.xlim = FALSE, 
@@ -55,6 +61,7 @@ ldrop.levels(x, subset)
 compute.layout(...)
 make.list.from.intervals(x)
 construct.scales(...)
+construct.3d.scales(...)
 limits.and.aspect(...)
 trellis.skeleton(...)
 prepanel.default.bwplot(...)
@@ -99,7 +106,7 @@ prepanel.default.xyplot(x, y, type, ...)
 
   \code{lpretty} is used instead of pretty (which gives very non-pretty
   results in some cases, particularly densityplot).
-  
+
   \code{ldrop.levels} returns an object of the same class as \code{x},
   with the redundant factor/shingle levels dropped, if any. Used to
   avoid empty panels when using the \code{subset} argument.
@@ -109,7 +116,7 @@ prepanel.default.xyplot(x, y, type, ...)
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{Lattice}}}
-\keyword{dplot}
+\keyword{internal}
 
 
 

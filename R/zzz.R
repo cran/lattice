@@ -7,4 +7,10 @@
 
 autoload("loess.smooth", "modreg")
 autoload("loess", "modreg")
-require(grid)
+library(grid)
+
+.First.lib <- function(lib, pkg) {
+  library.dynam( "lattice", pkg, lib )
+}
+
+

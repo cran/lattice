@@ -6,13 +6,19 @@
   \code{panel.superpose}
 }
 \usage{
-panel.stripplot(x, y, jitter.data = F, factor, pch, col, ...)
+panel.stripplot(x, y, jitter.data = F, factor, horizontal, pch, col, ...)
 }
 \arguments{
   \item{x,y}{ coordinates of points to be plotted}
   \item{jitter.data}{ whether points should be jittered to avoid
     overplotting.} 
   \item{factor}{factor by which to jitter}
+  \item{horizontal}{ logical. If FALSE, the plot is `transposed' in the
+    sense that the behaviours of x and y are switched. x is now
+    the `factor'.  Interpretation of other arguments change
+    accordingly. See documentation of \code{bwplot} for a fuller
+    explanation.
+  }
   \item{pch, col}{ graphical parameters can be supplied.}
   \item{\dots}{other arguments}
 }

@@ -93,7 +93,7 @@ panel.histogram <- function(x,
 
         }
 
-        h <- hist(x, breaks = breaks, plot = F, ...)
+        h <- hist(x, breaks = breaks, plot = FALSE, ...)
         y <-
             if (type == "count") h$counts
             else if (type == "percent") 100 * h$counts/length(x)

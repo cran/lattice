@@ -35,7 +35,7 @@
   Lattice functions, see \code{\link{xyplot}}.
 
   To learn how to customise the Graphical parameters used by the Lattice
-  functions, see \code{\link{xyplot}}.
+  functions, see \code{\link{lattice.theme}} and \code{\link{lset}}.
 
   To learn how to initialise new devices or change the settings of the
   current device, see \code{\link{trellis.device}}

@@ -24,15 +24,14 @@ prepanel.qqmathline(y, distribution, f.value = ppoints, ...)
 \value{
   usually a list with components \code{xlim, ylim, dx, dy}, the first
   two being used to calculate panel axes limits, the last two for
-  banking computations.
+  banking computations. There are also several undocumented prepanel
+  functions that serve as the default for high level functions, e.g.,
+  \code{prepanel.default.xyplot} 
 }
-\seealso{\code{\link{lowess}}, \code{\link{trellis.par.get}},
-  \code{\link{Lattice}}. See \code{\link[modreg]{loess.smooth}} for
-    further options to \code{prepanel.loess}
+\seealso{\code{\link{trellis.par.get}}, \code{\link{Lattice}}. See
+  \code{\link[modreg]{loess.smooth}} for further options to
+  \code{prepanel.loess}
 }
-\author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
+\author{ Deepayan Sarkar\email{deepayan@stat.wisc.edu}}
 \keyword{dplot}
-
-
-
 

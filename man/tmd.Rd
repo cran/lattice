@@ -3,7 +3,7 @@
 \title{Tukey Mean-Difference Plot}
 \description{
   Create Tukey Mean-Difference Plots from a trellis object returned by
-  \code{xyplot} (and perhaps \code{qq} as well in future)
+  \code{xyplot} and \code{qq}
 }
 \synopsis{
 tmd(object, aspect = "fill", as.table = object$as.table, 
@@ -18,11 +18,12 @@ tmd(object, aspect = "fill", as.table = object$as.table,
 tmd(object, xlab = "mean", ylab = "difference", ...)
 }
 \arguments{
-  \item{object}{ An object of class ``trellis''. Currently only the
-    value returned by \code{xyplot} gives sensible results. }
+  \item{object}{ An object of class ``trellis'' returned by
+    \code{xyplot} or \code{qq}
+  }
   \item{xlab}{ x label}
   \item{ylab}{ y label}
-  \item{\dots}{ other arguments, see \code{trellis.args}}
+  \item{\dots}{ other arguments}
 }
 \details{
   The Tukey Mean-difference plot is produced by modifying the (x,y)

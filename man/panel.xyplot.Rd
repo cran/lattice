@@ -27,10 +27,11 @@ panel.qqmath(...) <- function (...) panel.xyplot(...)
     following: \code{"p", "l", "h", "b", "o", "s", "S", "r", "smooth"}. 
 
     The behaviour if any of the first six are included in \code{type} is
-    similar to the effect of \code{type} in \code{\link{plot}}. `"r"'
-    adds a  regression line (same as \code{\link{panel.lmline}}, except
-    for default graphical parameters), and `"smooth"' adds a lowess fit
-    (same as \code{\link{panel.loess}}).
+    similar to the effect of \code{type} in \code{\link{plot}}. 
+    \code{"r"} adds a  regression line (same as
+    \code{\link{panel.lmline}}, except for default graphical
+    parameters), and \code{"smooth"} adds a lowess fit (same as
+    \code{\link{panel.loess}}).
 
     See example in \code{xyplot} for an example.
   }

@@ -220,7 +220,7 @@ parallel <-
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
-    id.na <- F
+    id.na <- FALSE
     for (j in 1:ncol(x))
         id.na <- id.na | is.na(x[,j])
     for (var in cond)

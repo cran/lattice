@@ -2,6 +2,7 @@
 
 rfs <-
     function(model, layout = c(2,1), xlab = "f-value", ylab = NULL,
+             distribution = qunif,
              panel = function(...) {panel.grid(); panel.qqmath(...)},
              prepanel = NULL, strip = TRUE, ...)
 {
@@ -25,6 +26,6 @@ rfs <-
                  rep("Residuals", nr)))
 
     qqmath(~y|f, data = data, layout = layout, xlab = xlab, ylab = ylab,
-           distribution = qunif, panel = panel,
+           distribution = distribution, panel = panel,
            prepanel = prepanel, strip = strip, ...)
 }
