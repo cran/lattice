@@ -33,7 +33,7 @@ col.whitebg <- function()
          ##regions=list(col=rev(hsv(h=250:349/1000, v=30:129/150,s=.5,
          ##gamma = .6)))
          regions = list(col = heat.colors(100)),
-         strip.background = list(col = c("#ff7f00", "#00ff00", "#00ffff",
+         strip.shingle = list(col = c("#ff7f00", "#00ff00", "#00ffff",
                                  "#0080ff", "#ff00ff", "#ff0000", "#ffff00")),
          strip.background = list(col = c("#ffe5cc", "#ccffcc", "#ccffff",
                                  "#cce6ff", "#ffccff", "#ffcccc", "#ffffcc")),

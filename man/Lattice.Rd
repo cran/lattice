@@ -10,25 +10,27 @@
   presented in Bill Cleveland's 1993 book \emph{Visualizing Data} (see
   the references section for details).
 
-  Lattice is an implementation of Trellis Graphics that aims to emulate
-  the implementation in S/S-Plus, and perhaps to add some functionality
-  of its own. As of now, it is incomplete in that the 3D display
-  functions and contourplots are unimplemented. However, what has been
-  already implemented should be useful. Lattice is built upon the Grid
-  Graphics engine for R being developed by Paul Murrell and requires the
-  \code{grid} package.
+  Lattice is an implementation of Trellis Graphics for R. Its interface
+  is based on the implementation in S-Plus, although there are several
+  differences. Existing Trellis code written for S-Plus should
+  \emph{ideally} work unchanged (or with minimal change) in Lattice. One
+  exception to this is when custom panel functions are used. See the
+  entry for \code{panel} in \code{help(xyplot)} for help with this aspect.
 
-  Existing Trellis code written for S-Plus should \emph{ideally} work
-  unchanged in Lattice. One unavoidable exception to this is when custom
-  panel functions are used. See the entry for \code{panel} in
-  \code{help(xyplot)} for help with this aspect.
+  As of now, most high level Trellis functions in S-Plus have been
+  implemented, although the 3d display functions (notably
+  \code{wireframe} and \code{contourplot}) are often buggy and
+  inefficient.
+
+  Lattice is built upon the Grid Graphics engine for R being developed
+  by Paul Murrell and requires the \code{grid} add-on package.
 
   Type \code{library(help = lattice)} to see a list of (public)
   Lattice graphics functions for which further documentation is
   available. Apart from the documentation accompanying this package, 
   several documents outlining the use of Trellis graphics is available
   from Bell Lab's website that might provide a holistic introduction to
-  the Trellis paradigm.
+  the Trellis paradigm. Lattice also has a website with some tips.
 }
 \seealso{
   To get a general idea of what arguments are generally accepted by
@@ -95,6 +97,9 @@
   Becker, R.A., Cleveland, W.S. and Shyu, M.
   ``The Visual Design and Control of Trellis Display'',
   \emph{Journal of Computational and Graphical Statistics}
+
+  Lattice Webpage:
+  \url{http://packages.r-project.org/lattice/}
 }
 \author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \keyword{dplot}
