@@ -4,16 +4,32 @@ postscript("scales.ps")
 library(lattice)
 
 
+## text axis colors
+
+xyplot(1:10 ~ 1:10,
+       scales =
+       list(y = list(fontfamily = 2, cex = 1,
+            col = "green", col.line = "cyan", tck = 5)),
+       xlab = list("one to ten",  fontfamily = "HersheySerif"),
+       par.settings =
+       list(axis.text = list(col = "red", font = 4, cex = 3),
+            axis.line = list(col = "yellow")))
+
+
 
 ## test for POSIXt handling
 
 y <- Sys.time() + 10000 * 1:100
 x <- rnorm(100)
-b <- gl(2,1,100)
+b <- gl(3,1,100)
 
 xyplot(y ~ x | b)
 xyplot(y ~ x | b, scales = list(relation = "free", rot = 0))
 xyplot(y ~ x | b, scales = "sliced")
+
+
+
+
 
 
 

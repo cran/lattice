@@ -20,6 +20,13 @@
 ### MA 02111-1307, USA
 
 
+
+
+chooseFace <- function(fontface = NULL, font = 1)
+    if (is.null(fontface)) font else fontface
+
+
+
 lpretty <- function(x, ...) { 
     eps <- 1e-10
     at <- pretty(x[is.finite(x)], ...)
@@ -131,7 +138,7 @@ make.list.from.intervals <- function(x)
 
 
 equal.count <-
-  function(x, ...)
+    function(x, ...)
 {
     attr(x, "levels") <- make.list.from.intervals(co.intervals(x,...))
     class(attr(x, "levels")) <- "shingleLevel"
@@ -217,7 +224,6 @@ strip.default <-
              fg = trellis.par.get("strip.shingle")$col[which.given],
              par.strip.text = trellis.par.get("add.text"))
 {
-    default.fontsize <- trellis.par.get("fontsize")$default
     name <- var.name[which.given]
     level <- which.panel[which.given]
     strip.names <- rep(strip.names, length = 2)
@@ -225,102 +231,105 @@ strip.default <-
     if (is.null(factor.levels)) { # means this is a  shingle, as opposed to a factor
         if (is.null(shingle.intervals)) stop("both factor.levels and shingle.intervals cannot be NULL")
         strip.names <- strip.names[2]
-        grid.rect(gp = gpar(fill=bg))
+        grid.rect(gp = gpar(fill = bg, col = bg))
         t <- range(shingle.intervals)
         r <- (range(shingle.intervals[level,])-t[1])/diff(t)
         grid.rect(x = unit(r%*%c(.5,.5),"npc"), width = max(unit( c(diff(r), 1), c("npc", "mm"))),
                   gp = gpar(col=fg, fill=fg))
         if (strip.names)
             grid.text(label = name,
-                      gp = gpar(col = par.strip.text$col,
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-        grid.rect()
+                      gp = 
+                      gpar(col = par.strip.text$col,
+                           fontfamily = par.strip.text$fontfamily,
+                           fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                           cex = par.strip.text$cex))
     }
     else if (is.null(shingle.intervals)) { # factor
         strip.names <- strip.names[1]
         x <- factor.levels
         num <- length(x)
         if (style == 1) {
-            grid.rect(gp = gpar(fill=bg))
+            grid.rect(gp = gpar(fill = bg, col = bg))
             if (strip.names) {
                 grid.text(name,
                           x=unit(0.5, "npc") - unit(1, "mm"),
-                          gp = gpar(col = par.strip.text$col,
-                          font = par.strip.text$font,
-                          fontsize = par.strip.text$cex *
-                          default.fontsize),
+                          gp =
+                          gpar(col = par.strip.text$col,
+                               fontfamily = par.strip.text$fontfamily,
+                               fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                               cex = par.strip.text$cex),
                           just="right")
                 grid.text(":",
                           x=unit(0.5, "npc"),
-                          gp = gpar(col = par.strip.text$col,
-                          font = par.strip.text$font,
-                          fontsize = par.strip.text$cex *
-                          default.fontsize))
+                          gp =
+                          gpar(col = par.strip.text$col,
+                               fontfamily = par.strip.text$fontfamily,
+                               fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                               cex = par.strip.text$cex))
                 grid.text(x[level],
                           x=unit(0.5, "npc") + unit(1, "mm"),
-                          gp = gpar(col = par.strip.text$col,
-                          font = par.strip.text$font,
-                          fontsize = par.strip.text$cex *
-                          default.fontsize),
+                          gp =
+                          gpar(col = par.strip.text$col,
+                               fontfamily = par.strip.text$fontfamily,
+                               fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                               cex = par.strip.text$cex),
                           just="left")
             }
             else grid.text(label = x[level],
-                           gp = gpar(col = par.strip.text$col,
-                           font = par.strip.text$font,
-                           fontsize = par.strip.text$cex *
-                           default.fontsize))
-            grid.rect()
+                           gp =
+                           gpar(col = par.strip.text$col,
+                                fontfamily = par.strip.text$fontfamily,
+                                fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                                cex = par.strip.text$cex))
         }
         else if (style == 2) {
             grid.rect(x = unit((2*level-1)/(2*num), "npc"),
                       width = unit(1/num, "npc"),
-                      gp = gpar(fill=fg, col = NULL))
+                      gp = gpar(fill = fg, col = fg))
             grid.text(label=x,
                       x = (2*1:num-1)/(2*num),
-                      gp = gpar(col = par.strip.text$col,
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
+                      gp =
+                      gpar(col = par.strip.text$col,
+                           fontfamily = par.strip.text$fontfamily,
+                           fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                           cex = par.strip.text$cex))
         }
         else if (style == 3){
-            grid.rect(gp = gpar(fill=bg))
+            grid.rect(gp = gpar(fill = bg, col = bg))
             grid.rect(x = unit((2*level-1)/(2*num), "npc"),
                       width = unit(1/num, "npc"),
-                      gp = gpar(fill=fg, col = NULL))
+                      gp = gpar(fill = fg, col = fg))
             grid.text(label =
                       if (strip.names) paste(name, x[level], sep = ": ")
                       else x[level],
-                      gp = gpar(col = par.strip.text$col, 
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
+                      gp =
+                      gpar(col = par.strip.text$col, 
+                           fontfamily = par.strip.text$fontfamily,
+                           fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                           cex = par.strip.text$cex))
         }
         else if(style == 4){
-            grid.rect(gp = gpar(fill=bg))
+            grid.rect(gp = gpar(fill = bg, col = bg))
             grid.rect(x = unit((2*level-1)/(2*num), "npc"),
                       width = unit(1/num, "npc"),
-                      gp = gpar(col=NULL, fill=fg))
+                      gp = gpar(fill = fg, col = fg))
             grid.text(label=x,
                       x = (2* 1:num - 1)/(2*num),   #using default.units
-                      gp = gpar(col = par.strip.text$col, 
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
+                      gp =
+                      gpar(col = par.strip.text$col, 
+                           fontfamily = par.strip.text$fontfamily,
+                           fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                           cex = par.strip.text$cex))
         }
         else if(style >= 5){
-            grid.rect(gp = gpar(fill=bg))
+            grid.rect(gp = gpar(fill = bg, col = bg))
             grid.text(label=x[level],
                       x = (2* level - 1)/(2*num),   #using default.units
-                      gp = gpar(col = par.strip.text$col, 
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
+                      gp =
+                      gpar(col = par.strip.text$col, 
+                           fontfamily = par.strip.text$fontfamily,
+                           fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
+                           cex = par.strip.text$cex))
         }
     }
 }
@@ -395,23 +404,31 @@ ltext <-
              col = add.text$col,
              cex = add.text$cex,
              srt = 0,
-             font = 1,
+             font = add.text$font,
+             fontfamily = add.text$fontfamily,
+             fontface = add.text$fontface,
              adj = c(.5, .5),
-             pos,
+             pos = NULL,
              ...)
 {
     add.text <- trellis.par.get("add.text")
+
     xy <- xy.coords(x, y)
-    if (!missing(pos))
+    if (length(xy$x) == 0) return()
+    if (!is.null(pos))
         adj <-
             if (pos == 1) c(.5, 1)
             else if (pos == 2) c(1, .5)
             else if (pos == 3) c(.5, 0)
             else if (pos == 4) c(0, .5)
+            else stop("Invalid value of pos")
     if (length(adj) == 1) adj <- c(adj, .5)
     grid.text(label = labels, x = xy$x, y = xy$y,
-              gp = gpar(col = col, font = font,
-              fontsize = cex * trellis.par.get("fontsize")$default),
+              gp =
+              gpar(col = col,
+                   fontfamily = fontfamily,
+                   fontface = chooseFace(fontface, font),
+                   cex = cex),
               just = c(if (adj[1] == 0) "left"
               else if (adj[1] == 1) c("right")
               else "centre",
@@ -444,11 +461,16 @@ lpoints <-
     function(x, y = NULL, type = "p",
              col = plot.symbol$col,
              pch = plot.symbol$pch,
+             font = plot.symbol$font,
+             fontfamily = plot.symbol$fontfamily,
+             fontface = plot.symbol$fontface,
              cex = plot.symbol$cex, ...)
 {
     plot.symbol <- trellis.par.get("plot.symbol")
     lplot.xy(xy.coords(x, y), type = type,
-             col = col, pch = pch, cex = cex, ...)
+             col = col, pch = pch, font = font,
+             fontfamily = fontfamily, fontface = fontface,
+             cex = cex, ...)
 }
 
 
@@ -457,39 +479,35 @@ lpoints <-
 
 
 lplot.xy <-
-    function(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1, font = 1, ...)
-
-    ## currently uses grid.text for non-numeric pch. This would allow
-    ## pch like pch = 'string' or pch = expression(sigma). This
-    ## feature would disappear in the future.
-
+    function(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
+             font = 1, fontfamily = NULL, fontface = NULL,
+             col.line = col,
+             ...)
 {
     x <- xy$x
     y <- xy$y
 
+    fontsize.points <- trellis.par.get("fontsize")$points
+
+    if (length(x) == 0) return()
+
     if (type %in% c("l", "o", "b", "c"))
-        grid.lines(x=x, y=y, gp = gpar(lty=lty, col=col, lwd=lwd),
-                   default.units="native")
+        grid.lines(x = x, y = y,
+                   gp = gpar(lty = lty, col = col.line, lwd = lwd),
+                   default.units = "native")
     
     if (type %in% c("p", "o", "b", "c"))
-
-        if (is.numeric(pch))
-            grid.points(x = x, y = y, size = unit(cex * 2.5, "mm"),
-                    gp = gpar(col = col), #, cex = cex),
+        grid.points(x = x, y = y, 
+                    gp =
+                    gpar(col = col, cex = cex,
+                         fontsize = fontsize.points,
+                         fontfamily = fontfamily,
+                         fontface = chooseFace(fontface, font)),
                     pch = pch, 
-                    default.units="native")
-        else
-            grid.points(x = x, y = y, 
-                    gp = gpar(col = col, cex = cex),
-                    pch = pch, 
-                    default.units="native")
+                    default.units = "native")
 
-
-            #grid.text(label = pch, x = x, y = y,
-            #          gp = gpar(col = col, fontsize = cex * trellis.par.get("fontsize")$default),
-            #          default.units = "native")
-
-    if (type %in% c("s", "S")) {
+    if (type %in% c("s", "S"))
+    {
         ord <- sort.list(x)
         n <- length(x)
         xx <- numeric(2*n-1)
@@ -500,7 +518,7 @@ lplot.xy <-
         xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
         yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
         grid.lines(x=xx, y=yy,
-                   gp = gpar(lty=lty, col=col, lwd=lwd),
+                   gp = gpar(lty=lty, col=col.line, lwd=lwd),
                    default.units="native")
     }
 
@@ -516,16 +534,11 @@ lplot.xy <-
         ##print(zero) ?
         ##print(x) 
         for (i in seq(along=x))
-            grid.lines(x=rep(x[i],2), y=c(y[i], zero),
-                       gp = gpar(lty=lty, col=col, lwd=lwd),
-                       default.units="native")
+            grid.lines(x = rep(x[i],2), y = c(y[i], zero),
+                       gp = gpar(lty = lty, col = col.line, lwd = lwd),
+                       default.units = "native")
     }
+    return()
 }
-
-
-
-
-
-
 
 

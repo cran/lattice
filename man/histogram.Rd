@@ -1,64 +1,65 @@
 \name{histogram}
+\alias{histogram}
+\alias{densityplot}
 \title{Histograms and Kernel Density Plots}
 \synopsis{
 histogram(formula,
-          data = parent.frame(),
-          allow.multiple = FALSE,
-          outer = FALSE,
-          auto.key = FALSE,
-          aspect = "fill",
-          layout = NULL,
-          panel = "panel.histogram",
-          prepanel = NULL,
-          scales = list(),
-          strip = TRUE,
-          groups = NULL,
-          xlab,
-          xlim,
-          ylab,
-          ylim,
-          type = c("percent", "count", "density"),
-          nint = if (is.factor(x)) length(levels(x))
-          else round(log2(length(x)) + 1),
-          endpoints = extend.limits(range(x[!is.na(x)]), prop = 0.04),
-          breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
-          else do.breaks(endpoints, nint),
-          equal.widths = TRUE,
-          ...,
-          subscripts = !is.null(groups),
-          subset = TRUE)
-
+             data = parent.frame(),
+             allow.multiple = is.null(groups) || outer,
+             outer = FALSE,
+             auto.key = FALSE,
+             aspect = "fill",
+             panel = "panel.histogram",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab,
+             xlim,
+             ylab,
+             ylim,
+             type = c("percent", "count", "density"),
+             nint = if (is.factor(x)) length(levels(x))
+             else round(log2(length(x)) + 1),
+             endpoints = extend.limits(range(x[!is.na(x)]), prop = 0.04),
+             breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
+             else do.breaks(endpoints, nint),
+             equal.widths = TRUE,
+             drop.unused.levels,
+             ...,
+             subscripts = !is.null(groups),
+             subset = TRUE)
 densityplot(formula,
-            data = parent.frame(),
-            allow.multiple = FALSE,
-            outer = FALSE,
-            auto.key = FALSE,
-            aspect = "fill",
-            layout = NULL,
-            panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
-            prepanel = NULL,
-            scales = list(),
-            strip = TRUE,
-            groups = NULL,
-            xlab,
-            xlim,
-            ylab,
-            ylim,
-            bw = NULL,
-            adjust = NULL,
-            kernel = NULL,
-            window = NULL,
-            width = NULL,
-            give.Rkern = FALSE,
-            n = 50,
-            from = NULL,
-            to = NULL,
-            cut = NULL,
-            na.rm = NULL,
-            ...,
-            panel.groups = "panel.densityplot",
-            subscripts = !is.null(groups),
-            subset = TRUE)
+             data = parent.frame(),
+             allow.multiple = is.null(groups) || outer,
+             outer = FALSE,
+             auto.key = FALSE,
+             aspect = "fill",
+             panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab,
+             xlim,
+             ylab,
+             ylim,
+             bw = NULL,
+             adjust = NULL,
+             kernel = NULL,
+             window = NULL,
+             width = NULL,
+             give.Rkern = FALSE,
+             n = 50,
+             from = NULL,
+             to = NULL,
+             cut = NULL,
+             na.rm = NULL,
+             drop.unused.levels,
+             ...,
+             panel.groups = "panel.densityplot",
+             subscripts = !is.null(groups),
+             subset = TRUE)
 }
 \usage{
 histogram(formula,
@@ -78,14 +79,12 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
 \description{
   Draw Histograms and Kernel Density Plots
 }
-\alias{histogram}
-\alias{densityplot}
 \arguments{
   \item{formula}{A formula of the form \code{~ x | g1 * g2 * \dots}
-    indicates that histograms of \code{x} should be produced conditioned
-    on the levels of the (optional) variables \code{g1,g2,\dots}. When
-    the conditioning variables \code{g1,g2,\dots} are missing, the
-    leading \code{~} can be dropped.
+    indicates that histograms or Kernel Density estimates of \code{x}
+    should be produced conditioned on the levels of the (optional)
+    variables \code{g1,g2,\dots}. When the conditioning variables
+    \code{g1,g2,\dots} are missing, the leading \code{~} can be dropped.
     
     \code{x} can be numeric (or factor for \code{histogram}), and each
     of \code{g1,g2,\dots} must be either factors or shingles.
@@ -95,14 +94,14 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
     sign. What happens in this case is described in details in the
     documentation for \code{\link{xyplot}}.
   }
-  \item{data}{ optional data frame in which variables are to be
-    evaluated} 
+  \item{data}{
+    optional data frame in which variables are to be evaluated
+  }
   \item{type}{ Character string indicating type of histogram to be
     drawn. ``percent'' and ``count'' give relative frequency and
     frequency histograms, and can be misleading when breakpoints are not
-    equally spaced. ``density'' produces a density scale histogram. (See
-    second example below.) (This option is missing in Splus.)
-    
+    equally spaced. ``density'' produces a density scale histogram.
+
     \code{type} defaults to ``percent'', except when the breakpoints
     are unequally spaced or \code{breaks = NULL}, when it defaults to
     ``density''.
@@ -142,8 +141,8 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
     the case of \code{densityplot}, if the default panel function is
     used, then arguments appropriate to \code{density} can be
     included. This can control the details of how the Kernel Density
-    Estimates are calculated. See documentation for \code{density} for
-    details.
+    Estimates are calculated. See documentation for
+    \code{\link{density}} for details.
   }
 }
 \value{
@@ -169,7 +168,7 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
 \note{
   The form of the arguments accepted by the default
   panel function \code{panel.histogram} is different from that in
-  S-Plus. Whereas S-Plus calculates the heights inside \code{histogram}
+  S-PLUS. Whereas S-PLUS calculates the heights inside \code{histogram}
   and passes only the breakpoints and the heights to the panel function,
   here the original variable \code{x} is passed along with the
   breakpoints. This allows plots as in the second example below.
@@ -184,18 +183,21 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
+require(stats)
 data(singer)
+
 histogram( ~ height | voice.part, data = singer, nint = 17,
           endpoints = c(59.5, 76.5), layout = c(2,4), aspect = 1,
           xlab = "Height (inches)")
-## The following would not be possible in S-Plus
+
 histogram( ~ height | voice.part, data = singer,
           xlab = "Height (inches)", type = "density",
           panel = function(x, ...) {
               panel.histogram(x, ...)
-              panel.mathdensity(dmath = dnorm,
+              panel.mathdensity(dmath = dnorm, col = "black",
                                 args = list(mean=mean(x),sd=sd(x)))
           } )
+
 densityplot( ~ height | voice.part, data = singer, layout = c(2, 4),  
             xlab = "Height (inches)", bw = 5)
 }

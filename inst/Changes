@@ -1,5 +1,102 @@
 
 
+
+Changes in lattice 0.9
+======================
+
+
+
+improvements
+------------
+
+
+ o Axis labelling code has been rewritten to internally use S3 method
+   dispatch, with (unexported) methods for numeric (default),
+   character (for factors), POSIXct and date. More methods can be
+   considered on request.  reversed limits are now allowed.
+
+ o contourplot can now handle missing rows in the data frame
+   (equivalent to NA's in z). contourplot now uses contourLines().
+
+ o cloud and wireframe now use better 3-D projection calculations, and
+   are generally much better than before.  wireframe is much faster,
+   and has a better shading algorithm. It can also handle NA's and
+   missing rows.
+
+ o splom (specifically panel.pairs) has more functionality, including
+   the option of using different panel functions below and above the
+   diagonal, user defined diagonal panels, and a table-like layout
+   (similar to pairs)
+
+ o font specifications now allow for fontface and fontfamily
+
+ o much improved update method for trellis objects
+
+ o setting auto.key = TRUE now computes key at printing time,
+   honouring any changes in trellis settings
+
+
+
+new features
+------------
+
+ o arbitrary reordering of conditioning variables, as well as of
+   levels within a conditioning variable. This works in the update
+   method (as well as high-level plots), making it easy to examine
+   parts of a multipanel trellis display and view it in different
+   conditioning orders.
+
+ o extended key functionality (via the legend argument) that allows
+   multiple legends and the use of arbitrary grid objects as keys
+
+ o option to NOT drop unused factor levels when subsetting, by setting
+   drop.unused.levels = FALSE or 
+   drop.unused.levels = list(cond = FALSE, data = FALSE) 
+   in high-level functions like xyplot.
+
+ o Ability to attach settings to a trellis object (rather than
+   changing the global settings), via argument par.settings in high
+   level calls.
+
+ o Wireframe can now draw parametrized 3-D surfaces like spheres
+   (generally of the form f(u,v) = (x(u,v), y(u,v), z(u,v)), for
+   (u,v) in the square [0,1] x [0,1]).
+
+ o Functionality similar to locator() (possible due to recently added
+   features of grid). All panels should have predictable viewport
+   names, which can be used in seekViewport() to grab a particular
+   viewport. grid.locator() can subsequently be used to locate points
+   in the native coordinate system of that panel.
+
+
+changes in behaviour
+---------------------
+
+ o allow.multiple now defaults to TRUE (whenever it makes sense),
+   since '+' in a formula is interpreted differently than S-PLUS
+   anyway. As in model formulae, I(x+y) works as expected.
+
+
+ o default behaviour of qq and qqmath changed (from S-PLUS behaviour)
+   to match corresponding base functions qqplot and qqnorm
+
+
+bug fixes
+---------
+
+ o Fixed important bug concerning interaction of subscripts and
+   subsets
+   
+
+ o lots of other fixes, mostly obscure
+
+
+
+
+
+
+
+
 Changes in lattice 0.8
 ======================
 
@@ -17,6 +114,7 @@ Clipping can now be turned off in panels and strips via the
 trellis.par.get("clip") setting.
 
 See the Changelog for other minor changes. 
+
 
 
 

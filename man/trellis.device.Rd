@@ -14,7 +14,7 @@ trellis.device(device = getOption("device"),
                bg = NULL,
                new = TRUE,
                retain = FALSE,
-               \dots)
+               ...)
 canonical.theme(name, color)
 }
 \arguments{
@@ -28,10 +28,11 @@ canonical.theme(name, color)
   }
   \item{theme}{ list of components that change the settings of the
     device opened, or, a function that when called produces such a
-    list. The function name can be supplied as a quoted string. A
-    possible usage is to change the default settings at session startup,
-    for example by setting \code{options(lattice.theme =
-      "col.whitebg")}. If \code{theme} is a function, it will not be
+    list. The function name can be supplied as a quoted string.
+
+    A possible use of this argument is to change the default settings at
+    session startup, for example by setting \code{options(lattice.theme
+      = "col.whitebg")}. If \code{theme} is a function, it will not be
     supplied any arguments, however, it is guaranteed that a device will
     already be open when it is called, so one may use \code{.Device}
     inside the function to ascertain what device has been opened.
@@ -41,9 +42,11 @@ canonical.theme(name, color)
     started. If \code{FALSE},  the options for the current device are
     changed to the defaults determined by the other arguments.
   }
-  \item{retain}{ logical. If \code{TRUE} and a setting for this device
-    already exists, then that is used instead of the defaults for this
-    device. By default, pre-existing settings are overwritten (and lost).
+  \item{retain}{
+    logical. If \code{TRUE} and a setting for this device already
+    exists, then that is used instead of the defaults for this
+    device. By default, pre-existing settings are overwritten (and
+    lost).
   }
   \item{name}{ name of the device for which the setting is required, as
     returned by \code{.Device}
@@ -54,16 +57,17 @@ canonical.theme(name, color)
 }
 \details{
   \code{trellis.device} calls the \code{device} function to start a
-  display, and sets an appropriate component of the global variable
-  \code{lattice.theme} to appropriate (device-specific) values.
+  display, and sets an appropriate component of the variable
+  \code{lattice.theme} (in an unexported environment named
+  \code{.LatticeEnv}) to appropriate (device-specific) values.
 
   The device specific settings are determined by \code{canonical.theme}
   which returns a list (see below).
 
-  The settings can subsequently be handled by the  interface functions
-  \code{trellis.par.get} and \code{trellis.par.set} (also the
-  \code{lset} interface). 
+  The settings can subsequently be handled by the interface functions
+  \code{trellis.par.get}, \code{trellis.par.set} and \code{lset}
 }
+
 \value{
   \code{canonical.theme} returns a list of components defining graphical
   parameter settings for Lattice displays. It is used internally in
@@ -71,6 +75,7 @@ canonical.theme(name, color)
   \code{lset}, or even as \code{theme} in \code{trellis.device} to use
   the defaults for another device.
 }
+
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{
   \code{\link{trellis.par.set}}, \code{\link{lset}}, 

@@ -1,24 +1,159 @@
+2004-04-08  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/qq.R, R/qqmath.R, man/qq.Rd, man/qqmath.Rd: changed default
+	behaviour of qq and qqmath to use actual data instead of sample
+	quantiles. The new behaviour is different from the corresponding
+	S-PLUS functions, but is closer to analogous base functions qqplot
+	and qqnorm
+
+
+2004-03-22  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/print.trellis.R: changed behaviour of skip
+
+	* man/xyplot.Rd: updated docs for skip
+
+2004-03-19  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* utilities.3d.Rd: removed palette.shade from docs
+
+	* panel.cloud.Rd: adjusted docs for panel.3dwire's shade.colors arg
+
+	* latticeParseFormula.Rd: fixed docs for drop
+
+	* R/*.R: added drop.unused.levels as a high-level argument to
+	xyplot etc. The earlier behaviour was a trellis.par.get-table
+	setting, but that doesn;t make sense because this is not a display
+	parameter
+
+2004-03-17  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* panel.functions.Rd: added panel.rug in docs
+
+	* lset.Rd: added link to trellis.device
+
+2004-03-13  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* panel.cloud.Rd: added note saying x,y,z could all be matrices
+
+	* cloud.Rd: added docs in wireframe for parametrized 3-D surfaces
+
+
+2004-03-12  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* DESCRIPTION: updated version
+
+	* tests/test.R: minor changes
+
+	* demo/lattice.R: added wireframe sphere
+
+	* R/densityplot.R: fixed default prepanel function to not throw an
+	error (in density()) when panel has only 1 point
+
+	* R/common.R: modified latticeParseFormula to keep matrices
+	unchanged (so that a formula of the form matrix ~ matrix * matrix
+	can be used in wireframe)
+
+	* R/cloud.R: added (way cool) changes to allow wireframe to render
+	3-D surfaces parametrized on a grid (e.g. a sphere)
+
+	* man/update.trellis.Rd: added mention of legend
+
+	* man/panel.pairs.Rd: fixed synopsis
+
+	* man/print.trellis.Rd: fixed grid links (hopefully)
+
+
+
+2004-03-08  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* miscellaneous.R: added a col.line arg for lplot.xy to
+	distinguish between color for lines and points (not that it
+	matters here, but panel.xyplot and panel.superpose make the
+	distinction, and it's easier to just pass it down here)
+
+	* cloud.R, levelplot.R, scales.R, settings.R, update.trellis.R,
+	zzz.R: many improvements to cloud and wireframe, plus misc changes
+
+2004-03-05  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* tmd.R: tmd simplified using update(), fixed potential xlab/ylab
+	bug
+
+	* miscellaneous.R, print.trellis.R, update.trellis.R:
+	obscure improvements to axis setting usage and update method
+
+	* R: bunch of updates, mostly dealing with fonts (fontfaces,
+	fontwidths) and labels (main, sub, xlab, ylab)
+
+
+2004-03-03  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* man/xyplot.Rd: added docs for perm.cond, index.cond; updated
+	other parts
+
+	* R: bunch of fairly major changes, including code reorganization
+	and addition of features, too numerous to list. A summary of the
+	changes is available in inst/Changes
+
+2004-03-02  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* man:	doc updates mostly to ensure R CMD check passage
+
+2004-02-14  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* xyplot.Rd: added entry for par.settings, corrected statements
+	about subscripts
+
+2004-02-13  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* xyplot.Rd:
+	added note on panel.number and panel.counter arguments. Has a related
+	brief and oblique mention of the conditioning variable permutation /
+	reordering stuff. Not sure what the best place to put a more detailed
+	description is.
+
+2004-02-10  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* man/Lattice.Rd: wireframe is no longer slow, so removed
+	statement to that effect. Replaced S-Plus with S-PLUS
+
+2004-02-08  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* man/print.trellis.Rd: added warning not to use aspect != "fill"
+	with explicit panel.width and panel.height
+
+2004-02-05  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* man/xyplot.Rd, cloud.Rd: fixed errors of the form
+	\link{\code{stuff}}
+
+
+2003-12-20  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* DESCRIPTION, NAMESPACE : made changes to deal with package
+	reorganization in R 1.9.0-pre. Some other files changed as well
+	(mostly dealing with loess.smooth, which is now in stats)
+
+
 2003-10-17  Deepayan Sarkar <deepayan@stat.wisc.edu>
 
-	* R/common.R : added trim = TRUE in format() when calculating axis
+	* R/axis.R : added trim = TRUE in format() when calculating axis
 	tick labels. Without this, labels often had leading spaces,
 	causing a visible 'right shift' (reported by Patrick Connolly).
 
-	
+
+2003-10-10  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* R/ : split common.R into common.R, axis.R and scales.R
+
+
 2003-10-09  Deepayan Sarkar <deepayan@stat.wisc.edu>
 
 	* R/levelplot.R: Fixed panel.levelplot bug where nothing was drawn
 	if a panel contained only one unique value of x/y (reported by
 	Wolfram Fischer).
 
-	
-2003-09-28  Deepayan Sarkar <deepayan@stat.wisc.edu>
-
-	* : started restructuring axis calculations, but too late for
-	1.8.0. So, took 0.8-2 and fixed doc mismatches, and also hacked in
-	a fix for POSIXt scales not being plotted for
-	relation="same". (This may have broken other things, but I hope
-	not.) Still no fix for MASS contourplot example with NA's.
 
 
 2003-09-15  Deepayan Sarkar <deepayan@stat.wisc.edu>

@@ -15,7 +15,7 @@ data(sunspot)
 data(environmental)
 }
 \description{
-  These data sets are included to facilitate the same examples as S-Plus
+  These data sets are included to facilitate the same examples as S-PLUS
   trellis. (Detailed descriptions of the datasets are omitted for now.)
 }
 \source{

@@ -15,8 +15,9 @@ panel.parallel(z, subscripts, col, lwd, lty, ...)
     for \code{superpose.line}).}
   \item{\dots}{other arguments}
 }
+\details{difficult to describe. See example for \code{parallel}}
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
-\seealso{\code{\link{parallel}}, \code{\link{trellis.par.get}}}
+\seealso{\code{\link{parallel}}}
 \keyword{dplot}
 
 

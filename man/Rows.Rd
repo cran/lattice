@@ -17,7 +17,7 @@ Rows(x, which)
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{xyplot}}, \code{\link{Lattice}}}
-\keyword{dplot}
+\keyword{utilities}
 
 
 

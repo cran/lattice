@@ -16,14 +16,20 @@ larrows(x0, y0, x1, y1, x2, y2, angle = 30, code = 2, length = NULL,
 llines(x, y = NULL, type = "l", col = plot.line$col, lty = plot.line$lty, 
     lwd = plot.line$lwd, \dots)
 lplot.xy(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
-font =1, \dots)  
+         font = 1, fontfamily = NULL, fontface = NULL,
+         col.line = col, \dots)  
 lpoints(x, y = NULL, type = "p", col = plot.symbol$col,
         pch = plot.symbol$pch, 
+        font = plot.symbol$font,
+        fontfamily  = plot.symbol$fontfamily,
+        fontface = plot.symbol$fontface,
         cex = plot.symbol$cex, \dots)  
 lsegments(x0, y0, x1, y1, x2, y2, col = add.line$col, lty = add.line$lty, 
     lwd = add.line$lwd, \dots)
 ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
-    cex = add.text$cex, srt = 0, font = 1, adj = c(0.5, 0.5), pos, \dots)  
+    cex = add.text$cex, srt = 0,
+    font, fontfamily = add.text$fontfamily,
+    fontface = add.text$fontface, adj = c(0.5, 0.5), pos = NULL, \dots)  
 }
 \usage{
 larrows(x0, y0, x1, y1, proportion, \dots)

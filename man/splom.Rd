@@ -2,30 +2,42 @@
 \title{Scatter Plot Matrices}
 \synopsis{
 splom(formula,
-      data = parent.frame(),
-       aspect = 1,
-       between = list(x = 0.5, y = 0.5),
-       layout = NULL,
-       panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
-       prepanel = NULL,
-       scales = list(),
-       strip = TRUE,
-       groups = NULL,
-       xlab = "Scatter Plot Matrix",
-       xlim,
-       ylab = NULL,
-       ylim,
-       superpanel = "panel.pairs",
-       pscales = 5,
-       varnames,
-       ...,
-       subscripts = !is.null(groups),
-       subset = TRUE)
-parallel(formula, data = parent.frame(), aspect = "fill", between = list(x = 0.5, 
-    y = 0.5), layout = NULL, panel = panel.parallel, prepanel = NULL, 
-    scales = list(), strip = TRUE, groups = NULL, xlab = NULL, 
-    xlim, ylab = NULL, ylim, varnames, ..., subscripts = !is.null(groups), 
-    subset = TRUE)
+             data = parent.frame(),
+             auto.key = FALSE,
+             aspect = 1,
+             between = list(x = 0.5, y = 0.5),
+             panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab = "Scatter Plot Matrix",
+             xlim,
+             ylab = NULL,
+             ylim,
+             superpanel = "panel.pairs",
+             pscales = 5,
+             varnames,
+             drop.unused.levels,
+             ...,
+             subset = TRUE)
+parallel(formula,
+             data = parent.frame(),
+             aspect = "fill",
+             between = list(x = 0.5, y = 0.5),
+             panel = "panel.parallel",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab = NULL,
+             xlim,
+             ylab = NULL,
+             ylim,
+             varnames,
+             drop.unused.levels,
+             ...,
+             subset = TRUE)
 }
 \usage{
 splom(formula,
@@ -37,8 +49,8 @@ splom(formula,
       pscales = 5,
       varnames, \dots)
 parallel(formula,
-         data = list(x = 0.5, y = 0.5),
-         between,
+         data,
+         between = list(x = 0.5, y = 0.5),
          panel = "panel.parallel",
          varnames,
          \dots)
@@ -56,7 +68,7 @@ parallel(formula,
     \code{g1,g2,\dots} may be omitted, in which case the leading
     \code{~} may also be omitted.
   }
-  \item{data}{a data frame containing values for any variables in the
+  \item{data}{ a data frame containing values for any variables in the
     formula. By default the environment where the function 
     was called from is used.
   }
@@ -69,8 +81,18 @@ parallel(formula,
     show the panels of a splom plot with space between them.
   }
   \item{panel}{
-    function that is used to plot the data on each subpanel of a splom
-    display. Usual interpretation for \code{densityplot}.
+    Usual interpretation for \code{parallel}, namely the function that
+    creates the display within each panel. 
+
+    For \code{splom}, the terminology is slightly complicated. The role
+    played by the panel function in most other high-level functions is
+    played here by the \code{superpanel} function, which is responsible
+    for the display for each conditional data subset. \code{panel} is
+    simply an argument to the default \code{superpanel} function
+    \code{panel.pairs}, and is passed on to it unchanged. It is used
+    there to create each pairwise display. See \code{\link{panel.pairs}}
+    for more useful options.
+
   }
   \item{superpanel}{ 
     function that sets up the splom display, by default as a scatterplot
@@ -101,9 +123,8 @@ parallel(formula,
   limits, tick locations and prepanel calcultions. If you are trying to
   fine-tune your \code{splom} plot, definitely look at the
   \code{\link{panel.pairs}} help page. The \code{scales} argument is
-  usually not very useful in \code{splom} (see the examples for a
-  legitimate use, though), and trying to change it may have undesired
-  effects.
+  usually not very useful in \code{splom}, and trying to change it may
+  have undesired effects.
 
   \code{parallel} draws Parallel Coordinate Plots. (Difficult to
   describe, see example.)
@@ -119,7 +140,7 @@ parallel(formula,
   by default) will plot it on an appropriate plotting device.
 }
 \seealso{
-  \code{\link{xyplot}}, \code{\link{Lattice}} 
+  \code{\link{xyplot}}, \code{\link{Lattice}}, \code{\link{panel.pairs}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
@@ -141,6 +162,7 @@ splom(~iris[1:3]|Species, data = iris,
                 lab = c("Three", "Varieties", "of", "Iris"),
                 cex = 2)
       })
+parallel(~iris[1:4] | Species, iris) 
 }
 \keyword{hplot}
 

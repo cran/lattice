@@ -20,11 +20,10 @@
 
 
 .onLoad <- function(lib, pkg) {
-  library.dynam(pkg, pkg, lib )
-  #import(grid) # will this do ?  apparently not
-  ## do we want grid functions visible
-  ##if (!require(grid))
-  ##    stop("lattice requires grid, but grid couldn't be loaded")
+    library.dynam(pkg, pkg, lib )
+    ## Note: grid functions will not be visible
+    ## if (!require(grid))
+    ##    stop("lattice requires grid, but grid couldn't be loaded")
 }
 
 .LatticeEnv <- new.env()
@@ -46,15 +45,19 @@ assign("lattice.theme", list(), env = .LatticeEnv)
 
 
 
-# old (pre NAMESPACE version)
-#.First.lib <- function(lib, pkg) {
-#  library.dynam(pkg, pkg, lib )
-#  if (!require(grid))
-#      stop("lattice requires grid, but grid couldn't be loaded")
-#}
+## old (pre NAMESPACE version). If you need to rename the NAMESPACE
+## file (for testing, say), also uncomment the code below. Nothing
+## else need be changed.
 
-## Need global variable to handle more in print.trellis
-#.lattice.print.more <- FALSE
+
+
+
+# .First.lib <- function(lib, pkg) {
+#     library.dynam(pkg, pkg, lib )
+#     if (!require(grid))
+#         stop("lattice requires grid, but grid couldn't be loaded")
+# }
+
 
 
 

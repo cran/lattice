@@ -1,5 +1,5 @@
-% $Id: strip.default.Rd,v 1.7 2002/10/29 09:43:42 deepayan Exp $
 \name{strip.default}
+\alias{strip.default}
 \title{Default Trellis strip function}
 \usage{
 strip.default(which.given,
@@ -13,9 +13,10 @@ strip.default(which.given,
               fg = trellis.par.get("strip.shingle")$col[which.given],
               par.strip.text = trellis.par.get("add.text"))
 }
-\description{ function that draws the strips in trellis functions.
+\description{
+  function that draws the strips in conditional trellis plots.
 }
-\alias{strip.default}
+
 \arguments{
   \item{which.given}{ integer index specifying which of the conditioning
     variables this strip corresponds to. 
@@ -67,21 +68,19 @@ strip.default(which.given,
     1, except that the strip text is not centred, it is instead
     postioned according to the current level.
 
-    Note that unlike S-Plus, the default value of \code{style} is 1.
+    Note that unlike S-PLUS, the default value of \code{style} is 1.
   }
   \item{par.strip.text}{ list with parameters controlling the text on
     each strip, with components \code{col, cex, font}
   }
-  \item{bg}{ strip background color.
-  }
-  \item{fg}{ strip foreground color.
-  }
+  \item{bg}{ strip background color. }
+  \item{fg}{ strip foreground color. }
 }
 \details{ default strip function for trellis functions. Useful 
   mostly because of the \code{style} argument --- non-default styles
   are often more informative, especially when the names of the levels
   of the factor \code{x} are small. Typical use is as 
-  \code{strip = function(\dots) strip.default(style=2,\dots)}
+  \code{strip = function(\dots) strip.default(style=2,\dots)}.
 }
 \seealso{
   \code{\link{xyplot}}, \code{\link{Lattice}} 

@@ -1,59 +1,59 @@
 \name{xyplot}
 \title{Common Bivariate Trellis Plots}
+\alias{xyplot}
 \alias{barchart}
 \alias{bwplot}
 \alias{dotplot}
 \alias{stripplot}
-\alias{xyplot}
 \synopsis{
 xyplot(formula,
-       data = parent.frame(),
-       allow.multiple = FALSE,
-       outer = FALSE,
-       auto.key = FALSE,
-       aspect = "fill",
-       layout = NULL,
-       panel = if (is.null(groups)) "panel.xyplot"
-       else "panel.superpose",
-       prepanel = NULL,
-       scales = list(),
-       strip = TRUE,
-       groups = NULL,
-       xlab,
-       xlim,
-       ylab,
-       ylim,
-       ...,
-       subscripts = !is.null(groups),
-       subset = TRUE)
+             data = parent.frame(),
+             allow.multiple = is.null(groups) || outer,
+             outer = FALSE,
+             auto.key = FALSE,
+             aspect = "fill",
+             panel = if (is.null(groups)) "panel.xyplot"
+             else "panel.superpose",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab,
+             xlim,
+             ylab,
+             ylim,
+             drop.unused.levels = TRUE,
+             ...,
+             subscripts = !is.null(groups),
+             subset = TRUE)
 bwplot(formula,
-       data = parent.frame(),
-       allow.multiple = FALSE,
-       outer = FALSE,
-       auto.key = FALSE,
-       aspect = "fill",
-       layout = NULL,
-       panel = "panel.bwplot",
-       prepanel = NULL,
-       scales = list(),
-       strip = TRUE,
-       groups = NULL,
-       xlab,
-       xlim,
-       ylab,
-       ylim,
-       box.ratio = 1,
-       horizontal = NULL,
-       ...,
-       subscripts = !is.null(groups),
-       subset = TRUE)
+             data = parent.frame(),
+             allow.multiple = is.null(groups) || outer,
+             outer = FALSE,
+             auto.key = FALSE,
+             aspect = "fill",
+             panel = "panel.bwplot",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab,
+             xlim,
+             ylab,
+             ylim,
+             box.ratio = 1,
+             horizontal = NULL,
+             drop.unused.levels = TRUE,
+             ...,
+             subscripts = !is.null(groups),
+             subset = TRUE)
 }
 \usage{
 xyplot(formula,
        data = parent.frame(),
        panel = if (is.null(groups)) "panel.xyplot"
                else "panel.superpose",
-       allow.multiple = TRUE,
+       allow.multiple,
        outer,
        aspect = "fill",
        as.table = FALSE,
@@ -61,6 +61,7 @@ xyplot(formula,
        groups,
        key,
        auto.key = FALSE,
+       legend,
        layout,
        main,
        page,
@@ -74,6 +75,10 @@ xyplot(formula,
        xlim,
        ylab,
        ylim,
+       drop.unused.levels = TRUE,
+       par.settings,
+       perm.cond,
+       index.cond,
        \dots,
        panel.groups = "panel.xyplot",
        subscripts,
@@ -135,9 +140,18 @@ bwplot(formula,
     that plots of \code{y} (on the y axis) versus \code{x} (on the x
     axis) should be produced conditional on the variables
     \code{g1, g2, \dots}. However, the conditioning variables
-    \code{g1,g2,\dots} may be omitted. For S-Plus compatibility, the
+    \code{g1,g2,\dots} may be omitted. For S-PLUS compatibility, the
     formula can also be written as \code{y ~ x | g1 + g2 + \dots}.
 
+    For all these functions other than \code{xyplot}, a formula of the
+    form \code{ ~ x | g1 * g2 * \dots} is also allowed. In that case,
+    \code{y} defaults to \code{as.factor(names(x))} if \code{x} is
+    named, and a factor with a single level otherwise.
+
+    Although it is not recommended, usage of the form \code{dotplot(x)}
+    (where the formula argument is not a formula at all) is also
+    allowed, and is equivalent to \code{dotplot{ ~ x}}.
+    
     The conditioning variables \code{g1, g2, \dots} must be either
     factors or shingles (Shingles are a way of processing numeric
     variables for use in conditioning. See documentation of
@@ -148,6 +162,14 @@ bwplot(formula,
     produced using the points \code{(x,y)} for the subset of the data
     (also called packet) defined by that combination.
 
+    The order in which the panels are drawn depends on the order in
+    which the conditioning variables are specified (\code{g1} varies
+    fastest). Within a conditioning variable, the order depends on the
+    order of the levels (which for factors is usually in alphabetical
+    order). Both of these orders can be modified using the
+    \code{order.cond} and \code{perm.cond} arguments, typically in the
+    \code{update} method.
+
     Numeric conditioning variables are converted to shingles by the
     function \code{shingle} (however, using \code{\link{equal.count}}
     might be more appropriate in many cases) and character vectors are
@@ -157,14 +179,10 @@ bwplot(formula,
 
     A special case is when the left and/or right sides of the formula
     (before the conditioning variables) contain a `+' sign, e.g.,
-    \code{y1+y2 ~ x | a*b}. Normally, this would result in the sum of
-    the vectors \code{y1} and \code{y2} being plotted against
-    \code{x}. However, if the \code{allow.multiple} flag is set to
-    \code{TRUE}, this is treated differently. The formula given above,
-    for instance, would be taken to mean that the user wants to plot
-    both \code{y1~x | a*b} and \code{y2~x | a*b}, but with the
-    \code{y1~x} and \code{y2~x} superposed in each panel (this is
-    slightly more complicated in \code{barchart}). The two parts
+    \code{y1+y2 ~ x | a*b}. This formula would be taken to mean that the
+    user wants to plot both \code{y1~x | a*b} and \code{y2~x | a*b}, but
+    with the \code{y1~x} and \code{y2~x} superposed in each panel (this
+    is slightly more complicated in \code{barchart}). The two parts
     would be distinguished by different graphical parameters. This is
     essentially what the \code{groups} argument would produce, if
     \code{y1} and \code{y2} were concatenated to produce a longer
@@ -173,10 +191,13 @@ bwplot(formula,
     internally using the \code{\link{reshape}} function. This feature
     cannot be used in conjunction with the \code{groups} argument.
 
+    To interpret \code{y1+y2} as a sum, one can either set
+    \code{allow.multiple=FALSE} or use \code{I(y1+y2)}.
+
     A variation on this feature is when the \code{outer} argument is set
     to \code{TRUE} as well as \code{allow.multiple}. In that case, the
     plots are not superposed in each panel, but instead separated into
-    different panels (as if a new conditioning variable has been added).
+    different panels (as if a new conditioning variable had been added).
     
     The \code{x} and \code{y} variables should both be numeric in
     \code{xyplot}, and an attempt is made to coerce them if
@@ -202,9 +223,13 @@ bwplot(formula,
   \item{allow.multiple, outer}{
     logical flags to control what happens with formulas like \code{y1 +
       y2 ~ x}. See the entry for \code{formula} for details.
+    \code{allow.multiple} defaults to \code{TRUE} whenever it makes
+    sense, and \code{outer} defaults to \code{FALSE} except when
+    \code{groups} is explicitly specified or grouping doesn't make sense
+    for the default panel function
   }
-  \item{box.ratio}{ applicable to \code{bwplot, bachart} and
-    \code{strpplot}, specifies the ratio of the width of the rectangles
+  \item{box.ratio}{ applicable to \code{bwplot, barchart} and
+    \code{stripplot}, specifies the ratio of the width of the rectangles
     to the inter rectangle space.
   }
   \item{horizontal}{ logical, applicable to \code{bwplot, dotplot,
@@ -260,7 +285,7 @@ bwplot(formula,
     graphical parameters, but other uses are also common. See
     documentation for individual panel functions for specifics.
 
-    Note that unlike in S-Plus, it is not guaranteed that panel
+    Note that unlike in S-PLUS, it is not guaranteed that panel
     functions will be supplied only numeric vectors for the \code{x} and
     \code{y} arguments; they can be factors as well (but not
     shingles). panel functions need to handle this case, which to get
@@ -275,7 +300,7 @@ bwplot(formula,
     this purpose, such as \code{llines}. (Note that the corresponding
     base R graphics functions like \code{lines} would not work.) These
     are usually sufficient to convert existing custom panel functions
-    written for S-Plus.
+    written for S-PLUS.
     
     One case where a bit more is required of the panel function is when
     the \code{groups} argument is not null. In that case, the panel
@@ -285,8 +310,36 @@ bwplot(formula,
     which can be combined with different \code{panel.groups}
     functions. See the examples section for an interaction plot
     constructed this way. Several other panel functions can also handle
-    the groups argument, including the default ones for \code{barchart,
-      dotplot} and \code{stripplot}.
+    the \code{groups} argument, including the default ones for
+    \code{barchart, dotplot} and \code{stripplot}.
+
+    Even when \code{groups} is not present, the panel function can have
+    \code{subscripts} as a formal argument. In either case, the
+    \code{subscripts} argument passed to the panel function are the
+    indices of the \code{x} and \code{y} data for that panel in the
+    original \code{data}, BEFORE taking into account the effect of
+    the \code{subset} argument. Note that \code{groups} remains
+    unaffected by any subsetting operations, so
+    \code{groups[subscripts]} gives the values of \code{groups} that
+    correspond to the data in that panel. (This becomes slightly more
+    complicated when \code{allow.multiple} is in effect. Details are
+    explained in the source code (function \code{latticeParseFormula}).)
+
+    A panel function can have two other optional arguments for
+    convenience, namely \code{panel.number} and
+    \code{panel.counter}. Both provide a simple integer index indicating
+    which panel is currently being drawn, but differ in how the count is
+    calculated. \code{panel.counter} is a simple incremental counter
+    that starts with 1 and is incremented each time a panel is
+    drawn. \code{panel.number} on the other hand depends only on the
+    combination of levels of the conditioning variables that is
+    represented by that panel. The two indices coincide unless the order
+    of conditioning variables is permuted and/or the plotting order of
+    levels within one or more conditioning variables is altered (using
+    \code{perm.cond} and \code{index.cond} respectively), in which case
+    \code{panel.number} gives the index corresponding to the `natural'
+    ordering of that combination of levels of the conditioning
+    variables.
 
     \code{panel.xyplot} has an argument called \code{type} which is
     worth mentioning here because it is quite frequently used (and as
@@ -295,10 +348,11 @@ bwplot(formula,
     called \code{horizontal} to account for the cases when \code{x} is
     the factor or shingle.
   }
-  \item{panel.groups}{ relevant for \code{xyplot} and \code{densityplot}
-    only, applies when \code{panel} is \code{panel.superpose} (which
-    happens by default in these cases if \code{groups} is non-null)
-    }
+  \item{panel.groups}{ useful mostly for \code{xyplot} and
+    \code{densityplot}. Applies when \code{panel} is
+    \code{panel.superpose} (which happens by default in these cases if
+    \code{groups} is non-null)
+  }
   \item{aspect}{ controls physical aspect ratio of the panels (same for
     all the panels). It can be specified as a ratio (vertical
     size/horizontal size) or as a character string. Legitimate 
@@ -343,27 +397,46 @@ bwplot(formula,
   \item{auto.key}{
     A logical (indicating whether a key is to be drawn automatically when
     a grouping variable is present in the plot), or a list of parameters
-    to be passed to \code{\link{simpleKey}}. If \code{auto.key} is not
-    \code{FALSE} and no \code{key} argument is specified in the call,
-    \code{simpleKey} is called with \code{levels(groups)} as the first
-    argument and the result is added as the \code{key} component of the
-    final ``trellis'' object. (Note: this may not work in all high level
-    functions.)
+    that would be valid arguments to \code{\link{simpleKey}}. If
+    \code{auto.key} is not \code{FALSE}, \code{groups} is non-null and
+    there is no \code{key} or \code{legend} argument specified in the
+    call, a key is created with \code{simpleKey} with
+    \code{levels(groups)} as the first argument. (Note: this may not
+    work in all high level functions, but it does work for the ones
+    where grouping makes sense with the default panel function)
 
     \code{simpleKey} uses the trellis settings to determine the
     graphical parameters in the key, so this will be meaningful only if
     the settings are used in the plot as well.
+
+    One disadvantage to using \code{key} (or even \code{simpleKey})
+    directly is that the graphical parameters used in the key are
+    absolutely determined at the time when the ``trellis'' object is
+    created. Consequently, if a plot once created is re-\code{print}ed
+    on another device, the parameter settings for the original device
+    will be used. However, with \code{auto.key}, the key is actually
+    created at printing time, so the key settings match the device
+    settings.
   }
   \item{key}{
-    A list of arguments that define a legend to be drawn on the plot
-    (see also the less flexible but usually sufficient shortcut function
-    \code{\link{simpleKey}} that can generate such a list).
+    A list of arguments that define a legend to be drawn on the
+    plot. This list is used as an argument to the \code{\link{draw.key}}
+    function, which produces a grid object eventually plotted by the
+    print method for ``trellis'' objects.
 
-    The position of the legend can be controlled in either of two
-    possible  ways. If a component called \code{space} is present, the
-    key is positioned outside the plot region, in one of the four sides, 
+    There is also a less flexible but usually sufficient shortcut
+    function \code{\link{simpleKey}} that can generate such a list, as
+    well as the argument \code{auto.key} that can be convenient in the
+    most common situation where legends are used, namely when there is a
+    grouping variable. To use more than one legend, or to have arbitrary
+    legends not constrained by the structure imposed by \code{key}, use
+    the \code{legend} argument.
+
+    The position of the key can be controlled in either of two possible
+    ways. If a component called \code{space} is present, the key is
+    positioned outside the plot region, in one of the four sides,
     determined by the value of \code{space}, which can be one of
-    ``top'', ``bottom'', ``left'' and  ``right''. Alternatively, the key
+    ``top'', ``bottom'', ``left'' and ``right''. Alternatively, the key
     can be positioned inside the plot region by specifying components
     \code{x,y} and \code{corner}. \code{x} and \code{y} determine the
     location of the corner of the key given by \code{corner}, which can
@@ -430,9 +503,33 @@ bwplot(formula,
     \code{divide} Number of point symbols to divide each line when
     \code{type} is `"b"' or `"o"' in \code{lines}.
   }
-  \item{layout}{ In general, a Trellis conditioning plot consists of
-    several panels arranged in a rectangular array, possibly spanning
-    multiple pages. \code{layout} determines this arrangement.
+  \item{legend}{
+    the legend argument can be useful if one wants to place more than
+    one key. It also allows one to use arbitrary ``grob''s (grid
+    objects) as legends.
+    
+    If used, \code{legend} must be a list with an arbitrary number of
+    components. Each component must be named one of ``left'', ``right'',
+    ``top'', ``bottom'' or ``inside''. The name ``inside'' can be
+    repeated, but not the others. This name will be used to determine
+    the location for that component, and is similar to the \code{space}
+    component of \code{key}.  If \code{key} (or \code{colorkey} for
+    \code{\link{levelplot}} and \code{\link{wireframe}}) is specified,
+    their \code{space} component must not conflict with the name of any
+    component of \code{legend}.
+
+    Each component of \code{legend} must have a component called
+    \code{fun}. This can be a ``grob'', or a function or the name of a
+    function that produces a ``grob'' when called. If this function
+    expects any arguments, they must be supplied as a list in another
+    component called \code{args}. For components named ``inside'', there
+    can be additional components called \code{x, y} and \code{corner},
+    which work in the same way as it does for \code{key}.
+  }
+  \item{layout}{
+    In general, a Trellis conditioning plot consists of several panels
+    arranged in a rectangular array, possibly spanning multiple
+    pages. \code{layout} determines this arrangement.
 
     \code{layout} is a numeric vector giving the number of columns, rows
     and pages in a multipanel display. By default, the number of columns
@@ -557,15 +654,25 @@ bwplot(formula,
     log: Use a log scale. Defaults to \code{FALSE}, other possible
     values are any number that works as a base for taking logarithm,
     \code{TRUE}, equivalent to 10, and \code{"e"} (for natural
-    logarithm).
+    logarithm). Note that in this case the values passed to the panel
+    function are already transformed, so all computations done inside
+    the panel funtion will be affected accordingly. For example,
+    \code{panel.lmline} will fit a line to the transformed values.
 
-    Note: the "axs" component is ignored. Much of the function of
-    \code{scales} is accomplished by \code{pscales} in \code{splom}.
+    format: the \code{format} to use for POSIXct variables. See
+    \code{\link{strptime}} for description of valid strings.
+    
+    axs: character, ``r'' or ``i''. In the latter case, the axis limits
+    are calculated as the exact data range, instead of being padded on
+    either side. (May not always work as expected.) 
+
+    Note: Much of the function of \code{scales} is accomplished by
+    \code{pscales} in \code{splom}.
   }
-  \item{skip}{logical vector (default \code{FALSE}), replicated to be as
-    long as the number of panels in each page. If \code{TRUE}, nothing
-    is plotted in the corresponding panel. Useful for arranging plots in
-    an informative manner.
+  \item{skip}{ logical vector (default \code{FALSE}), replicated to be
+    as long as the number of panels (spanning all pages). If
+    \code{TRUE}, nothing is plotted in the corresponding panel. Useful
+    for arranging plots in an informative manner.
   }
   \item{strip}{logical flag or function. If \code{FALSE}, strips are
     not drawn. Otherwise, strips are drawn using the \code{strip}
@@ -582,10 +689,11 @@ bwplot(formula,
     accepts an argument named \code{subscripts}. (One should be careful
     when defining the panel function on-the-fly.)
   }
-  \item{subset}{ logical vector (can be specified in terms of variables
-    in \code{data}). Everything will be done on the data points for
-    which \code{subset=TRUE}. In case \code{subscripts} is TRUE, the
-    subscripts will correspond to the original observations.
+  \item{subset}{ logical or integer indexing vector (can be specified in
+    terms of variables in \code{data}). Everything will be done on the
+    data points indexed by \code{subset}. In case \code{subscripts}
+    is TRUE, the subscripts will provide indices to the rows of data
+    AFTER the subsetting is done (unlike S-PLUS).
   }
   \item{xlab}{character string or expression giving label for the
     x-axis. Defaults to the expression for \code{x} in
@@ -613,6 +721,58 @@ bwplot(formula,
   }
   \item{ylim}{ same as \code{xlim}, applied to the y-axis. 
   }
+  \item{drop.unused.levels}{ 
+    logical indicating whether the unused levels of factors will be
+    dropped. Defaults to \code{TRUE}, but it is sometimes useful to
+    suppress dropping to preserve an useful layout. For finer control,
+    this argument could also be list containing components \code{cond}
+    and \code{data}, both logical, indicating desired behaviour for
+    conditioning variables and data variables respectively.
+  }
+  \item{par.settings}{
+    a list that could be supplied to \code{\link{lset}}. This enables
+    the user to attach some display settings to the trellis object
+    itself rather than change the settings globally. When the object is
+    printed, these settings are temporarily in effect for the duration
+    of the plot, after which the settings revert back to whatever it was
+    before.
+  }
+  \item{perm.cond}{
+    numeric vector, a permutation \code{1:n}, where \code{n} is the
+    number of conditioning variables.  The order in which panels are
+    drawn depends on the order of the conditioning variables specified
+    in the \code{formula}. \code{perm.cond} can modify this order. If
+    the trellis display is thought of as an \code{n}-dimensional array,
+    then during printing, its dimensions are permuted using
+    \code{perm.cond} as the \code{perm} argument to \code{\link{aperm}}
+  }
+  \item{index.cond}{
+    While \code{perm.cond} permutes the dimensions of the
+    multidimensional array of panels, \code{index.cond} can be used to
+    subset that array.
+
+    The panel display order within each conditioning variable depends on
+    the order of their levels. \code{index.cond} can be used to choose a
+    `subset' (in the R sense) of each of these levels.
+    \code{index.cond} has to be a list as long as the number of
+    conditioning variables, and the \code{i}-th component has to be a
+    valid indexing vector for the integer vector \code{1:nlevels(g_i)}
+    (which can repeat some of the levels or drop some altogether). The
+    result of this indexing determines the order of panels within that
+    conditioning variable. (To keep the order of a particular variable
+    unchanged, one can simply set the corresponding component to
+    \code{TRUE}.)
+
+    Note that the components of \code{index.cond} are in the order of
+    the conditioning variables in the original call, and is not affected
+    by \code{perm.cond}.
+
+    Although they can be supplied in high level function calls directly,
+    it is more typical to use \code{perm.cond} and \code{index.cond} to
+    update an existing ``trellis'' object, thus allowing it to be
+    displayed in a different arrangement without re-calculating the data
+    subsets that go into each panel.
+  }  
   \item{\dots}{ other arguments, passed to the panel function.
 
     The arguments \code{horizontal} and \code{panel.groups} are
@@ -651,9 +811,11 @@ bwplot(formula,
   \code{\link{panel.linejoin}},
   \code{\link{strip.default}},
   \code{\link{simpleKey}}
+  \code{\link{lset}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
+require(stats)
 ## Tonga Trench Earthquakes
 data(quakes)
 Depth <- equal.count(quakes$depth, number=8, overlap=.1)
@@ -676,30 +838,41 @@ xyplot(NOx ~ C | EE, data = ethanol,
        },
        aspect = "xy")
 
-## banking to 45 degrees
 
-data(sunspot)
-xyplot(sunspot ~ 1:37 ,type = "l", aspect="xy",
-       scales = list(y = list(log = TRUE)),
-       sub = "log scales")
+
+## with and without banking
+
+data(sunspots)
+spots <- by(sunspots, gl(235, 12, lab = 1749:1983), mean)
+plot <- xyplot(spots ~ 1749:1983, xlab = "", type = "l",
+               scales = list(x = list(alternating = 2)),
+               main = "Average Yearly Sunspots")
+print(plot, position = c(0, .3, 1, .9), more = TRUE)
+print(update(plot, aspect = "xy", main = "", xlab = "Year"),
+      position = c(0, 0, 1, .3))
+
+
+
 
 ## Multiple variables in formula for grouped displays
 
 data(iris)
 xyplot(Sepal.Length + Sepal.Width ~ Petal.Length + Petal.Width | Species, 
-       data = iris, allow.multiple = TRUE, scales = "free",
-       layout = c(2, 2),
+       data = iris, scales = "free", layout = c(2, 2),
        auto.key = list(x = .6, y = .7, corner = c(0, 0)))
 
-data(state)
+
 ## user defined panel functions
+
+data(state)
 states <- data.frame(state.x77,
                      state.name = dimnames(state.x77)[[1]], 
                      state.region = state.region) 
 xyplot(Murder ~ Population | state.region, data = states, 
-       groups = as.character(state.name), 
+       groups = state.name, 
        panel = function(x, y, subscripts, groups)  
-       ltext(x=x, y=y, label=groups[subscripts], cex=.7, font=3))
+       ltext(x = x, y = y, label = groups[subscripts], cex=1,
+             fontfamily = "HersheyPlain"))
 
 data(barley)
 barchart(yield ~ variety | site, data = barley,

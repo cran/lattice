@@ -95,6 +95,8 @@ panel.barchart <-
     x <- as.numeric(x)
     y <- as.numeric(y)
 
+    if (length(x) < 1) return()
+
     bar.fill <- trellis.par.get("bar.fill")
     reference.line <- trellis.par.get("reference.line")
 
@@ -408,17 +410,21 @@ panel.stripplot <-
 panel.bwplot <-
     function(x, y, box.ratio=1, horizontal = TRUE, pch=box.dot$pch,
              col = box.dot$col, cex = box.dot$cex,
+             font = box.dot$font, fontfamily = box.dot$fontfamily, fontface = box.dot$fontface, 
              fill = box.rectangle$fill, varwidth = FALSE,
              levels.fos = NULL, coef = 1.5, ...)
 {
-    
     x <- as.numeric(x)
     y <- as.numeric(y)
+
+    if (length(x) < 1) return()
 
     box.dot <- trellis.par.get("box.dot")
     box.rectangle <- trellis.par.get("box.rectangle")
     box.umbrella <- trellis.par.get("box.umbrella")
     plot.symbol <- trellis.par.get("plot.symbol")
+
+    fontsize.points <- trellis.par.get("fontsize")$points
 
     ## In case levels.fos is not given (which should not happen), I'll
     ## be working on the premise that EACH INTEGER in the y-RANGE is a
@@ -442,7 +448,7 @@ panel.bwplot <-
                 
                 if (stats$n>0)
                 {
-                    push.viewport(viewport(y=unit(yval, "native"),
+                    pushViewport(viewport(y=unit(yval, "native"),
                                            height = unit((if (varwidth)
                                            sqrt(stats$n/maxn)  else 1) * height, "native"),
                                            xscale = xscale))
@@ -479,18 +485,24 @@ panel.bwplot <-
                                lwd = box.umbrella$lwd,
                                lty = box.umbrella$lty))
                     
-                    grid.points(x=stats$stats[3], y=.5, pch=pch, 
-                                size = unit(cex * 2.5, "mm"),
-                                gp = gpar(col = col, cex = cex))
+                    grid.points(x = stats$stats[3], y = .5, pch = pch, 
+                                gp =
+                                gpar(col = col, cex = cex,
+                                     fontfamily = fontfamily,
+                                     fontface = chooseFace(fontface, font),
+                                     fontsize = fontsize.points))
                     
                     if ((l<-length(stats$out))>0)
                         grid.points(x = stats$out, y = rep(.5,l),
-                                    size = unit(plot.symbol$cex * 2.5, "mm"),
                                     pch = plot.symbol$pch,
-                                    gp = gpar(col = plot.symbol$col,
-                                    cex = plot.symbol$cex))
+                                    gp =
+                                    gpar(col = plot.symbol$col,
+                                         cex = plot.symbol$cex,
+                                         fontfamily = plot.symbol$fontfamily,
+                                         fontface = chooseFace(plot.symbol$fontface, plot.symbol$font),
+                                         fontsize = fontsize.points))
                     
-                    pop.viewport()
+                    popViewport()
                 
                 }
             }
@@ -512,7 +524,7 @@ panel.bwplot <-
 
                 if (stats$n>0)
                 {
-                    push.viewport(viewport(x = unit(xval, "native"),
+                    pushViewport(viewport(x = unit(xval, "native"),
                                            width = unit((if (varwidth)
                                            sqrt(stats$n/maxn)  else 1) * width, "native"),
                                            yscale = yscale))
@@ -550,17 +562,23 @@ panel.bwplot <-
                                lty = box.umbrella$lty))
                     
                     grid.points(y = stats$stats[3], x = .5, pch = pch, 
-                                size = unit(cex * 2.5, "mm"),
-                                gp = gpar(col = col, cex = cex))
+                                gp =
+                                gpar(col = col, cex = cex,
+                                     fontfamily = fontfamily,
+                                     fontface = chooseFace(fontface, font),
+                                     fontsize = fontsize.points))
                     
                     if ((l<-length(stats$out))>0)
                         grid.points(y = stats$out, x = rep(.5,l),
-                                    size = unit(plot.symbol$cex * 2.5, "mm"),
                                     pch = plot.symbol$pch,
-                                    gp = gpar(col = plot.symbol$col,
-                                    cex = plot.symbol$cex))
+                                    gp =
+                                    gpar(col = plot.symbol$col,
+                                         cex = plot.symbol$cex,
+                                         fontfamily = plot.symbol$fontfamily,
+                                         fontface = chooseFace(plot.symbol$fontface, plot.symbol$font),
+                                         fontsize = fontsize.points))
                     
-                    pop.viewport()
+                    popViewport()
                 
                 }
             }
@@ -597,12 +615,17 @@ dotplot <-
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
+    right.name <- deparse(substitute(formula))
+
     try(formula <- eval(formula), silent = TRUE)
+
     foo <- substitute(formula)
+
     if (!(is.call(foo) && foo[[1]] == "~")) {
-        formula <- as.formula(paste("~", deparse(foo)))
+        formula <- as.formula(paste("~", right.name)) #   deparse(foo)))
         environment(formula) <- parent.frame()
     }
+
     call.list <- c(list(formula = formula, data = data,
                         groups = groups,
                         subset = subset,
@@ -628,11 +651,17 @@ barchart <-
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
+    right.name <- deparse(substitute(formula))
+
+    try(formula <- eval(formula), silent = TRUE)
+
     foo <- substitute(formula)
+
     if (!(is.call(foo) && foo[[1]] == "~")) {
-        formula <- as.formula(paste("~", deparse(foo)))
+        formula <- as.formula(paste("~", right.name)) #   deparse(foo)))
         environment(formula) <- parent.frame()
     }
+
     call.list <- c(list(formula = formula, data = data,
                         groups = groups,
                         subset = subset,
@@ -660,11 +689,17 @@ stripplot <-
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
+    right.name <- deparse(substitute(formula))
+
+    try(formula <- eval(formula), silent = TRUE)
+
     foo <- substitute(formula)
+
     if (!(is.call(foo) && foo[[1]] == "~")) {
-        formula <- as.formula(paste("~", deparse(foo)))
+        formula <- as.formula(paste("~", right.name)) #   deparse(foo)))
         environment(formula) <- parent.frame()
     }
+
     call.list <- c(list(formula = formula, data = data,
                         panel = panel,
                         jitter = jitter,
@@ -682,11 +717,10 @@ stripplot <-
 bwplot <-
     function(formula,
              data = parent.frame(),
-             allow.multiple = FALSE,
+             allow.multiple = is.null(groups) || outer,
              outer = FALSE,
              auto.key = FALSE,
              aspect = "fill",
-             layout = NULL,
              panel = "panel.bwplot",
              prepanel = NULL,
              scales = list(),
@@ -698,6 +732,7 @@ bwplot <-
              ylim,
              box.ratio = 1,
              horizontal = NULL,
+             drop.unused.levels = TRUE,
              ...,
              subscripts = !is.null(groups),
              subset = TRUE)
@@ -723,7 +758,8 @@ bwplot <-
     form <-
         latticeParseFormula(formula, data, subset = subset,
                             groups = groups, multiple = allow.multiple,
-                            outer = outer, subscripts = TRUE)
+                            outer = outer, subscripts = TRUE,
+                            drop = drop.unused.levels)
 
 
     groups <- form$groups
@@ -748,7 +784,6 @@ bwplot <-
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, length(x))))
-        layout <- c(1,1,1)
         number.of.cond <- 1
     }
 
@@ -787,23 +822,18 @@ bwplot <-
     ## less complicated components:
 
     foo <- do.call("trellis.skeleton",
-                   c(list(aspect = aspect,
+                   c(list(cond = cond,
+                          aspect = aspect,
                           strip = strip,
                           panel = panel,
                           xlab = xlab,
-                          ylab = ylab), dots))
+                          ylab = ylab,
+                          xlab.default = form$right.name,
+                          ylab.default = form$left.name), dots))
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
     foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
-
-    ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
-        foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
-        foo$ylab$label <- form$left.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
@@ -879,8 +909,6 @@ bwplot <-
     if (!any(!id.na)) stop("nothing to draw")
     ## Nothing simpler ?
 
-    foo$condlevels <- lapply(cond, levels)
-
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
     foo$panel.args.common <- dots
@@ -890,101 +918,95 @@ bwplot <-
         if (horizontal) num.l.y else num.l.x
     if (subscripts) foo$panel.args.common$groups <- groups
 
-    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
-    plots.per.page <- max(layout[1] * layout[2], layout[2])
-    number.of.pages <- layout[3]
-    foo$skip <- rep(foo$skip, length = plots.per.page)
-    foo$layout <- layout
-    nplots <- plots.per.page * number.of.pages
 
-    foo$panel.args <- as.list(1:nplots)
-    cond.current.level <- rep(1,number.of.cond)
-    panel.number <- 1 # this is a counter for panel number
-    for (page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0))
-            for (plot in 1:plots.per.page) {
 
-                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                else if(!any(cond.max.level-cond.current.level<0)) {
+    nplots <- prod(cond.max.level)
+    if (nplots != prod(sapply(foo$condlevels, length))) stop("mismatch")
+    foo$panel.args <- vector(mode = "list", length = nplots)
 
-                    id <- !id.na
-                    for(i in 1:number.of.cond)
-                    {
-                        var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
-                            ((var >=
-                              levels(var)[[cond.current.level[i]]][1])
-                             & (var <=
-                                levels(var)[[cond.current.level[i]]][2]))
-                        else (as.numeric(var) == cond.current.level[i])
-                    }
 
-                    if (horizontal) {
-                        if (is.f.y) {
-                            foo$panel.args[[panel.number]] <-
-                                list(x = x[id],
-                                     ##y = as.numeric(y[id]))
-                                     y = y[id])
-                            if (subscripts)
-                                foo$panel.args[[panel.number]]$subscripts <-
-                                    subscr[id]
-                        }
-                        else {  # shingle
-                            panel.x <- numeric(0)
-                            panel.y <- numeric(0)
-                            if (subscripts) panel.subscr <- numeric(0)
-                            for (k in 1:num.l.y) {
-                                tid <- id & (y >= levels(y)[[k]][1]) & (y <= levels(y)[[k]][2])
-                                panel.x <- c(panel.x, x[tid])
-                                panel.y <- c(panel.y, rep(k,length(tid[tid])))
-                                if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
-                            }
-                            foo$panel.args[[panel.number]] <-
-                                list(x = panel.x,
-                                     y = panel.y)
-                            if (subscripts)
-                                foo$panel.args[[panel.number]]$subscripts <-
-                                    panel.subscr
+    cond.current.level <- rep(1, number.of.cond)
 
-                        }
-                    }
-                    else {
-                        if (is.f.x) {
-                            foo$panel.args[[panel.number]] <-
-                                ##list(x = as.numeric(x[id]),
-                                list(x = x[id],
-                                     y = y[id])
-                            if (subscripts)
-                                foo$panel.args[[panel.number]]$subscripts <-
-                                    subscr[id]
-                        }
-                        else {  # shingle
-                            panel.x <- numeric(0)
-                            panel.y <- numeric(0)
-                            if (subscripts) panel.subscr <- numeric(0)
-                            for (k in 1:num.l.x) {
-                                tid <- id & (x >= levels(x)[[k]][1]) & (x <= levels(x)[[k]][2])
-                                panel.y <- c(panel.y, y[tid])
-                                panel.x <- c(panel.x, rep(k,length(tid[tid])))
-                                if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
-                            }
-                            foo$panel.args[[panel.number]] <-
-                                list(x = panel.x,
-                                     y = panel.y)
-                            if (subscripts)
-                                foo$panel.args[[panel.number]]$subscripts <-
-                                    panel.subscr
-                        }
-                    }
 
-                    cond.current.level <-
-                        cupdate(cond.current.level,
-                                cond.max.level)
-                }
+    for (panel.number in seq(length = nplots))
+    {
 
-                panel.number <- panel.number + 1
+        id <- !id.na
+        for(i in 1:number.of.cond)
+        {
+            var <- cond[[i]]
+            id <- id &
+            if (is.shingle(var))
+                ((var >=
+                  levels(var)[[cond.current.level[i]]][1])
+                 & (var <=
+                    levels(var)[[cond.current.level[i]]][2]))
+            else (as.numeric(var) == cond.current.level[i])
+        }
+
+        if (horizontal) {
+            if (is.f.y) {
+                foo$panel.args[[panel.number]] <-
+                    list(x = x[id],
+                         ##y = as.numeric(y[id]))
+                         y = y[id])
+                if (subscripts)
+                    foo$panel.args[[panel.number]]$subscripts <-
+                        subscr[id]
             }
+            else {  # shingle
+                panel.x <- numeric(0)
+                panel.y <- numeric(0)
+                if (subscripts) panel.subscr <- numeric(0)
+                for (k in 1:num.l.y) {
+                    tid <- id & (y >= levels(y)[[k]][1]) & (y <= levels(y)[[k]][2])
+                    panel.x <- c(panel.x, x[tid])
+                    panel.y <- c(panel.y, rep(k,length(tid[tid])))
+                    if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
+                }
+                foo$panel.args[[panel.number]] <-
+                    list(x = panel.x,
+                         y = panel.y)
+                if (subscripts)
+                    foo$panel.args[[panel.number]]$subscripts <-
+                        panel.subscr
+
+            }
+        }
+        else {
+            if (is.f.x) {
+                foo$panel.args[[panel.number]] <-
+                    ##list(x = as.numeric(x[id]),
+                    list(x = x[id],
+                         y = y[id])
+                if (subscripts)
+                    foo$panel.args[[panel.number]]$subscripts <-
+                        subscr[id]
+            }
+            else {  # shingle
+                panel.x <- numeric(0)
+                panel.y <- numeric(0)
+                if (subscripts) panel.subscr <- numeric(0)
+                for (k in 1:num.l.x) {
+                    tid <- id & (x >= levels(x)[[k]][1]) & (x <= levels(x)[[k]][2])
+                    panel.y <- c(panel.y, y[tid])
+                    panel.x <- c(panel.x, rep(k,length(tid[tid])))
+                    if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
+                }
+                foo$panel.args[[panel.number]] <-
+                    list(x = panel.x,
+                         y = panel.y)
+                if (subscripts)
+                    foo$panel.args[[panel.number]]$subscripts <-
+                        panel.subscr
+            }
+        }
+
+        cond.current.level <-
+            cupdate(cond.current.level,
+                    cond.max.level)
+    }
+
 
     foo <- c(foo,
              limits.and.aspect(prepanel.default.bwplot,
@@ -1001,11 +1023,27 @@ bwplot <-
                                y.axs = foo$y.scales$axs))
 
 
-    if (is.null(foo$key) && !is.null(groups) &&
+
+    if (is.null(foo$legend) && !is.null(groups) &&
         (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
-        foo$key <- do.call("simpleKey",
-                           c(list(levels(as.factor(groups))),
-                             if (is.list(auto.key)) auto.key else list()))
+    {
+        foo$legend <-
+            list(list(fun = "drawSimpleKey",
+                      args =
+                      c(list(levels(as.factor(groups))),
+                        if (is.list(auto.key)) auto.key else list())))
+        foo$legend[[1]]$x <- foo$legend[[1]]$args$x
+        foo$legend[[1]]$y <- foo$legend[[1]]$args$y
+        foo$legend[[1]]$corner <- foo$legend[[1]]$args$corner
+
+        names(foo$legend) <- 
+            if (any(c("x", "y", "corner") %in% names(foo$legend[[1]]$args)))
+                "inside"
+            else
+                "top"
+        if (!is.null(foo$legend[[1]]$args$space))
+            names(foo$legend) <- foo$legend[[1]]$args$space
+    }
 
     class(foo) <- "trellis"
     foo

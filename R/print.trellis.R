@@ -20,12 +20,21 @@
 
 
 
+## accessors for a grid layouts nrow and ncol
+
+layoutNRow <- function(x) x$nrow
+layoutNCol <- function(x) x$ncol
+
+
+
 
 
 
 ## the pos'th entry in the unit vector x is replaced by the unit u.
 ## Essentially does what x[pos] <- u should have done, only u can only
 ## be a unit of length 1
+
+
 
 rearrangeUnit <- function(x, pos, u)
 {
@@ -38,6 +47,49 @@ rearrangeUnit <- function(x, pos, u)
     else
         unit.c(x[1:(pos-1)], u, x[(pos+1):unit.length(x)])
 }
+
+
+
+
+
+
+
+## utility to create a full-fledged list describing a label from parts
+## (used for main, sub, xlab, ylab)
+
+getLabelList <- function(label, text.settings, default.label = NULL)
+{
+    if (!is.null(label))
+    {
+        ans <- list(label = 
+                    if (is.characterOrExpression(label)) label
+                    else if (is.list(label) && names(label)[1] == "") label[[1]]
+                    else default.label,
+                    col = text.settings$col, cex = text.settings$cex,
+                    fontfamily = text.settings$fontfamily,
+                    fontface = text.settings$fontface,
+                    font = text.settings$font)
+
+        if (is.list(label)) ans[names(label)] <- label
+    }
+    else ans <- NULL
+    if (is.null(ans$lab) || ans$lab == "") ans <- NULL
+    ans
+}
+
+
+
+
+
+
+
+
+
+
+# convenience function for auto.key
+
+drawSimpleKey <- function(...)
+    draw.key(simpleKey(...), draw = FALSE)
 
 
 
@@ -79,6 +131,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
     if (!is.list(key)) stop("key must be a list")
     
     max.length <- 0
+
     ## maximum of the `row-lengths' of the above
     ## components. There is some scope for confusion
     ## here, e.g., if col is specified in key as a
@@ -106,6 +159,8 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                  lty = 1,
                  lwd = 1,
                  font = 1, 
+                 fontface = NULL, 
+                 fontfamily = NULL, 
                  pch = 8,
                  adj = 0,
                  type = "l", 
@@ -129,7 +184,9 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                  col = col,
                  lty = lty,
                  lwd = lwd,
-                 font = font, 
+                 font = font,
+                 fontface = fontface,
+                 fontfamily = fontfamily,
                  pch = pch,
                  adj = adj,
                  type = type, 
@@ -139,8 +196,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                  ...)
         }
 
-    default.fontsize <- trellis.par.get("fontsize")$default
-
+    fontsize.points <- trellis.par.get("fontsize")$points
     key <- do.call("process.key", key)
 
     key.length <- length(key)
@@ -166,7 +222,9 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                          col = key$col,
                          adj = key$adj,
                          cex = key$cex,
-                         font = key$font)
+                         font = key$font,
+                         fontface = key$fontface,
+                         fontfamily = key$fontfamily)
             key[[i]][[1]] <- NULL
             pars[names(key[[i]])] <- key[[i]]
 
@@ -216,7 +274,10 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
 
             pars <- list(col = key$col,
                          cex = key$cex,
-                         pch = key$pch)
+                         pch = key$pch,
+                         font = key$font,
+                         fontface = key$fontface,
+                         fontfamily = key$fontfamily)
                          
             pars[names(key[[i]])] <- key[[i]]
 
@@ -436,27 +497,22 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
         ## OK, layout set up, now to draw the key - no
 
         
-        key.gf <- grid.frame(layout = key.layout, vp = vp,
-                             gp = gpar(fontsize = default.fontsize),
-                             draw = FALSE)
+        key.gf <- frameGrob(layout = key.layout, vp = vp)
 
-        if (!key$transparent) {
-            grid.place(key.gf,
-                       grid.rect(gp=gpar(fill = key$background, col = key$border),
-                                 draw = FALSE),
-                       draw = FALSE, row = NULL, col = NULL)
-        }
+        if (!key$transparent) 
+            key.gf <- placeGrob(key.gf,
+                                rectGrob(gp = gpar(fill = key$background, col = key$border)),
+                                row = NULL, col = NULL)
         else
-            grid.place(key.gf,
-                       grid.rect(gp=gpar(col=key$border), draw = FALSE),
-                       draw = FALSE, row = NULL, col = NULL)
+            key.gf <- placeGrob(key.gf,
+                                rectGrob(gp=gpar(col=key$border)),
+                                row = NULL, col = NULL)
 
         ## Title
         if (!is.null(key$title))
-            grid.place(key.gf, 
-                       grid.text(label = key$title, draw = FALSE,
-                                 gp = gpar(fontsize = default.fontsize * key$cex.title)),
-                       row=1, col = NULL, draw = FALSE)
+            key.gf <- placeGrob(key.gf, 
+                                textGrob(label = key$title, gp = gpar(cex = key$cex.title)),
+                                row=1, col = NULL)
         
 
         
@@ -476,94 +532,111 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
 
                 if (cur$type == "text") {
                     
-                    grid.place(key.gf, 
-                               grid.text(x = cur$pars$adj[j],
-                                         just = c(
-                                         if (cur$pars$adj[j] == 1) "right"
-                                         else if (cur$pars$adj[j] == 0) "left"
-                                         else "center",
-                                         "center"),
-                                         label = cur$pars$labels[j],
-                                         gp = gpar(col = cur$pars$col[j],
-                                         font = cur$pars$font[j],
-                                         fontsize = default.fontsize * cur$pars$cex[j]),
-                                         draw = FALSE),
-                               row = yy, col = xx, draw = FALSE)
+                    key.gf <- placeGrob(key.gf, 
+                                        textGrob(x = cur$pars$adj[j],
+                                                 just = c(
+                                                 if (cur$pars$adj[j] == 1) "right"
+                                                 else if (cur$pars$adj[j] == 0) "left"
+                                                 else "center",
+                                                 "center"),
+                                                 label = cur$pars$labels[j],
+                                                 gp =
+                                                 gpar(col = cur$pars$col[j],
+                                                      fontfamily = cur$pars$fontfamily[j],
+                                                      fontface = chooseFace(cur$pars$fontface[j], cur$pars$font[j]),
+                                                      cex = cur$pars$cex[j])),
+                                        row = yy, col = xx)
                     
                 }
                 else if (cur$type == "rectangles") {
-                    grid.place(key.gf, 
-                              grid.rect(width = cur$pars$size[j]/max(cur$pars$size),
-                                        ## centred, unlike Trellis, due to aesthetic reasons !
-                                        gp = gpar(fill = cur$pars$col[j]), 
-                                        draw = FALSE),
-                              row = yy, col = xx, draw = FALSE)
-                    
+                    key.gf <- placeGrob(key.gf, 
+                              rectGrob(width = cur$pars$size[j]/max(cur$pars$size),
+                                       ## centred, unlike Trellis, due to aesthetic reasons !
+                                       gp = gpar(fill = cur$pars$col[j])),
+                              row = yy, col = xx)
+
                     ## Need to make changes to support angle/density
                 }
                 else if (cur$type == "lines") {
                     if (cur$pars$type[j] == "l") {
-                        grid.place(key.gf,
-                                  grid.lines(x = c(0,1) * cur$pars$size[j]/max(cur$pars$size),
-                                             ## ^^ this should be centered as well, but since the
-                                             ## chances that someone would actually use this feature
-                                             ## are astronomical, I'm leaving that for later.
-                                             y = c(.5, .5),
-                                             gp = gpar(col = cur$pars$col[j],
-                                             lty = cur$pars$lty[j],
-                                             lwd = cur$pars$lwd[j]),
-                                             draw = FALSE),
-                                  row = yy, col = xx, draw = FALSE)
+                        key.gf <-
+                            placeGrob(key.gf,
+                                      linesGrob(x = c(0,1) * cur$pars$size[j]/max(cur$pars$size),
+
+                                                ## ^^ this should be
+                                                ## centered as well,
+                                                ## but since the
+                                                ## chances that
+                                                ## someone would
+                                                ## actually use this
+                                                ## feature are
+                                                ## astronomical, I'm
+                                                ## leaving that for
+                                                ## later.
+
+                                                y = c(.5, .5),
+                                                gp = gpar(col = cur$pars$col[j],
+                                                lty = cur$pars$lty[j],
+                                                lwd = cur$pars$lwd[j])),
+                                  row = yy, col = xx)
                     }
                     else if (cur$pars$type[j] == "p") {
-                        grid.place(key.gf,
-                                   grid.points(x=.5, y=.5, 
-                                               gp = gpar(col = cur$pars$col[j]),
-                                               size = unit(cur$pars$cex[j] * 2.5, "mm"),
-                                               pch = cur$pars$pch[j],
-                                               draw = FALSE),
-                                   row = yy, col = xx, draw = FALSE)
+                        key.gf <-
+                            placeGrob(key.gf,
+                                      pointsGrob(x=.5, y=.5, 
+                                                 gp =
+                                                 gpar(col = cur$pars$col[j], cex = cur$pars$cex[j],
+                                                      fontfamily = cur$pars$fontfamily[j],
+                                                      fontface = chooseFace(cur$pars$fontface[j], cur$pars$font[j]),
+                                                      fontsize = fontsize.points),
+                                                 pch = cur$pars$pch[j]),
+                                      row = yy, col = xx)
                     }
                     else { # if (cur$pars$type[j] == "b" or "o") -- not differentiating
-                        grid.place(key.gf, 
-                                  grid.lines(x = c(0,1) * cur$pars$size[j]/max(cur$pars$size),
-                                             ## ^^ this should be centered as well, but since the
-                                             ## chances that someone would actually use this feature
-                                             ## are astronomical, I'm leaving that for later.
-                                             y = c(.5, .5),
-                                             gp = gpar(col = cur$pars$col[j],
-                                             lty = cur$pars$lty[j],
-                                             lwd = cur$pars$lwd[j]),
-                                             draw = FALSE),
-                                  row = yy, col = xx, draw = FALSE)
+                        key.gf <-
+                            placeGrob(key.gf, 
+                                      linesGrob(x = c(0,1) * cur$pars$size[j]/max(cur$pars$size),
 
-                        grid.place(key.gf, 
-                                   grid.points(x = (1:key$divide-1)/(key$divide-1),
-                                               y = rep(.5, key$divide),
-                                               gp = gpar(col = cur$pars$col[j]),
-                                               size = unit(cur$pars$cex[j] * 2.5, "mm"),
-                                               pch = cur$pars$pch[j],
-                                               draw = FALSE),
-                                   row = yy, col = xx, draw = FALSE)
+                                                ## ^^ this should be
+                                                ## centered as well,
+                                                ## but since the
+                                                ## chances that
+                                                ## someone would
+                                                ## actually use this
+                                                ## feature are
+                                                ## astronomical, I'm
+                                                ## leaving that for
+                                                ## later.
+
+                                                y = c(.5, .5),
+                                                gp = gpar(col = cur$pars$col[j],
+                                                lty = cur$pars$lty[j],
+                                                lwd = cur$pars$lwd[j])),
+                                      row = yy, col = xx)
+
+                        key.gf <-
+                            placeGrob(key.gf, 
+                                      pointsGrob(x = (1:key$divide-1)/(key$divide-1),
+                                                 y = rep(.5, key$divide),
+                                                 gp =
+                                                 gpar(col = cur$pars$col[j], cex = cur$pars$cex[j],
+                                                      fontfamily = cur$pars$fontfamily[j],
+                                                      fontface = chooseFace(cur$pars$fontface[j], cur$pars$font[j]),
+                                                      fontsize = fontsize.points),
+                                                 pch = cur$pars$pch[j]),
+                                      row = yy, col = xx)
                     }
                 }
                 else if (cur$type == "points") {
-                    if (is.character(cur$pars$pch[j]))
-                        grid.place(key.gf, 
-                                  grid.text(lab = cur$pars$pch[j], x=.5, y=.5, 
-                                            gp = gpar(col = cur$pars$col[j],
-                                            fontsize = cur$pars$cex[j] * 10),
-                                            draw = FALSE),
-                                  row = yy, col = xx, draw = FALSE)
-                    else {
-                        grid.place(key.gf,
-                                  grid.points(x=.5, y=.5, 
-                                              gp = gpar(col = cur$pars$col[j]),
-                                              size = unit(cur$pars$cex[j] * 2.5, "mm"),
-                                              pch = cur$pars$pch[j],
-                                              draw = FALSE),
-                                  row = yy, col = xx, draw = FALSE)
-                    }
+                    key.gf <- placeGrob(key.gf,
+                                        pointsGrob(x=.5, y=.5,
+                                                   gp =
+                                                   gpar(col = cur$pars$col[j], cex = cur$pars$cex[j],
+                                                        fontfamily = cur$pars$fontfamily[j],
+                                                        fontface = chooseFace(cur$pars$fontface[j], cur$pars$font[j]),
+                                                        fontsize = fontsize.points),
+                                                   pch = cur$pars$pch[j]),
+                                        row = yy, col = xx)
                 }
 
             }
@@ -579,23 +652,6 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
 
     key.gf
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -627,255 +683,327 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                  ...)
         }
 
-    default.fontsize <- trellis.par.get("fontsize")$default
+    axis.line <- trellis.par.get("axis.line")
+    axis.text <- trellis.par.get("axis.text")
+
     key <- do.call("process.key", key)
+
+    ## made FALSE later if labels explicitly specified
+    check.overlap <- TRUE
     
     ## Getting the locations/dimensions/centers of the rectangles
     key$at <- sort(key$at) ## should check if ordered
     if (length(key$at)!=length(key$col)+1) stop("length(col) must be length(at)-1")
+
     atrange <- range(key$at)
-    scat <- .5 - key$height/2 + key$height *
-        (key$at - atrange[1]) / diff(atrange)
+    scat <- key$at
+
     recnum <- length(scat)-1
     reccentre <- (scat[-1] + scat[-length(scat)]) / 2
     recdim <- diff(scat)
 
-    cex <- 0.9
-    col <- "black"
-    font <- 1
-    if (is.null(key$lab)) {
+    cex <- axis.text$cex
+    col <- axis.text$col
+    font <- axis.text$font
+    fontfamily <- axis.text$fontfamily
+    fontface <- axis.text$fontface
+
+    if (is.null(key$lab))
+    {
         at <- lpretty(atrange, key$tick.number)
         at <- at[at>=atrange[1] & at<=atrange[2]]
-        labels <- as.character(at)
+        labels <- format(at, trim = TRUE)
     }
-    else if (is.character(key$lab) && length(key$lab)==length(key$at)) {
+    else if (is.characterOrExpression(key$lab) && length(key$lab)==length(key$at))
+    {
+        check.overlap <- FALSE
         at <- key$at
-        labels <- as.character(key$lab)
+        labels <- key$lab
     }
-    else if (is.list(key$lab)) {
+    else if (is.list(key$lab))
+    {
         if (!is.null(key$lab$at)) at <- key$lab$at
-        if (!is.null(key$lab$lab)) labels <- as.character(key$lab$lab)
+        labels <- if (!is.null(key$lab$lab)) {
+            check.overlap <- FALSE
+            key$lab$lab
+        } else format(at, trim = TRUE)
         if (!is.null(key$lab$cex)) cex <- key$lab$cex
         if (!is.null(key$lab$col)) col <- key$lab$col
         if (!is.null(key$lab$font)) font <- key$lab$font
+        if (!is.null(key$lab$fontface)) fontface <- key$lab$fontface
+        if (!is.null(key$lab$fontfamily)) fontfamily <- key$lab$fontfamily
     }
     else stop("malformed colorkey")
-    labscat <- .5 - key$height/2 + key$height *
-        (at - atrange[1]) / diff(atrange) # scales tick positions
 
-    which.name <- "W"
-    for (ss in labels)
-        if (nchar(ss) > nchar(which.name)) which.name <- ss
-
-
-    ## the tick marks for left and right should be modified
+    labscat <- at
 
 
     if (key$space == "right") {
 
-        widths.x <- c(key$width,1)
-        widths.units <- rep("strwidth", 2)
-        widths.data <- as.list(c("W", paste("--",which.name)))
+        labelsGrob <-
+            textGrob(label = labels,
+                     x = rep(0, length(labscat)),
+                     y = labscat,
+                     vp = viewport(yscale = atrange),
+                     default.units = "native",
+                     check.overlap = check.overlap,
+                     just = c("left","center"),
+                     gp =
+                     gpar(col = col,
+                          cex = cex,
+                          fontfamily = fontfamily,
+                          fontface = chooseFace(fontface, font)))
+
+        heights.x <- c((1 - key$height) / 2, key$height, (1 - key$height) / 2)
+        heights.units <- rep("null", 3)
+
+        widths.x <- c(.6 * key$width, .6, 1)
+        widths.units <- c("lines", "lines", "grobwidth")
+        widths.data <- list(NULL, NULL, labelsGrob)
         
         key.layout <-
-            grid.layout(nrow = 1, ncol = 2,
-                        widths = unit(widths.x, widths.units, data=widths.data))
+            grid.layout(nrow = 3, ncol = 3,
+                        heights = unit(heights.x, heights.units),
+                        widths = unit(widths.x, widths.units, data = widths.data),
+                        respect = TRUE)
         
-        key.gf <- grid.frame(layout = key.layout, vp = vp,
-                             gp = gpar(fontsize = default.fontsize),
-                             draw = FALSE)
+        key.gf <- frameGrob(layout = key.layout, vp = vp)
+
+        key.gf <- placeGrob(key.gf,
+                            rectGrob(x = rep(.5, length(reccentre)), 
+                                     y = reccentre,
+                                     default.units = "native",
+                                     vp = viewport(yscale = atrange),
+                                     height = recdim, 
+                                     gp = gpar(fill = key$col,  col = NULL)),
+                            row = 2, col = 1)
         
+        key.gf <- placeGrob(frame = key.gf, 
+                            rectGrob(gp =
+                                     gpar(col = axis.line$col,
+                                          lty = axis.line$lty,
+                                          lwd = axis.line$lwd)),
+                            row = 2, col = 1)
 
-######
 
-#         for (c in seq(along = key$col))
-#             grid.pack(frame = key.gf,
-#                       row = 1, col = 1,
-#                       grob = grid.rect(y = unit(reccentre[c], "native"),
-#                       height = unit(recdim[c], "native"),
-#                       gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-#                       draw = FALSE)
-
-        grid.pack(frame = key.gf, row = 1, col = 1,
-                  grob =
-                  grid.rect(x = rep(.5, length(reccentre)), 
-                            y = reccentre, default.units = "native",
-                            height = recdim, 
-                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-                  draw = FALSE)
-
-        grid.pack(frame = key.gf, col = 1,
-                  grob =
-                  grid.rect(height = key$height,
-                            gp=gpar(col="black"), draw = FALSE),
-                  draw = FALSE)
+        key.gf <- placeGrob(frame = key.gf, 
+                            segmentsGrob(x0 = rep(0, length(labscat)),
+                                         y0 = labscat,
+                                         x1 = rep(.4, length(labscat)),
+                                         y1 = labscat,
+                                         vp = viewport(yscale = atrange),
+                                         default.units = "native",
+                                         gp =
+                                         gpar(col = axis.line$col,
+                                              lty = axis.line$lty,
+                                              lwd = axis.line$lwd)),
+                            row = 2, col = 2)
         
-        grid.pack(frame = key.gf, col = 1,
-                  grob =
-                  grid.text(label = paste("-", labels, sep = ""),
-                            x = rep(1, length(labscat)),
-                            y = labscat,
-                            just = c("left","center"),
-                            gp=gpar(col = col, fontsize = cex * default.fontsize, font = font),
-                            draw = FALSE),
-                  draw = FALSE)
+        key.gf <- placeGrob(key.gf,
+                            labelsGrob, 
+                            row = 2, col = 3)
+
     }
     else if (key$space == "left") {
 
-        widths.x <- c(1,key$width)
-        widths.units <- rep("strwidth", 2)
-        widths.data <- as.list(c(paste("--",which.name), "W"))
+
+
+        labelsGrob <-
+            textGrob(label = labels,
+                     x = rep(1, length(labscat)),
+                     y = labscat,
+                     vp = viewport(yscale = atrange),
+                     default.units = "native",
+                     check.overlap = check.overlap,
+                     just = c("right","center"),
+                     gp =
+                     gpar(col = col,
+                          cex = cex,
+                          fontfamily = fontfamily,
+                          fontface = chooseFace(fontface, font)))
+
+        heights.x <- c((1 - key$height) / 2, key$height, (1 - key$height) / 2)
+        heights.units <- rep("null", 3)
+
+        widths.x <- c(1, .6, .6 * key$width)
+        widths.units <- c("grobwidth", "lines", "lines")
+        widths.data <- list(labelsGrob, NULL, NULL)
         
         key.layout <-
-            grid.layout(nrow = 1, ncol = 2,
-                        widths = unit(widths.x, widths.units, data=widths.data))
+            grid.layout(nrow = 3, ncol = 3,
+                        heights = unit(heights.x, heights.units),
+                        widths = unit(widths.x, widths.units, data = widths.data),
+                        respect = TRUE)
         
-        key.gf <- grid.frame(layout = key.layout, vp = vp,
-                             gp = gpar(fontsize = default.fontsize), 
-                             draw = FALSE)
+        key.gf <- frameGrob(layout = key.layout, vp = vp)
 
-#        for (c in seq(along = key$col))
-#            grid.pack(frame = key.gf,
-#                      row = 1, col = 2,
-#                      grob = grid.rect(y = unit(reccentre[c], "native"),
-#                      height = unit(recdim[c], "native"),
-#                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-#                      draw = FALSE)
+        key.gf <- placeGrob(key.gf,
+                            rectGrob(x = rep(.5, length(reccentre)), 
+                                     y = reccentre,
+                                     default.units = "native",
+                                     vp = viewport(yscale = atrange),
+                                     height = recdim, 
+                                     gp = gpar(fill = key$col,  col = NULL)),
+                            row = 2, col = 3)
+        
+        key.gf <- placeGrob(frame = key.gf, 
+                            rectGrob(gp =
+                                     gpar(col = axis.line$col,
+                                          lty = axis.line$lty,
+                                          lwd = axis.line$lwd)),
+                            row = 2, col = 3)
 
-        grid.pack(frame = key.gf, row = 1, col = 2,
-                  grob =
-                  grid.rect(x = rep(.5, length(reccentre)),
-                            y = unit(reccentre, "native"),
-                            height = unit(recdim, "native"),
-                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-                  draw = FALSE)
 
-        grid.pack(frame = key.gf, col = 2,
-                  grob =
-                  grid.rect(height = key$height,
-                            gp=gpar(col="black"), draw = FALSE),
-                  draw = FALSE)
+        key.gf <- placeGrob(frame = key.gf, 
+                            segmentsGrob(x0 = rep(1, length(labscat)),
+                                         y0 = labscat,
+                                         x1 = rep(.6, length(labscat)),
+                                         y1 = labscat,
+                                         vp = viewport(yscale = atrange),
+                                         default.units = "native",
+                                         gp =
+                                         gpar(col = axis.line$col,
+                                              lty = axis.line$lty,
+                                              lwd = axis.line$lwd)),
+                            row = 2, col = 2)
+        
+        key.gf <- placeGrob(key.gf,
+                            labelsGrob, 
+                            row = 2, col = 1)
 
-        grid.pack(frame = key.gf, col = 2,
-                  grob =
-                  grid.text(label = paste(labels, "-", sep = ""),
-                            x = rep(0, length(labscat)),
-                            y = labscat,
-                            just = c("right","center"),
-                            gp=gpar(col = col, fontsize = cex * default.fontsize, font = font),
-                            draw = FALSE),
-                  draw = FALSE)
     }
     else if (key$space == "top") {
 
-        heights.x <- c(1, .2, key$width)
-        heights.units <- c("lines", "lines", "strwidth")
-        heights.data <- as.list(c("a", "a", "W"))
+        labelsGrob <-
+            textGrob(label = labels,
+                     y = rep(0, length(labscat)),
+                     x = labscat,
+                     vp = viewport(xscale = atrange),
+                     default.units = "native",
+                     check.overlap = check.overlap,
+                     just = c("center","bottom"),
+                     gp =
+                     gpar(col = col,
+                          cex = cex,
+                          fontfamily = fontfamily,
+                          fontface = chooseFace(fontface, font)))
+
+        widths.x <- c((1 - key$height) / 2, key$height, (1 - key$height) / 2)
+        widths.units <- rep("null", 3)
+
+        heights.x <- c(1, .6, .6 * key$width)
+        heights.units <- c("grobheight", "lines", "lines")
+        heights.data <- list(labelsGrob, NULL, NULL)
         
         key.layout <-
-            grid.layout(nrow = 3, ncol = 1,
-                        heights = unit(heights.x, heights.units, data=heights.data))
+            grid.layout(nrow = 3, ncol = 3,
+                        heights = unit(heights.x, heights.units, data = heights.data),
+                        widths = unit(widths.x, widths.units),
+                        respect = TRUE)
         
-        key.gf <- grid.frame(layout = key.layout, vp = vp,
-                             gp = gpar(fontsize = default.fontsize), 
-                             draw = FALSE)
+        key.gf <- frameGrob(layout = key.layout, vp = vp)
 
-#         for (c in seq(along = key$col))
-#             grid.pack(frame = key.gf,
-#                       row = 3, col = 1,
-#                       grob = grid.rect(x = unit(reccentre[c], "native"),
-#                       width = unit(recdim[c], "native"),
-#                       gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-#                       draw = FALSE)
+        key.gf <- placeGrob(key.gf,
+                            rectGrob(y = rep(.5, length(reccentre)), 
+                                     x = reccentre,
+                                     default.units = "native",
+                                     vp = viewport(xscale = atrange),
+                                     width = recdim, 
+                                     gp = gpar(fill = key$col,  col = NULL)),
+                            row = 3, col = 2)
+        
+        key.gf <- placeGrob(frame = key.gf, 
+                            rectGrob(gp =
+                                     gpar(col = axis.line$col,
+                                          lty = axis.line$lty,
+                                          lwd = axis.line$lwd)),
+                            row = 3, col = 2)
 
-        grid.pack(frame = key.gf, row = 3, col = 1,
-                  grob =
-                  grid.rect(x = unit(reccentre, "native"),
-                            y = rep(.5, length(reccentre)),
-                            width = unit(recdim, "native"),
-                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-                  draw = FALSE)
 
-        grid.pack(frame = key.gf, row = 3,
-                  grob =
-                  grid.rect(width = key$height,
-                            gp=gpar(col="black"), draw = FALSE),
-                  draw = FALSE)
+        key.gf <- placeGrob(frame = key.gf, 
+                            segmentsGrob(y0 = rep(0, length(labscat)),
+                                         x0 = labscat,
+                                         y1 = rep(.4, length(labscat)),
+                                         x1 = labscat,
+                                         vp = viewport(xscale = atrange),
+                                         default.units = "native",
+                                         gp =
+                                         gpar(col = axis.line$col,
+                                              lty = axis.line$lty,
+                                              lwd = axis.line$lwd)),
+                            row = 2, col = 2)
+        
+        key.gf <- placeGrob(key.gf,
+                            labelsGrob, 
+                            row = 1, col = 2)
 
-        for (c in seq(along = labscat))
-            grid.pack(frame = key.gf, row = 2,
-                      grob =
-                      grid.lines(x = unit(rep(labscat[c], 2), "native"),
-                                 gp=gpar(col = col),
-                                 draw = FALSE),
-                                 draw = FALSE)
-
-        grid.pack(frame = key.gf, row = 1,
-                  grob =
-                  grid.text(label = labels,
-                            x = labscat,
-                            just = c("centre","center"),
-                            gp=gpar(col = col, fontsize = cex * default.fontsize, font = font),
-                            draw = FALSE),
-                  draw = FALSE)
     }
     else if (key$space == "bottom") {
 
-        heights.x <- c(key$width, .2, 1)
-        heights.units <- c("strwidth", "lines", "lines")
-        heights.data <- as.list(c("W", "a", "a"))
+
+        labelsGrob <-
+            textGrob(label = labels,
+                     y = rep(1, length(labscat)),
+                     x = labscat,
+                     vp = viewport(xscale = atrange),
+                     default.units = "native",
+                     check.overlap = check.overlap,
+                     just = c("center","top"),
+                     gp =
+                     gpar(col = col,
+                          cex = cex,
+                          fontfamily = fontfamily,
+                          fontface = chooseFace(fontface, font)))
+
+        widths.x <- c((1 - key$height) / 2, key$height, (1 - key$height) / 2)
+        widths.units <- rep("null", 3)
+
+        heights.x <- c(.6 * key$width, .6, 1)
+        heights.units <- c("lines", "lines", "grobheight")
+        heights.data <- list(NULL, NULL, labelsGrob)
         
         key.layout <-
-            grid.layout(nrow = 3, ncol = 1,
-                        heights = unit(heights.x, heights.units, data=heights.data))
+            grid.layout(nrow = 3, ncol = 3,
+                        heights = unit(heights.x, heights.units, data = heights.data),
+                        widths = unit(widths.x, widths.units),
+                        respect = TRUE)
         
-        key.gf <- grid.frame(layout = key.layout, vp = vp,
-                             gp = gpar(fontsize = default.fontsize),
-                             draw = FALSE)
+        key.gf <- frameGrob(layout = key.layout, vp = vp)
+
+        key.gf <- placeGrob(key.gf,
+                            rectGrob(y = rep(.5, length(reccentre)), 
+                                     x = reccentre,
+                                     default.units = "native",
+                                     vp = viewport(xscale = atrange),
+                                     width = recdim, 
+                                     gp = gpar(fill = key$col,  col = NULL)),
+                            row = 1, col = 2)
+
+        key.gf <- placeGrob(frame = key.gf, 
+                            rectGrob(gp =
+                                     gpar(col = axis.line$col,
+                                          lty = axis.line$lty,
+                                          lwd = axis.line$lwd)),
+                            row = 1, col = 2)
+
+        key.gf <- placeGrob(frame = key.gf, 
+                            segmentsGrob(y0 = rep(1, length(labscat)),
+                                         x0 = labscat,
+                                         y1 = rep(.6, length(labscat)),
+                                         x1 = labscat,
+                                         vp = viewport(xscale = atrange),
+                                         default.units = "native",
+                                         gp =
+                                         gpar(col = axis.line$col,
+                                              lty = axis.line$lty,
+                                              lwd = axis.line$lwd)),
+                            row = 2, col = 2)
         
-#         for (c in seq(along = key$col))
-#             grid.pack(frame = key.gf,
-#                       row = 1, col = 1,
-#                       grob = grid.rect(x = unit(reccentre[c], "native"),
-#                       width = unit(recdim[c], "native"),
-#                       gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-#                       draw = FALSE)
+        key.gf <- placeGrob(key.gf,
+                            labelsGrob, 
+                            row = 3, col = 2)
 
-        grid.pack(frame = key.gf, row = 1, col = 1,
-                  grob =
-                  grid.rect(x = unit(reccentre, "native"),
-                            y = rep(.5, length(reccentre)),
-                            width = unit(recdim, "native"),
-                            gp = gpar(fill=key$col, col = NULL), draw = FALSE),
-                  draw = FALSE)
-
-        grid.pack(frame = key.gf, row = 1,
-                  grob =
-                  grid.rect(width = key$height,
-                            gp = gpar(col="black"), draw = FALSE),
-                  draw = FALSE)
-
-        for (c in seq(along = labscat))
-            grid.pack(frame = key.gf, row = 2,
-                      grob =
-                      grid.lines(x = unit(rep(labscat[c], 2), "native"),
-                                 gp=gpar(col = col),
-                                 draw = FALSE),
-                                 draw = FALSE)
-
-        grid.pack(frame = key.gf, row = 3,
-                  grob =
-                  grid.text(label = labels,
-                            x = labscat,
-                            just = c("centre","center"),
-                            gp=gpar(col = col, fontsize = cex * default.fontsize, font = font),
-                            draw = FALSE),
-                  draw = FALSE)
     }
-    
-
-
-
 
 
     if (draw)
@@ -894,199 +1022,26 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 
 
 
+calculateGridLayout <- function(x,
+                                rows.per.page, cols.per.page,
+                                number.of.cond,
+                                panel.height, panel.width,
 
+                                main, sub,
+                                xlab, ylab,
 
+                                x.alternating, y.alternating,
+                                x.relation.same, y.relation.same,
 
+                                xaxis.rot, yaxis.rot,
+                                xaxis.cex, yaxis.cex,
 
+                                par.strip.text,
 
-
-
-
-
-
-print.trellis <-
-    function(x, position, split, more = FALSE,
-             newpage = TRUE,
-             panel.height = list(1, "null"),
-             panel.width = list(1, "null"),
-             ...)
+                                legend)
+    ## x: the trellis object
 {
-    if (is.null(dev.list())) trellis.device()
-    else if (is.null(trellis.par.get()))
-        trellis.device(device = .Device, new = FALSE)
-    bg = trellis.par.get("background")$col
-    new <- TRUE
-    if (get(".lattice.print.more", envir=.LatticeEnv) || !newpage) new <- FALSE
-    assign(".lattice.print.more", more, envir=.LatticeEnv)
-    usual  <- (missing(position) & missing(split))
-    ##if (!new && usual)
-    ##    warning("more is relevant only when split/position is specified")
 
-    fontsize.default <- trellis.par.get("fontsize")$default
-    
-    if (!missing(position)) {
-        if (length(position)!=4) stop("Incorrect value of position")
-        if (new) {
-            grid.newpage()
-            grid.rect(gp = gpar(fill = bg, col = "transparent"))
-        }
-        push.viewport(viewport(x=position[1], y=position[2],
-                               width=position[3]-position[1],
-                               height=position[4]-position[2],
-                               just=c("left","bottom")))
-        
-        if (!missing(split)) {
-            if (length(split)!=4) stop("Incorrect value of split")
-
-            push.viewport(viewport(layout = grid.layout(nrow=split[4],
-                                   ncol = split[3])))
-            push.viewport(viewport(layout.pos.row = split[2],
-                                   layout.pos.col = split[1]))
-        }
-    }
-    
-    
-    else if (!missing(split)) {
-        
-        if (length(split)!=4) stop("Incorrect value of split")
-        if (new) {
-            grid.newpage()
-            grid.rect(gp = gpar(fill = bg, col = "transparent"))
-        }
-        push.viewport(viewport(layout = grid.layout(nrow=split[4],
-                               ncol = split[3])))
-        push.viewport(viewport(layout.pos.row = split[2],
-                               layout.pos.col = split[1]))
-    }
-    
-    panel <- # shall use "panel" in do.call
-        if (is.function(x$panel)) x$panel 
-        else if (is.character(x$panel)) get(x$panel)
-        else eval(x$panel)
-
-    x$strip <- 
-        if (is.function(x$strip)) x$strip 
-        else if (is.character(x$strip)) get(x$strip)
-        else eval(x$strip)
-
-    axis.line <- trellis.par.get("axis.line")
-    number.of.cond <- length(x$condlevels)
-    
-    ##panel.width <- 1
-    layout.respect <- !x$aspect.fill
-    if (layout.respect) panel.height[[1]] <-
-        x$aspect.ratio * panel.width[[1]]
-
-    if (!is.null(x$key)) {
-        key.gf <- draw.key(x$key)
-        key.space <-
-            if ("space" %in% names(x$key)) x$key$space
-            else if ("x" %in% names(x$key) ||
-                     "corner" %in% names(x$key)) "inside"
-            else "top"
-    }
-    else if (!is.null(x$colorkey)) {
-        key.gf <- draw.colorkey(x$colorkey)
-        key.space <- 
-            if ("space" %in% names(x$colorkey)) x$colorkey$space
-            else "right"
-    }
-
-    xaxis.col <-
-        if (is.logical(x$x.scales$col)) axis.line$col
-        else x$x.scales$col
-    xaxis.font <-
-        if (is.logical(x$x.scales$font)) 1
-        else x$x.scales$font
-    xaxis.cex <-
-        x$x.scales$cex
-    xaxis.rot <-
-        if (is.logical(x$x.scales$rot)) c(0, 0)
-        else x$x.scales$rot
-    yaxis.col <-
-        if (is.logical(x$y.scales$col)) axis.line$col
-        else x$y.scales$col
-    yaxis.font <-
-        if (is.logical(x$y.scales$font)) 1
-        else x$y.scales$font
-    yaxis.cex <-
-        x$y.scales$cex
-    yaxis.rot <-
-        if (!is.logical(x$y.scales$rot)) x$y.scales$rot
-        else if (x$y.scales$relation != "same" && is.logical(x$y.scales$labels)) c(90, 90)
-        else c(0, 0)
-
-    strip.col.default.bg <-
-        rep(trellis.par.get("strip.background")$col,length=number.of.cond)
-    strip.col.default.fg <-
-        rep(trellis.par.get("strip.shingle")$col,length=number.of.cond)
-
-
-    cond.max.level <- integer(number.of.cond)
-    for(i in 1:number.of.cond) {
-        cond.max.level[i] <- length(x$condlevels[[i]])
-    }
-
-    if(x$layout[1]==0) { # using device dimensions to
-        ddim <- par("din") # calculate default layout
-        device.aspect <- ddim[2]/ddim[1]
-        panel.aspect <- panel.height[[1]]/panel.width[[1]]
-
-        plots.per.page <- x$layout[2]
-        m <- max (1, round(sqrt(x$layout[2] * device.aspect/panel.aspect)))
-        ## changes made to fix bug (PR#1744)
-        n <- ceiling(plots.per.page/m)
-        m <- ceiling(plots.per.page/n)
-        x$layout[1] <- n
-        x$layout[2] <- m
-
-    }
-    else plots.per.page <- x$layout[1] * x$layout[2] 
-
-
-
-    cols.per.page <- x$layout[1]
-    rows.per.page <- x$layout[2]
-    number.of.pages <- x$layout[3]
-        
-    if(cols.per.page>1)
-        x.between <- rep(x$x.between, length = cols.per.page-1)
-    if(rows.per.page>1) 
-        y.between <- rep(x$y.between, length = rows.per.page-1)
-    
-    x.alternating <- rep(x$x.scales$alternating, length = cols.per.page)
-    y.alternating <- rep(x$y.scales$alternating, length = rows.per.page)
-    x.relation.same <- x$x.scales$relation == "same"
-    y.relation.same <- x$y.scales$relation == "same"
-
-    xlog <- x$x.scales$log
-    ylog <- x$y.scales$log
-    if (is.logical(xlog) && xlog) xlog <- 10
-    if (is.logical(ylog) && ylog) ylog <- 10
-    have.xlog <- !is.logical(xlog) || xlog
-    have.ylog <- !is.logical(ylog) || ylog
-    xlogbase <-
-        if (is.numeric(xlog)) xlog
-        else exp(1)
-    ylogbase <-
-        if (is.numeric(ylog)) ylog
-        else exp(1)
-    xlogpaste <-
-        if (have.xlog) paste(as.character(xlog), "^", sep = "")
-        else ""
-    ylogpaste <-
-        if (have.ylog) paste(as.character(ylog), "^", sep = "")
-        else ""
-
-
-
-    have.main <- !(is.null(x$main$label) || (is.character(x$main$label) && x$main$label==""))
-    have.sub <- !(is.null(x$sub$label)   || (is.character(x$sub$label) && x$sub$label==""))
-    have.xlab <- !(is.null(x$xlab$label) || (is.character(x$xlab$label) && x$xlab$label==""))
-    have.ylab <- !(is.null(x$ylab$label) || (is.character(x$ylab$label) && x$ylab$label==""))
-
-    
-    ## Shall calculate the per page layout now:
 
     ## The idea here is to create a layout with proper widths and
     ## heights (representing the requisite amounts of space required
@@ -1121,7 +1076,7 @@ print.trellis <-
     ## this gives some hints to whoever (probably me!) tries to
     ## decipher the following code on some later date.
 
-    
+
     n.row <- rows.per.page * (number.of.cond + 3) + (rows.per.page-1) + 11
     ##       ^^^^^^^^^^^      ^^^^^^^^^^^^^^^^       ^^^^^^^^^^^^^^^    ^^
     ##          panels         rows per panel           between     see below
@@ -1169,6 +1124,9 @@ print.trellis <-
     ## cases (no need for matrices then), but that fails with the
     ## complicated layout necessitated by expressions (see above).
 
+
+    layout.respect <- !x$aspect.fill
+
     if (layout.respect) {
         layout.respect <- matrix(0, n.row, n.col)
 
@@ -1177,6 +1135,16 @@ print.trellis <-
                        8] <- 1
 
     }
+
+    if(cols.per.page > 1)
+        x.between <- rep(x$x.between, length = cols.per.page - 1)
+    if(rows.per.page > 1) 
+        y.between <- rep(x$y.between, length = rows.per.page - 1)
+    
+
+
+
+
 
     ## see ?unit before trying to follow this. 
 
@@ -1218,20 +1186,30 @@ print.trellis <-
     ## y-between
 
 
+    
+
     heights.x[1] <- 0.5
-    heights.x[2] <- if (have.main) 2 * x$main$cex else 0
-    if (have.main) {
+
+    if (is.null(main))
+        heights.x[2] <- 0
+    else
+    {
+        heights.x[2] <- 2 * main$cex
         heights.units[2] <-  "strheight"
-        heights.data[[2]] <- x$main$lab
+        heights.data[[2]] <- main$lab
     }
 
 
 
     heights.x[n.row] <- 0.5
-    heights.x[n.row-1] <- if (have.sub) 2 * x$sub$cex else 0
-    if (have.sub) {
+
+    if (is.null(sub))
+        heights.x[n.row-1] <- 0
+    else
+    {
+        heights.x[n.row-1] <- 2 * sub$cex
         heights.units[n.row-1] <-  "strheight"
-        heights.data[[n.row-1]] <- x$sub$lab
+        heights.data[[n.row-1]] <- sub$lab
     }
 
     heights.x[3] <- 0 # for the key
@@ -1251,6 +1229,12 @@ print.trellis <-
     ## labels. Unfortunately this makes the code complicated
 
 
+
+    ## All the upcoming horrendous code about labels is only to
+    ## determine how much space to leave for them. Much of these
+    ## calcualtions will be repeated later before actually drawing
+    ## them. Maybe the two can be combined ?
+
     if (x$x.scales$draw) {
 
         if (x.relation.same) {
@@ -1259,11 +1243,13 @@ print.trellis <-
                 calculateAxisComponents(x = x$x.limits,
                                         at = x$x.scales$at,
                                         labels = x$x.scales$lab,
-                                        have.log = have.xlog,
-                                        logbase = xlogbase,
-                                        logpaste = xlogpaste,
+                                        logsc = x$x.scales$log,
+                                        #have.log = have.xlog,
+                                        #logbase = xlogbase,
+                                        #logpaste = xlogpaste,
                                         abbreviate = x$x.scales$abbr,
                                         minlength = x$x.scales$minl,
+                                        format.posixt = x$x.scales$format,
                                         n = x$x.scales$tick.number)$lab
 
 
@@ -1341,12 +1327,14 @@ print.trellis <-
                     calculateAxisComponents(x = x$x.limits[[i]],
                                             at = if (is.list(x$x.scales$at)) x$x.scales$at[[i]] else x$x.scales$at,
                                             labels = if (is.list(x$x.scales$lab)) x$x.scales$lab[[i]] else x$x.scales$lab,
-                                            have.log = have.xlog,
-                                            logbase = xlogbase,
-                                            logpaste = xlogpaste,
+                                            logsc = x$x.scales$log,
+                                            #have.log = have.xlog,
+                                            #logbase = xlogbase,
+                                            #logpaste = xlogpaste,
                                             abbreviate = x$x.scales$abbr,
                                             minlength = x$x.scales$minl,
-                                            n = x$x.scales$tick.number)$lab
+                                            n = x$x.scales$tick.number,
+                                            format.posixt = x$x.scales$format)$lab
                 if (is.character(lab)) 
                     labelChars <- c(labelChars, lab)
                 else if (is.expression(lab))
@@ -1400,25 +1388,39 @@ print.trellis <-
         }
     }
 
-    heights.x[n.row-3] <- if (have.xlab) 2 * x$xlab$cex else 0 # xlab
-    if (have.xlab) {
+
+
+    ## xlab
+    if (is.null(xlab))
+        heights.x[n.row-3] <- 0.2 
+    else
+    {
+        heights.x[n.row-3] <- 2 * xlab$cex
         heights.units[n.row-3] <-  "strheight"
-        heights.data[[n.row-3]] <- x$xlab$lab
+        heights.data[[n.row-3]] <- xlab$lab
     }
 
-    ## this is if strip=F -- strips not to be drawn
+    ## space for strips
     for(crr in 1:number.of.cond)
         heights.x[number.of.cond + 6 + (1:rows.per.page - 1)*(number.of.cond+4) - crr] <-
             if (is.logical(x$strip)) 0  # which means strip = F, strips not to be drawn
-            else 1.1 * x$par.strip.text$cex * x$par.strip.text$lines
+            else 1.1 * par.strip.text$cex * par.strip.text$lines
+
+
+
+
 
     ## fine tuning widths:
     ##----------------------------------------------------------------------------------
-
-    widths.x[3] <- if (have.ylab) 2 * x$ylab$cex else 0 # ylab
-    if (have.ylab) {
+    
+    ## ylab
+    if (is.null(ylab))
+        widths.x[3] <- 0.2
+    else
+    {
+        widths.x[3] <- 2 * ylab$cex
         widths.units[3] <-  "strheight"
-        widths.data[[3]] <- x$ylab$lab
+        widths.data[[3]] <- ylab$lab
     }
 
 
@@ -1468,12 +1470,14 @@ print.trellis <-
                 calculateAxisComponents(x = x$y.limits,
                                         at = x$y.scales$at,
                                         labels = x$y.scales$lab,
-                                        have.log = have.ylog,
-                                        logbase = ylogbase,
-                                        logpaste = ylogpaste,
+                                        logsc = x$y.scales$log,
+                                        #have.log = have.ylog,
+                                        #logbase = ylogbase,
+                                        #logpaste = ylogpaste,
                                         abbreviate = x$y.scales$abbr,
                                         minlength = x$y.scales$minl,
-                                        n = x$y.scales$tick.number)$lab
+                                        n = x$y.scales$tick.number,
+                                        format.posixt = x$y.scales$format)$lab
 
 
             if (is.character(lab)) 
@@ -1489,7 +1493,17 @@ print.trellis <-
 
             widths.x[5] <- 0.5 + max(0.001, x$y.scales$tck[1]) * 0.3
             ## tck = 2 is .5 lines + .6 lines
-            widths.x[n.col-3] <- max(1, x$y.scales$tck[2]) * 0.5
+
+
+##FIXME
+            
+            ## WAS : widths.x[n.col-3] <- max(1, x$y.scales$tck[2]) * 0.5
+            ## not sure why
+            ## changed to:
+
+            widths.x[n.col-3] <- 0.5 + max(0.001, x$y.scales$tck[2]) * 0.3
+
+
 
             if (any(y.alternating==1 | y.alternating==3)) {
 
@@ -1543,12 +1557,14 @@ print.trellis <-
                     calculateAxisComponents(x = x$y.limits[[i]],
                                             at = if (is.list(x$y.scales$at)) x$y.scales$at[[i]] else x$y.scales$at,
                                             labels = if (is.list(x$y.scales$lab)) x$y.scales$lab[[i]] else x$y.scales$lab,
-                                            have.log = have.ylog,
-                                            logbase = ylogbase,
-                                            logpaste = ylogpaste,
+                                            logsc = x$y.scales$log,
+                                            #have.log = have.ylog,
+                                            #logbase = ylogbase,
+                                            #logpaste = ylogpaste,
                                             abbreviate = x$y.scales$abbr,
                                             minlength = x$y.scales$minl,
-                                            n = x$y.scales$tick.number)$lab
+                                            n = x$y.scales$tick.number,
+                                            format.posixt = x$y.scales$format)$lab
                 if (is.character(lab)) 
                     labelChars <- c(labelChars, lab)
                 else if (is.expression(lab))
@@ -1583,13 +1599,6 @@ print.trellis <-
                 widths.x[(1:cols.per.page - 1)*4 + 7] <- 
                     max(0.001, x$y.scales$tck[1]) * 0.3
 
-                ##if (is.logical(x$y.scales$at)) {
-                ##    widths.x[(1:cols.per.page - 1)*4 + 6] <-
-                ##        1.1 * yaxis.cex * abs(cos(yaxis.rot * pi /180))
-                ##    widths.units[(1:cols.per.page - 1)*4 + 6] <- "strwidth"
-                ##    widths.data[(1:cols.per.page - 1)*4 + 6] <- which.name
-                #3}
-                ##else {
                 widths.insertlist.position <-
                     c(widths.insertlist.position, (1:cols.per.page - 1)*4 + 6)
                 for (i in 1:cols.per.page)
@@ -1597,39 +1606,75 @@ print.trellis <-
                         unit.c(widths.insertlist.unit,
                                max(unit(rep(1.2 * yaxis.cex[1] * abs(cos(yaxis.rot[1] * base::pi /180)),
                                             length(strbar)), "strwidth", strbar)))
-                ##}
             }
         }
     }
 
 
-    if (!is.null(x$key) || !is.null(x$colorkey)) {
-            
-        if (key.space == "left") {
+
+    if (!is.null(legend))
+    {
+        ## allocate space as necessary
+
+        if ("left" %in% names(legend))
+        {
             widths.x[2] <- 1.2
             widths.units[2] <- "grobwidth"
-            widths.data[[2]] <- key.gf
+            widths.data[[2]] <- legend$left$obj
         }
-        else if (key.space == "right") {
+        if ("right" %in% names(legend))
+        {
             widths.x[n.col-1] <- 1.2
             widths.units[n.col-1] <- "grobwidth"
-            widths.data[[n.col-1]] <- key.gf
+            widths.data[[n.col-1]] <- legend$right$obj
         }
-        else if (key.space == "top") {
+        if ("top" %in% names(legend))
+        {
             heights.x[3] <- 1.2
             heights.units[3] <- "grobheight"
-            heights.data[[3]] <- key.gf
+            heights.data[[3]] <- legend$top$obj
         }
-        else if (key.space == "bottom") {
+        if ("bottom" %in% names(legend))
+        {
             heights.x[n.row-2] <- 1.2
             heights.units[n.row-2] <- "grobheight"
-            heights.data[[n.row-2]] <- key.gf
+            heights.data[[n.row-2]] <- legend$bottom$obj
         }
-        
     }
+
+
+
+
+
+
+
+#     if (!is.null(x$key) || !is.null(x$colorkey)) {
+            
+#         if (key.space == "left") {
+#             widths.x[2] <- 1.2
+#             widths.units[2] <- "grobwidth"
+#             widths.data[[2]] <- key.gf
+#         }
+#         else if (key.space == "right") {
+#             widths.x[n.col-1] <- 1.2
+#             widths.units[n.col-1] <- "grobwidth"
+#             widths.data[[n.col-1]] <- key.gf
+#         }
+#         else if (key.space == "top") {
+#             heights.x[3] <- 1.2
+#             heights.units[3] <- "grobheight"
+#             heights.data[[3]] <- key.gf
+#         }
+#         else if (key.space == "bottom") {
+#             heights.x[n.row-2] <- 1.2
+#             heights.units[n.row-2] <- "grobheight"
+#             heights.data[[n.row-2]] <- key.gf
+#         }
+        
+#     }
     
 
-    ## Constructing the layout:
+    ## Having determined heights and widths, now construct the layout:
 
     layout.heights <- unit(heights.x, heights.units, data=heights.data)
     if (length(heights.insertlist.position)>1)
@@ -1651,594 +1696,1054 @@ print.trellis <-
                                heights = layout.heights,
                                respect = layout.respect)
 
+
+    page.layout
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+evaluate.legend <- function(legend)
+{
+    if (is.null(legend)) return(NULL)
+    for (i in seq(along = legend))
+    {
+        fun <- legend[[i]]$fun
+        fun <- 
+            if (is.function(fun)) fun 
+            else if (is.character(fun)) get(fun)
+            else eval(fun)  ## in case fun is a grob (is this OK?)
+        if (is.function(fun)) fun <- do.call("fun", legend[[i]]$args)
+        legend[[i]]$obj <- fun
+        legend[[i]]$args <- NULL
+        legend[[i]]$fun <- NULL
+    }
+    legend
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+print.trellis <-
+    function(x, position, split, more = FALSE,
+             newpage = TRUE,
+             panel.height = list(1, "null"),
+             panel.width = list(1, "null"),
+             ...)
+{
+    if (is.null(dev.list())) trellis.device()
+    else if (is.null(trellis.par.get()))
+        trellis.device(device = .Device, new = FALSE)
+
+    ## if necessary, save current settings and apply temporary
+    ## settings in x$par.settings
+
+    if (!is.null(x$par.settings))
+    {
+        opars <- trellis.par.get()
+        lset(x$par.settings)
+    }
+
+    bg = trellis.par.get("background")$col
+    new <- TRUE
+    if (get(".lattice.print.more", envir=.LatticeEnv) || !newpage) new <- FALSE
+    assign(".lattice.print.more", more, envir=.LatticeEnv)
+    usual  <- (missing(position) & missing(split))
+    ##if (!new && usual)
+    ##    warning("more is relevant only when split/position is specified")
+
+    fontsize.text <- trellis.par.get("fontsize")$text
+    
+    if (!missing(position)) {
+        if (length(position)!=4) stop("Incorrect value of position")
+        if (new)
+        {
+            grid.newpage()
+            grid.rect(gp = gpar(fill = bg, col = "transparent"))
+        }
+        pushViewport(viewport(x = position[1], y = position[2],
+                              width = position[3] - position[1],
+                              height = position[4] - position[2],
+                              just = c("left","bottom")))
         
-    cond.current.level <- rep(1,number.of.cond)
-    panel.number <- 1
+        if (!missing(split))
+        {
+            if (length(split)!=4) stop("Incorrect value of split")
+            pushViewport(viewport(layout = grid.layout(nrow=split[4], ncol = split[3])))
+            pushViewport(viewport(layout.pos.row = split[2], layout.pos.col = split[1]))
+        }
+    }
+    
+    
+    else if (!missing(split)) {
         
+        if (length(split)!=4) stop("Incorrect value of split")
+        if (new)
+        {
+            grid.newpage()
+            grid.rect(gp = gpar(fill = bg, col = "transparent"))
+        }
+        pushViewport(viewport(layout = grid.layout(nrow=split[4], ncol = split[3])))
+        pushViewport(viewport(layout.pos.row = split[2], layout.pos.col = split[1]))
+    }
+
+
+
+
+
+
+
+
+
+    ## reordering stuff
+
+
+    ## FLAG: potentially changes x
+
+    ## the following definitions are already made in high level functions
+#     if (is.null(x$index.cond)) {
+#         x$index.cond <-
+#             vector(mode = "list",
+#                    length = length(x$condlevels))
+#         for (i in seq(along = x$condlevels))
+#             x$index.cond[[i]] <- seq(along = x$condlevels[[i]])
+#     }
+#     if (is.null(x$perm.cond))
+#         x$perm.cond <- seq(length = length(x$condlevels))
+
+    ## but maybe a validity check (to ensure current values make
+    ## sense) would be useful here (or, wherever it can be changed)
+
+
+
+
+
+
+
+
+    ## order.cond will be a multidimensional array, with
+    ## length(dim(order.cond)) = number of conditioning
+    ## variables. It's a numeric vector 1:(number.of.panels), with
+    ## dim() = c(nlevels(g1), ..., nlevels(gn)), where g1, ..., gn are
+    ## the conditioning variables.
+
+    ## manipulating order.cond has 2 uses. Using normal indexing, the
+    ## order of plots within a conditioning variable can be altered,
+    ## or only a subset of the levels used. Also, using aperm, the
+    ## order of conditioning can be altered.
+
+    ## the information required to make the appropriate permutation
+    ## and indexing is in the components index.cond and perm.cond of
+    ## the trellis object
+
+    order.cond <- seq(length = prod(sapply(x$condlevels, length)))
+    dim(order.cond) <- sapply(x$condlevels, length)
+
+    ## first subset, then permute
+    order.cond <- do.call("[", c(list(order.cond), x$index.cond, list(drop = FALSE)))
+    order.cond <- aperm(order.cond, perm = x$perm.cond)
+
+    ## order.cond will be used as indices for (exactly) the following
+
+    ## 1. panel.args
+    ## 2. x.limits
+    ## 3. y.limits
+
+    ## may need x$(subset|perm).cond later for strip drawing
+
+    cond.max.level <- dim(order.cond)
+    number.of.cond <- length(cond.max.level)
+
+    panel.layout <-
+        compute.layout(x$layout, cond.max.level, skip = x$skip)
+
+    panel <- # shall use "panel" in do.call
+        if (is.function(x$panel)) x$panel 
+        else if (is.character(x$panel)) get(x$panel)
+        else eval(x$panel)
+
+    strip <- 
+        if (is.function(x$strip)) x$strip 
+        else if (is.character(x$strip)) get(x$strip)
+        else eval(x$strip)
+
+    axis.line <- trellis.par.get("axis.line")
+    axis.text <- trellis.par.get("axis.text")
+
+
+    ## make sure aspect ratio is preserved for aspect != "fill" but
+    ## this may not always be what's expected. In fact, aspect should
+    ## be "fill" whenever panel.width or panel.height are non-default.
+
+    ## panel.width <- 1
+    if (!x$aspect.fill)
+        panel.height[[1]] <- x$aspect.ratio * panel.width[[1]]
+
+
+
+
+
+    ## Evaluate the legend / key grob(s): 
+
+    legend <- evaluate.legend(x$legend)
+
+    ## legend is now a list of `grob's along with placement info
+
+
+
+    xaxis.lty <-
+        if (is.logical(x$x.scales$lty)) axis.line$lty
+        else x$x.scales$lty
+    xaxis.lwd <-
+        if (is.logical(x$x.scales$lwd)) axis.line$lwd
+        else x$x.scales$lwd
+    xaxis.col.line <-
+        if (is.logical(x$x.scales$col.line)) axis.line$col
+        else x$x.scales$col.line
+    xaxis.col.text <-
+        if (is.logical(x$x.scales$col)) axis.text$col
+        else x$x.scales$col
+    xaxis.font <-
+        if (is.logical(x$x.scales$font)) axis.text$font
+        else x$x.scales$font
+    xaxis.fontface <-
+        if (is.logical(x$x.scales$fontface)) axis.text$fontface
+        else x$x.scales$fontface
+    xaxis.fontfamily <-
+        if (is.logical(x$x.scales$fontfamily)) axis.text$fontfamily
+        else x$x.scales$fontfamily
+    xaxis.cex <-
+        if (is.logical(x$x.scales$cex)) rep(axis.text$cex, length = 2)
+        else x$x.scales$cex
+    xaxis.rot <-
+        if (is.logical(x$x.scales$rot)) c(0, 0)
+        else x$x.scales$rot
+
+
+
+    yaxis.lty <-
+        if (is.logical(x$y.scales$lty)) axis.line$lty
+        else x$y.scales$lty
+    yaxis.lwd <-
+        if (is.logical(x$y.scales$lwd)) axis.line$lwd
+        else x$y.scales$lwd
+    yaxis.col.line <-
+        if (is.logical(x$y.scales$col.line)) axis.line$col
+        else x$y.scales$col.line
+    yaxis.col.text <-
+        if (is.logical(x$y.scales$col)) axis.text$col
+        else x$y.scales$col
+    yaxis.font <-
+        if (is.logical(x$y.scales$font)) axis.text$font
+        else x$y.scales$font
+    yaxis.fontface <-
+        if (is.logical(x$y.scales$fontface)) axis.text$fontface
+        else x$y.scales$fontface
+    yaxis.fontfamily <-
+        if (is.logical(x$y.scales$fontfamily)) axis.text$fontfamily
+        else x$y.scales$fontfamily
+    yaxis.cex <-
+        if (is.logical(x$y.scales$cex)) rep(axis.text$cex, length = 2)
+        else x$y.scales$cex
+    yaxis.rot <-
+        if (!is.logical(x$y.scales$rot)) x$y.scales$rot
+        else if (x$y.scales$relation != "same" && is.logical(x$y.scales$labels)) c(90, 90)
+        else c(0, 0)
+
+
+
+
+    strip.col.default.bg <-
+        rep(trellis.par.get("strip.background")$col,length=number.of.cond)
+    strip.col.default.fg <-
+        rep(trellis.par.get("strip.shingle")$col,length=number.of.cond)
+
+
+
+    ## Start layout calculations when only number of panels per page
+    ## is pecified (this refers to the layout argument, not grid
+    ## layouts)
+
+    if (panel.layout[1] == 0) { # using device dimensions to
+
+        ddim <- par("din") # calculate default layout
+        device.aspect <- ddim[2] / ddim[1]
+        panel.aspect <- panel.height[[1]] / panel.width[[1]]
+
+        plots.per.page <- panel.layout[2]
+        m <- max (1, round(sqrt(panel.layout[2] * device.aspect / panel.aspect)))
+        ## changes made to fix bug (PR#1744)
+        n <- ceiling(plots.per.page/m)
+        m <- ceiling(plots.per.page/n)
+        panel.layout[1] <- n
+        panel.layout[2] <- m
+
+    }
+    else plots.per.page <- panel.layout[1] * panel.layout[2] 
+
+    ## End layout calculations
+
+
+    cols.per.page <- panel.layout[1]
+    rows.per.page <- panel.layout[2]
+    number.of.pages <- panel.layout[3]
+
+    skip <- rep(x$skip, plots.per.page * rows.per.page * cols.per.page)
+
+    x.alternating <- rep(x$x.scales$alternating, length = cols.per.page)
+    y.alternating <- rep(x$y.scales$alternating, length = rows.per.page)
+    x.relation.same <- x$x.scales$relation == "same"
+    y.relation.same <- x$y.scales$relation == "same"
+
+    ## get lists for main, sub, xlab, ylab
+
+    main <- getLabelList(x$main, trellis.par.get("par.main.text"))
+    sub <- getLabelList(x$sub, trellis.par.get("par.sub.text"))
+    xlab <- getLabelList(x$xlab, trellis.par.get("par.xlab.text"), x$xlab.default)
+    ylab <- getLabelList(x$ylab, trellis.par.get("par.ylab.text"), x$ylab.default)
+
+
+    ## get par.strip.text
+
+    par.strip.text <- trellis.par.get("add.text")
+    par.strip.text$lines <- 1
+    if (!is.null(x$par.strip.text)) 
+        par.strip.text[names(x$par.strip.text)] <- x$par.strip.text
+
+
+
+    ## Shall calculate the per page Grid layout now:
+
+    ## this layout will now be used for each page (this is quite
+    ## complicated and unfortunately very convoluted)
+
+
+    page.layout <- calculateGridLayout(x,
+                                       rows.per.page, cols.per.page,
+                                       number.of.cond,
+                                       panel.height, panel.width,
+                                       main, sub,
+                                       xlab, ylab,
+                                       x.alternating, y.alternating,
+                                       x.relation.same, y.relation.same,
+                                       xaxis.rot, yaxis.rot,
+                                       xaxis.cex, yaxis.cex,
+                                       par.strip.text,
+                                       legend)
+
+
+    n.row <- layoutNRow(page.layout)
+    n.col <- layoutNCol(page.layout)
+
+
+    ## commence actual plotting
+
+    
+    cond.current.level <- rep(1, number.of.cond)
+
+    ##   this vector represents the combination of levels of the
+    ##   conditioning variables for the current panel.
+
+    
+    panel.counter <- 0
+
+    ## panel.counter used as an optional argument to the panel
+    ## function. Sequential counter keeping track of which panel is
+    ## being drawn
+
+
     for(page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0)) {
-                
-            if(usual) {
+        if (!any(cond.max.level - cond.current.level < 0)) {
+            
+            if (usual) {
                 if (new) grid.newpage()
                 grid.rect(gp = gpar(fill = bg, col = "transparent"))
                 new <- TRUE
             }
 
-            push.viewport(viewport(layout = page.layout,
-                                   gp = gpar(fontsize = fontsize.default,
-                                   col = axis.line$col,
-                                   lty = axis.line$lty,
-                                   lwd = axis.line$lwd)))
+            pushViewport(viewport(layout = page.layout,
+                                  gp =
+                                  gpar(fontsize = fontsize.text)))
 
-            if (have.main)
-                grid.text(label = x$main$label,
-                          gp = gpar(col = x$main$col, font = x$main$font, 
-                          fontsize = fontsize.default * x$main$cex),
+            if (!is.null(main))
+                grid.text(label = main$label,
+                          gp =
+                          gpar(col = main$col,
+                               fontfamily = main$fontfamily,
+                               fontface = chooseFace(main$fontface, main$font),
+                               cex = main$cex),
                           vp = viewport(layout.pos.row = 2))
-                    
-                    
-            if (have.sub)
-                grid.text(label = x$sub$label,
-                          gp = gpar(col = x$sub$col, font = x$sub$font, 
-                          fontsize = fontsize.default * x$sub$cex),
+
+            if (!is.null(sub))
+                grid.text(label = sub$label,
+                          gp =
+                          gpar(col = sub$col,
+                               fontfamily = sub$fontfamily,
+                               fontface = chooseFace(sub$fontface, sub$font),
+                               cex = sub$cex),
                           vp = viewport(layout.pos.row = n.row-1))
-                    
-                    
-            if (have.xlab) 
-                grid.text(label = x$xlab$label,
-                          gp = gpar(col = x$xlab$col, font = x$xlab$font, 
-                          fontsize = fontsize.default * x$xlab$cex), 
+
+            if (!is.null(xlab))
+                grid.text(label = xlab$label,
+                          gp =
+                          gpar(col = xlab$col,
+                               fontfamily = xlab$fontfamily,
+                               fontface = chooseFace(xlab$fontface, xlab$font),
+                               cex = xlab$cex), 
                           vp = viewport(layout.pos.row = n.row - 3, layout.pos.col = c(6, n.col - 4)))
-                
-            if (have.ylab)
-                grid.text(label = x$ylab$label, rot = 90,
-                          gp = gpar(col = x$ylab$col, font = x$ylab$font, 
-                          fontsize = fontsize.default * x$ylab$cex),
+
+            if (!is.null(ylab))
+                grid.text(label = ylab$label, rot = 90,
+                          gp =
+                          gpar(col = ylab$col,
+                               fontfamily = ylab$fontfamily,
+                               fontface = chooseFace(ylab$fontface, ylab$font),
+                               cex = ylab$cex),
                           vp = viewport(layout.pos.col = 3, layout.pos.row = c(6, n.row - 6)))
-            
+
+
             for (row in 1:rows.per.page)
                 for (column in 1:cols.per.page)
 
                     if (!any(cond.max.level-cond.current.level<0) &&
-                        (row-1) * cols.per.page + column <= plots.per.page) {
-
-                        if (!is.list(x$panel.args[[panel.number]]))
-                            ## corr to skip = T or extra plots
-                            panel.number <- panel.number + 1
-                            
-                        else {
-                                
-                            actual.row <- if (x$as.table)
-                                (rows.per.page-row+1) else row
-                            ## this gives the row position from the bottom
+                        (row-1) * cols.per.page + column <= plots.per.page &&
+                        !skip[(page.number-1) * rows.per.page * cols.per.page +
+                              (row-1) * cols.per.page + column] )
+                    {
 
 
-                            pos.row <- 6 + number.of.cond + 
-                                (rows.per.page - actual.row) *
+                        ##panel.number should be same as order.cond[cond.current.level]
+                        ##                                          ^^^^^^^^^^^^^^^^^^
+                        ##                                          (length not fixed)
+
+                        panel.number <- 
+                            do.call("[", c(list(x = order.cond), as.list(cond.current.level)))
+
+                        ## this index retrieves the appropriate entry
+                        ## of panel.args and [xy].limits. It has to be
+                        ## this way because otherwise non-trivial
+                        ## orderings will not work.
+
+                        ## But we should also have a simple
+                        ## incremental counter that may be used as a
+                        ## panel function argument
+
+                        panel.counter <- panel.counter + 1
+
+                        ## this will also be used to name the panel
+                        ## viewport for later accessing
+
+                        actual.row <- if (x$as.table)
+                            (rows.per.page-row+1) else row
+
+                        ## this gives the row position from the bottom
+
+
+                        pos.row <- 6 + number.of.cond + 
+                            (rows.per.page - actual.row) *
                                 (number.of.cond + 4)
-                            pos.col <- (column-1) * 4 + 8
+                        pos.col <- (column-1) * 4 + 8
 
 
-                            xlabelinfo <-
-                                calculateAxisComponents(x =
-                                                        if (x.relation.same) x$x.limits
-                                                        else x$x.limits[[panel.number]],
-                                                        at =
-                                                        if (is.list(x$x.scales$at)) x$x.scales$at[[panel.number]]
-                                                        else x$x.scales$at,
-                                                        labels =
-                                                        if (is.list(x$x.scales$lab)) x$x.scales$lab[[panel.number]]
-                                                        else x$x.scales$lab,
-                                                        have.log = have.xlog,
-                                                        logbase = xlogbase,
-                                                        logpaste = xlogpaste,
-                                                        abbreviate = x$x.scales$abbr,
-                                                        minlength = x$x.scales$minl,
-                                                        n = x$x.scales$tick.number)
+                        xlabelinfo <-
+                            calculateAxisComponents(x =
+                                                    if (x.relation.same) x$x.limits
+                                                    else x$x.limits[[panel.number]],
+                                                    at =
+                                                    if (is.list(x$x.scales$at)) x$x.scales$at[[panel.number]]
+                                                    else x$x.scales$at,
+                                                    labels =
+                                                    if (is.list(x$x.scales$lab)) x$x.scales$lab[[panel.number]]
+                                                    else x$x.scales$lab,
+                                                    logsc = x$x.scales$log,
+                                                    abbreviate = x$x.scales$abbr,
+                                                    minlength = x$x.scales$minl,
+                                                    n = x$x.scales$tick.number,
+                                                    format.posixt = x$x.scales$format)
 
-                            ylabelinfo <-
-                                calculateAxisComponents(x =
-                                                        if (y.relation.same) x$y.limits
-                                                        else x$y.limits[[panel.number]],
-                                                        at =
-                                                        if (is.list(x$y.scales$at)) x$y.scales$at[[panel.number]]
-                                                        else x$y.scales$at,
-                                                        labels =
-                                                        if (is.list(x$y.scales$lab)) x$y.scales$lab[[panel.number]]
-                                                        else x$y.scales$lab,
-                                                        have.log = have.ylog,
-                                                        logbase = ylogbase,
-                                                        logpaste = ylogpaste,
-                                                        abbreviate = x$y.scales$abbr,
-                                                        minlength = x$y.scales$minl,
-                                                        n = x$y.scales$tick.number)
+                        ylabelinfo <-
+                            calculateAxisComponents(x =
+                                                    if (y.relation.same) x$y.limits
+                                                    else x$y.limits[[panel.number]],
+                                                    at =
+                                                    if (is.list(x$y.scales$at)) x$y.scales$at[[panel.number]]
+                                                    else x$y.scales$at,
+                                                    labels =
+                                                    if (is.list(x$y.scales$lab)) x$y.scales$lab[[panel.number]]
+                                                    else x$y.scales$lab,
+                                                    logsc = x$y.scales$log,
+                                                    abbreviate = x$y.scales$abbr,
+                                                    minlength = x$y.scales$minl,
+                                                    n = x$y.scales$tick.number,
+                                                    format.posixt = x$y.scales$format)
 
 
 
-                            xscale <- xlabelinfo$num.limit
-                            yscale <- ylabelinfo$num.limit
+                        xscale <- xlabelinfo$num.limit
+                        yscale <- ylabelinfo$num.limit
+
+                        pushViewport(viewport(layout.pos.row = pos.row,
+                                              layout.pos.col = pos.col,
+                                              xscale = xscale,
+                                              yscale = yscale,
+                                              clip = trellis.par.get("clip")$panel,
+                                              name = paste("panel", panel.counter, sep = ".")))
+
+
+                        pargs <- c(x$panel.args[[panel.number]],
+                                   x$panel.args.common,
+                                   list(panel.number = panel.number,
+                                        panel.counter = panel.counter))
+
+                        if (!("..." %in% names(formals(panel))))
+                            pargs <- pargs[names(formals(panel))]
+                        do.call("panel", pargs)
+
+
                                 
-                            push.viewport(viewport(layout.pos.row = pos.row,
-                                                   layout.pos.col = pos.col,
-                                                   xscale = xscale,
-                                                   yscale = yscale,
-                                                   clip = trellis.par.get("clip")$panel,
-                                                   gp = gpar(fontsize =
-                                                   fontsize.default)))
+                        grid.rect(gp =
+                                  gpar(col = axis.line$col,
+                                       lty = axis.line$lty,
+                                       lwd = axis.line$lwd))
 
+                        upViewport()
 
-                            pargs <- c(x$panel.args[[panel.number]],
-                                       x$panel.args.common,
-                                       list(panel.number = panel.number))
-                            if (!("..." %in% names(formals(panel))))
-                                pargs <- pargs[names(formals(panel))]
-                            do.call("panel", pargs)
+                        ## next few lines deal with drawing axes
+                        ## as appropriate
 
-                            grid.rect()
+                        ## when relation != same, axes drawn for
+                        ## each panel:
+                        
+                        ## X-axis
+                        if (!x.relation.same && x$x.scales$draw) {
 
-                            pop.viewport()
+                            axstck <- x$x.scales$tck
 
-                            ## next few lines deal with drawing axes
-                            ## as appropriate
+                            ok <- seq(along = xlabelinfo$at)
 
-                            ## when relation != same, axes drawn for
-                            ## each panel:
+                            pushViewport(viewport(layout.pos.row = pos.row+1,
+                                                  layout.pos.col = pos.col,
+                                                  xscale = xscale))
+
                             
-                            ## X-axis
-                            if (!x.relation.same && x$x.scales$draw) {
-
-                                axs <- x$x.scales
-
-                                #if (is.logical(axs$at)) {
-                                #    axs$at <- lpretty(xscale, n = axs$tick.number)
-                                #    axs$labels <- paste(xlogpaste, as.character(axs$at), sep = "")
-                                #}
-
-                                ok <- (xlabelinfo$at>=xscale[1] & xlabelinfo$at<=xscale[2])
-
-                                push.viewport(viewport(layout.pos.row = pos.row+1,
-                                                       layout.pos.col = pos.col,
-                                                       xscale = xscale))
-
-                                
-                                ##panel.fill(col = "yellow")
-                                if (axs$tck[1] !=0 && any(ok))
-                                    grid.segments(y0 = unit(rep(1, sum(ok)), "npc"),
-                                                  y1 = unit(rep(1, sum(ok)), "npc") -
-                                                  unit(rep(0.3 * axs$tck[1], sum(ok)), "lines"),
-                                                  x0 = unit(xlabelinfo$at[ok], "native"),
-                                                  x1 = unit(xlabelinfo$at[ok], "native"),
-                                                  gp = gpar(col = xaxis.col))
-
-                                # deepayan
-
-                                pop.viewport()
-
-                                if (any(ok))
-                                    grid.text(label = xlabelinfo$label[ok],
-                                              x = unit(xlabelinfo$at[ok], "native"),
-                                              y = unit(if (xaxis.rot[1] %in% c(0, 180)) .5 else .95, "npc"),
-                                              ##y = unit(.95, "npc"),
-                                              just = if (xaxis.rot[1] == 0) c("centre", "centre")
-                                              else if (xaxis.rot[1] == 180) c("centre", "centre")
-                                              else if (xaxis.rot[1] > 0)  c("right", "centre")
-                                              else c("left", "centre"),
-                                              rot = xaxis.rot[1],
-                                              check.overlap = xlabelinfo$check.overlap,
-                                              gp = gpar(col = xaxis.col, font = xaxis.font, 
-                                              fontsize = axs$cex[1] * fontsize.default),
-                                              vp = viewport(layout.pos.row = pos.row+2,
-                                              layout.pos.col = pos.col, xscale = xscale))
-
-                            }
-                            ## Y-axis
-                            if (!y.relation.same && x$y.scales$draw) {
-
-                                axs <- x$y.scales
-
-                                #if (is.logical(axs$at)) {
-                                #    axs$at <- lpretty(yscale, n = axs$tick.number)
-                                #    axs$labels <- paste(ylogpaste, as.character(axs$at), sep = "")
-                                #}
-
-                                ok <- (ylabelinfo$at>=yscale[1] & ylabelinfo$at<=yscale[2])
-
-                                push.viewport(viewport(layout.pos.row = pos.row,
-                                                       layout.pos.col = pos.col-1,
-                                                       yscale = yscale))
-
-
-                                if (axs$tck[1] !=0 && any(ok))
-                                    grid.segments(x0 = unit(rep(1, sum(ok)), "npc"),
-                                                  x1 = unit(rep(1, sum(ok)), "npc") -
-                                                  unit(rep(0.3 * axs$tck[1], sum(ok)), "lines"),
-                                                  y0 = unit(ylabelinfo$at[ok], "native"),
-                                                  y1 = unit(ylabelinfo$at[ok], "native"),
-                                                  gp = gpar(col = yaxis.col))
-
-                                pop.viewport()
-
-
-                                if (any(ok))
-                                    grid.text(label = ylabelinfo$label[ok],
-                                              y = unit(ylabelinfo$at[ok], "native"),
-                                              x = unit(if ( abs(yaxis.rot[1]) == 90) .5 else .95, "npc"),
-                                              ##y = unit(.95, "npc"),
-                                              just = if (yaxis.rot[1] == 90) c("centre", "centre")
-                                              else if (yaxis.rot[1] == -90) c("centre", "centre")
-                                              else if (yaxis.rot[1] > -90 && yaxis.rot[1] < 90) c("right", "centre")
-                                              else c("left", "centre"),
-                                              rot = yaxis.rot[1],
-                                              check.overlap = ylabelinfo$check.overlap,
-                                              gp = gpar(col = yaxis.col, font = xaxis.font, 
-                                              fontsize = axs$cex[1] * fontsize.default),
-                                              vp = viewport(layout.pos.row = pos.row,
-                                              layout.pos.col = pos.col-2, yscale = yscale))
-
-                            }
-
-                            ## When relation = same, axes drawn based on value of alternating
-                            if (y.relation.same && x$y.scales$draw) {
-                                
-                                ## Y-axis to the left
-                                if (column == 1) {
-
-                                    axs <- x$y.scales
-
-                                    ok <- (ylabelinfo$at>=yscale[1] & ylabelinfo$at<=yscale[2])
-
-                                    push.viewport(viewport(layout.pos.row = pos.row,
-                                                           layout.pos.col = pos.col-3,
-                                                           yscale = yscale))
-
-                                    if (axs$tck[1] !=0 && any(ok))
-                                        grid.segments(x0 = unit(rep(1, sum(ok)), "npc"),
-                                                      x1 = unit(rep(1, sum(ok)), "npc") -
-                                                      unit(rep(0.3 * axs$tck[1], sum(ok)), "lines"),
-                                                      y0 = unit(ylabelinfo$at[ok], "native"),
-                                                      y1 = unit(ylabelinfo$at[ok], "native"),
-                                                      gp = gpar(col = yaxis.col))
-
-                                    pop.viewport()
-
-                                    if (y.alternating[actual.row]==1 || y.alternating[actual.row]==3) 
-
-                                        if (any(ok)) 
-
-                                            grid.text(label = ylabelinfo$lab[ok],
-                                                      y = unit(ylabelinfo$at[ok], "native"),
-                                                      x = unit(if (abs(yaxis.rot[1]) == 90) .5 else 1, "npc"),
-                                                      ##y = unit(rep(.95, sum(ok)), "npc"),
-                                                      just = if (yaxis.rot[1] == -90) c("centre", "centre")
-                                                      else if (yaxis.rot[1] == 90) c("centre", "centre")
-                                                      else if (yaxis.rot[1] > -90 && yaxis.rot[1] < 90)  c("right", "centre")
-                                                      else c("left", "centre"),
-                                                      rot = yaxis.rot[1],
-                                                      check.overlap = ylabelinfo$check.overlap,
-                                                      gp = gpar(col = yaxis.col, font = yaxis.font, 
-                                                      fontsize = axs$cex[1] * fontsize.default),
-                                                      vp = viewport(layout.pos.row = pos.row,
-                                                      layout.pos.col = pos.col-4, yscale = yscale))
-
-                                }
-
-
-                                ## Y-axis to the right
-                                if (column == cols.per.page) {
-
-                                    axs <- x$y.scales
-
-                                    ok <- (ylabelinfo$at>=yscale[1] & ylabelinfo$at<=yscale[2])
-
-                                    push.viewport(viewport(layout.pos.row = pos.row,
-                                                           layout.pos.col = pos.col+1,
-                                                           yscale = yscale))
-
-
-                                    if (axs$tck[2] !=0 && any(ok))
-                                        grid.segments(x0 = unit(rep(0, sum(ok)), "npc"),
-                                                      x1 = unit(rep(0.3 * axs$tck[2], sum(ok)), "lines"),
-                                                      y0 = unit(ylabelinfo$at[ok], "native"),
-                                                      y1 = unit(ylabelinfo$at[ok], "native"),
-                                                      gp = gpar(col = yaxis.col))
-
-                                    pop.viewport()
-
-                                    if (y.alternating[actual.row]==2 || y.alternating[actual.row]==3)
-
-                                        if (any(ok))
-
-                                            grid.text(label = ylabelinfo$label[ok],
-                                                      y = unit(ylabelinfo$at[ok], "native"),
-                                                      x = unit(if (abs(yaxis.rot[2]) == 90) .5 else 0, "npc"),
-                                                      ##y = unit(.05, "npc"),
-                                                      just = if (yaxis.rot[2] == -90) c("centre", "centre")
-                                                      else if (yaxis.rot[2] == 90) c("centre", "centre")
-                                                      else if (yaxis.rot[2] > -90 && yaxis.rot[2] < 90)  c("left", "centre")
-                                                      else c("right", "centre"),
-                                                      rot = yaxis.rot[2],
-                                                      check.overlap = ylabelinfo$check.overlap,
-                                                      gp = gpar(col = yaxis.col, font = yaxis.font, 
-                                                      fontsize = axs$cex[2] * fontsize.default),
-                                                      vp = viewport(layout.pos.row = pos.row,
-                                                      layout.pos.col = pos.col+2, yscale = yscale))
-
-                                }
-                            }
-                                
-                            ## X-axis to the bottom
-                            if (x.relation.same && x$x.scales$draw) {
-
-                                if (actual.row == 1) {
-
-                                    axs <- x$x.scales
-
-                                    ok <- (xlabelinfo$at>=xscale[1] & xlabelinfo$at<=xscale[2])
-
-                                    push.viewport(viewport(layout.pos.row = pos.row+3,
-                                                           layout.pos.col = pos.col,
-                                                           xscale = xscale))
-
-                                    if (axs$tck[1] !=0 && any(ok))
-                                        grid.segments(y0 = unit(rep(1, sum(ok)), "npc"),
-                                                      y1 = unit(rep(1, sum(ok)), "npc") -
-                                                      unit(rep(0.3 * axs$tck[1], sum(ok)), "lines"),
-                                                      x0 = unit(xlabelinfo$at[ok], "native"),
-                                                      x1 = unit(xlabelinfo$at[ok], "native"),
-                                                      gp = gpar(col = xaxis.col))
-
-                                    pop.viewport()
-
-                                    if (x.alternating[column]==1 || x.alternating[column]==3) 
-
-                                        if (any(ok)) {
-
-                                            grid.text(label = xlabelinfo$lab[ok],
-                                                      x = unit(xlabelinfo$at[ok], "native"),
-                                                      y = unit(if (xaxis.rot[1] %in% c(0, 180)) .5 else 1, "npc"),
-                                                      ##y = unit(rep(.95, sum(ok)), "npc"),
-                                                      just = if (xaxis.rot[1] == 0) c("centre", "centre")
-                                                      else if (xaxis.rot[1] == 180) c("centre", "centre")
-                                                      else if (xaxis.rot[1] > 0)  c("right", "centre")
-                                                      else c("left", "centre"),
-                                                      rot = xaxis.rot[1],
-                                                      check.overlap = xlabelinfo$check.overlap,
-                                                      gp = gpar(col = xaxis.col, font = xaxis.font, 
-                                                      fontsize = axs$cex[1] * fontsize.default),
-                                                      vp = viewport(layout.pos.row = pos.row + 4,
-                                                      layout.pos.col = pos.col, xscale = xscale))
-                                        }
-                                }
-                            }
-                                    
-                            ##-------------------------
-
-
-                            if (!is.logical(x$strip)) # logical ==> FALSE
-                                for(i in 1:number.of.cond)
-                                {
-                                    push.viewport(viewport(layout.pos.row = pos.row-i,
-                                                           layout.pos.col = pos.col,
-                                                           clip = trellis.par.get("clip")$strip,
-                                                           gp = gpar(fontsize = fontsize.default)))
-                                    
-                                    grid.rect()
-                                    x$strip(which.given = i,
-                                            which.panel = cond.current.level,
-                                            var.name = names(x$cond),
-                                            factor.levels = if (!is.list(x$cond[[i]]))
-                                            x$cond[[i]] else NULL,
-                                            shingle.intervals = if (is.list(x$cond[[i]]))
-                                            do.call("rbind", x$cond[[i]]) else NULL,
-                                            ##x = x$condlevel[[i]],
-                                            ##level = cond.current.level[i],
-                                            ##name = names(x$cond)[i],
-                                            bg = strip.col.default.bg[i],
-                                            fg = strip.col.default.fg[i],
-                                            par.strip.text = x$par.strip.text)
-                                    
-                                    pop.viewport()
-                                            
-                                }
-                            
-                            
-                            ## X-axis at top
-                            if (x.relation.same && x$x.scales$draw)
-
-                                if (actual.row == rows.per.page) {
-
-                                    axs <- x$x.scales
-
-                                    ok <- (xlabelinfo$at>=xscale[1] & xlabelinfo$at<=xscale[2])
-
-                                    push.viewport(viewport(layout.pos.row = pos.row - 1 - 
-                                                           number.of.cond,
-                                                           layout.pos.col = pos.col,
-                                                           xscale = xscale))
-
-                                    if (axs$tck[2] !=0 && any(ok))
-                                        grid.segments(y0 = unit(rep(0, sum(ok)), "npc"),
-                                                      y1 = unit(rep(0.3 * axs$tck[2], sum(ok)), "lines"),
-                                                      x0 = unit(xlabelinfo$at[ok], "native"),
-                                                      x1 = unit(xlabelinfo$at[ok], "native"),
-                                                      gp = gpar(col = xaxis.col))
-
-                                    pop.viewport()
-
-                                    if (x.alternating[column]==2 || x.alternating[column]==3)
-
-                                        if (any(ok))
-
-                                            grid.text(label = xlabelinfo$label[ok],
-                                                      x = unit(xlabelinfo$at[ok], "native"),
-                                                      y = unit(if (xaxis.rot[2] %in% c(0, 180)) .5 else 0, "npc"),
-                                                      ##y = unit(.05, "npc"),
-                                                      just = if (xaxis.rot[2] == 0) c("centre", "centre")
-                                                      else if (xaxis.rot[2] == 180) c("centre", "centre")
-                                                      else if (xaxis.rot[2] > 0)  c("left", "centre")
-                                                      else c("right", "centre"),
-                                                      rot = xaxis.rot[2],
-                                                      check.overlap = xlabelinfo$check.overlap,
-                                                      gp = gpar(col = xaxis.col, font = xaxis.font, 
-                                                      fontsize = axs$cex[2] * fontsize.default),
-                                                      vp = viewport(layout.pos.row = pos.row - 2 - 
-                                                      number.of.cond, layout.pos.col = pos.col, xscale = xscale))
-
-
-                                }
-
-                                
-                            cond.current.level <- cupdate(cond.current.level,
-                                                          cond.max.level)
-                            panel.number <- panel.number + 1
+                            if (axstck[1] !=0 && any(ok))
+                                grid.segments(y0 = unit(rep(1, sum(ok)), "npc"),
+                                              y1 = unit(rep(1, sum(ok)), "npc") -
+                                              unit(rep(0.3 * axstck[1], sum(ok)), "lines"),
+                                              x0 = unit(xlabelinfo$at[ok], "native"),
+                                              x1 = unit(xlabelinfo$at[ok], "native"),
+                                              gp =
+                                              gpar(col = xaxis.col.line,
+                                                   lty = xaxis.lty,
+                                                   lwd = xaxis.lwd))
+
+
+
+                            upViewport()
+
+                            if (any(ok))
+                                grid.text(label = xlabelinfo$label[ok],
+                                          x = unit(xlabelinfo$at[ok], "native"),
+                                          y = unit(if (xaxis.rot[1] %in% c(0, 180)) .5 else .95, "npc"),
+                                          ##y = unit(.95, "npc"),
+                                          just = if (xaxis.rot[1] == 0) c("centre", "centre")
+                                          else if (xaxis.rot[1] == 180) c("centre", "centre")
+                                          else if (xaxis.rot[1] > 0)  c("right", "centre")
+                                          else c("left", "centre"),
+                                          rot = xaxis.rot[1],
+                                          check.overlap = xlabelinfo$check.overlap,
+                                          gp =
+                                          gpar(col = xaxis.col.text,
+                                               fontfamily = xaxis.fontfamily,
+                                               fontface = chooseFace(xaxis.fontface, xaxis.font),
+                                               cex = xaxis.cex[1]),
+                                          vp = viewport(layout.pos.row = pos.row + 2,
+                                          layout.pos.col = pos.col, xscale = xscale))
 
                         }
-                        
-                    }
-            
-            
-            if (!is.null(x$key) || !is.null(x$colorkey)) {
-                
-                if (key.space == "left") {
-                    push.viewport(viewport(layout.pos.col = 2,
-                                  layout.pos.row = c(6, n.row-6)))
-                    grid.draw(key.gf)
-                    pop.viewport()
-                }
-                else if (key.space == "right") {
-                    push.viewport(viewport(layout.pos.col = n.col-1,
-                                  layout.pos.row = c(6, n.row-6)))
-                    grid.draw(key.gf)
-                    pop.viewport()
-                    }
-                else if (key.space == "top") {
-                    push.viewport(viewport(layout.pos.row = 3,
-                                           layout.pos.col = c(6,n.col-4)))
-                    grid.draw(key.gf)
-                    pop.viewport()
-                }
-                else if (key.space == "bottom") {
-                    push.viewport(viewport(layout.pos.row = n.row - 2,
-                                           layout.pos.col = c(6,n.col-4)))
-                    grid.draw(key.gf)
-                    pop.viewport()
-                }
-                else if (key.space == "inside") {
-                    
-                    push.viewport(viewport(layout.pos.row = c(1, n.row),
-                                           layout.pos.col = c(1, n.col)))
-                    
-                    if (is.null(x$key$corner)) x$key$corner <- c(0,1)
-                    if (is.null(x$key$x)) x$key$x <- x$key$corner[1]
-                    if (is.null(x$key$y)) x$key$y <- x$key$corner[2]
-                    
-                    if (all(x$key$corner == c(0,1))) {
-                        
-                        push.viewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
-                                               widths = unit(c(x$key$x, 1, 1),
-                                               c("npc", "grobwidth", "null"),
-                                               list(1, key.gf, 1)),
-                                               heights = unit(c(1-x$key$y, 1, 1),
-                                               c("npc", "grobheight", "null"),
-                                               list(1, key.gf, 1)))))
-                        
-                        push.viewport(viewport(layout.pos.row = 2, layout.pos.col = 2))
-                        
-                        grid.draw(key.gf)
-                        
-                        pop.viewport()
-                        pop.viewport()
-                        
-                    }
-                    
-                    
-                    if (all(x$key$corner == c(1,1))) {
-                        
-                        push.viewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
-                                               heights = unit(c(1-x$key$y, 1, 1),
-                                               c("npc", "grobheight", "null"),
-                                               list(1, key.gf, 1)),
-                                               widths = unit(c(1, 1, 1-x$key$x),
-                                               c("null", "grobwidth", "npc"),
-                                               list(1, key.gf, 1)))))
-                        
-                        push.viewport(viewport(layout.pos.row = 2, layout.pos.col = 2))
-                        
-                        grid.draw(key.gf)
+                        ## Y-axis
+                        if (!y.relation.same && x$y.scales$draw) {
 
-                        pop.viewport()
-                        pop.viewport()
-                        
-                    }
-                    
+                            axstck <- x$y.scales$tck
 
-                    if (all(x$key$corner == c(0,0))) {
-                    
-                        push.viewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
-                                               widths = unit(c(x$key$x, 1, 1),
-                                               c("npc", "grobwidth", "null"),
-                                               list(1, key.gf, 1)),
-                                               heights = unit(c(1,1,x$key$y),
-                                               c("null", "grobheight", "npc"),
-                                               list(1, key.gf, 1)))))
-                        
-                        push.viewport(viewport(layout.pos.row = 2, layout.pos.col = 2))
-                        
-                        grid.draw(key.gf)
-                        
-                        pop.viewport()
-                        pop.viewport()
-                        
-                    }
-                    
-                    
-                    if (all(x$key$corner == c(1,0))) {
+                            ok <- seq(along = ylabelinfo$at)
+
+                            pushViewport(viewport(layout.pos.row = pos.row,
+                                                  layout.pos.col = pos.col-1,
+                                                  yscale = yscale))
+
+
+                            if (axstck[1] !=0 && any(ok))
+                                grid.segments(x0 = unit(rep(1, sum(ok)), "npc"),
+                                              x1 = unit(rep(1, sum(ok)), "npc") -
+                                              unit(rep(0.3 * axstck[1], sum(ok)), "lines"),
+                                              y0 = unit(ylabelinfo$at[ok], "native"),
+                                              y1 = unit(ylabelinfo$at[ok], "native"),
+                                              gp =
+                                              gpar(col = yaxis.col.line,
+                                                   lty = yaxis.lty,
+                                                   lwd = yaxis.lwd))
+
+                            upViewport()
+
+
+                            if (any(ok))
+                                grid.text(label = ylabelinfo$label[ok],
+                                          y = unit(ylabelinfo$at[ok], "native"),
+                                          x = unit(if ( abs(yaxis.rot[1]) == 90) .5 else .95, "npc"),
+                                          ##y = unit(.95, "npc"),
+                                          just = if (yaxis.rot[1] == 90) c("centre", "centre")
+                                          else if (yaxis.rot[1] == -90) c("centre", "centre")
+                                          else if (yaxis.rot[1] > -90 && yaxis.rot[1] < 90) c("right", "centre")
+                                          else c("left", "centre"),
+                                          rot = yaxis.rot[1],
+                                          check.overlap = ylabelinfo$check.overlap,
+                                          gp =
+                                          gpar(col = yaxis.col.text,
+                                               fontfamily = yaxis.fontfamily,
+                                               fontface = chooseFace(yaxis.fontface, yaxis.font),
+                                               cex = yaxis.cex[1]),
+                                          vp = viewport(layout.pos.row = pos.row,
+                                          layout.pos.col = pos.col-2, yscale = yscale))
+
+                        }
+
+                        ## When relation = same, axes drawn based on value of alternating
+                        if (y.relation.same && x$y.scales$draw) {
                             
-                        push.viewport(viewport(layout=grid.layout(nrow = 3, ncol = 3,
-                                               widths = unit(c(1, 1, 1-x$key$x),
-                                               c("null", "grobwidth", "npc"),
-                                               list(1, key.gf, 1)),
-                                               heights = unit(c(1, 1, x$key$y),
-                                               c("null", "grobheight", "npc"),
-                                               list(1, key.gf, 1)))))
+                            ## Y-axis to the left
+                            if (column == 1) {
+
+                                axstck <- x$y.scales$tck
+
+                                ok <- seq(along = ylabelinfo$at)
+
+                                pushViewport(viewport(layout.pos.row = pos.row,
+                                                      layout.pos.col = pos.col-3,
+                                                      yscale = yscale))
+
+                                if (axstck[1] !=0 && any(ok))
+                                    grid.segments(x0 = unit(rep(1, sum(ok)), "npc"),
+                                                  x1 = unit(rep(1, sum(ok)), "npc") -
+                                                  unit(rep(0.3 * axstck[1], sum(ok)), "lines"),
+                                                  y0 = unit(ylabelinfo$at[ok], "native"),
+                                                  y1 = unit(ylabelinfo$at[ok], "native"),
+                                                  gp =
+                                                  gpar(col = yaxis.col.line,
+                                                       lty = yaxis.lty,
+                                                       lwd = yaxis.lwd))
+
+                                upViewport()
+
+                                if (y.alternating[actual.row]==1 || y.alternating[actual.row]==3) 
+
+                                    if (any(ok)) 
+
+                                        grid.text(label = ylabelinfo$lab[ok],
+                                                  y = unit(ylabelinfo$at[ok], "native"),
+                                                  x = unit(if (abs(yaxis.rot[1]) == 90) .5 else 1, "npc"),
+                                                  ##y = unit(rep(.95, sum(ok)), "npc"),
+                                                  just = if (yaxis.rot[1] == -90) c("centre", "centre")
+                                                  else if (yaxis.rot[1] == 90) c("centre", "centre")
+                                                  else if (yaxis.rot[1] > -90 && yaxis.rot[1] < 90)  c("right", "centre")
+                                                  else c("left", "centre"),
+                                                  rot = yaxis.rot[1],
+                                                  check.overlap = ylabelinfo$check.overlap,
+                                                  gp =
+                                                  gpar(col = yaxis.col.text,
+                                                       fontfamily = yaxis.fontfamily,
+                                                       fontface = chooseFace(yaxis.fontface, yaxis.font),
+                                                       cex = yaxis.cex[1]),
+                                                  vp = viewport(layout.pos.row = pos.row,
+                                                  layout.pos.col = pos.col-4, yscale = yscale))
+
+                            }
+
+
+                            ## Y-axis to the right
+                            if (column == cols.per.page) {
+
+                                axstck <- x$y.scales$tck
+
+                                ok <- seq(along = ylabelinfo$at)
+
+                                pushViewport(viewport(layout.pos.row = pos.row,
+                                                      layout.pos.col = pos.col+1,
+                                                      yscale = yscale))
+
+
+                                if (axstck[2] !=0 && any(ok))
+                                    grid.segments(x0 = unit(rep(0, sum(ok)), "npc"),
+                                                  x1 = unit(rep(0.3 * axstck[2], sum(ok)), "lines"),
+                                                  y0 = unit(ylabelinfo$at[ok], "native"),
+                                                  y1 = unit(ylabelinfo$at[ok], "native"),
+                                                  gp =
+                                                  gpar(col = yaxis.col.line,
+                                                       lty = yaxis.lty,
+                                                       lwd = yaxis.lwd))
+
+                                upViewport()
+
+                                if (y.alternating[actual.row]==2 || y.alternating[actual.row]==3)
+
+                                    if (any(ok))
+
+                                        grid.text(label = ylabelinfo$label[ok],
+                                                  y = unit(ylabelinfo$at[ok], "native"),
+                                                  x = unit(if (abs(yaxis.rot[2]) == 90) .5 else 0, "npc"),
+                                                  ##y = unit(.05, "npc"),
+                                                  just = if (yaxis.rot[2] == -90) c("centre", "centre")
+                                                  else if (yaxis.rot[2] == 90) c("centre", "centre")
+                                                  else if (yaxis.rot[2] > -90 && yaxis.rot[2] < 90)  c("left", "centre")
+                                                  else c("right", "centre"),
+                                                  rot = yaxis.rot[2],
+                                                  check.overlap = ylabelinfo$check.overlap,
+                                                  gp =
+                                                  gpar(col = yaxis.col.text,
+                                                       fontfamily = yaxis.fontfamily,
+                                                       fontface = chooseFace(yaxis.fontface, yaxis.font),
+                                                       cex = yaxis.cex[2]),
+                                                  vp = viewport(layout.pos.row = pos.row,
+                                                  layout.pos.col = pos.col+2, yscale = yscale))
+
+                            }
+                        }
                         
-                        push.viewport(viewport(layout.pos.row = 2, layout.pos.col = 2))
+                        ## X-axis to the bottom
+                        if (x.relation.same && x$x.scales$draw) {
+
+                            if (actual.row == 1) {
+
+                                axstck <- x$x.scales$tck
+
+                                ok <- seq(along = xlabelinfo$at)
+
+                                pushViewport(viewport(layout.pos.row = pos.row+3,
+                                                      layout.pos.col = pos.col,
+                                                      xscale = xscale))
+
+                                if (axstck[1] !=0 && any(ok))
+                                    grid.segments(y0 = unit(rep(1, sum(ok)), "npc"),
+                                                  y1 = unit(rep(1, sum(ok)), "npc") -
+                                                  unit(rep(0.3 * axstck[1], sum(ok)), "lines"),
+                                                  x0 = unit(xlabelinfo$at[ok], "native"),
+                                                  x1 = unit(xlabelinfo$at[ok], "native"),
+                                                  gp =
+                                                  gpar(col = xaxis.col.line,
+                                                       lty = xaxis.lty,
+                                                       lwd = xaxis.lwd))
+
+                                upViewport()
+
+                                if (x.alternating[column]==1 || x.alternating[column]==3) 
+
+                                    if (any(ok)) {
+
+                                        grid.text(label = xlabelinfo$lab[ok],
+                                                  x = unit(xlabelinfo$at[ok], "native"),
+                                                  y = unit(if (xaxis.rot[1] %in% c(0, 180)) .5 else 1, "npc"),
+                                                  ##y = unit(rep(.95, sum(ok)), "npc"),
+                                                  just = if (xaxis.rot[1] == 0) c("centre", "centre")
+                                                  else if (xaxis.rot[1] == 180) c("centre", "centre")
+                                                  else if (xaxis.rot[1] > 0)  c("right", "centre")
+                                                  else c("left", "centre"),
+                                                  rot = xaxis.rot[1],
+                                                  check.overlap = xlabelinfo$check.overlap,
+                                                  gp =
+                                                  gpar(col = xaxis.col.text,
+                                                       fontfamily = xaxis.fontfamily,
+                                                       fontface = chooseFace(xaxis.fontface, xaxis.font),
+                                                       cex = xaxis.cex[1]),
+                                                  vp = viewport(layout.pos.row = pos.row + 4,
+                                                  layout.pos.col = pos.col, xscale = xscale))
+                                    }
+                            }
+                        }
                         
-                        grid.draw(key.gf)
+                        ##-------------------------
+                        ## draw strip(s)
+
+                        if (!is.logical(strip)) # logical <==> FALSE
+                        {
+                            ## which.panel in original cond variables order
+                            which.panel = cond.current.level[x$perm.cond]
+
+                            ## need to pass each index in original terms
+                            for (i in seq(along = which.panel))
+                                which.panel[i] <- x$index.cond[[i]][which.panel[i]]
+
+
+                            ## WAS for(i in 1:number.of.cond)
+                            for(i in seq(length = number.of.cond))
+                            {
+                                pushViewport(viewport(layout.pos.row = pos.row - i,
+                                                      layout.pos.col = pos.col,
+                                                      clip = trellis.par.get("clip")$strip))
+
+## I have a choice here. By which.given, do I mean which in the original order,
+## or the permuted order ? This is related to order in which strips are drawn
+## (see above -- perm[i] or just i ?)
+
+## currently, original                                
+                                strip(which.given = x$perm.cond[i],
+                                      which.panel = which.panel,
+
+                                      var.name = names(x$condlevels),
+
+                                      factor.levels = if (!is.list(x$condlevels[[x$perm.cond[i]]]))
+                                      x$condlevels[[x$perm.cond[i]]] else NULL,
+
+                                      shingle.intervals = if (is.list(x$condlevels[[x$perm.cond[i]]]))
+                                      do.call("rbind", x$condlevels[[x$perm.cond[i]]]) else NULL,
+
+                                      bg = strip.col.default.bg[i],
+                                      fg = strip.col.default.fg[i],
+                                      par.strip.text = par.strip.text)
+
+
+## FIXME: add color for rectangle (already axis.line (?))
+                                
+                                grid.rect(gp =
+                                          gpar(col = axis.line$col,
+                                               lty = axis.line$lty,
+                                               lwd = axis.line$lwd))
+
+                                upViewport()
+                                
+                            }
+
+                        }
+
+
+
                         
-                        pop.viewport()
-                        pop.viewport()
                         
+                        ## X-axis at top
+                        if (x.relation.same && x$x.scales$draw)
+
+                            if (actual.row == rows.per.page) {
+
+                                axstck <- x$x.scales$tck
+
+                                ok <- seq(along = xlabelinfo$at)
+
+                                pushViewport(viewport(layout.pos.row = pos.row - 1 - 
+                                                      number.of.cond,
+                                                      layout.pos.col = pos.col,
+                                                      xscale = xscale))
+
+                                if (axstck[2] !=0 && any(ok))
+                                    grid.segments(y0 = unit(rep(0, sum(ok)), "npc"),
+                                                  y1 = unit(rep(0.3 * axstck[2], sum(ok)), "lines"),
+                                                  x0 = unit(xlabelinfo$at[ok], "native"),
+                                                  x1 = unit(xlabelinfo$at[ok], "native"),
+                                                  gp =
+                                                  gpar(col = xaxis.col.line,
+                                                       lty = xaxis.lty,
+                                                       lwd = xaxis.lwd))
+
+                                upViewport()
+
+                                if (x.alternating[column]==2 || x.alternating[column]==3)
+
+                                    if (any(ok))
+
+                                        grid.text(label = xlabelinfo$label[ok],
+                                                  x = unit(xlabelinfo$at[ok], "native"),
+                                                  y = unit(if (xaxis.rot[2] %in% c(0, 180)) .5 else 0, "npc"),
+                                                  ##y = unit(.05, "npc"),
+                                                  just = if (xaxis.rot[2] == 0) c("centre", "centre")
+                                                  else if (xaxis.rot[2] == 180) c("centre", "centre")
+                                                  else if (xaxis.rot[2] > 0)  c("left", "centre")
+                                                  else c("right", "centre"),
+                                                  rot = xaxis.rot[2],
+                                                  check.overlap = xlabelinfo$check.overlap,
+                                                  gp =
+                                                  gpar(col = xaxis.col.text,
+                                                       fontfamily = xaxis.fontfamily,
+                                                       fontface = chooseFace(xaxis.fontface, xaxis.font),
+                                                       cex = xaxis.cex[2]),
+                                                  vp = viewport(layout.pos.row = pos.row - 2 - 
+                                                  number.of.cond, layout.pos.col = pos.col, xscale = xscale))
+
+
+                            }
+
+                        cond.current.level <- cupdate(cond.current.level,
+                                                      cond.max.level)
+
                     }
-                    
-                    
-                    
-                    pop.viewport()
-                    
+            
+
+
+
+            ## legend / key plotting
+
+            if (!is.null(legend))
+            {
+                locs <- names(legend)
+                for (i in seq(along = legend))
+                {
+                    key.space <- locs[i]
+                    key.gf <- legend[[i]]$obj
+
+                    if (key.space == "left")
+                    {
+                        pushViewport(viewport(layout.pos.col = 2,
+                                              layout.pos.row = c(6, n.row-6)))
+                        grid.draw(key.gf)
+                        upViewport()
+                    }
+                    else if (key.space == "right")
+                    {
+                        pushViewport(viewport(layout.pos.col = n.col-1,
+                                              layout.pos.row = c(6, n.row-6)))
+                        grid.draw(key.gf)
+                        upViewport()
+                    }
+                    else if (key.space == "top")
+                    {
+                        pushViewport(viewport(layout.pos.row = 3,
+                                              layout.pos.col = c(6,n.col-4)))
+                        grid.draw(key.gf)
+                        upViewport()
+                    }
+                    else if (key.space == "bottom")
+                    {
+                        pushViewport(viewport(layout.pos.row = n.row - 2,
+                                              layout.pos.col = c(6,n.col-4)))
+                        grid.draw(key.gf)
+                        upViewport()
+                    }
+                    else if (key.space == "inside")
+                    {
+                        pushViewport(viewport(layout.pos.row = c(1, n.row),
+                                              layout.pos.col = c(1, n.col)))
+
+                        key.corner <-
+                            if (is.null(legend[[i]]$corner)) c(0,1)
+                            else legend[[i]]$corner
+
+                        key.x <- 
+                            if (is.null(legend[[i]]$x)) key.corner[1]
+                            else legend[[i]]$x
+
+                        key.y <- 
+                            if (is.null(legend[[i]]$y)) key.corner[2]
+                            else legend[[i]]$y
+                        
+                        if (all(key.corner == c(0,1))) {
+                            pushViewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
+                                                  widths = unit(c(key.x, 1, 1),
+                                                  c("npc", "grobwidth", "null"),
+                                                  list(1, key.gf, 1)),
+                                                  heights = unit(c(1 - key.y, 1, 1),
+                                                  c("npc", "grobheight", "null"),
+                                                  list(1, key.gf, 1)))))
+                        }
+                        else if (all(key.corner == c(1,1))) {
+                            pushViewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
+                                                  heights = unit(c(1 - key.y, 1, 1),
+                                                  c("npc", "grobheight", "null"),
+                                                  list(1, key.gf, 1)),
+                                                  widths = unit(c(1, 1, 1 - key.x),
+                                                  c("null", "grobwidth", "npc"),
+                                                  list(1, key.gf, 1)))))
+                        }
+                        else if (all(key.corner == c(0,0))) {
+                            pushViewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
+                                                  widths = unit(c(key.x, 1, 1),
+                                                  c("npc", "grobwidth", "null"),
+                                                  list(1, key.gf, 1)),
+                                                  heights = unit(c(1, 1, key.y),
+                                                  c("null", "grobheight", "npc"),
+                                                  list(1, key.gf, 1)))))
+                        }
+                        else if (all(key.corner == c(1,0))) {
+                            pushViewport(viewport(layout=grid.layout(nrow = 3, ncol = 3,
+                                                  widths = unit(c(1, 1, 1 - key.x),
+                                                  c("null", "grobwidth", "npc"),
+                                                  list(1, key.gf, 1)),
+                                                  heights = unit(c(1, 1, key.y),
+                                                  c("null", "grobheight", "npc"),
+                                                  list(1, key.gf, 1)))))
+                        }
+                        
+
+
+                        pushViewport(viewport(layout.pos.row = 2, layout.pos.col = 2))
+                        grid.draw(key.gf)
+                        upViewport(3)
+                    }
                 }
-                
             }
+
+
+
             
-            push.viewport(viewport(layout.pos.row = c(1, n.row),
-                                   layout.pos.col = c(1, n.col)))
-            if(!is.null(x$page)) x$page(page.number)                
-            pop.viewport()
+            pushViewport(viewport(layout.pos.row = c(1, n.row),
+                                  layout.pos.col = c(1, n.col)))
+            if (!is.null(x$page)) x$page(page.number)                
+            upViewport()
             
-            pop.viewport()
+            upViewport()
             
             
         }
 
     if (!missing(position)) {
         if (!missing(split)) {
-            pop.viewport()
-            pop.viewport()
+            upViewport()
+            upViewport()
         }
-        pop.viewport()
+        upViewport()
     }
     else if (!missing(split)) {
-        pop.viewport()
-        pop.viewport()
+        upViewport()
+        upViewport()
     }
-    invisible(page.layout)
+
+    if (!is.null(x$par.settings))
+    {
+        lset(opars)
+    }
+
+    invisible(x)
 }

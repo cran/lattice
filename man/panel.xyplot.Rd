@@ -15,11 +15,14 @@ panel.xyplot(x, y, type="p",
              col,
              col.line = plot.line$col,
              col.symbol = plot.symbol$col,
+             font = plot.symbol$font,
+             fontfamily = plot.symbol$fontfamily,
+             fontface = plot.symbol$fontface,
              lty = plot.line$lty,
              cex = plot.symbol$cex,
              lwd = plot.line$lwd, ...)
-panel.splom(...) <- function (...) panel.xyplot(...)
-panel.qqmath(...) <- function (...) panel.xyplot(...)
+panel.splom(...)
+panel.qqmath(...)
 panel.qq(...)
 }
 \arguments{
@@ -38,8 +41,10 @@ panel.qq(...)
   }
   \item{col, col.line, col.symbol}{
     default colours are obtained from \code{plot.symbol} and
-    \code{plot.line} using \code{\link{trellis.par.get}}. These default
-    instead to \code{col} when the latter is specified.
+    \code{plot.line} using \code{\link{trellis.par.get}}.
+  }
+  \item{font, fontface, fontfamily}{
+    font used when \code{pch} is a character
   }
   \item{pch, lty, cex, lwd}{
     other graphical parameters.
@@ -50,12 +55,21 @@ panel.qq(...)
     \code{panel.loess} respectively.
   }
 }
-\details{ Creates scatterplot of \code{x} and \code{y}, with various
+\details{ 
+
+  Creates scatterplot of \code{x} and \code{y}, with various
   modifications possible via the type argument. \code{panel.qq} draws a
   45 degree line before calling \code{panel.xyplot}.
+
+  Note that most of the arguments controlling the display can be
+  supplied directly to the high-level \code{xyplot} call.
+
 }
-\author{ Deepayan Sarkar
-\email{deepayan@stat.wisc.edu}} \seealso{\code{\link{panel.superpose}},
-\code{\link{xyplot}},
-  \code{\link{splom}},\code{\link{qqmath}}}
+\author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
+
+\seealso{
+  \code{\link{panel.superpose}},
+  \code{\link{xyplot}},
+  \code{\link{splom}},\code{\link{qqmath}}
+}
 \keyword{dplot}

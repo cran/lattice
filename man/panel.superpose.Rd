@@ -16,6 +16,9 @@ panel.superpose(x, y = NULL, subscripts, groups,
              col.symbol = superpose.symbol$col,
              pch = superpose.symbol$pch,
              cex = superpose.symbol$cex, 
+             font = superpose.symbol$font,
+             fontface = superpose.symbol$fontface,
+             fontfamily = superpose.symbol$fontfamily,
              lty = superpose.line$lty,
              lwd = superpose.line$lwd,
              ...)
@@ -62,19 +65,13 @@ panel.superpose.2(x, y, subscripts, groups, type="p", ...)
     \code{panel.xyplot}.
   }
 }
-\seealso{Different functions when used as \code{panel.groups} gives
-  different types of plots, for example \code{\link{panel.xyplot}},
-  \code{\link{panel.dotplot}} and  \code{\link{panel.linejoin}} (This
-  can be used to produce interaction plots).
+\seealso{
+  Different functions when used as \code{panel.groups} gives different
+  types of plots, for example \code{\link{panel.xyplot}},
+  \code{\link{panel.dotplot}} and \code{\link{panel.linejoin}} (This can
+  be used to produce interaction plots).
 }
-\examples{
-data(barley)
-dotplot(variety ~ yield | site, barley, groups = year,
-        layout = c(1, 6), aspect = .5,
-        col.line = c("grey", "transparent"),  
-        panel = "panel.superpose",
-        panel.groups = "panel.dotplot")
-}
+
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}
   (\code{panel.superpose.2} contributed by Neil Klepeis)
 }

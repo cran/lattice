@@ -48,7 +48,9 @@ panel.barchart(x, y, box.ratio = 1,
 }
 
 \details{
-  A barchart is drawn in the panel.
+  A barchart is drawn in the panel. Note that most arguments controlling
+  the display can be supplied to the high-level \code{barchart} call
+  directly.
 }
 
 \seealso{

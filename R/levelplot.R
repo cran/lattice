@@ -1,7 +1,7 @@
 
 
 
-### Copyright 2001-2003  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2004  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -41,7 +41,6 @@ prepanel.default.levelplot <-
             else c(3 * uy[1] - uy[2], 3 * uy[length(uy)] - uy[length(uy)-1])/2
     }
     else y <- y[subscripts]
-
     list(xlim =
          if (is.numeric(x)) extend.limits(xlim, prop = -0.0614)
          else levels(x),
@@ -55,6 +54,11 @@ prepanel.default.levelplot <-
 
 
 
+
+
+
+## new version using contourLines, and hopefully to work for missing
+## matrix entries as well
 
 panel.levelplot <-
     function(x, y, z, zcol,
@@ -70,15 +74,17 @@ panel.levelplot <-
              lwd = add.line$lwd,
              cex = add.text$cex,
              font = add.text$font,
+             fontfamily = add.text$fontfamily,
+             fontface = add.text$fontface,
              col.text = add.text$col,
              ...,
              col.regions)
 {
     label.style <- match.arg(label.style)
-    minXwid <- min(diff(sort(unique(x))))
-    minYwid <- min(diff(sort(unique(y))))
     x <- as.numeric(x[subscripts])
     y <- as.numeric(y[subscripts])
+    minXwid <- min(diff(sort(unique(x))))
+    minYwid <- min(diff(sort(unique(y))))
 
     fullZrange <- range(as.numeric(z), na.rm = TRUE) # for shrinking
     z <- as.numeric(z[subscripts])
@@ -149,119 +155,103 @@ panel.levelplot <-
                       default.units = "native",
                       gp = gpar(fill=col.regions[zcol], col = NULL))
 
-
-        ################################################
-#         dux <- diff(ux)
-#         wux <- .5 * (c(dux[1], dux) + c(dux, dux[length(dux)]))
-#         ##wx <- wux[match(x[!is.na(x)], ux)]
-#         wx <- wux[match(x, ux)]
-#         uy <- sort(unique(y[!is.na(y)]))
-#         duy <- diff(uy)
-#         wuy <- .5 * (c(duy[1], duy) + c(duy, duy[length(duy)]))
-#         ##wy <- wuy[match(y[!is.na(y)], uy)]
-#         wy <- wuy[match(y, uy)]
-
-#         if (region) {
-#             for (i in seq(along = col.regions)) {
-#                 ok <- (zcol[subscripts]==i)
-#                 if (any(ok))
-#                     grid.rect(x = x[ok],
-#                               y = y[ok],
-#                               width = wx[ok],
-#                               height = wy[ok],
-#                               default.units = "native",
-#                               gp = gpar(fill=col.regions[i], col = NULL))
-#             }
-#         }
-        ################################################
-
-
         
-        if (contour) {
-
-
-            ## FIXME:
-
-            ## bad hack for when z contains NA's. Including anyway
-            ## since the result would be much worse without it (well,
-            ## that at least had the advantage of being obviously
-            ## broken, as opposed to this which will in certain cases
-            ## silently give the wrong result... still, shouldn't be
-            ## that bad)
-
-            ## z[is.na(z)] <- min(z, na.rm = TRUE)
-
-
+        if (contour)
+        {
 
             add.line <- trellis.par.get("add.line")
             add.text <- trellis.par.get("add.text")
-            ux <- as.double(ux)
-            uy <- as.double(uy)
-            ord <- order(x, y)
-            m <- z[ord] + 10e-12 ## some problems otherwise
-            
-            for (i in seq(along = at)) {
-                val <- .Call("calculateContours", m, ux, uy, as.double(at[i]),
-                             length(ux), length(uy), PACKAGE="lattice")
-                if (length(val[[1]]) > 3) {
-                    if (is.null(labels))
-                        lsegments(val[[1]], val[[2]], val[[3]], val[[4]],
-                                  col = col, lty = lty, lwd = lwd)
-                    else {
 
-                        if (label.style == "flat") {
-                            slopes <-
-                                (val[[4]] - val[[2]]) /
-                                    (val[[3]] - val[[1]])
-                            textloc <- which(abs(slopes) == min(abs(slopes)))[1]
-                            ##skiploc <- numeric(0)
-                            rotangle <- 0
+            ## convert z into a matrix, with NA entries for those
+            ## 'missing' from data frame. There's scope for ambiguity
+            ## here, which can be avoided by the user.
+
+            m <- matrix(NA, nrow = length(ux), ncol = length(uy))
+            m[(idy - 1) * length(ux) + idx ] <- z
+
+            clines <-
+                contourLines(x = ux, y = uy, z = m,
+                             nlevels = length(at), ## necessary ?
+                             levels = at)
+
+            for (val in clines) {
+
+                ## each val looks like:
+
+                ## $ :List of 3
+                ##  ..$ level: num 170
+                ##  ..$ x    : num [1:21] 0.535 0.534 0.534 0.534 0.535 ...
+                ##  ..$ y    : num [1:21] 0.398 0.400 0.417 0.433 0.434 ...
+
+                ## we don't know how to leave gap in lines for labels.
+
+                llines(val, ## hopefully $levels won't matter
+                       col = col, lty = lty, lwd = lwd)
+
+
+                ## if too small, don't add label. How small is small ?
+                ## Should depend on resolution. How ?
+
+                ## if length(val$x) > 10  ?
+                if (!is.null(labels))
+                {
+
+                    slopes <- diff(val$y) / diff(val$x)
+
+                    if (label.style == "flat")
+                    {
+                        ## draw label at 'flattest' position along contour
+
+                        textloc <- which.min(abs(slopes))
+                        rotangle <- 0
+                    }
+                    else if (label.style == "align")
+                    {
+
+                        ## draw label at 'deepest' position along
+                        ## contour, depth being min distance to either
+                        ## of the four edges, scaled appropriately
+
+                        rx <- range(ux)
+                        ry <- range(uy)
+                        depth <- pmin(pmin(val$x - rx[1], rx[2] - val$x) / diff(rx), 
+                                      pmin(val$y - ry[1], ry[2] - val$y) / diff(ry))
+                        textloc <- min(which.max(depth), length(slopes)) 
+                                        # slopes has one less entry,
+                                        # and textloc indexes slopes
+
+                        rotangle <- atan(slopes[textloc] * diff(rx) / diff(ry)) * 180 / base::pi
+                    }
+                    else if (label.style == "mixed")
+                    {
+
+                        ## mix both. align for contours whose flattest
+                        ## portion is too close to edge
+
+                        rx <- range(ux)
+                        ry <- range(uy)
+                        depth <- pmin(pmin(val$x - rx[1], rx[2] - val$x) / diff(rx), 
+                                      pmin(val$y - ry[1], ry[2] - val$y) / diff(ry))
+                        textloc <- which.min(abs(slopes))
+                        rotangle <- 0
+
+                        if (depth[textloc] < .05 ) {
+                            textloc <- min(which.max(depth), length(slopes))
+                            rotangle <- atan(slopes[textloc] * diff(rx) / diff(ry)) * 180 / base::pi
                         }
-                        else if (label.style == "align") {
-                            rx <- range(ux)
-                            ry <- range(uy)
-                            depth <- pmin( (val[[1]] + val[[3]] - 2 * rx[1])/diff(rx),
-                                          (2 * rx[2] - val[[1]] - val[[3]])/diff(rx),
-                                          (val[[2]] + val[[4]] - 2 * ry[1])/diff(ry),
-                                          (2 * ry[2] - val[[2]] - val[[4]])/diff(ry))
-                            textloc <- which(depth == max(depth))[1]
-                            slopes <-
-                                (val[[4]][textloc] - val[[2]][textloc]) /
-                                    (val[[3]][textloc] - val[[1]][textloc])
-                            rotangle <- atan(slopes * diff(rx) / diff(ry)) * 180 / base::pi
-                        }
-                        else if (label.style == "mixed") {
-                            slopes <-
-                                (val[[4]] - val[[2]]) /
-                                    (val[[3]] - val[[1]])
-                            rx <- range(ux)
-                            ry <- range(uy)
-                            depth <- pmin( (val[[1]] + val[[3]] - 2 * rx[1])/diff(rx),
-                                          (2 * rx[2] - val[[1]] - val[[3]])/diff(rx),
-                                          (val[[2]] + val[[4]] - 2 * ry[1])/diff(ry),
-                                          (2 * ry[2] - val[[2]] - val[[4]])/diff(ry))
-
-                            textloc <- which(abs(slopes) == min(abs(slopes), na.rm = TRUE))[1]
-                            rotangle <- 0
-
-                            if ( depth[textloc] < .05 ) {
-                                textloc <- which(depth == max(depth))[1]
-                                rotangle <- atan(slopes[textloc] * diff(rx) / diff(ry)) * 180 / base::pi
-                            }
-                        }
-                        else stop("Invalid label.style")
-
-                        lsegments(val[[1]], val[[2]],
-                                  val[[3]], val[[4]],
-                                  col = col, lty = lty, lwd = lwd)
-
-                        ltext(lab = labels$lab[i], adj = c(.5, 0),
-                              srt = rotangle,
-                              col = col.text, cex = cex, font = font,
-                              x = .5 * (val[[1]][textloc]+val[[3]][textloc]),
-                              y = .5 * (val[[2]][textloc]+val[[4]][textloc]))
 
                     }
+                    else stop("Invalid label.style")
+
+                    i <- match(val$level, at)
+
+                    ltext(lab = labels$lab[i], adj = c(.5, 0),
+                          srt = rotangle,
+                          col = col.text, cex = cex, font = font,
+                          fontfamily = fontfamily, fontface = fontface,
+                          x = .5 * (val$x[textloc]+val$x[textloc + 1]),
+                          y = .5 * (val$y[textloc]+val$y[textloc + 1]))
+
                 }
             }
         }
@@ -306,7 +296,7 @@ contourplot <-
         else eval(prepanel)
 
     do.call("levelplot",
-            c(list(formula = formula,
+            c(list(formula = substitute(formula),
                    data = data,
                    groups = groups,
                    subset = subset,
@@ -325,13 +315,12 @@ contourplot <-
 
 
 
-
-
 levelplot <-
     function(formula,
              data = parent.frame(),
+             allow.multiple = is.null(groups) || outer,
+             outer = TRUE,
              aspect = "fill",
-             layout = NULL,
              panel = "panel.levelplot",
              prepanel = NULL,
              scales = list(),
@@ -347,30 +336,30 @@ levelplot <-
              labels = FALSE,
              pretty = FALSE,
              region = TRUE,
+             drop.unused.levels = TRUE,
              ...,
              colorkey = region,
              col.regions = trellis.par.get("regions")$col,
-             subscripts = TRUE,
              subset = TRUE)
 {
 
     ##dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
 
     ## Step 1: Evaluate x, y, z etc. and do some preprocessing
 
+    left.name <- deparse(substitute(formula))
     formula <- eval(substitute(formula), data, parent.frame())
     form <-
         if (inherits(formula, "formula"))
-            latticeParseFormula(formula, data, dim = 3)
+            latticeParseFormula(formula, data, dim = 3,
+                                subset = subset, groups = groups,
+                                multiple = allow.multiple,
+                                outer = outer, subscripts = TRUE,
+                                drop = drop.unused.levels)
         else {
             if (is.matrix(formula)) {
                 tmp <- expand.grid(1:nrow(formula), 1:ncol(formula))
@@ -378,8 +367,9 @@ levelplot <-
                      right.x = tmp[[1]],
                      right.y = tmp[[2]],
                      condition = NULL,
-                     left.name = "",
-                     right.x.name = "", right.y.name = "")
+                     left.name = left.name,
+                     right.x.name = "row", right.y.name = "column",
+                     subscr = seq(length = nrow(tmp)))
             }
             else if (is.data.frame(formula)) {
                 tmp <- expand.grid(rownames(formula), colnames(formula))
@@ -387,11 +377,36 @@ levelplot <-
                      right.x = tmp[[1]],
                      right.y = tmp[[2]],
                      condition = NULL,
-                     left.name = "",
-                     right.x.name = "", right.y.name = "")
+                     left.name = left.name,
+                     right.x.name = "row", right.y.name = "column",
+                     subscr = seq(length = nrow(tmp)))
             }
             else stop("invalid formula")
         }
+
+
+    ## We need to be careful with subscripts here. It HAS to be there,
+    ## and it's to be used to index x, y, z (and not only groups,
+    ## unlike in xyplot etc). This means we have to subset groups as
+    ## well, which is about the only use for the subscripts calculated
+    ## in latticeParseFormula, after which subscripts is regenerated
+    ## as a straight sequence indexing the variables
+
+    if (!is.null(form$groups))
+        groups <-
+            if (is.matrix(form$groups)) as.vector(form$groups)[form$subscr]
+            else if (is.data.frame(form$groups)) as.vector(as.matrix(form$groups))[form$subscr]
+            else form$groups[form$subscr]
+
+    subscr <- seq(length = length(form$left))
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
 
     cond <- form$condition
     number.of.cond <- length(cond)
@@ -402,53 +417,43 @@ levelplot <-
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, length(x))))
-        layout <- c(1,1,1)
         number.of.cond <- 1
     }
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-    subscr <- seq(along=x)
-    x <- x[subset, drop = TRUE]
-    y <- y[subset, drop = TRUE]
-    z <- z[subset, drop = TRUE]
-    subscr <- subscr[subset, drop = TRUE]
 
     if (missing(xlab)) xlab <- form$right.x.name
     if (missing(ylab)) ylab <- form$right.y.name
 
-    #if(!(is.numeric(x) && is.numeric(y) && is.numeric(z)))
-    #    warning("x, y and z should be numeric")
-    #x <- as.numeric(x)
-    #y <- as.numeric(y)
-    #z <- as.numeric(z)
-
     zrng <- extend.limits(range(z[!is.na(z)]))
     if (missing(at))
         at <-
-            if (pretty) lpretty(zrng, cuts)
+            if (pretty) pretty(zrng, cuts)
             else seq(zrng[1], zrng[2], length = cuts+2)
     
-
     ## create a skeleton trellis object with the
     ## less complicated components:
 
     foo <- do.call("trellis.skeleton",
-                   c(list(aspect = aspect,
+                   c(list(cond = cond,
+                          aspect = aspect,
                           strip = strip,
                           panel = panel,
                           xlab = xlab,
-                          ylab = ylab), dots))
-                          
+                          ylab = ylab,
+                          xlab.default = form$right.x.name,
+                          ylab.default = form$right.y.name), dots))
 
     ## Processing the labels argument
     if (is.logical(labels) && !labels) labels <- NULL
-    else {
-        if (is.logical(labels)) labels <- format(at)
+    else
+    {
+        if (is.logical(labels)) labels <- format(at, trim = TRUE)
         text <- trellis.par.get("add.text") # something better ?
-        if (is.null(text)) text <- list(cex = 1, col = "black", font = 1, rot = 0)
         labels <- list(label = if (is.list(labels)) labels[[1]] else labels,
                        col = text$col, rot = text$rot,
-                       cex = text$cex, font = text$font)
+                       cex = text$cex,
+                       fontfamily = text$fontfamily,
+                       fontface = text$fontface,
+                       font = text$font)
         if (is.list(labels)) labels[names(labels)] <- labels
         if (!is.characterOrExpression(labels$label))
             labels$label <- format(at)
@@ -458,14 +463,6 @@ levelplot <-
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
     foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
-
-    ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
-        foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
-        foo$ylab$label <- form$left.name
 
     ## Step 2: Compute scales.common (excluding limits)
 
@@ -515,16 +512,13 @@ levelplot <-
     
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
-    id.na <- is.na(x)|is.na(y)  ##|is.na(z)
+    id.na <- is.na(x) | is.na(y)  ##|is.na(z)
     for (var in cond)
         id.na <- id.na | is.na(var)
     if (!any(!id.na)) stop("nothing to draw")
     ## Nothing simpler ?
-
-    foo$condlevels <- lapply(cond, levels)
 
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
@@ -539,42 +533,26 @@ levelplot <-
         if (numcol.r <= numcol)
             rep(col.regions, length = numcol)
         else col.regions[floor(1+(1:numcol-1)*(numcol.r-1)/(numcol-1))]
-    
-    if (is.logical(colorkey)) {
-        if (colorkey) foo$colorkey <-
+
+    if (is.logical(colorkey))
+    {
+        if (colorkey) colorkey <-
             list(space = "right", col = col.regions,
                  at = at, tick.number = 7)
+        else colorkey <- NULL
     }
-    else if (is.list(colorkey)) {
-        foo$colorkey <- colorkey
-        if (is.null(foo$colorkey$col)) foo$colorkey$col <- col.regions
-        if (is.null(foo$colorkey$at)) foo$colorkey$at <- at
+    else if (is.list(colorkey))
+    {
+        #foo$colorkey <- colorkey
+        if (is.null(colorkey$col)) colorkey$col <- col.regions
+        if (is.null(colorkey$at)) colorkey$at <- at
+        if (is.null(colorkey$space)) colorkey$space <-
+            if (any(c("x", "y", "corner") %in% names(colorkey))) "inside" else "right"
     }
-
-    ## Current algo unnecessarily memory intensive ?
-
-    
-    
-    ## I'm going to create vectors parallel to x y etc which would
-    ## give the widths and heights of the rectangles for each point.
-    ## My algo works only when the x's and y's are really evaluated
-    ## on a grid, that is, there is no numerical error. Splus also
-    ## doesn't work (in any meaningful way, at least) in such cases,
-    ## but behaviour would be dissimilar in that case.
-
-#     ux <- sort(unique(x[!is.na(x)]))
-#     dux <- diff(ux)
-#     wux <- .5 * (c(dux[1], dux) + c(dux, dux[length(dux)]))
-#     ##wx <- wux[match(x[!is.na(x)], ux)]
-#     wx <- wux[match(x, ux)]
-#     uy <- sort(unique(y[!is.na(y)]))
-#     duy <- diff(uy)
-
-# print(uy)
-
-#     wuy <- .5 * (c(duy[1], duy) + c(duy, duy[length(duy)]))
-#     ##wy <- wuy[match(y[!is.na(y)], uy)]
-#     wy <- wuy[match(y, uy)]
+    foo$legend <-
+        construct.legend(foo$legend,
+                         colorkey,
+                         fun = "draw.colorkey")
 
     zcol <- rep(NA, length(z)) #numeric(length(z))
     for (i in seq(along=col.regions))
@@ -588,47 +566,36 @@ levelplot <-
 
     if (!is.null(groups)) foo$panel.args.common$groups <- groups
 
-    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
-    plots.per.page <- max(layout[1] * layout[2], layout[2])
-    number.of.pages <- layout[3]
-    foo$skip <- rep(foo$skip, length = plots.per.page)
-    foo$layout <- layout
-    nplots <- plots.per.page * number.of.pages
+    nplots <- prod(cond.max.level)
+    if (nplots != prod(sapply(foo$condlevels, length))) stop("mismatch")
+    foo$panel.args <- vector(mode = "list", length = nplots)
 
-    foo$panel.args <- as.list(1:nplots)
+
     cond.current.level <- rep(1, number.of.cond)
-    panel.number <- 1 # this is a counter for panel number
 
-    for (page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0))
-            for (plot in 1:plots.per.page) {
 
-                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                else if(!any(cond.max.level-cond.current.level<0)) {
+    for (panel.number in seq(length = nplots))
+    {
+        id <- !id.na
+        for(i in 1:number.of.cond)
+        {
+            var <- cond[[i]]
+            id <- id &
+            if (is.shingle(var))
+                ((var >=
+                  levels(var)[[cond.current.level[i]]][1])
+                 & (var <=
+                    levels(var)[[cond.current.level[i]]][2]))
+            else (as.numeric(var) == cond.current.level[i])
+        }
 
-                    id <- !id.na
-                    for(i in 1:number.of.cond)
-                    {
-                        var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
-                            ((var >=
-                              levels(var)[[cond.current.level[i]]][1])
-                             & (var <=
-                                levels(var)[[cond.current.level[i]]][2]))
-                        else (as.numeric(var) == cond.current.level[i])
-                    }
+        foo$panel.args[[panel.number]] <- 
+            list(subscripts = subscr[id])
 
-                    foo$panel.args[[panel.number]] <- 
-                        list(subscripts = subscr[id])
-
-                    cond.current.level <-
-                        cupdate(cond.current.level,
-                                cond.max.level)
-                }
-
-                panel.number <- panel.number + 1
-            }
+        cond.current.level <-
+            cupdate(cond.current.level,
+                    cond.max.level)
+    }
 
     foo <- c(foo,
              limits.and.aspect(prepanel.default.levelplot,

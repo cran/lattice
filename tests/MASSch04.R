@@ -30,6 +30,17 @@ contourplot(z ~ x * y, topo.lo1, aspect = 1,
 )
 
 
+contourplot(z ~ x * y, na.omit(topo.lo1), aspect = 1,
+  at = seq(700, 1000, 25), xlab = "", ylab = "",
+  panel = function(x, y, subscripts, ...) {
+     panel.levelplot(x, y, subscripts, ...)
+     panel.xyplot(topo$x, topo$y, cex = 0.5)
+  }
+)
+
+
+
+
 
 # 4.5  Trellis graphics
 

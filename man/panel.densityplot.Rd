@@ -6,7 +6,7 @@
 }
 \usage{
 panel.densityplot(x, darg, plot.points = TRUE, ref = FALSE,
-                  cex, col, col.line, ...)
+                  col, col.line, ...)
 }
 \arguments{
   \item{x}{ data points for which density is to be estimated}
@@ -17,10 +17,9 @@ panel.densityplot(x, darg, plot.points = TRUE, ref = FALSE,
     details)
 } 
   \item{plot.points}{ logical, specifying whether or not the data 
-    points should be plotted along with the estimated density. The
-    default (TRUE) is S-Plus behaviour.}
-  \item{ref}{ logical, whether to draw x-axis}
-  \item{cex}{ cex for points, if plotted}
+    points should be plotted along with the estimated density.
+  }
+  \item{ref}{ logical, whether to draw x-axis }
   \item{col}{ color for points and line}
   \item{col.line}{ color for line, overrides col }
   \item{\dots}{ extra grahical parameters }

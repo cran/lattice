@@ -1,26 +1,108 @@
 \name{panel.pairs}
 \alias{panel.pairs}
+\alias{diag.panel.splom}
 \title{ Default Superpanel Function for splom}
 \description{
   This is the default superpanel function for \code{splom}.
 }
+\synopsis{
+panel.pairs(z,
+             panel = "panel.splom",
+             lower.panel = panel,
+             upper.panel = panel,
+             diag.panel = "diag.panel.splom",
+             as.matrix = FALSE,
+
+             groups = NULL,
+             panel.subscripts,
+             subscripts,
+             pscales = 5,
+             panel.number = 0,
+             panel.counter = 0,
+
+             prepanel.limits = function(x) if (is.factor(x)) levels(x) else
+             extend.limits(range(as.numeric(x), na.rm = TRUE)),
+
+
+             varname.col = add.text$col,
+             varname.cex = add.text$cex,
+             varname.font = add.text$font,
+             varname.fontfamily = add.text$fontfamily,
+             varname.fontface = add.text$fontface,
+
+             axis.text.col = axis.text$col,
+             axis.text.cex = axis.text$cex,
+             axis.text.font = axis.text$font,
+             axis.text.fontfamily = axis.text$fontfamily,
+             axis.text.fontface = axis.text$fontface,
+
+             axis.line.col = axis.line$col,
+             axis.line.lty = axis.line$lty,
+             axis.line.lwd = axis.line$lwd,
+
+             ...)
+diag.panel.splom(varname = NULL, limits, at = NULL, lab = NULL,
+             draw = TRUE,
+
+             varname.col = add.text$col,
+             varname.cex = add.text$cex,
+             varname.font = add.text$font,
+             varname.fontfamily = add.text$fontfamily,
+             varname.fontface = add.text$fontface,
+
+             axis.text.col = axis.text$col,
+             axis.text.cex = axis.text$cex,
+             axis.text.font = axis.text$font,
+             axis.text.fontfamily = axis.text$fontfamily,
+             axis.text.fontface = axis.text$fontface,
+
+             axis.line.col = axis.line$col,
+             axis.line.lty = axis.line$lty,
+             axis.line.lwd = axis.line$lwd,
+             ...)
+}
 \usage{
-panel.pairs(z, panel = panel.splom,
-            groups = NULL, panel.subscripts, 
+panel.pairs(z,
+            panel = "panel.splom",
+            lower.panel = panel,
+            upper.panel = panel,
+            diag.panel = "diag.panel.splom",
+            as.matrix = FALSE,
+            groups = NULL,
+            panel.subscripts,
             subscripts,
             pscales = 5,
-            panel.number,
-            prepanel.limits,
+            prepanel.limits = function(x) if (is.factor(x)) levels(x) else
+            extend.limits(range(as.numeric(x), na.rm = TRUE)),
             ...)
+diag.panel.splom(varname, limits, at, lab, draw = TRUE, ...)
 }
 \arguments{
   \item{z}{ The data frame used for the plot.}
-  \item{panel}{ The panel function used inside.}
-  \item{groups}{ Grouping variable, if any.}
-  \item{panel.subscripts}{ logical specifying whether the panel
-    function accepts an argument named \code{subscripts}.}
+  \item{panel, lower.panel, upper.panel}{
+    The panel function used to display each pair of variables. If
+    specified, \code{lower.panel} and \code{upper.panel} are used for
+    panels below and above the diagonal respectively.
+  }
+  \item{diag.panel}{
+    The panel function used for the diagonals. See arguments to
+    \code{diag.panel.splom} to know what arguments this function is
+    passed when called.
+  }
+  \item{as.matrix}{
+    logical. If \code{TRUE}, the layout of the panels will have origin
+    on the top left instead of bottom left (similar to
+    \code{pairs}). This is in essence the same functionality as provided
+    by \code{as.table} for the panel layout
+  }
+  \item{groups}{ Grouping variable, if any }
+  \item{panel.subscripts}{
+    logical specifying whether the panel function accepts an argument
+    named \code{subscripts}.
+  }
   \item{subscripts}{ The indices of the rows of \code{z} that are to be
-    displayed in this (super)panel.}
+    displayed in this (super)panel.
+  }
   \item{pscales}{ Controls axis labels, passed down from
     \code{splom}. If pscales is a single number, it indicates the
     approximate number of equally-spaced ticks that should appear on
@@ -40,11 +122,6 @@ panel.pairs(z, panel = panel.splom,
     Factor variables are labelled with the factor names. Use pscales=0
     to supress the axes entirely.
   }
-  \item{panel.number}{ the sequential index of the panel in the Lattice
-    plot which this function will draw, meant to keep track of the
-    conditioning variable for the panel. Passed to the `panel' function
-    if it accepts such an argument.
-  }
   \item{prepanel.limits}{ The `regular' high level lattice plots such as
     \code{xyplot} use the \code{prepanel} function for deciding on axis
     limits from data. This function serves a similar function, and works
@@ -52,7 +129,26 @@ panel.pairs(z, panel = panel.splom,
     overridden by the corresponding \code{limits} component in the
     \code{pscales} list.
   }
-  \item{\dots}{ graphical parameters may be supplied.}
+  \item{varname}{ (scalar) character string or expression that is to be
+    written centred within the panel
+  }
+  \item{limits}{
+    numeric of length 2, or, vector of characters, specifying the scale
+    for that panel (used to calculate tick locations when missing)
+  }
+  \item{at}{ locations of tick marks}
+  \item{lab}{ optional labels for tick marks}
+  \item{draw}{
+    logical, specifying whether to draw the tick marks and labels. If
+    \code{FALSE}, only variable names are written
+  }
+  \item{\dots}{
+    extra arguments, typically graphical parameters to control
+    appearance of axes and variable names in the diagonal panels. The
+    actual list of possible arguments is rather large, see the formal
+    arguments to \code{panel.pairs} and \code{panel.diag.splom} (using
+    \code{formals}) for all the possibilities.
+  }
 }
 \details{
   This is the function that is actually passed in as the \code{panel}

@@ -34,10 +34,15 @@
   \item{panel.width, panel.height}{ lists with 2 components, that should
     be valid \code{x} and \code{units} arguments to \code{unit()} (the
     \code{data} argument cannot be specified currently, but can be
-    considered for addition). The resulting \code{unit} object will be
-    the width/height of each panel in the Lattice plot. These arguments
-    can be used to explicitly control the dimensions of the panel,
-    rather than letting them expand to maximize available space.
+    considered for addition if needed). The resulting \code{unit} object
+    will be the width/height of each panel in the Lattice plot. These
+    arguments can be used to explicitly control the dimensions of the
+    panel, rather than letting them expand to maximize available space.
+
+    Note that this option should not be used in conjunction with
+    non-default values of the \code{aspect} argument in the original
+    high level call (no error will be produced, but the resulting
+    behaviour is undefined).
   }
   \item{\dots}{extra arguments, ignored}
 }
@@ -47,9 +52,31 @@
     bwplot} etc. It is usually called automatically when a trellis
   object is produced. It can also be called explicitly to control plot
   positioning by means of the arguments \code{split} and
-  \code{position}. When \code{newpage = FALSE}, the current grid
-  viewport is treated as the plotting area, making it possible to embed
-  a Lattice plot inside an arbitrary grid viewport.
+  \code{position}.
+
+  When \code{newpage = FALSE}, the current grid viewport is treated as
+  the plotting area, making it possible to embed a Lattice plot inside
+  an arbitrary grid viewport.
+
+  The print method uses the information in \code{x} (the object to be
+  printed) to produce a display using the Grid graphics engine. At the
+  heart of the plot is a grid layout, of which the entries of most
+  interest to the user are the ones containing the display panels.
+
+  Unlike in older versions of Lattice (and Grid), the grid display tree
+  is retained after the plot is produced, making it possible to access
+  individual viewport locations and make additions to the plot. The full
+  tree can be viewed using the grid function
+  \code{\link[grid:current.viewport]{current.vpTree}}, and individual
+  viewports can be `seeked' using
+  \code{\link[grid:viewports]{seekViewport}}.  The viewports that
+  correspond to panels (which is what the user would be interested in)
+  have names of the form \code{panel.n}, where \code{n} is a simple
+  incremental counter for the panels. These names can be used in
+  \code{seekViewport}. For multi-page displays, only the viewports for
+  the last page are available.  This functionality is still very new,
+  and details may change in the future.
+
 }
 
 \note{
@@ -57,7 +84,7 @@
 }
 
 \seealso{
-  \code{\link{Lattice}}, \code{\link[grid]{unit}}
+  \code{\link{Lattice}}, \code{\link[grid:unit]{unit}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
@@ -76,47 +103,41 @@ print(p11, position = c(0,0,.75,.75), split=c(1,1,1,2), more=TRUE)
 print(p12, position = c(0,0,.75,.75), split=c(1,2,1,2), more=TRUE)
 print(p3, position = c(.5,.75,1,1), more=FALSE)
 
-## Embedding lattice plots inside a grid viewport
-## Note: this is lattice specific, won't work in S-Plus
+## Using seekViewport
+data(longley)
 
+## repeat same plot, with different polynomial fits in each panel
+xyplot(Armed.Forces ~ Year, longley, index.cond = list(rep(1, 6)),
+       panel = function(x, y, panel.counter, ...)
+       {
+           panel.xyplot(x, y, ...)
+           fm <- lm(y ~ poly(x, panel.counter))
+           llines(x, predict(fm))
+       })
 
-# data(iris)
-# cur.settings <- trellis.par.get()
+\dontrun{
+grid::seekViewport("panel.1")
+cat("Click somewhere inside the first panel:\n")
+ltext(grid::grid.locator(), lab = "linear")
+}
 
-# grid.newpage()
-# lset(list(background = list(col = "transparent")))
+grid::seekViewport("panel.1")
+grid::grid.text("linear")
 
-# grid.rect(gp = gpar(fill = "#fffff0"))
+grid::seekViewport("panel.2")
+grid::grid.text("quadratic")
 
-# push.viewport(viewport(x = .6, y = .8, h = .25, w = .8, angle = 5))
-# print(densityplot(~ Petal.Length | Species, iris, plot.p = FALSE, col = 4,
-#       layout = c(3, 1)), newpage = FALSE)
-# pop.viewport()
+grid::seekViewport("panel.3")
+grid::grid.text("cubic")
 
-# push.viewport(viewport(x = .6, y = .6, h = .25, w = .75, angle = 25))
-# print(densityplot(~ Petal.Width | Species, iris, plot.p = FALSE, col = 3,
-#       layout = c(3, 1)), newpage = FALSE)
-# pop.viewport()
+grid::seekViewport("panel.4")
+grid::grid.text("degree 4")
 
-# push.viewport(viewport(x = .6, y = .3, h = .25, w = .7, angle = -5))
-# print(densityplot(~ Sepal.Length | Species, iris, plot.p = FALSE,  col = 2,
-#       layout = c(3, 1)), newpage = FALSE)
-# pop.viewport()
+grid::seekViewport("panel.5")
+grid::grid.text("degree 5")
 
-# push.viewport(viewport(x = .15, y = .5, h = .8, w = .25, angle = 10))
-# lset(list(background = list(col = "#f0ffff")))
-# print(densityplot(~ Sepal.Width | Species, iris, plot.p = FALSE, col = 1,
-#       layout = c(1, 3)), newpage = FALSE)
-# grid.rect()
-# pop.viewport()
-
-# grid.text(lab = "Densities by Species in the Iris Data",
-#           vp = viewport(x = .6, y = .1))
-
-
-
-# lset(cur.settings)
-
+grid::seekViewport("panel.6")
+grid::grid.text("degree 6")
 }
 \keyword{hplot}
 

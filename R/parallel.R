@@ -1,6 +1,6 @@
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2004  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -83,7 +83,6 @@ parallel <-
              data = parent.frame(),
              aspect = "fill",
              between = list(x = 0.5, y = 0.5),
-             layout = NULL,
              panel = "panel.parallel",
              prepanel = NULL,
              scales = list(),
@@ -94,70 +93,99 @@ parallel <-
              ylab = NULL,
              ylim,
              varnames,
+             drop.unused.levels = TRUE,
              ...,
-             subscripts = !is.null(groups),
              subset = TRUE)
 {
 
     ## dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+
+    ## Step 1: Evaluate x, y, etc. and do some preprocessing
+    
+    right.name <- deparse(substitute(formula))
+    formula <- eval(substitute(formula), data, parent.frame())
+    form <-
+        if (inherits(formula, "formula"))
+            latticeParseFormula(formula, data,
+                                subset = subset, groups = groups,
+                                multiple = FALSE,
+                                outer = FALSE, subscripts = TRUE,
+                                drop = drop.unused.levels)
+        else {
+            if (is.matrix(formula)) {
+                list(left = NULL,
+                     right = as.data.frame(formula)[subset,],
+                     condition = NULL,
+                     left.name = "",
+                     right.name =  right.name,
+                     groups = groups,
+                     subscr = seq(length = nrow(formula))[subset])
+            }
+            else if (is.data.frame(formula)) {
+                list(left = NULL,
+                     right = formula[subset,],
+                     condition = NULL,
+                     left.name = "",
+                     right.name =  right.name,
+                     groups = groups,
+                     subscr = seq(length = nrow(formula))[subset])
+            }
+            else stop("invalid formula")
+        }
+
+
+    ## We need to be careful with subscripts here. It HAS to be there,
+    ## and it's to be used to index x, y, z (and not only groups,
+    ## unlike in xyplot etc). This means we have to subset groups as
+    ## well, which is about the only use for the subscripts calculated
+    ## in latticeParseFormula, after which subscripts is regenerated
+    ## as a straight sequence indexing the variables
+
+    if (!is.null(form$groups)) groups <-  form$groups[form$subscr]
+    subscr <- seq(length = nrow(form$right))
+
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
 
     prepanel <-
-        if (is.function(prepanel)) prepanel 
+        if (is.function(prepanel)) prepanel
         else if (is.character(prepanel)) get(prepanel)
         else eval(prepanel)
 
-    ## Step 1: Evaluate x, y, etc. and do some preprocessing
-    
-    form <- latticeParseFormula(formula, data)
+
     cond <- form$condition
     number.of.cond <- length(cond)
     x <- as.data.frame(form$right)
+
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, nrow(x))))
-        layout <- c(1,1,1)
         number.of.cond <- 1
     }
+
     if (!missing(varnames)) colnames(x) <-
         eval(substitute(varnames), data, parent.frame())
-
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
-    subscr <- seq(along=x[,1])
-    x <- x[subset,, drop = TRUE]
-    subscr <- subscr[subset, drop = TRUE]
-    
-    ##if(!(is.numeric(x) && is.numeric(y)))
-    ##    warning("Both x and y should be numeric")    WHAT ?
-
 
     ## create a skeleton trellis object with the
     ## less complicated components:
 
     foo <- do.call("trellis.skeleton",
-                   c(list(aspect = aspect,
+                   c(list(cond = cond,
+                          aspect = aspect,
                           between = between,
                           strip = strip,
                           panel = panel,
                           xlab = xlab,
-                          ylab = ylab), dots))
+                          ylab = ylab,
+                          xlab.default = "Parallel Coordinate Plot"), dots))
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
     foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
-
-    ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
-        foo$xlab$label <- "Parallel Coordinate Plot"
-    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
-        foo$ylab <- NULL
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
@@ -172,12 +200,15 @@ parallel <-
     }
     foo <- c(foo, 
              do.call("construct.scales", scales))
+
+    ## forcing this for now. Shouldn't be too hard to give more
+    ## control to the user
+
     foo$x.scales$at <- c(0,1)
     foo$x.scales$labels <- c("Min","Max")
     foo$y.scales$at <- 1:ncol(x)
     foo$y.scales$labels <- colnames(x)
     
-
     ## Step 3: Decide if limits were specified in call:
 
     if (missing(xlim)) xlim <- extend.limits(c(0,1))
@@ -217,7 +248,6 @@ parallel <-
     
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
@@ -229,7 +259,6 @@ parallel <-
     if (!any(!id.na)) stop("nothing to draw")
     ## Nothing simpler ?
 
-    foo$condlevels <- lapply(cond, levels)
 
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
@@ -237,46 +266,38 @@ parallel <-
     foo$panel.args.common <-
         c(list(z = x, groups = groups), dots)
 
-    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
-    plots.per.page <- max(layout[1] * layout[2], layout[2])
-    number.of.pages <- layout[3]
-    foo$skip <- rep(foo$skip, length = plots.per.page)
-    foo$layout <- layout
-    nplots <- plots.per.page * number.of.pages
 
-    foo$panel.args <- as.list(1:nplots)
-    cond.current.level <- rep(1,number.of.cond)
-    panel.number <- 1 # this is a counter for panel number
-    for (page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0))
-            for (plot in 1:plots.per.page) {
+    nplots <- prod(cond.max.level)
+    if (nplots != prod(sapply(foo$condlevels, length))) stop("mismatch")
+    foo$panel.args <- vector(mode = "list", length = nplots)
 
-                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                else if(!any(cond.max.level-cond.current.level<0)) {
 
-                    id <- !id.na
-                    for(i in 1:number.of.cond)
-                    {
-                        var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
-                            ((var >=
-                              levels(var)[[cond.current.level[i]]][1])
-                             & (var <=
-                                levels(var)[[cond.current.level[i]]][2]))
-                        else (as.numeric(var) == cond.current.level[i])
-                    }
+    cond.current.level <- rep(1, number.of.cond)
 
-                    foo$panel.args[[panel.number]] <-
-                        list(subscripts = subscr[id])
 
-                    cond.current.level <-
-                        cupdate(cond.current.level,
-                                cond.max.level)
-                }
+    for (panel.number in seq(length = nplots))
+    {
 
-                panel.number <- panel.number + 1
-            }
+        id <- !id.na
+        for(i in 1:number.of.cond)
+        {
+            var <- cond[[i]]
+            id <- id &
+            if (is.shingle(var))
+                ((var >=
+                  levels(var)[[cond.current.level[i]]][1])
+                 & (var <=
+                    levels(var)[[cond.current.level[i]]][2]))
+            else (as.numeric(var) == cond.current.level[i])
+        }
+
+        foo$panel.args[[panel.number]] <-
+            list(subscripts = subscr[id])
+
+        cond.current.level <-
+            cupdate(cond.current.level,
+                    cond.max.level)
+    }
 
     foo <- c(foo,
              limits.and.aspect(prepanel.default.parallel,
@@ -295,16 +316,6 @@ parallel <-
     class(foo) <- "trellis"
     foo
 }
-
-
-
-
-
-
-
-
-
-
 
 
 

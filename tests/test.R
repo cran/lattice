@@ -1,5 +1,9 @@
 postscript("misctests.ps")
 library(lattice)
+
+densityplot(~ 5)
+densityplot(~ 1:5 | letters[1:5])
+
 x <- rnorm(200)
 y <- rnorm(200)
 z <- equal.count(rnorm(200))
@@ -72,6 +76,47 @@ splom(iris2, groups = iris$Species,
 splom(iris2, groups = iris$Species,
       pscales = list(list(at = 6, lab = "six", limits = c(-10, 10)),
       list(at = 3), list(at = 4), list(limits = c(-5, 5))))
+
+
+## factors in formula
+
+data(barley)
+levelplot(yield ~ year * variety | site, barley,
+          panel = function(x, y, ...) {
+              x <- as.numeric(x)
+              y <- as.numeric(y)
+              panel.levelplot(x, y, ...)
+          })
+
+
+data(volcano)
+levelplot(volcano, key = list(x = .5, y = .5, points = list(col = 1:3)),
+          legend = list(top = list(fun = grid::textGrob("This \nis \na \nstupid \nlegend"))))
+
+
+## demo of seekViewport
+
+library(grid)
+
+splom(~iris[1:3]|Species, data = iris, 
+      layout=c(2,2), pscales = 0,
+      varnames = c("Sepal\nLength", "Sepal\nWidth", "Petal\nLength"),
+      page = function(...) {
+          ltext(x = seq(.6, .8, len = 4), 
+                y = seq(.9, .6, len = 4), 
+                lab = c("Three", "Varieties", "of", "Iris"),
+                cex = 2)
+      }, par.settings = list(clip = list(panel = FALSE)))
+
+seekViewport(vpPath("panel.1", "pairs", "subpanel.3.2"))
+grid.yaxis(main = TRUE)
+
+seekViewport(vpPath("panel.2", "pairs", "subpanel.1.2"))
+grid.yaxis(main = FALSE)
+
+seekViewport(vpPath("panel.3", "pairs", "subpanel.2.2"))
+grid.yaxis(main = FALSE)
+
 
 
 demo("lattice")

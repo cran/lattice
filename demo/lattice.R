@@ -1,6 +1,11 @@
 
 
-par(ask = TRUE)
+opar <- par(ask = TRUE)
+
+## store current settings, to be restored later
+
+old.settings <- trellis.par.get()
+
 ## changing settings to new 'theme'
 lset(theme = col.whitebg())
 
@@ -21,8 +26,6 @@ densityplot( ~ height | voice.part, data = singer, layout = c(2, 4),
             ylab = "Kernel Density\n with Normal Fit",
             main = list("Estimated Density", cex = 1.4, col = "DarkOliveGreen"),
             panel = function(x, ...) {
-                panel.xyplot(x = jitter(x),
-                             y = rep(0, length(x)))
                 panel.densityplot(x, ...)
                 panel.mathdensity(dmath = dnorm,
                                   args = list(mean=mean(x),sd=sd(x)))
@@ -34,10 +37,11 @@ states <- data.frame(state.x77,
                      state.name = dimnames(state.x77)[[1]], 
                      state.region = factor(state.region)) 
 
-xyplot(Murder  ~ Population | state.region, data = states, 
-       groups = as.character(state.name), 
+xyplot(Murder ~ Population | state.region, data = states, 
+       groups = state.name,
        panel = function(x, y, subscripts, groups)  
-       ltext(x=x, y=y, label=groups[subscripts], cex=.7, font=3),
+       ltext(x = x, y = y, label = groups[subscripts],
+             cex=.9, fontfamily = "Hershey", fontface = "italic"),
        par.strip.text = list(cex = 1.3, font = 4, col = "brown"),
        xlab = list("Estimated Population, July 1, 1975", font = 2),
        ylab = list("Murder Rate (per 100,000 population), 1976", font = 2),
@@ -53,8 +57,8 @@ levels(states$state.region) <- c("Northeast", "South", "North\n Central",  "West
 xyplot(Murder  ~ Population | state.region, data = states,
        groups = as.character(state.name),
        panel = function(x, y, subscripts, groups)
-       grid::grid.text(x=x, y=y, label=groups[subscripts], default.units = "native",
-                       gp = grid::gpar(fontsize = 10, font=2, col = "blue"), rot = -50),
+       ltext(x = x, y = y, label = groups[subscripts], srt = -50, col = "blue",
+             cex=.9, fontfamily = "Hershey"),
        par.strip.text = list(cex = 1.3, font = 4, col = "brown", lines = 2),
        xlab = "Estimated Population\nJuly 1, 1975", 
        ylab = "Murder Rate \n(per 100,000 population)\n 1976", 
@@ -70,6 +74,29 @@ lset(list(par.xlab.text = list(font = 1),
 data(volcano)
 levelplot(volcano, colorkey = list(space = "top"),
           sub = "Maunga Whau volcano")
+
+## wireframe
+wireframe(volcano, shade = TRUE,
+          aspect = c(61/87, 0.4),
+          screen = list(z = -120, x = -45),
+          light.source = c(0,0,10), distance = .2,
+          shade.colors = function(irr, ref, height, w = .5)
+          grey(w * irr + (1 - w) * (1 - (1-ref)^.4)))
+
+## 3-D surface parametrized on a 2-D grid
+
+n <- 50
+tx <- matrix(seq(-pi, pi, len = 2*n), 2*n, n)
+ty <- matrix(seq(-pi, pi, len = n) / 2, 2*n, n, byrow = T)
+xx <- cos(tx) * cos(ty)
+yy <- sin(tx) * cos(ty)
+zz <- sin(ty)
+
+zzz <- zz
+zzz[,1:12 * 4] <- NA
+wireframe(zzz ~ xx * yy, shade = TRUE, light.source = c(3,3,3))
+
+
 
 ## Example with panel.superpose. 
 data(iris)
@@ -112,10 +139,12 @@ xyplot(y~x | a, aspect = "fill",
        points=list(pch=1:2),
        text = list(c('small', 'BIG'), cex = c(.8, 3)),
        lines = list(lty = 1:2),
-       text=list(expression(theta, zeta))
-       ),
+       text=list(expression(theta, zeta))),
        sub=expression(frac(demonstrating, expressions)))
 
 
-par(ask = FALSE)
+
+lset(theme = old.settings)
+
+par(opar)
 

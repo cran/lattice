@@ -8,8 +8,7 @@
 banking(dx, dy)
 }
 \arguments{
-  \item{dx, dy}{ vector of consecutive x, y differences.
-  }
+  \item{dx, dy}{ vector of consecutive x, y differences. }
 }
 \details{
   \code{banking} is a crude banking function used when aspect="xy" in

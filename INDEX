@@ -1,10 +1,13 @@
+Lattice                 Lattice Graphics
+Rows                    Extract 'rows' from a list
 banking                 Banking
+barley                  Data Sets in the Lattice library
 cloud                   3d Scatter Plot
 draw.colorkey           Produce a Colorkey for levelplot
 draw.key                Produce a Legend or Key
+equal.count             shingles
 histogram               Histograms and Kernel Density Plots
 latticeParseFormula     Parse Trellis formula
-Lattice                 Lattice Graphics
 levelplot               Level Plots
 llines                  Lattice Replacements of base graphics
                         functions
@@ -25,20 +28,18 @@ panel.stripplot         Default Panel Function for stripplot
 panel.superpose         Panel Function for Display Marked by groups
 panel.tmd               Panel function for tmd
 panel.xyplot            Default Panel Function for xyplot
-prepanel.functions      Useful Prepanel Function for Lattice
+prepanel.lmline         Useful Prepanel Function for Lattice
 print.trellis           Print Trellis Objects
-qqmath                  Q-Q Plot with Theoretical Distribution
 qq                      Quantile-Quantile Plots of Two Samples
+qqmath                  Q-Q Plot with Theoretical Distribution
 rfs                     Residual and Fit Spread Plots
-Rows                    Extract 'rows' from a list
-shingles                shingles
 simpleKey               Function to generate a simple key
 splom                   Scatter Plot Matrices
 strip.default           Default Trellis strip function
 tmd                     Tukey Mean-Difference Plot
-trellis.datasets        Data Sets in the Lattice library
 trellis.device          Initializing Trellis Displays
 trellis.object          Lattice Display Object
 trellis.par.get         Graphical Parameters for Trellis Displays
 update.trellis          Update Trellis Object
+utilities.3d            Default Panel Function for cloud
 xyplot                  Common Bivariate Trellis Plots

@@ -1,6 +1,6 @@
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2004  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -20,7 +20,8 @@
 
 
 
-## not quite what it should be
+## FIXME: not quite what it should be
+
 plot.shingle <-
     function(x, col = bar.fill$col, aspect = "fill", ...)
 {
@@ -53,21 +54,19 @@ plot.shingle <-
                 strip = FALSE,
                 main = NULL,
                 sub = NULL,
-                xlab = list(label = "Range", col = "black", cex = 1, font =1),
-                ylab = list(label = "Panel", col = "black", cex = 1, font =1),
+                xlab = c(list(label = "Range"), trellis.par.get("par.xlab.text")),
+                ylab = c(list(label = "Panel"), trellis.par.get("par.ylab.text")),
                 x.scales = 1,
                 y.scales = 1,
                 x.between = 0,
                 y.between = 0,
                 x.alternating = 1,
-                y.alternating = 1,
-                fontsize.normal = 10,
-                fontsize.small = 8)
+                y.alternating = 1)
     
     num.l.y <- nlevels(x)
     foo$x.limits <- extend.limits(range(x, levels(x)))
     foo$y.limits <- extend.limits(c(1,num.l.y),
-                                  length = .5+num.l.y)
+                                  length = .5 + num.l.y)
 
 
     foo$x.scales <- list(relation = "same",

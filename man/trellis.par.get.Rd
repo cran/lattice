@@ -83,10 +83,11 @@ lattice.theme
   \code{show.settings} provides a graphical display summarizing some of
   the values in the current setting.
 
-  There are a few more (non S compatible) interface functions which
-  might be simpler to use. Details can be found in the documentation for
-  \code{lset}.
+  There are some simpler alternatives that can be used to manipulate the
+  settings. Details can be found in the documentation for \code{lset}.
+
 }
+
 \value{
   \code{trellis.par.get} returns a list giving parameters for that
   component. If \code{name} is missing, it returns the full list.

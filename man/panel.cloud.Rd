@@ -1,115 +1,207 @@
 \name{panel.cloud}
 \alias{panel.cloud}
 \alias{panel.wireframe}
-\alias{panel.3dscatter.old}
 \alias{panel.3dscatter}
 \alias{panel.3dwire}
-\alias{palette.shade}
-\alias{ltransform3dMatrix}
-\alias{ltransform3dto3d}
 \title{ Default Panel Function for cloud }
 \description{
-  These are (related to) the default panel functions for \code{cloud}
-  and \code{wireframe}.
+  These are default panel functions controlling \code{cloud} and
+  \code{wireframe} displays.
 }
+
 \usage{
-panel.cloud(x, y, z, subscripts,
+panel.cloud(
+x, y, z, subscripts,
             groups = NULL,
             distance, xlim, ylim, zlim,
             panel.3d.cloud = "panel.3dscatter",
             panel.3d.wireframe = "panel.3dwire",
             rot.mat, aspect,
             par.box = NULL,
-            xlab, ylab, zlab, scales.3d,
+            xlab, ylab, zlab,
+            xlab.default, 
+            ylab.default,
+            zlab.default,
+            scales.3d,
             proportion = 0.6, wireframe = FALSE,
             scpos,
             \dots,
             col.at,
             col.regions)
 panel.wireframe(\dots)
-ltransform3dMatrix(screen, R.mat)
-ltransform3dto3d(x, R.mat, za = 1 , zb = 0, zmin, zmax, dist)
-panel.3dscatter.old(x, y, z, rot.mat = diag(4), za, zb,
-             zback, zfront, distance,
-             groups = NULL,
-             subpanel = if (is.null(groups)) "panel.xyplot"
-             else "panel.superpose",
-             ...)
-panel.3dscatter(x, y, z, rot.mat = diag(4), za, zb,
-             zback, zfront, distance,
-             zlim, zero,
-             groups = NULL, subscripts = TRUE,
-             type = 'p',
-             col, col.point, col.line, lty, lwd, cex, pch, ...)
-panel.3dwire(x, y, z, rot.mat = diag(4), za, zb,
-             minz = 0, maxz = 1,
+panel.3dscatter(x, y, z, rot.mat, distance,
+                groups, type = 'p',
+                xlim.scaled, ylim.scaled, zlim.scaled,
+                zero.scaled,
+                col, col.point, col.line,
+                lty, lwd, cex, pch,
+                cross, \dots, subscripts)
+panel.3dwire(x, y, z, rot.mat, distance,
              col.at, col.regions,
              shade = FALSE,
-             shade.colors = palette.shade,
-             light.source = c(1, 0, 0),
-             col = "black",
+             shade.colors = trellis.par.get("shade.colors")$palette,
+             light.source = c(0, 0, 1000),
+             xlim.scaled,
+             ylim.scaled,
+             zlim.scaled,
+             col,
              col.groups = superpose.line$col,
-             ...)
-palette.shade(cosangle, height, saturation = .3, ...)
+             polynum = 100,
+             \dots)
 }
 \arguments{
-  \item{x, y, z}{ numeric vectors (or possibly factors etc for
-    \code{panel.cloud}), not necessarily of the same
-    length. \code{x} can be a numeric matrix with 3 rows for
-    \code{ltransform3dto3d}}
-  \item{subscripts}{which points to draw}
-  \item{distance, par.box}{described in \code{\link{cloud}}}
-  \item{xlim, ylim, zlim}{limits}
-  \item{panel.3d.cloud}{function that draws the data-driven part of the
-    plot (as opposed to the bounding box and scales) in \code{cloud} }
-  \item{panel.3d.wireframe}{the same for \code{wireframe}}
-  \item{aspect}{aspect as in \code{cloud}}
-  \item{xlab, ylab, zlab}{ Labels, have to be lists}
-  \item{scales.3d}{ list defining the scales}
-  \item{proportion}{ Gives the length of arrows as a proportion of the
+  \item{x, y, z}{
+    numeric (or possibly factors) vectors representing the data to be
+    displayed. The interpretation depends on the context. For
+    \code{panel.cloud} these are essentially the same as the data passed
+    to the high level plot (except if \code{formula} was a matrix, the
+    appropriate \code{x, y} vectors are generated). By the time they are
+    passed to \code{panel.3dscatter} and \code{panel.3dwire}, they have
+    been scaled (to lie inside a bounding box, usually the [-0.5, 0.5]
+    cube).
+
+    Further, for \code{panel.3dwire}, \code{x} and \code{y} are shorter
+    than \code{z} and represent the sorted locations defining a
+    rectangular grid. Also in this case, \code{z} may be a matrix if the
+    display is grouped, with each column representing one surface.
+
+    In \code{panel.cloud} (called from \code{wireframe}) and
+    \code{panel.3dwire}, \code{x}, \code{y} and \code{z} could also be
+    matrices (of the same dimension) when they represent a 3-D surface
+    parametrized on a 2-D grid.
+  }
+  \item{subscripts}{
+    index specifying which points to draw. The same \code{x, y, z} values
+    (representing the whole data) are passed to \code{panel.cloud} for
+    each panel. \code{subscripts} specifies the subset of rows to be
+    used for the particular panel.
+  }
+  \item{distance, par.box}{ described in \code{\link{cloud}} }
+  \item{xlim, ylim, zlim}{
+    limits for the respective axes. As with other lattice functions,
+    these could each be a numeric 2-vector or a character vector
+    indicating levels of a factor.
+  }
+  \item{panel.3d.cloud, panel.3d.wireframe}{
+    functions that draw the data-driven part of the plot (as opposed to
+    the bounding box and scales) in \code{cloud} and
+    \code{wireframe}. This function is called after the `back' of the
+    bounding box is drawn, but before the `front' is drawn.
+
+    Any user-defined custom display would probably want to change these
+    functions. The intention is to pass as much information to this
+    function as might be useful (not all of which are used by the
+    defaults). In particular, these functions can expect arguments
+    called \code{xlim}, \code{ylim}, \code{zlim} which give the bounding
+    box ranges in the original data scale and \code{xlim.scaled},
+    \code{ylim.scaled}, \code{zlim.scaled} which give the bounding box
+    ranges in the transformed scale. More arguments can be considered on
+    request.
+  }
+  \item{aspect}{ aspect as in \code{cloud} }
+  \item{xlab, ylab, zlab}{
+    Labels, have to be lists. Typically the user will not manipulate
+    these, but instead control this via arguments to \code{cloud}
+    directly.
+  }
+  \item{xlab.default}{ for internal use  }
+  \item{ylab.default}{ for internal use  }
+  \item{zlab.default}{ for internal use  }
+  \item{scales.3d}{ list defining the scales }
+  \item{proportion}{
+    numeric scalar, gives the length of arrows as a proportion of the
     sides
   }
-  \item{scpos}{A list with three components x, y and z, describing which
-    of the 12 sides of the cube the scales should be drawn. The
-    defaults should be OK. Valid values are x: 1, 3, 9, 11; y: 8, 5, 7,
-    6 and z: 4, 2, 10, 12. See comments in panel.cloud
+  \item{scpos}{
+    A list with three components x, y and z (each a scalar integer),
+    describing which of the 12 sides of the cube the scales should be
+    drawn. The defaults should be OK. Valid values are x: 1, 3, 9, 11;
+    y: 8, 5, 7, 6 and z: 4, 2, 10, 12. (See comments in the source code
+    of \code{panel.cloud} to see the details of this enumeration.)
   }
   \item{wireframe}{logical, indicating whether this is a wireframe plot}
-  \item{col.at, col.regions}{deals with specification of colors when
-    \code{drape = TRUE} in \code{wireframe}}
-  \item{subpanel}{ the function used to plot the points in
-    \code{panel.3dscatter} once coordinates of their projections are
-    computed.  \code{subpanel="panel.superpose"} along with the
-    \code{groups} argument can be used to create grouped displays.}
-  \item{screen}{list, as described in \code{\link{cloud}}}
-  \item{R.mat, rot.mat}{4x4 transformation matrix in homogeneous
-    coordinates}
-  \item{za, zb, zmin, zmax, dist}{controls transformation to account for
-    perspective viewing}
-  \item{zback, zfront, zero}{ same as previous, not for regular use yet}
-  \item{type}{ character string, specifying type of cloud plot. Can be
-    ``p'', ``l'', ``h''}
-  \item{groups}{specification of a grouping variable, passed down from
-    the high level functions.}
-  \item{shade}{logical, whether lighting is to be used}
-  \item{shade.colors}{a function that takes 2 arguments, the cosine of
-    twice the angle of between the viewing direction and the direction
-    of the light source, and a height between 0 and 1, and returns an
-    appropriate color }
-  \item{cosangle, height}{as described above}
-  \item{saturation}{used as \code{s} in \code{hsv} inside
-    \code{palette.shade}}
-  \item{light.source}{any vector (cartesian coordinates) in the
-    direction of the light source. This is relative to the viewing point
-    in the direction of (0,0,1)}
-  \item{minz, maxz, col.groups}{miscellaneous other arguments.}
+  \item{col.at, col.regions}{
+    deals with specification of colors when \code{drape = TRUE} in
+    \code{\link{wireframe}}
+  }
+  \item{rot.mat}{
+    4x4 transformation matrix in homogeneous coordinates. This gives the
+    rotation matrix combining the \code{screen} and \code{R.mat}
+    arguments to \code{\link{cloud}}
+  }
+  \item{type}{
+    character vector, specifying type of cloud plot. Can include one or
+    more of ``p'', ``l'', ``h'' or ``b''. ``p'' and ``l'' mean `points'
+    and `lines' respectively, and ``b'' means `both'. ``h'' stands for
+    `histogram', and causes a line to be drawn from each point to
+    the X-Y plane (i.e., the plane representing \code{z = 0}), or the
+    lower (or upper) bounding box face, whichever is closer.
+  }
+  \item{xlim.scaled, ylim.scaled, zlim.scaled}{
+     axis limits (after being scaled to the bounding box) 
+  }
+  \item{zero.scaled}{
+    z-axis location (after being scaled to the bounding box) of the X-Y
+    plane in the original data scale, to which lines will be dropped (if
+    within range) from each point when \code{type = 'h'}
+  }
+  \item{cross}{
+    logical, defaults to \code{TRUE} if \code{pch='+'}.
+    \code{panel.3dscatter} can represent each point by a 3d `cross' of
+    sorts (it's much easier to understand looking at an example than
+    from a description). This is different from the usual \code{pch}
+    argument, and reflects the depth of the points and the orientation
+    of the axes. This argument indicates whether this feature will be
+    used.
+
+    This is useful for two reasons. It can be set to \code{FALSE} to use
+    `+' as the plotting character in the regular sense. It can also be
+    used to force this feature in grouped displays.
+  }
+  \item{groups}{
+    specification of a grouping variable, passed down from the high
+    level functions.
+  }
+  \item{shade}{
+    logical, indicating whether the surface is to be colored using an
+    illumination model with a single light source
+  }
+  \item{shade.colors}{
+    a function (or the name of one) that is supposed to calculate the
+    color of a facet when shading is being used. Three pieces of
+    information is available to the function: first, the cosine of the
+    angle between the incident light ray and the normal to the surface
+    (representing foreshortening); second, the cosine of half the angle
+    between the reflected ray and the viewing direction (useful for
+    non-lambertian surfaces); and third, the scaled (average) height of
+    that particular facet with respect to the total plot z-axis limits.
+
+    All three numbers should be between 0 and 1. The \code{shade.colors}
+    function should return a valid color. The default function is
+    obtained from the Lattice settings.
+  }
+  \item{light.source}{
+    a 3-vector representing (in cartesian coordinates) the light
+    source. This is relative to the viewing point being (0, 0,
+    1/distance) (along the positive z-axis), keeping in mind that all
+    observations are bounded within the [-0.5, 0.5] cube
+  }
+  \item{polynum}{
+    quadrilateral faces are drawn in batches of \code{polynum} at a
+    time. Drawing too few at a time increases the total number of calls
+    to the underlying \code{grid.polygon} function, which affects
+    speed. Trying to draw too many at once may be unnecessarily memory
+    intensive. This argument controls the trade-off.
+  }
+  \item{col.groups}{colors for different groups}
   \item{col, col.point, col.line, lty, lwd, cex, pch}{graphical parameters}
   \item{\dots}{ other parameters, passed down when appropriate}
 }
 \details{
-  These functions together deal with the content drawn inside each panel
-  in \code{cloud} and \code{wireframe}. \code{panel.wireframe} is the
-  same as \code{panel.cloud}, which does the actual work.
+  These functions together are responsible for the content drawn inside
+  each panel in \code{cloud} and
+  \code{wireframe}. \code{panel.wireframe} is a wrapper to
+  \code{panel.cloud}, which does the actual work.
 
   \code{panel.cloud} is responsible for drawing the content that does
   not depend on the data, namely, the bounding box, the arrows/scales,
@@ -122,61 +214,33 @@ palette.shade(cosangle, height, saturation = .3, ...)
   unstructured, and \code{x, y, z} are all passed to the
   \code{panel.3d.cloud} function. For wireframe, on the other hand,
   \code{x} and \code{y} are increasing vectors with unique values,
-  defining a rectangular. \code{z} must be a matrix with \code{length(x)
-    * length(y)} rows, and as many columns as the number of groups.
+  defining a rectangular grid. \code{z} must be a matrix with
+  \code{length(x) * length(y)} rows, and as many columns as the number
+  of groups.
 
-  \code{panel.3dscatter} is the default \code{panel.3d.cloud} function,
-  which computes the projection of the points and calls the
-  \code{subpanel} function to draw the points in 2-D. (It's a very
-  simple function, and could serve as a model for customizing the
-  contents of the panels in \code{cloud}.)
+  \code{panel.3dscatter} is the default \code{panel.3d.cloud} function.
+  It has a \code{type} argument similar to \code{\link{panel.xyplot}},
+  and supports grouped displays. It tries to honour depth ordering,
+  i.e., points and lines closer to the camera are drawn later,
+  overplotting more distant ones. (Of course there is no absolute
+  ordering for line segments, so an ad hoc ordering is used. There is no
+  hidden point removal.)
 
-  \code{panel.3dscatter.new} is intended as a replacement for
-  \code{panel.3dscatter} in future versions. Has a \code{type} argument
-  to control type of plot. Has some nice properties, but is still in an
-  experimental stage.
-  
   \code{panel.3dwire} is the default \code{panel.3d.wireframe}
-  function. If \code{shade = TRUE}, it attempts to color the surface as
-  being illuminated from a light source at infinite distance, in the
-  direction given by \code{light.source}. \code{palette.shade} is a
-  simple function that returns the apropriate colors required for
-  shading given the cosine of twice the angle of between the viewing
-  direction and the direction of the light source, and a height between
-  0 and 1. (No shadows are formed, though.)  Multiple surfaces are drawn
-  if \code{groups} is non-null in the call to \code{wireframe}, however,
-  the algorithm is not sophisticated enough to render intersecting
-  surfaces correctly.
+  function. It calculates polygons corresponding to the facets one by
+  one, but waits till it has collected information about \code{polynum}
+  facets, and draws them all at once. This avoids the overhead of
+  drawing \code{grid.polygon} repeatedly, speeding up the rendering
+  considerably. If \code{shade = TRUE}, these attempt to color the
+  surface as being illuminated from a light source at
+  \code{light.source}. \code{palette.shade} is a simple function that
+  provides the deafult shading colors
 
-  \code{ltransform3dMatrix} and \code{ltransform3dto3d} are utility
-  functions to help computation of projections. The first function takes
-  a list of the form of the \code{screen} argument in \code{cloud} and
-  \code{wireframe} and a \code{R.mat}, a 4x4 transformation matrix in
-  homogeneous coordinates, to return a new 4x4 transformation matrix that
-  is the  result of applying \code{R.mat} followed by the rotations in
-  \code{screen}. The second function applies a 4x4 transformation matrix
-  in homogeneous coordinates to a 3xn matrix representing points in 3-D
-  space, and optionally does some perspective computations. (There has
-  been no testing with non-trivial transformation matrices, and my
-  knowledge of the homogeneous coordinate system is very limited, so
-  there might be bugs here.)
+  Multiple surfaces are drawn if \code{groups} is non-null in the call
+  to \code{wireframe}, however, the algorithm is not sophisticated
+  enough to render intersecting surfaces correctly.
+
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{cloud}}}
 \keyword{dplot}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -130,6 +130,34 @@ panel.curve <-
 
 
 
+
+panel.rug <-
+    function(x = NULL, y = NULL,
+             regular = TRUE, 
+             start = if (regular) 0 else 0.97,
+             end = if (regular) 0.03 else 1,
+             col = add.line$col,
+             ...)
+{
+    add.line <- trellis.par.get("add.line")
+    if (!is.null(x))
+    {
+        grid.segments(x0 = unit(x, "native"), x1 = unit(x, "native"),
+                      y0 = unit(start, "npc"), y1 = unit(end, "npc"),
+                      gp = gpar(col = col))
+    }
+    if (!is.null(y))
+    {
+        grid.segments(y0 = unit(y, "native"), y1 = unit(y, "native"),
+                      x0 = unit(start, "npc"), x1 = unit(end, "npc"),
+                      gp = gpar(col = col))
+    }
+}
+
+
+
+
+
 panel.fill <-
     function(col = trellis.par.get("background")$col, ...)
 {
@@ -186,7 +214,7 @@ panel.grid <-
     if (v<0)
     {
         scale <- current.viewport()$xscale
-        at <- lpretty(scale)
+        at <- pretty(scale)
         at <- at[at>scale[1] & at < scale[2]]
         for(i in seq(along=at))
             grid.lines(x=rep(at[i],2), default.units="native",
@@ -251,8 +279,8 @@ panel.loess <-
 
         add.line <- trellis.par.get("add.line")
         
-        smooth <- modreg::loess.smooth(x, y, span = span, family = family,
-                                       degree = degree, evaluation = evaluation)
+        smooth <- loess.smooth(x, y, span = span, family = family,
+                               degree = degree, evaluation = evaluation)
         grid.lines(x=smooth$x, y=smooth$y, default.units = "native",
                    gp = gpar(col = col.line, lty = lty, lwd = lwd))
     }
@@ -263,17 +291,15 @@ prepanel.loess <-
     function(x, y, span = 2/3, degree = 1,
              family = c("symmetric", "gaussian"),
              evaluation = 50,
-             lwd = add.line$lwd, lty = add.line$lty,
-             col = add.line$col, ...)
+             ...)
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
 
     if (length(x)>0) {
-        add.line <- trellis.par.get("add.line")
-        
-        smooth <- modreg::loess.smooth(x, y, span = span, family = family,
-                                       degree = degree, evaluation = evaluation)
+        smooth <-
+            loess.smooth(x, y, span = span, family = family,
+                         degree = degree, evaluation = evaluation)
         list(xlim = range(x,smooth$x),
              ylim = range(y,smooth$y),
              dx = diff(smooth$x),
@@ -309,6 +335,9 @@ panel.superpose <-
              col.symbol = superpose.symbol$col,
              pch = superpose.symbol$pch,
              cex = superpose.symbol$cex, 
+             font = superpose.symbol$font, 
+             fontface = superpose.symbol$fontface, 
+             fontfamily = superpose.symbol$fontfamily, 
              lty = superpose.line$lty,
              lwd = superpose.line$lwd,
              ...)
@@ -336,6 +365,9 @@ panel.superpose <-
         lty <- rep(lty, length=nvals)
         lwd <- rep(lwd, length=nvals)
         cex <- rep(cex, length=nvals)
+        font <- rep(font, length=nvals)
+        fontface <- rep(fontface, length=nvals)
+        fontfamily <- rep(fontfamily, length=nvals)
 
         panel.groups <- 
             if (is.function(panel.groups)) panel.groups
@@ -350,11 +382,14 @@ panel.superpose <-
                              groups = groups,
                              subscripts = subscripts[id],
                              pch = pch[i], cex = cex[i],
+                             font = font[i],
+                             fontface = fontface[i],
+                             fontfamily = fontfamily[i],
                              col.line = col.line[i],
                              col.symbol = col.symbol[i],
                              lty = lty[i],
                              lwd = lwd[i], ...)
-                if (!is.null(y)) args$y=y[id]
+                if (!is.null(y)) args$y <- y[id]
 
                 do.call("panel.groups", args)
             }

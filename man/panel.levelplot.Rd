@@ -18,39 +18,60 @@ panel.levelplot(x, y, z, zcol,
                 lwd = add.line$lwd,
                 cex = add.text$cex,
                 font = add.text$font,
+                fontfamily = add.text$fontfamily,
+                fontface = add.text$fontface,
                 col.text = add.text$col,
                 \dots,
                 col.regions)
 }
 \arguments{
-  \item{x, y, z}{ variables defining the plot}
-  \item{zcol}{color numbers for each x,y combination}
-  \item{subscripts}{which points to draw}
-  \item{at}{cut points}
-  \item{shrink}{ either a numeric vector of length 2, or a list with
-    components x and y which are numeric vectors of length 2.}
+  \item{x, y, z}{ variables defining the plot }
+  \item{zcol}{
+    color numbers for each x,y combination, used as indices for the
+    color vector \code{col.regions}
+  }
+  \item{subscripts}{ which points of \code{x,y,z} to draw }
+  \item{at}{ numeric vector specifying cut points }
+  \item{shrink}{
+    either a numeric vector of length 2 (meant to work as both x and y
+    components), or a list with components x and y which are numeric
+    vectors of length 2.  This allows the rectangles to be scaled
+    proportional to the z-value. The specification can be made
+    separately for widths (x) and heights (y).  The elements of the
+    length 2 numeric vector gives the minimum and maximum proportion of
+    shrinkage (corresponding to min and max of z).
+  }
   \item{labels}{contour labels}
-  \item{label.style}{}
-  \item{contour}{logical}
-  \item{region}{logical}
+  \item{label.style}{
+    controls choice of how label positions are determined.
+  }
+  \item{contour}{
+    logical, specifying whether contour lines should be
+    drawn
+  }
+  \item{region}{
+    logical, specifying whether inter-contour regions should be filled
+    with the appropriate color
+  }
   \item{col, lty, lwd}{ graphical parameters for contour lines}
-  \item{cex, font, col.text}{ graphical parameters for contour labels}
-  \item{\dots}{extra parameters }
-  \item{col.regions}{colors indexed by zcol} 
+  \item{cex, col.text, font, fontfamily, fontface}{ graphical parameters for contour labels}
+  \item{\dots}{ extra parameters }
+  \item{col.regions}{ colors indexed by zcol, used if \code{region=TRUE}
+  }
 }
+
 \details{
+
   The same function is used for both \code{levelplot} and
   \code{contourplot} (which differ only in default values of some
-  arguments). Most arguments are self-evident. \code{label.style}
-  controls choice of how label positions are determined (this is not
-  very sophisticated yet). The \code{shrink} argument allows the
-  rectangles to be resized, proportional to the z-value. The
-  specification can be made separately for widths and heights, in terms
-  of a length 2 numeric vector, which gives the minimum and maximum
-  proportion of shrinkage (corresponding to min and max of z).
-}
+  arguments). 
+
+  When \code{contour=TRUE}, the \code{contourLines} function is used to
+  calculate the contour lines.
+} 
+
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
-\seealso{\code{\link{levelplot}}}
+\seealso{\code{\link{levelplot}}, \code{\link{contourLines}} }
 \keyword{dplot}
 
 

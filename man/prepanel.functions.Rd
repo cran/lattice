@@ -7,8 +7,7 @@
   These are predefined prepanel functions available in Lattice.
 }
 \synopsis{
-prepanel.loess(x, y, span, degree, family, evaluation, lwd, lty,
-               col, ...)
+prepanel.loess(x, y, span, degree, family, evaluation, ...)
 }
 \usage{
 prepanel.lmline(x, y, ...)
@@ -30,7 +29,9 @@ prepanel.qqmathline(y, distribution, f.value = ppoints, ...)
   banking computations. The form of these components are described under
   \code{\link{xyplot}}. There are also several undocumented prepanel
   functions that serve as the default for high level functions, e.g.,
-  \code{prepanel.default.xyplot} }
+  \code{prepanel.default.xyplot}
+}
+
 \seealso{\code{\link{trellis.par.get}}, \code{\link{xyplot}},
   \code{\link{Lattice}}. See \code{\link[modreg]{loess.smooth}} for
   further options to \code{prepanel.loess}

@@ -33,15 +33,18 @@ prepanel.default.histogram <-
              type = "density",
              ...)
 {
-    if (!is.numeric(x)) x <- as.numeric(x)
-
     if (length(x)<1)
         list(xlim = NA,
              ylim = NA,
              dx = NA,
              dy = NA)
-    else
-    {
+    else {
+        if (is.factor(x)) {
+            isFactor <- TRUE
+            xlimits <- levels(x)
+        }
+        else isFactor <- FALSE
+        if (!is.numeric(x)) x <- as.numeric(x)
         if (is.null(breaks)) {
             nint <- round(log2(length(x)) + 1)
             breaks <-
@@ -58,7 +61,7 @@ prepanel.default.histogram <-
         ##ubreak <- min(xlim[2], breaks[breaks>=xlim[2]])
         ## why ?
         ##list(xlim = range(x, lbreak, ubreak),
-        list(xlim = range(x, breaks),
+        list(xlim = if (isFactor) xlimits else range(x, breaks),
              ylim = range(0,y),
              dx = 1,
              dy = 1)
@@ -134,11 +137,10 @@ panel.histogram <- function(x,
 histogram <-
     function(formula,
              data = parent.frame(),
-             allow.multiple = FALSE,
+             allow.multiple = is.null(groups) || outer,
              outer = FALSE,
              auto.key = FALSE,
              aspect = "fill",
-             layout = NULL,
              panel = "panel.histogram",
              prepanel = NULL,
              scales = list(),
@@ -155,6 +157,7 @@ histogram <-
              breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
              else do.breaks(endpoints, nint),
              equal.widths = TRUE,
+             drop.unused.levels = TRUE,
              ...,
              subscripts = !is.null(groups),
              subset = TRUE)
@@ -177,7 +180,8 @@ histogram <-
     form <-
         latticeParseFormula(formula, data, subset = subset,
                             groups = groups, multiple = allow.multiple,
-                            outer = outer, subscripts = TRUE)
+                            outer = outer, subscripts = TRUE,
+                            drop = drop.unused.levels)
 
     groups <- form$groups
 
@@ -198,7 +202,6 @@ histogram <-
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, length(x))))
-        layout <- c(1,1,1)
         number.of.cond <- 1
     }
 
@@ -218,18 +221,18 @@ histogram <-
     ## less complicated components:
 
     foo <- do.call("trellis.skeleton",
-                   c(list(aspect = aspect,
+                   c(list(cond = cond,
+                          aspect = aspect,
                           strip = strip,
                           panel = panel,
                           xlab = xlab,
-                          ylab = ylab), dots))
+                          ylab = ylab,
+                          xlab.default = form$right.name), dots))
                           
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
     foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
     if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
@@ -298,7 +301,7 @@ histogram <-
     if (!any(!id.na)) stop("nothing to draw")
     ## Nothing simpler ?
 
-    foo$condlevels <- lapply(cond, levels)
+
 
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
@@ -308,54 +311,39 @@ histogram <-
                                     equal.widths = equal.widths), dots)
     if (subscripts) foo$panel.args.common$groups <- groups
 
-    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
-    plots.per.page <- max(layout[1] * layout[2], layout[2])
-    number.of.pages <- layout[3]
-    foo$skip <- rep(foo$skip, length = plots.per.page)
-    foo$layout <- layout
 
-    nplots <- plots.per.page * number.of.pages
-    
-    foo$panel.args <- as.list(1:nplots)
-    cond.current.level <- rep(1,number.of.cond)
-    panel.number <- 1 # this is a counter for panel number
-    for (page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0))
-            for (plot in 1:plots.per.page) {
+    nplots <- prod(cond.max.level)
+    if (nplots != prod(sapply(foo$condlevels, length))) stop("mismatch")
+    foo$panel.args <- vector(mode = "list", length = nplots)
 
-                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                else if(!any(cond.max.level-cond.current.level<0)) {
+    cond.current.level <- rep(1, number.of.cond)
 
-                    id <- !id.na
-                    for(i in 1:number.of.cond)
-                    {
-                        var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
-                            ((var >=
-                              levels(var)[[cond.current.level[i]]][1])
-                             & (var <=
-                                levels(var)[[cond.current.level[i]]][2]))
-                        else (as.numeric(var) == cond.current.level[i])
-                    }
 
-                    ##if (any(id)) {
-                    foo$panel.args[[panel.number]] <-
-                        list(x = x[id])
-                    if (subscripts)
-                        foo$panel.args[[panel.number]]$subscripts <-
-                            subscr[id]
-                    ##}
-                    ##else
-                    ##    foo$panel.args[[panel.number]] <-FALSE
-                    
-                    cond.current.level <-
-                        cupdate(cond.current.level,
-                                cond.max.level)
-                }
+    for (panel.number in seq(length = nplots))
+    {
+        id <- !id.na
+        for(i in 1:number.of.cond)
+        {
+            var <- cond[[i]]
+            id <- id &
+            if (is.shingle(var))
+                ((var >=
+                  levels(var)[[cond.current.level[i]]][1])
+                 & (var <=
+                    levels(var)[[cond.current.level[i]]][2]))
+            else (as.numeric(var) == cond.current.level[i])
+        }
 
-                panel.number <- panel.number + 1
-            }
+        foo$panel.args[[panel.number]] <-
+            list(x = x[id])
+        if (subscripts)
+            foo$panel.args[[panel.number]]$subscripts <-
+                subscr[id]
+
+        cond.current.level <-
+            cupdate(cond.current.level,
+                    cond.max.level)
+    }
 
     foo <- c(foo,
              limits.and.aspect(prepanel.default.histogram,
@@ -372,11 +360,27 @@ histogram <-
                                y.axs = foo$y.scales$axs))
 
 
-    if (is.null(foo$key) && !is.null(groups) &&
+
+    if (is.null(foo$legend) && !is.null(groups) &&
         (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
-        foo$key <- do.call("simpleKey",
-                           c(list(levels(as.factor(groups))),
-                             if (is.list(auto.key)) auto.key else list()))
+    {
+        foo$legend <-
+            list(list(fun = "drawSimpleKey",
+                      args =
+                      c(list(levels(as.factor(groups))),
+                        if (is.list(auto.key)) auto.key else list())))
+        foo$legend[[1]]$x <- foo$legend[[1]]$args$x
+        foo$legend[[1]]$y <- foo$legend[[1]]$args$y
+        foo$legend[[1]]$corner <- foo$legend[[1]]$args$corner
+
+        names(foo$legend) <- 
+            if (any(c("x", "y", "corner") %in% names(foo$legend[[1]]$args)))
+                "inside"
+            else
+                "top"
+        if (!is.null(foo$legend[[1]]$args$space))
+            names(foo$legend) <- foo$legend[[1]]$args$space
+    }
 
     class(foo) <- "trellis"
     foo

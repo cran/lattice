@@ -3,8 +3,9 @@
 \synopsis{
 levelplot(formula,
              data = parent.frame(),
+             allow.multiple = is.null(groups) || outer,
+             outer = TRUE,
              aspect = "fill",
-             layout = NULL,
              panel = "panel.levelplot",
              prepanel = NULL,
              scales = list(),
@@ -20,10 +21,10 @@ levelplot(formula,
              labels = FALSE,
              pretty = FALSE,
              region = TRUE,
+             drop.unused.levels,
              ...,
              colorkey = region,
              col.regions = trellis.par.get("regions")$col,
-             subscripts = TRUE,
              subset = TRUE)
 contourplot(formula,
              data = parent.frame(),
@@ -65,17 +66,15 @@ contourplot(formula, data, at,
 \arguments{
   \item{formula}{a formula of the form \code{z ~ x * y | g1 * g2 * ...},
     where \code{z} is a numeric response, and \code{x, y} are numeric
-    values evaluated on a rectangular grid. 
-    
-    \code{g1,g2,...}, if present, must be either factors or shingles.
+    values evaluated on a rectangular grid.  \code{g1,g2,...} are
+    optional conditional variables, and must be either factors or
+    shingles if present.
 
     Calculations are based on the assumption that all x and y values are
-    evaluated on a grid (defined by \code{(unique(x))} and
-    \code{(unique(y))}. The function will not return an error if this is
-    not true, but the display might be nonsense.
-
-    However, the x and y values need not be equally spaced. See example
-    below with log scales.
+    evaluated on a grid (defined by their unique values). The function
+    will not return an error if this is not true, but the display might
+    not be meaningful.  However, the x and y values need not be equally
+    spaced.
 
     As an extension to partially support the form used in
     \code{filled.contour} and \code{image}, \code{formula} can be a
@@ -93,10 +92,10 @@ contourplot(formula, data, at,
     general idea is that this should be a color vector of moderately
     large length (longer than the number of regions. By default this is
     100). It is expected that this vector would be gradually varying in
-    color (so that nearby colors would be similar), and so when the
-    colors are actually chosen, they are chosen to be equally spaced
-    along this vector. When there are more regions than col.regions, the
-    colors are recycled.
+    color (so that nearby colors would be similar). When the colors are
+    actually chosen, they are chosen to be equally spaced along this
+    vector. When there are more regions than col.regions, the colors are
+    recycled.
   }
   \item{colorkey}{logical specifying whether a color key is to be drawn
     alongside the plot, or a list describing the color key. The list may
@@ -120,23 +119,27 @@ contourplot(formula, data, at,
 
     \code{corner} interacts with x, y; unimplemented
 
-    \code{width} width of the key in terms of character widths
+    \code{width} width of the key
 
     \code{height} length of key w.r.t side of plot.
   }
-  \item{contour}{ logical, whether to draw contour lines.
+  \item{contour}{
+    logical, whether to draw contour lines.
   }
-  \item{cuts}{ number of levels the range of \code{z} would be divided into}
+  \item{cuts}{
+    number of levels the range of \code{z} would be divided into
+  }
   \item{labels}{
     logical specifying whether contour lines should be labelled, or
-    character vector of labels for contour lines. This is not
-    well-implemented yet, don't count on it. The type of labelling can
-    be controlled by the \code{label.style} argument, which is passed on
-    to \code{\link{panel.levelplot}}
+    character vector of labels for contour lines. The type of labelling
+    can be controlled by the \code{label.style} argument, which is
+    passed on to \code{\link{panel.levelplot}}
   }
-  \item{pretty}{ logical, whether to use pretty labels}
-  \item{region}{ logical, whether regions between contour lines should
-    be filled
+  \item{pretty}{
+    logical, whether to use pretty cut locations and labels
+  }
+  \item{region}{
+    logical, whether regions between contour lines should be filled
   }
   \item{\dots}{other arguments}
 }
@@ -158,22 +161,21 @@ contourplot(formula, data, at,
 }
 \seealso{
   \code{\link{xyplot}}, \code{\link{Lattice}},
-  \code{\link{panel.levelplot}} 
+  \code{\link{panel.levelplot}}
 }
 \author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
-x <- seq(pi/4, 5*pi, length = 100)
-y <- seq(pi/4, 5*pi, length = 100)
+x <- seq(pi/4, 5 * pi, length = 100)
+y <- seq(pi/4, 5 * pi, length = 100)
 r <- as.vector(sqrt(outer(x^2, y^2, "+")))
 grid <- expand.grid(x=x, y=y)
 grid$z <- cos(r^2) * exp(-r/(pi^3))
-levelplot(z~x*y, grid, cuts = 50, xlab="", ylab="",
-          main="Weird Function", colorkey = FALSE)
 levelplot(z~x*y, grid, cuts = 50, scales=list(log="e"), xlab="",
           ylab="", main="Weird Function", sub="with log scales",
           colorkey = FALSE, region = TRUE)
-#S+ example
-library(modreg)
+
+#S-PLUS example
+require(stats)
 data(environmental)
 attach(environmental)
 ozo.m <- loess((ozone^(1/3)) ~ wind * temperature * radiation,

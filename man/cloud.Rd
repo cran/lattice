@@ -3,22 +3,21 @@
 \synopsis{
 cloud(formula,
              data = parent.frame(),
-             allow.multiple = FALSE,
+             allow.multiple = is.null(groups) || outer,
              outer = FALSE,
              auto.key = FALSE,
              aspect = c(1,1),
-             layout = NULL,
              panel = "panel.cloud",
              prepanel = NULL,
              scales = NULL,
              strip = TRUE,
              groups = NULL,
              xlab,
-             xlim = if (is.factor(x)) levels(x) else range(x),
+             xlim = if (is.factor(x)) levels(x) else range(x, na.rm = TRUE),
              ylab,
-             ylim = if (is.factor(y)) levels(y) else range(y),
+             ylim = if (is.factor(y)) levels(y) else range(y, na.rm = TRUE),
              zlab,
-             zlim = if (is.factor(z)) levels(z) else range(z),
+             zlim = if (is.factor(z)) levels(z) else range(z, na.rm = TRUE),
              distance = .2,
              perspective = TRUE,
              R.mat = diag(4),
@@ -27,11 +26,12 @@ cloud(formula,
              at,
              pretty = FALSE,
              drape = FALSE,
+             drop.unused.levels,
              ...,
              colorkey = any(drape),
-             col.regions, cuts = 1,
-             subscripts = TRUE,
-             subset = TRUE)
+             col.regions, cuts = 70,
+             subset = TRUE,
+             axs.default = "r")
 wireframe(formula,
              data = parent.frame(),
              panel = "panel.wireframe",
@@ -50,11 +50,9 @@ wireframe(formula,
 cloud(formula,
       data,
       aspect = c(1, 1),
-      scales = list(cex = 0.5, lty = 1, lwd = 1,
-                    col = "black", distance = rep(1, 3),
-                    arrows = TRUE, draw = TRUE),
+      scales = list(distance = rep(1, 3), arrows = TRUE),
       zlab,
-      zlim = range(z), 
+      zlim, 
       distance = 0.2,
       par.box,
       perspective = TRUE,
@@ -66,14 +64,15 @@ wireframe(formula, data,
           at = pretty(z, cuts),
           col.regions,
           drape = FALSE,
+          shade = FALSE,
           pretty = FALSE,
           colorkey = any(drape),
           cuts = 70,
           distance = 0.2,
           par.box,
           screen = list(z = 40, x = -60),
-          zoom = .9,
-          scales = list(cex = 0.5, distance = rep(1, 3), arrows = TRUE),
+          zoom,
+          scales),
           \dots)
 }
 \description{
@@ -84,16 +83,24 @@ wireframe(formula, data,
 \arguments{
   \item{formula}{a formula of the form \code{z ~ x * y | g1 * g2 * ...},
     where \code{z} is a numeric response, and \code{x, y} are numeric
-    values.
-    
-    \code{g1,g2,...}, if present, must be either factors or shingles.
-    
-    In the case of \code{wireframe}, calculations are based on the
-    assumption the \code{x} and \code{y} values are evaluated on a grid
-    (defined by \code{(unique(x))} and \code{(unique(y))}. The function
-    will not return an error if this is not true, but the display might
-    be nonsense.  However, the \code{x} and \code{y} values need not be
-    equally spaced.
+    values. \code{g1,g2,...}, if present, are conditioning variables
+    used for conditioning, and must be either factors or shingles. In
+    the case of \code{wireframe}, calculations are based on the
+    assumption the \code{x} and \code{y} values are evaluated on a
+    rectangular grid (defined by their unique values). The grid points
+    need not be equally spaced.
+
+    For \code{wireframe}, \code{x}, \code{y} and \code{z} may also be
+    matrices (of the same dimension), in which case they are taken to
+    represent a 3-D surface parametrized on a 2-D grid (e.g., a sphere).
+    Conditioning is not possible with this feature. See details below.
+
+    Missing values are allowed, either as \code{NA} values in the
+    \code{z} vector, or missing rows in the data frame (note however
+    that in that case the X and Y grids will be determined only by the
+    available values). For a grouped display (producing multiple
+    surfaces), missing rows are not allowed, but \code{NA}'s in \code{z}
+    are.
 
     As an extension to partially support the form used in
     \code{filled.contour} and \code{image}, \code{formula} can be a
@@ -110,56 +117,106 @@ wireframe(formula, data,
   }
   \item{zlab}{z label}
   \item{zlim}{z limits}
-  \item{distance}{ between 0 and 1, controls amount of perspective. No
-    connection with the physical concept of distance in this
-    implementation (not clear what S+ does). individual values don't give
-    the same results as S-Plus, but all instances should be achievable.}
-  \item{par.box}{graphical parameters for box, namely, col, lty and
-    lwd. By default obtained from the parameter \code{box.3d}}
-  \item{perspective}{logical, whether to plot a perspective view}
-  \item{R.mat}{initial rotation matrix in homogeneous
-    coordinates. Implemented but untested.
+  \item{distance}{
+    numeric, between 0 and 1, controls amount of perspective. See
+    details below
   }
-  \item{screen}{A list determining the rotations to applied to the data
-    before being plotted. The initial position starts with the viewing
-    point somewhere in the positive z-axis, and the x and y axes in the
+  \item{par.box}{
+    graphical parameters for box, namely, col, lty and lwd. By default
+    obtained from the parameter \code{box.3d}
+  }
+  \item{perspective}{
+    logical, whether to plot a perspective view. Setting this to
+    \code{FALSE} is equivalent to setting \code{distance=0}
+  }
+  \item{R.mat}{
+    initial rotation matrix in homogeneous coordinates. (Untested)
+  }
+  \item{screen}{
+    A list determining the sequence of rotations to be applied to the
+    data before being plotted. The initial position starts with the
+    viewing point along the positive z-axis, and the x and y axes in the
     usual position. Each component of the list should be named one of
-    \code{x, y, z} (repititions allowed), with their values indicating
-    the amount of rotation about that axis in degrees.  }
-  \item{zoom}{factor by which to scale the picture. Useful to get the
-    variable names into the plot}
-  \item{drape}{ whether the wireframe is to be draped in color}
-  \item{at}{ these arguments are analogous to those in
+    \code{x, y, z} (repititions are allowed), with their values
+    indicating the amount of rotation about that axis in degrees.
+  }
+  \item{zoom}{
+    factor by which to scale the picture. Useful to get the variable
+    names into the plot
+  }
+  \item{drape}{ logical, whether the wireframe is to be draped in color}
+  \item{shade}{
+    logical, whether the wireframe is to be illuminated from a light
+    source. See \code{\link{panel.3dwire}} for details
+  }
+  \item{at, col.regions}{
+    these arguments are analogous to those in
     \code{\link{levelplot}}. if \code{drape=TRUE}, \code{at} gives the
-    vector of values where the colors change}
-  \item{col.regions}{ the vector of colors to be used in that case}
+    vector of values where the colors change, and \code{col.regions} the
+    vector of colors to be used in that case
+  }
   \item{cuts}{ the default number of cutpoints if \code{drape=TRUE}}
   \item{pretty}{ whether the cutpoints should be pretty}
-  \item{colorkey}{ whether a color key should be drawn alongside. See
-    \code{\link{levelplot}} for details}
-  \item{\dots}{other arguments, passed to the panel function}
+  \item{colorkey}{
+    whether a color key should be drawn alongside. See
+    \code{\link{levelplot}} for details
+  }
+  \item{\dots}{ other arguments, passed to the panel function }
 }
 \details{
-  \code{cloud} draws a 3d Scatter Plot, while \code{wireframe} draws a
-  wireframe 3d surface evaluated on a grid. Multiple surfaces can be
-  drawn by \code{wireframe} using the \code{groups} argument. Specifying
-  \code{groups} with \code{cloud} results in a
-  \code{panel.superpose}-like effect (via \code{\link{panel.3dscatter}}).
+  These functions produce three dimensional plots in each panel. The
+  orientation is obtained as follows: the data are scaled to fall within
+  a bounding box that is contained in the [-0.5, 0.5] cube (even smaller
+  for non-default values of \code{aspect}).  The viewing direction is
+  given by a sequence of rotations specified by the \code{screen}
+  argument, starting from the positive Z-axis. The viewing point
+  (camera) is located at a distance of \code{1/distance} from the
+  origin. If \code{perspective=FALSE}, \code{distance} is set to 0
+  (i.e., the viewing point is at an infinite distance).
 
-  Wireframe can optionally render the surface as being illuminated by a
-  light source (no shadows though). Details can be found in the help
-  page for \code{\link{panel.cloud}}. Note that although arguments
-  controlling these are actually arguments for the panel function, they
-  can be supplied to \code{cloud} and \code{wireframe} directly.
+  \code{cloud} draws a 3-D Scatter Plot, while \code{wireframe} draws a
+  3-D surface (usually evaluated on a grid). Multiple surfaces can be
+  drawn by \code{wireframe} using the \code{groups} argument (although
+  this is of limited use because the display is messed up when the
+  surfaces intersect). Specifying \code{groups} with \code{cloud}
+  results in a \code{panel.superpose}-like effect (via
+  \code{\link{panel.3dscatter}}).
 
-  \code{wireframe} can be extremely slow in rendering; this should
-  improve sometime in the future. (For some reason, postscript output is
-  much faster than most other devices.)
+  \code{wireframe} can optionally render the surface as being
+  illuminated by a light source (no shadows though). Details can be
+  found in the help page for \code{\link{panel.3dwire}}. Note that
+  although arguments controlling these are actually arguments for the
+  panel function, they can be supplied to \code{cloud} and
+  \code{wireframe} directly.
 
-  The algorithm for identifying which edges of the bounding box should
-  be drawn before the points are plotted fails in some cases.
+  For single panel plots, \code{wireframe} can also plot parametrized
+  3-D surfaces (i.e., functions of the form f(u,v) = (x(u,v), y(u,v),
+  z(u,v)), where values of (u,v) lie on a rectangle. The simplest
+  example of this sort of surface is a sphere parametrized by latitude
+  and longitude. This can be achieved by calling \code{wireframe} with a
+  \code{formula} of the form \code{z~x*y}, where \code{x}, \code{y} and
+  \code{z} are all matrices of the same dimension, representing the
+  values of x(u,v), y(u,v) and z(u,v) evaluated on a discrete
+  rectangular grid (the actual values of (u,v) are unimportant). 
 
-  This and all other high level Trellis functions have several
+  When this feature is used, the heights used to calculate \code{drape}
+  colors or shading colors are no longer the \code{z} values, but the
+  distances of \code{(x,y,z)} from the origin.
+
+  Note that this feature does not work with \code{groups},
+  \code{subscripts}, \code{subset}, etc. Conditioning variables are also
+  not supported in this case.
+
+
+  The algorithm for identifying which edges of the bounding box are
+  `behind' the points doesn't work in some extreme situations. Also,
+  \code{panel.cloud} tries to figure out the optimal location of the
+  arrows and axis labels automatically, but can fail on occasion
+  (especially when the view is from ``below'' the data). This can be
+  manually controlled by the \code{scpos} argument in
+  \code{\link{panel.cloud}}.
+
+  These and all other high level Trellis functions have several other
   arguments in common. These are extensively documented only in the
   help page for \code{xyplot}, which should be consulted to learn more
   detailed usage. 
@@ -176,49 +233,39 @@ wireframe(formula, data,
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
-x <- seq(-pi, pi, len = 20)
-y <- seq(-pi, pi, len = 20)
-g <- expand.grid(x = x, y = y)
-g$z <- sin(sqrt(g$x^2 + g$y^2))
-wireframe(z ~ x * y, g, drape = TRUE,
-          perspective = FALSE,
-          aspect = c(3,1), colorkey = FALSE)
+data(volcano)  ## 87 x 61 matrix
+wireframe(volcano, shade = TRUE,
+          aspect = c(61/87, 0.4),
+          light.source = c(10,0,10))
+
 g <- expand.grid(x = 1:10, y = 5:15, gr = 1:2)
 g$z <- log((g$x^g$g + g$y^2) * g$gr)
 wireframe(z ~ x * y, data = g, groups = gr,
           scales = list(arrows = FALSE),
-          shade = TRUE,
-          shade.colors = function(cosangle, height)
-          palette.shade(cosangle, height = .15, saturation = .05),
-          light.source = c(0, 0, 1),
+          drape = TRUE,
           screen = list(z = 30, x = -60))
-data(iris)
-cloud(Sepal.Length ~ Petal.Length * Petal.Width, data = iris,
-      groups = Species, screen = list(x = -90, y = 70),
-      aspect = c(1, 1), distance = .4, zoom = .6,
-      key = list(title = "Iris Data", x = .1, y=.9,
-                 corner = c(0,1),
-                 border = TRUE, 
-                 points = Rows(trellis.par.get("superpose.symbol"), 1:3),
-                 text = list(levels(iris$Species))))
 
-ocol <- trellis.par.get("axis.line")$col
-oclip <- trellis.par.get("clip")$panel
-lset(list(axis.line = list(col = "transparent"), clip = list(panel = FALSE)))
+data(iris)
+cloud(Sepal.Length ~ Petal.Length * Petal.Width | Species, data = iris,
+      screen = list(x = -90, y = 70), distance = .4, zoom = .6)
+
+par.set <- list(axis.line = list(col = "transparent"), clip = list(panel = FALSE))
 print(cloud(Sepal.Length ~ Petal.Length * Petal.Width, 
             data = iris, cex = .8, 
             groups = Species, 
             subpanel = panel.superpose,
             main = "Stereo",
-            screen = list(z = 20, x = -70, y = 3)),
+            screen = list(z = 20, x = -70, y = 3),
+            par.settings = par.set),
       split = c(1,1,2,1), more = TRUE)
 print(cloud(Sepal.Length ~ Petal.Length * Petal.Width,
             data = iris, cex = .8, 
             groups = Species,
             subpanel = panel.superpose,
             main = "Stereo",
-            screen = list(z = 20, x = -70, y = 0)),
+            screen = list(z = 20, x = -70, y = 0),
+            par.settings = par.set),
       split = c(2,1,2,1))
-lset(list(axis.line = list(col = ocol), clip = list(panel = oclip)))
+
 }
 \keyword{hplot}

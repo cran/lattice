@@ -5,17 +5,13 @@
   Create Tukey Mean-Difference Plots from a trellis object returned by
   \code{xyplot} and \code{qq}
 }
-\synopsis{
-tmd(object, aspect = "fill", as.table = object$as.table, 
-    between = list(x = object$x.between, y = object$y.between), 
-    key = object$key, layout = object$layout, main = object$main, 
-    page = object$page, panel = panel.tmd, par.strip.text = object$par.strip.text, 
-    prepanel = NULL, scales = list(), strip = object$strip, sub = object$sub, 
-    xlab = "mean", xlim = NULL, ylab = "difference", ylim = NULL, 
-    ..., subscripts = !is.null(groups), subset = TRUE)
-}
 \usage{
-tmd(object, xlab = "mean", ylab = "difference", ...)
+tmd(object,
+    xlab = "mean",
+    ylab = "difference",
+    panel = "panel.tmd",
+    prepanel = "prepanel.default.tmd",
+    ...)
 }
 \arguments{
   \item{object}{ An object of class ``trellis'' returned by
@@ -23,6 +19,11 @@ tmd(object, xlab = "mean", ylab = "difference", ...)
   }
   \item{xlab}{ x label}
   \item{ylab}{ y label}
+  \item{panel}{ panel function to be used }
+  \item{prepanel}{
+    prepanel function used to recalculate limits using the modified
+    \code{x, y} values
+  }
   \item{\dots}{ other arguments}
 }
 \details{
@@ -30,10 +31,10 @@ tmd(object, xlab = "mean", ylab = "difference", ...)
   values of each panel as follows: the new coordinates are given by
   \code{x=(x+y)/2, y=y-x}.
 
-  Most arguments given to produce object are transmitted to \code{tmd},
-  with the notable exceptions of \code{aspect} and \code{scales}. (This
-  behaviour is different from S-Plus.)
+  \code{tmd} uses the \code{update} method for ``trellis'' objects,
+  which processes all extra arguments supplied to \code{tmd}.
 }
+
 \value{
   An object of class ``trellis''. The `update' method can be used to
   update components of the object and the `print' method (usually called

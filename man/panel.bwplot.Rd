@@ -7,6 +7,8 @@
 \synopsis{
 panel.bwplot(x, y, box.ratio=1, horizontal = TRUE, pch=box.dot$pch,
              col=box.dot$col, cex = box.dot$cex,
+             font = box.dot$font, fontfamily = box.dot$fontfamily,
+             fontface = box.dot$fontface,
              fill = box.rectangle$fill, varwidth = FALSE,
              levels.fos = NULL, coef = 1.5, ...)
 }
@@ -31,10 +33,13 @@ panel.bwplot(x, y, box.ratio = 1, horizontal, pch, col, cex,
   \item{coef}{ passed to \code{boxplot.stats}}
   \item{\dots}{ graphical parameters can be supplied}
 }
-\details{ Creates Box and Whisker plot of \code{x} for every level of
+\details{
+  Creates Box and Whisker plot of \code{x} for every level of
   \code{y}. The actual boxplot statistics are calculated using
-  \code{boxplot.stats} 
+  \code{boxplot.stats}. Note that most arguments controlling the display
+  can be supplied to the high-level \code{bwplot} call directly.
 }
+
 \seealso{
   \code{\link{bwplot}}, \code{\link{boxplot.stats}}
 }

@@ -10,17 +10,16 @@
   presented in Bill Cleveland's 1993 book \emph{Visualizing Data}.
 
   Lattice is best thought of as an implementation of Trellis Graphics
-  for R. Its interface is based on the implementation in S-Plus,
+  for R. Its interface is based on the implementation in S-PLUS,
   but there are several differences. To the extent possible, care has
-  been taken to ensure that existing Trellis code written for S-Plus
+  been taken to ensure that existing Trellis code written for S-PLUS
   works unchanged (or with minimal change) in Lattice. If you are having
-  problems porting S-Plus code, read the entry for \code{panel} in
-  the documentation for \code{\link{xyplot}} (and perhaps the Lattice
-  website referenced below).
+  problems porting S-PLUS code, read the entry for \code{panel} in
+  the documentation for \code{\link{xyplot}}. The Lattice website
+  referenced below has some useful material as well.
 
-  Most high level Trellis functions in S-Plus are implemented, with the
-  exception of \code{piechart} (also, \code{\link{wireframe}} is still
-  quite slow).
+  Most high level Trellis functions in S-PLUS are implemented, with the
+  exception of \code{piechart}.
 
   Lattice is built upon the Grid Graphics engine for R being developed
   by Paul Murrell and requires the \code{grid} add-on package.
@@ -51,7 +50,9 @@
   current device, see \code{\link{trellis.device}}
 
   To learn about sophisticated (non-default) printing capabilities, see
-  \code{\link{print.trellis}}.
+  \code{\link{print.trellis}}. Also described there are the
+  possibilities to enhance the plots thus produced (using \code{locator}
+  like functionality).
 
   Here is a list of `high level' functions in the Lattice library with a
   brief description of what they do:
@@ -80,8 +81,14 @@
 
   \bold{Trivariate:}
 
-  \code{\link{levelplot}} level plots (image plots in R)
-  
+  \code{\link{levelplot}} level plots (similar to image plots in R)
+
+  \code{\link{contourplot}} contour plots
+
+  \code{\link{cloud}} 3-D scatter plots
+
+  \code{\link{wireframe}} 3-D surfaces (similar to persp plots in R)
+
   \bold{Hypervariate:}
   
   \code{\link{splom}} scatterplot matrix
@@ -93,9 +100,17 @@
   \code{\link{rfs}} residual and fitted value plot (also see
   \code{\link{oneway}})
 
-  See \code{\link{llines}} if you need to write/port nontrivial panel
-  functions.
+  \code{\link{tmd}} Tukey Mean-Difference plot
+
+  Lattice also has a collection of convenience functions that correspond
+  to the base graphics primitives \code{\link{lines}},
+  \code{\link{points}}, etc. They are implemented using Grid graphics,
+  but try to be as close to the base versions as possible in terms of
+  their argument list. These functions have imaginative names like
+  \code{\link{llines}} are are often useful when writing (or porting
+  from S-PLUS code) nontrivial panel functions.
 }
+
 \references{
   Bell Lab's Trellis Page:
   \url{http://cm.bell-labs.com/cm/ms/departments/sia/project/trellis/}
