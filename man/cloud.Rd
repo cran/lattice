@@ -56,6 +56,7 @@ cloud(formula, data,
 wireframe(formula, data,
           at = pretty(z, cuts),
           col.regions,
+          alpha.regions,
           drape = FALSE,
           shade = FALSE,
           pretty = FALSE,
@@ -70,13 +71,14 @@ wireframe(formula, data,
   Draws 3d scatter plots and surfaces.
 }
 \arguments{
-  \item{formula}{a formula of the form \code{z ~ x * y | g1 * g2 * ...},
-    where \code{z} is a numeric response, and \code{x, y} are numeric
-    values. \code{g1,g2,...}, if present, are conditioning variables
+  \item{formula}{
+    a formula of the form \code{z ~ x * y | g1 * g2 * ...}, where
+    \code{z} is a numeric response, and \code{x, y} are numeric
+    values. \code{g1, g2, \dots}, if present, are conditioning variables
     used for conditioning, and must be either factors or shingles. In
     the case of \code{wireframe}, calculations are based on the
-    assumption the \code{x} and \code{y} values are evaluated on a
-    rectangular grid (defined by their unique values). The grid points
+    assumption that the \code{x} and \code{y} values are evaluated on a
+    rectangular grid defined by their unique values.  The grid points
     need not be equally spaced.
 
     For \code{wireframe}, \code{x}, \code{y} and \code{z} may also be
@@ -95,9 +97,14 @@ wireframe(formula, data,
     \code{filled.contour} and \code{image}, \code{formula} can be a
     matrix.
   }
-  \item{data}{ data frame in which variables are evaluated }
-  \item{aspect}{ vector of length 2, giving the relative aspects of the
-    y-size/x-size and z-size/x-size of the enclosing rectangle.}
+  \item{data}{
+    data frame in which variables are evaluated.  Ignored is
+    \code{formula} is not really a formula object.
+  }
+  \item{aspect}{
+    vector of length 2, giving the relative aspects of the y-size/x-size
+    and z-size/x-size of the enclosing cube.
+  }
   \item{scales}{
     a list describing the scales.  As with other high level functions
     (see \code{\link{xyplot}} for details), this list can contain
@@ -112,7 +119,7 @@ wireframe(formula, data,
     \code{draw=FALSE}.
 
     Other components that work in the \code{scales} argument of
-    \code{xyplot} etc should also work here (as long as they make
+    \code{xyplot} etc. should also work here (as long as they make
     sense), including explicit specification of tick mark locations and
     labels.  (Not everything is implemented yet, but if you find
     something that should work but doesn't, feel free to bug the
@@ -144,18 +151,24 @@ wireframe(formula, data,
     color the facets.  This argument is ignored if \code{shade=TRUE}.
   }
   \item{shade}{
-    logical, whether the wireframe is to be illuminated from a light
-    source. See \code{\link{panel.3dwire}} for details
+    logical, whether the wireframe is to be rendered as being
+    illuminated from a light source. See \code{\link{panel.3dwire}} for
+    details
   }
-  \item{at, col.regions}{
+  \item{at, col.regions, alpha.regions}{
     these arguments are analogous to those in
     \code{\link{levelplot}}. if \code{drape=TRUE}, \code{at} gives the
-    vector of values where the colors change, and \code{col.regions} the
-    vector of colors to be used in that case.  These are passed down to
-    the panel function, and also used in the colorkey if appropriate.
-    Defaults to the Trellis setting ``regions''
+    vector of cutpoints where the colors change, and \code{col.regions}
+    the vector of colors to be used in that case.  \code{alpha.regions}
+    determines the alpha-transparency on supporting devices.  These are
+    passed down to the panel function, and also used in the colorkey if
+    appropriate.  The default for \code{col.regions} and
+    \code{alpha.regions} is derived the Trellis setting ``regions''
   }
-  \item{cuts}{ the default number of cutpoints if \code{drape=TRUE}}
+  \item{cuts}{
+    if \code{at} is unspecified, the approximate number of cutpoints if
+    \code{drape=TRUE}
+  }
   \item{pretty}{
     whether automatic choice of cutpoints should be prettfied
   }
@@ -187,7 +200,7 @@ wireframe(formula, data,
   \code{cloud} draws a 3-D Scatter Plot, while \code{wireframe} draws a
   3-D surface (usually evaluated on a grid). Multiple surfaces can be
   drawn by \code{wireframe} using the \code{groups} argument (although
-  this is of limited use because the display is messed up when the
+  this is of limited use because the display is incorrect when the
   surfaces intersect). Specifying \code{groups} with \code{cloud}
   results in a \code{panel.superpose}-like effect (via
   \code{\link{panel.3dscatter}}).
@@ -207,7 +220,7 @@ wireframe(formula, data,
   \code{formula} of the form \code{z~x*y}, where \code{x}, \code{y} and
   \code{z} are all matrices of the same dimension, representing the
   values of x(u,v), y(u,v) and z(u,v) evaluated on a discrete
-  rectangular grid (the actual values of (u,v) are unimportant). 
+  rectangular grid (the actual values of (u,v) are irrelevant). 
 
   When this feature is used, the heights used to calculate \code{drape}
   colors or shading colors are no longer the \code{z} values, but the
@@ -216,7 +229,6 @@ wireframe(formula, data,
   Note that this feature does not work with \code{groups},
   \code{subscripts}, \code{subset}, etc. Conditioning variables are also
   not supported in this case.
-
 
   The algorithm for identifying which edges of the bounding box are
   `behind' the points doesn't work in some extreme situations. Also,

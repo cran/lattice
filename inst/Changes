@@ -56,6 +56,8 @@ new features
    'horizontal' for panel.xyplot, which affects what happens for
    various 'type'-s.
  
+ o type="g" in panel.xyplot, which draws a reference grid
+
  o the print method now (optionally) saves the (last) object printed
    in a non-visible environment.  This allows retrieval of the last
    printed object for 'update'-ing, and more importantly, to retrieve
@@ -83,6 +85,8 @@ changes in behaviour
  o choice of color for grouped barcharts now taken from a new setting
    parameter 'superpose.fill' and not 'regions' as previously
 
+ o arguments to panel.levelplot has changed (this is related to how 
+   default colors are obtained, as described above).
 
 
 

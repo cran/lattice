@@ -42,12 +42,10 @@ export("[.shingle", as.factorOrShingle, as.shingle, banking, barchart,
        trellis.device, trellis.par.get, trellis.par.set, wireframe,
        xyplot, 
 
-       reorderFactor,
-
        do.breaks,
        lattice.getOption, lattice.options,
        trellis.focus, trellis.unfocus, trellis.switchFocus,
-       trellis.panelArgs, trellis.vpname,
+       trellis.panelArgs, trellis.vpname, trellis.grobname,
 
        panel.arrows, panel.segments, panel.lines, panel.points,
        panel.text,
