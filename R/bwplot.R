@@ -29,9 +29,6 @@ prepanel.default.bwplot <-
              origin = NULL, stack = FALSE,
              levels.fos = length(unique(y)), ...)
 {
-str(x)
-print(stack)
-str(y)
     ## This function needs to work for all high level functions in the
     ## bwplot family, namely bwplot, dotplot, stripplot and
     ## barchart. For all but barchart, this is simply a question of
