@@ -1,0 +1,51 @@
+\name{qqmath}
+\alias{qqmath}
+\title{ Q-Q Plot with Theoretical Distribution }
+\description{
+  Quantile-Quantile plot of a sample and a theoretical distribution
+}
+\synopsis{
+qqmath(formula, f.value = ppoints, distribution = qnorm, aspect = "fill", 
+    as.table = FALSE, between = list(x = 0, y = 0), data, groups = NULL, 
+    key = NULL, layout, main = NULL, page = NULL, panel = panel.xyplot, 
+    par.strip.text, prepanel, scales, skip = FALSE, strip = strip.default, 
+    sub = NULL, subscripts = !missing(groups), subset, xlab, 
+    xlim, ylab, ylim, ...) 
+}
+\usage{
+qqmath(formula, distribution = qnorm, f.value = ppoints,...)
+}
+\arguments{
+  \item{formula}{formula of the form \code{~ x | g1 * g2 * \ldots},
+    where \code{x} must be a numeric.
+  }
+  \item{distribution}{ a quantile function that takes a vector of
+    probabilities as argument and produces the corresponding
+    quantiles. Possible values are \code{qnorm,qunif} etc.
+    Distributions with other required arguments need to be passed in as
+    user defined functions. This is also passed in as an argument to the
+    panel function (though not used by the default panel function), 
+    and the prepanel function if specified, for use in the bery commonly
+    used \code{(pre)panel.qqmathline}.
+  }
+  \item{f.value}{function of a single integer (representing sample
+    size), returning a vector of probabilities corresponding to which
+    quantiles should be plotted.
+  }
+  \item{\dots}{Other arguments}
+}
+\value{
+  An object of class trellis, py default plotted by \code{print.trellis}.
+}
+\author{Deepayan Sarkar \url{deepayan@stat.wisc.edu}}
+\seealso{\code{\link{trellis.args}}, \code{\link{panel.qqmath}},
+  \code{\link{panel.qqmathline}}, \code{\link{prepanel.qqmathline}},
+  \code{\link{Lattice}}
+}
+\examples{
+qqmath(~ rnorm(100), distribution = function(p) qt(p, df = 10))
+data(singer)
+qqmath(~ height | voice.part, aspect = 1, data = singer)
+}
+\keyword{dplot}
+

@@ -1,0 +1,33 @@
+2001-05-06  Deepayan Sarkar  <deepayan@franz.stat.wisc.edu>
+
+	* R/tmd.R: Name changed from trellis to Lattice. Prelilminary
+	changes to account for change of Lattice to Grid made. New
+	functions rfs, oneway, qq (not final), qqmath, tmd, plot.shingle,
+	update.trellis. Documentation more or less clean.
+
+2001-04-19  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/trellis.R: lots of changes. Introduced trellis objects.
+	Print method for trellis objects. Implementation now includes 
+	barchart, bwplot, densityplot, dtplot, histogram, stripplot,
+	xyplot, splom and parallel (and excludes piechart(will probably 
+	remain that way), qqmath, qq, timeplot(?), contourplot,
+	levelplot, wireframe and cloud). Cleanup, documentation etc.
+
+2001-03-22  Deepayan Sarkar  <deepayan@franz.stat.wisc.edu>
+
+	* R/trellis.R: added splom and some brief documentation for splom
+
+2001-03-02  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/trellis.R: dtplot (dotplot) implemented. Probably has lots of bugs.
+	Some documentation, including example for dtplot (same as usual dotplot example).
+
+2001-03-02  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/trellis.R: updated bwplot (with the new layout structure)
+
+
+
+
+	

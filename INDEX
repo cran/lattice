@@ -1,0 +1,43 @@
+Lattice                  Lattice Graphics
+banking                  Banking
+barchart                 Bar Graphs
+bwplot                   Box and Whisker Plots
+densityplot              Kernel Probability Density Plots
+dotplot                  Dot Plots
+histogram                Histograms
+lattice-Internal         Miscellaneous Functions used within Lattice
+latticeParseFormula      Parse Trellis formula
+oneway                   Fit One-way Model
+panel.barchart           Default Panel Functions for barchart
+panel.bwplot             Default Panel Function for bwplot
+panel.densityplot        Default Panel Function for densityplot
+panel.dotplot            Default Panel Functions for dotplot
+panel.functions          Useful Panel Functions
+panel.histogram          Default Panel Function for histogram
+panel.pairs              Default Superpanel Function for splom
+panel.parallel           Default Panel Function for parallel
+panel.qq                 Panel function for qq
+panel.qqmathline         Useful panel function with qqmath
+panel.stripplot          Default Panel Function for stripplot
+panel.superpose          Panel Function for Display Marked by groups
+panel.tmd                Panel function for tmd
+panel.xyplot             Default Panel Function for xyplot
+parallel                 Parallel Coordinate Plots
+prepanel.functions       Useful Prepanel Function for Lattice
+print.trellis            Print Trellis Objects
+qq                       Quantile-Quantile Plots of Two Samples
+qqmath                   Q-Q Plot with Theoretical Distribution
+rfs                      Residual and Fit Spread Plots
+shingles                 shingles
+splom                    Scatter Plot Matrices
+strip.default            Default Trellis strip function
+stripplot                Strip Plots
+tmd                      Tukey Mean-Difference Plot
+trellis.args             Trellis Arguments
+trellis.datasets         Data Sets in the Lattice library
+trellis.device           Initializing Trellis Displays
+trellis.object           Lattice Display Object
+trellis.par.get          Manipulating Graphical Parameters for Trellis
+                         Displays
+update.trellis           Update Trellis Object
+xyplot                   Conditioning Plots
