@@ -1,6 +1,6 @@
 Package: lattice
-Version: 0.3-0
-Date: 2001/09/16
+Version: 0.3-1
+Date: 2001/12/17
 Title: Lattice Graphics
 Author: Deepayan Sarkar <deepayan@stat.wisc.edu>
 Maintainer: Deepayan Sarkar <deepayan@stat.wisc.edu>

@@ -21,6 +21,7 @@ trellis.3d.function(formula,
   the as yet unimplemented wireframe)
 }
 \alias{trellis.3d.args}
+\alias{trellis.3d.function}
 \arguments{
   \item{formula}{ formula of the form \code{z ~ x * y | g_1 * g_2 * \dots}}
   \item{data}{ data frame in which variables are evaluated.}

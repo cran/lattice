@@ -539,17 +539,8 @@ print.trellis <-
 
     if (is.null(dev.list())) {
         trellis.device()
-        grid.start()
-        on.exit(grid.stop())
-    }
-    else if (!exists(".grid.started") || !.grid.started) {
-        grid.start(newpage=FALSE)
-        on.exit(grid.stop())
     }
 
-    obg <- par(bg = trellis.par.get("background")$col)
-    on.exit(par(bg=obg), add = TRUE)
-    
     new <- T
     if(.lattice.print.more) new <- F
     .lattice.print.more <<- more
@@ -559,7 +550,10 @@ print.trellis <-
     
     if (!missing(position)) {
         if (length(position)!=4) stop("Incorrect value of position")
-        if (new) grid.newpage()
+        if (new) {
+            grid.newpage()
+            grid.rect(gp = gpar(fill = trellis.par.get("background")$col, col = "transparent"))
+        }
 
         push.viewport(viewport(x=position[1], y=position[2],
                                width=position[3]-position[1],
@@ -580,7 +574,11 @@ print.trellis <-
     else if (!missing(split)) {
         
         if (length(split)!=4) stop("Incorrect value of split")
-        if (new) grid.newpage()
+        if (new) {
+            grid.newpage()
+            grid.rect(gp = gpar(fill = trellis.par.get("background")$col, col = "transparent"))
+        }
+
         push.viewport(viewport(layout = grid.layout(nrow=split[4],
                                ncol = split[3])))
         push.viewport(viewport(layout.pos.row = split[2],
@@ -987,8 +985,11 @@ print.trellis <-
     for(page.number in 1:number.of.pages)
         if (!any(cond.max.level-cond.current.level<0)) {
                 
-            if(usual) grid.newpage()
-            
+            if(usual) {
+                grid.newpage()
+                grid.rect(gp = gpar(fill = trellis.par.get("background")$col, col = "transparent"))
+            }
+
             push.viewport(viewport(layout = page.layout,
                                    gp = gpar(fontsize = x$fontsize.normal,
                                    col = axis.line$col,

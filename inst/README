@@ -58,17 +58,7 @@ includes lpoints, llines, ltext and lsegments.
 Using Lattice and base R graphics concurrently
 ==============================================
 
-Grid graphics normally do not mix with usual R graphics. However,
-end-users typically might want to use lattice functions concurrently
-with traditional R graphics. To allow this without intermittent calls
-to grid.stop() and grid.start(), print.trellis (which ultimately does
-all the plotting in lattice) now tries to preserve the state of the
-device on which it plots. By default, library(lattice) opens a device
-in grid enabled mode. It can be reverted to non grid mode by
-grid.stop(). Subsequently, both Lattice functions and traditional
-graphics functions can be used. Devices opened by trellis.device()
-start in non-grid mode, unless grid.start() is called.
-
+Grid/Lattice graphics should now mix (almost?) seamlessly
 
 
 Still Missing
@@ -83,10 +73,6 @@ Still Missing
  o Fonts 
 
  o axis labels badly implemented, no checking for overlaps.
-
-
-
-
 
 
 

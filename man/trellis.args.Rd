@@ -31,6 +31,7 @@ trellis.function(
   These arguments are common to (almost?) all trellis functions.
 }
 \alias{trellis.args}
+\alias{trellis.function}
 \arguments{
   \item{formula}{a formula describing the form of conditioning plot.  A
     formula is generally of the form \code{y ~ x | g1 * g2 * \ldots},

@@ -29,6 +29,12 @@
 ## starting with these settings:
 ## trellis.settings must be available as a global variable
 
+
+trellis.function <- "this is a dummy"
+trellis.3d.function <- "this is also a dummy"
+
+
+
 trellis.settings <-   # color settings
     list(background=list(col="#889088"),
          add.line=list(col="black", lty=1, lwd=1),
@@ -88,10 +94,10 @@ trellis.par.set <-
 trellis.device <-
     function(device = getOption("device"),
              color=TRUE,
-             # Paul 30/05/01
-             # Only use grey background for colour x11 device
-             # NOTE that this check may need modifying as more
-             # devices are added beyond just "x11" and "postscript"
+             ## Paul 30/05/01
+             ## Only use grey background for colour x11 device
+             ## NOTE that this check may need modifying as more
+             ## devices are added beyond just "x11" and "postscript"
              bg =
              if (color && (
                            if (is.character(device)) device != "postscript"
@@ -101,9 +107,9 @@ trellis.device <-
              new = TRUE, ...)
 {
 
-    # Paul 30/05/01
-    # Changed "device" to "device.call" so that the device name and
-    # the device function cannot be confused
+    ## Paul 30/05/01
+    ## Changed "device" to "device.call" so that the device name and
+    ## the device function cannot be confused
     if (is.character(device)) {
         device.call <- get(device)
     }
@@ -112,13 +118,9 @@ trellis.device <-
     if (new)
         device.call(...)
 
-    ## if (exists(".grid.started") && !.grid.started) grid.start()
-    
-    ##    par(bg = bg) # drop this when ...
-
     if (color)
     {
-        # color settings
+        ## color settings
         trellis.par.set("background", list(col=bg))
         trellis.par.set("add.line", list(col="black", lty=1, lwd=1))
         trellis.par.set("add.text", list(cex=1, col="black", font=1))
@@ -175,8 +177,6 @@ trellis.device <-
         trellis.par.set("axis.line", list(line=0, col="black", lty=1, lwd=1))
         
     }
-
-    .grid.started <<- FALSE
 }
 
 
@@ -373,7 +373,7 @@ strip.default <-
         grid.rect()
     }
     else {
-        num <- length(levels(x))
+        num <- length(x)
         if (style == 1) {
             grid.rect(gp = gpar(fill=bg))
             grid.text(label = paste(if(strip.names)

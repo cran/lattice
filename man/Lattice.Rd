@@ -20,20 +20,7 @@
   future). 
 
   This implementation depends heavily on a new Graphics engine (Grid) for
-  R being developed by Paul Murrell. Knowledge of Grid is not necessary
-  for using Lattice, except when trying to use both Lattice and
-  traditional R graphics concurrently. Grid graphics calls do not
-  usually mix with usual R graphics, and need to be enclosed within
-  calls to \code{grid.start()} and \code{grid.stop()}. To make the
-  switch transparent to the end-user, \code{print.trellis},  which
-  ultimately draws all the Lattice plots, now tries to preserve the
-  state of the graphics device it prints to. \code{library(lattice)}
-  automatically loads Grid, leaving the device in grid mode. The user
-  can revert to non-grid mode by calling grid.stop(). Subsequently,
-  Lattice calls can be used concurrently with usual R graphics
-  calls (but not Grid graphics calls). New devices opened by
-  \code{trellis.device} (in particular when a Lattice print is attempted
-  with no devices active) open the device in non grid mode.
+  R being developed by Paul Murrell.
 
   Type \code{library(help = lattice)} to see a list of (public)
   Lattice graphics functions.
