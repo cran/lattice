@@ -50,7 +50,10 @@ panel.xyplot <-
 {
     if (length(x)>0) {
 
-
+        notok <- is.na(x) | is.na(y)
+        x <- x[!notok]
+        y <- y[!notok]
+        
         if (!missing(col)) {
             if (missing(col.line)) col.line <- col
             if (missing(col.symbol)) col.symbol <- col

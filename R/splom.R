@@ -62,7 +62,7 @@ panel.pairs <-
         ## there must be a better way to do the foll:
         lim <- list(1:n.var)
         for(i in 1:n.var) {
-            lim[[i]] <- extend.limits(range(as.numeric(z[,i])))
+            lim[[i]] <- extend.limits(range( as.numeric(z[,i]), na.rm = TRUE  ))
         }
         ## should be further complicated by allowing for customization by
         ## prepanel functions --- prepanel(z[i], z[j]) etc
@@ -119,7 +119,7 @@ panel.pairs <-
                                               rot = 90,
                                               y = unit(0.5, "lines"),
                                               x = unit(axls[tt], "native"),
-                                              just = c("bottom", "centre"))
+                                              just = c("left", "centre"))
                                     
                                 }
                                 if(tt >=nal) {
@@ -140,7 +140,7 @@ panel.pairs <-
                                     grid.text(label = levels(z[,i])[tt], rot = 90,
                                               y = unit(1,"npc") - unit(.5, "lines"),
                                               x = unit(axls[tt], "native"),
-                                              just = c("top", "centre"))
+                                              just = c("right", "centre"))
                                     
                                 }
                                 
@@ -186,7 +186,7 @@ panel.pairs <-
                                     grid.text(label = as.character(axls[tt]),
                                               y = unit(0.5, "lines"),
                                               x = unit(axls[tt], "native"),
-                                              just = c("centre", "left"))
+                                              just = c("centre", "bottom"))
                                     
                                 }
                                 if(tt >=nal) {
@@ -207,7 +207,7 @@ panel.pairs <-
                                     grid.text(label = as.character(axls[tt]),
                                               y = unit(1,"npc") - unit(.5, "lines"),
                                               x = unit(axls[tt], "native"),
-                                              just = c("centre", "right"))
+                                              just = c("centre", "top"))
                                     
                                 }
                                 
@@ -298,7 +298,7 @@ splom <-
 
 
     number.of.cond <- length(cond)
-    x <- na.omit(as.data.frame(form$right))
+    x <- as.data.frame(form$right)
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, nrow(x))))
@@ -409,6 +409,7 @@ splom <-
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
+    ## id.na only decides whether to draw anything, not used subsequently
     id.na <- FALSE
     for (j in 1:ncol(x))
         id.na <- id.na | is.na(x[,j])
@@ -447,12 +448,11 @@ splom <-
                 if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
                 else if(!any(cond.max.level-cond.current.level<0)) {
 
-                    id <- !id.na
+                    ##id <- !id.na
                     for(i in 1:number.of.cond)
                     {
                         var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
+                        id <- if (is.shingle(var))
                             ((var >=
                               levels(var)[[cond.current.level[i]]][1])
                              & (var <=

@@ -1382,7 +1382,7 @@ print.trellis <-
 
                                 grid.text(label = axs$label[ok],
                                           x = unit(axs$at[ok], "native"),
-                                          just = "centre",
+                                          just = c("centre", "centre"),
                                           ## just = if (xaxis.rot == 0) c("centre", "top")
                                           ## else c("right", "centre"),
                                           rot = xaxis.rot,
@@ -1420,7 +1420,7 @@ print.trellis <-
 
                                 grid.text(label = axs$label[ok],
                                           y = unit(axs$at[ok], "native"),
-                                          just = "centre",
+                                          just = c("centre", "centre"),
                                           ## just = if (xaxis.rot == 0) c("centre", "top")
                                           ## else c("right", "centre"),
                                           rot = yaxis.rot,

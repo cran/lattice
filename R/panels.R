@@ -243,6 +243,16 @@ panel.superpose <-
 {
     if (length(x)>0) {
 
+        notok <- is.na(x) | is.na(subscripts) | is.na(groups[subscripts])
+        if (!is.null(y)) 
+            notok <- notok | is.na(y)
+
+        x <- x[!notok]
+        if (length(x) == 0) return(0)
+        subscripts <- subscripts[!notok]
+        if (!is.null(y)) 
+            y <- y[!notok]
+
         if (!missing(col)) {
             if (missing(col.line)) col.line <- col
             if (missing(col.symbol)) col.symbol <- col
@@ -312,6 +322,17 @@ panel.superpose.2 <-
     ##                        ---  Neil Klepeis, 26-Dec-2001
     
     if (length(x) > 0) {
+
+        notok <- is.na(x) | is.na(subscripts) | is.na(groups[subscripts])
+        if (!is.null(y)) 
+            notok <- notok | is.na(y)
+
+        x <- x[!notok]
+        if (length(x) == 0) return(0)
+        subscripts <- subscripts[!notok]
+        if (!is.null(y)) 
+            y <- y[!notok]
+
         if (!missing(col)) {
             if (missing(col.line))
                 col.line <- col
@@ -393,3 +414,4 @@ panel.mathdensity <-
     panel.xyplot(x = x, y = y, type = "l", col = col, lwd = lwd, ...)
     
 }
+
