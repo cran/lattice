@@ -22,7 +22,9 @@ rfs(model, layout=c(2, 1), xlab="f-value", distribution = qunif,...)
   \item{\dots}{other arguments}
 }
 \value{
-  an object of class trellis, by default plotted by \code{print.trellis}.
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{oneway}}, \code{\link{qqmath}},

@@ -398,7 +398,7 @@ panel.stripplot <-
         if (!horizontal && jitter.data) jitter(x, factor = factor)
         else x
     if (is.null(groups)) panel.xyplot(x = x.jitter, y = y.jitter, ...)
-    else panel.superpose(x = x.jitter, y = y.jitter, ...)
+    else panel.superpose(x = x.jitter, y = y.jitter, groups = groups, ...)
 }
 
 

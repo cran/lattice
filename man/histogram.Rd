@@ -104,7 +104,8 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
     second example below.) (This option is missing in Splus.)
     
     \code{type} defaults to ``percent'', except when the breakpoints
-    are unequally spaced or \code{breaks = NULL}.
+    are unequally spaced or \code{breaks = NULL}, when it defaults to
+    ``density''.
   }
   \item{nint}{ Number of bins. Applies only when \code{breaks} is
     unspecified in the call.
@@ -134,18 +135,21 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
   \item{plot.points}{ logical specifying whether the \code{x} values
     should be plotted.
   }
-  \item{ref}{logical specifying whether a reference x-axis should be
-    drawn.}
-  \item{\dots}{ other arguments. In the case of \code{densityplot},
-    if the default panel function is used, then arguments appropriate to
-    \code{density} can be included. This can control the details of how
-    the Kernel Density Estimates are calculated. See documentation for
-    \code{density} for details.
+  \item{ref}{ logical specifying whether a reference x-axis should be
+    drawn.
+  }
+  \item{\dots}{ other arguments, passed along to the panel function. In
+    the case of \code{densityplot}, if the default panel function is
+    used, then arguments appropriate to \code{density} can be
+    included. This can control the details of how the Kernel Density
+    Estimates are calculated. See documentation for \code{density} for
+    details.
   }
 }
 \value{
-  An object of class ``trellis'', plotted by default by
-  \code{print.trellis}.
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
 }
 \details{
   \code{histogram} draws Conditional Histograms, while

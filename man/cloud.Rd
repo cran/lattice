@@ -82,16 +82,16 @@ wireframe(formula, data,
 \arguments{
   \item{formula}{a formula of the form \code{z ~ x * y | g1 * g2 * ...},
     where \code{z} is a numeric response, and \code{x, y} are numeric
-    values evaluated on a rectangular grid. 
+    values.
     
     \code{g1,g2,...}, if present, must be either factors or shingles.
     
-    Calculations are based on the assumption that all x and y values are
-    evaluated on a grid (defined by \code{(unique(x))} and
-    \code{(unique(y))}. The function will not return an error if this is
-    not true, but the display might be nonsense.
-
-    However, the x and y values need not be equally spaced. 
+    In the case of \code{wireframe}, calculations are based on the
+    assumption the \code{x} and \code{y} values are evaluated on a grid
+    (defined by \code{(unique(x))} and \code{(unique(y))}. The function
+    will not return an error if this is not true, but the display might
+    be nonsense.  However, the \code{x} and \code{y} values need not be
+    equally spaced.
 
     As an extension to partially support the form used in
     \code{filled.contour} and \code{image}, \code{formula} can be a
@@ -128,13 +128,13 @@ wireframe(formula, data,
     variable names into the plot}
   \item{drape}{ whether the wireframe is to be draped in color}
   \item{at}{ these arguments are analogous to those in
-    \code{levelplot}. if \code{drape=TRUE}, \code{at} gives the vector
-    of values where the colors change}
+    \code{\link{levelplot}}. if \code{drape=TRUE}, \code{at} gives the
+    vector of values where the colors change}
   \item{col.regions}{ the vector of colors to be used in that case}
   \item{cuts}{ the default number of cutpoints if \code{drape=TRUE}}
   \item{pretty}{ whether the cutpoints should be pretty}
   \item{colorkey}{ whether a color key should be drawn alongside. See
-    \code{levelplot} for details}
+    \code{\link{levelplot}} for details}
   \item{\dots}{other arguments, passed to the panel function}
 }
 \details{
@@ -155,14 +155,17 @@ wireframe(formula, data,
   much faster than most other devices.)
 
   The algorithm for identifying which edges of the bounding box should
-  be drawn before the points are plotted fails in some cases (namely
-  when perspective = TRUE and the projection of the rear surface is
-  totally contained in that of the front surface).
+  be drawn before the points are plotted fails in some cases.
 
   This and all other high level Trellis functions have several
   arguments in common. These are extensively documented only in the
   help page for \code{xyplot}, which should be consulted to learn more
   detailed usage. 
+}
+\value{
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
 }
 \seealso{
   \code{\link{xyplot}}, \code{\link{levelplot}},

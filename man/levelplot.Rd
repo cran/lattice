@@ -89,16 +89,15 @@ contourplot(formula, data, at,
     (if any) will be drawn at these heights, and the regions in between
     would be colored using \code{col.regions}.
   }
-  \item{col.regions}{color vector to be used if regions is TRUE. The
+  \item{col.regions}{ color vector to be used if regions is TRUE. The
     general idea is that this should be a color vector of moderately
-    large length (by large, I mean longer than what you would expect the
-    number of regions to be. By default this is 100, which is quite
-    safe because a plot with even close to a 100 regions would usually
-    become very uninformative). It is expected that this vector would be
-    gradually varying in color (so that nearby colors would be similar),
-    and so when the colors are actually chosen, they are chosen to be
-    equally spaced along this vector. When there are more regions than
-    col.regions, the colors are recycled.}
+    large length (longer than the number of regions. By default this is
+    100). It is expected that this vector would be gradually varying in
+    color (so that nearby colors would be similar), and so when the
+    colors are actually chosen, they are chosen to be equally spaced
+    along this vector. When there are more regions than col.regions, the
+    colors are recycled.
+  }
   \item{colorkey}{logical specifying whether a color key is to be drawn
     alongside the plot, or a list describing the color key. The list may
     contain the following components:
@@ -106,7 +105,7 @@ contourplot(formula, data, at,
     \code{space} location of the colorkey, can be one of ``left'',
     ``right'', ``top'' and ``bottom''. Defaults to ``right''.
     
-    \code{x,y} location, unused
+    \code{x,y} location, currently unused
 
     \code{col} vector of colors
 
@@ -128,9 +127,13 @@ contourplot(formula, data, at,
   \item{contour}{ logical, whether to draw contour lines.
   }
   \item{cuts}{ number of levels the range of \code{z} would be divided into}
-  \item{labels}{ logical specifying whether contour lines should be
-    labelled, or character vector of labels for contour lines. This is
-    not well-implemented yet, don't count on it}
+  \item{labels}{
+    logical specifying whether contour lines should be labelled, or
+    character vector of labels for contour lines. This is not
+    well-implemented yet, don't count on it. The type of labelling can
+    be controlled by the \code{label.style} argument, which is passed on
+    to \code{\link{panel.levelplot}}
+  }
   \item{pretty}{ logical, whether to use pretty labels}
   \item{region}{ logical, whether regions between contour lines should
     be filled
@@ -148,7 +151,11 @@ contourplot(formula, data, at,
   arguments to the panel function, but can be specified in the high
   level calls directly).
 }
-
+\value{
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
+}
 \seealso{
   \code{\link{xyplot}}, \code{\link{Lattice}},
   \code{\link{panel.levelplot}} 

@@ -1,11 +1,22 @@
+2003-04-10  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* man: Documentation updates
+
 2003-03-26  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
-	* print.trellis.R: fixed problem with expression axis labels when
-	relation = "same". Reverted back to older slow version of
-	draw.colorkey because of (grid?) bug in newer version.
+	* bwplot.R, common.R, panels.R, print.trellis.R, zzz.R:
+	some bugfixes, added MASS ch04 script to tests
 
+2003-03-26  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
-2003-03-15  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+	* print.trelis.R: fixed problem with expressions as axis tick
+	labels when relation = "same". Reverted back to using (slower) old
+	code in colorkey because of (grid?) bug in new version.
+
+	* common.R: added code in latticeParseFormula to convert matrices
+	to data frames (for splom and parallel) before subsetting.
+
+2003-03-15  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* common.R:
 	fixed some problems when outer and conditioning variables interact
@@ -20,7 +31,7 @@
 	* several: updated support for multiple LHS/RHS in formula,
 	auto.key, outer
 
-2003-03-14  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-03-14  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* levelplot.R: changed prepanel functions to handle factors
 	gracefully. Fixed problem with unequally spaced grid
@@ -35,7 +46,7 @@
 
 	* common.R: removed latticeAsFormula, no use
 
-2003-03-14  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-03-14  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* print.trellis.R (print.trellis):
 	Among other things, a rewrite of how axis ticks and
@@ -51,7 +62,7 @@
 	modified plot.shingel to make tck, cex and rot 2-vectors
 
 
-2003-03-13  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-03-13  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* bwplot.R: added code to panel.barchart (also panel.dotplot) to handle
 	groups. Substantially changed the way arguments are processed in
@@ -63,7 +74,7 @@
 	with allow.multiple = TRUE.
 
 
-2003-03-13  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-03-13  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* common.R (construct.scales):
 	made changes so that cex, tck and rot can now be

@@ -25,7 +25,7 @@ panel.bwplot(x, y, box.ratio = 1, horizontal, pch, col, cex,
   }
   \item{pch, col, cex}{ graphical parameters controlling the dot}
   \item{fill}{ color to fill the boxplot}
-  \item{coef}{passed to \code{boxplot.stats}}
+  \item{coef}{ passed to \code{boxplot.stats}}
   \item{\dots}{ graphical parameters can be supplied}
 }
 \details{ Creates Box and Whisker plot of \code{x} for every level of

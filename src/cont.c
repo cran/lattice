@@ -42,7 +42,7 @@ do { \
 
 
 
-SEXP cont(SEXP mArg, SEXP uxArg, SEXP uyArg, SEXP atArg, SEXP nxArg, SEXP nyArg)
+SEXP calculateContours(SEXP mArg, SEXP uxArg, SEXP uyArg, SEXP atArg, SEXP nxArg, SEXP nyArg)
 {
      double *m;
      double *ux;

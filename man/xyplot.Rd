@@ -127,22 +127,24 @@ bwplot(formula,
   can usually be supplied as arguments to the high level plot.  
 }
 \arguments{
-  \item{formula}{a formula describing the form of conditioning plot. The
-    formula is generally of the form \code{y ~ x | g1 * g2 * \dots},
-    indicating that plots of \code{y} (on the y axis) versus \code{x}
-    (on the x axis) should be produced conditional on the given
-    variables \code{g1,g2,\dots}. However, the given variables
-    \code{g1,g2,\dots} may be omitted. For S-PLUS compatibility, the
+  \item{formula}{
+    a formula describing the form of conditioning plot. The formula is
+    generally of the form \code{y ~ x | g1 * g2 * \dots}, indicating
+    that plots of \code{y} (on the y axis) versus \code{x} (on the x
+    axis) should be produced conditional on the variables
+    \code{g1, g2, \dots}. However, the conditioning variables
+    \code{g1,g2,\dots} may be omitted. For S-Plus compatibility, the
     formula can also be written as \code{y ~ x | g1 + g2 + \dots}.
 
-    The given variables \code{g1, g2, \dots} must be either factors or
-    shingles (Shingles are a way of processing numeric variables for use
-    in conditioning. See documentation of \code{\link{shingle}} for
-    details. Like factors, they have a `level' attribute, which is used
-    in producing the conditioning plots). For each unique combination of
-    the levels of the conditioning variables \code{g1, g2, \dots}, a
-    separate panel is produced using the points \code{(x,y)} for the
-    subset of the data (also called packet) defined by that combination.
+    The conditioning variables \code{g1, g2, \dots} must be either
+    factors or shingles (Shingles are a way of processing numeric
+    variables for use in conditioning. See documentation of
+    \code{\link{shingle}} for details. Like factors, they have a
+    `levels' attribute, which is used in producing the conditioning
+    plots). For each unique combination of the levels of the
+    conditioning variables \code{g1, g2, \dots}, a separate panel is
+    produced using the points \code{(x,y)} for the subset of the data
+    (also called packet) defined by that combination.
 
     Numeric conditioning variables are converted to shingles by the
     function \code{shingle} (however, using \code{\link{equal.count}}
@@ -213,7 +215,7 @@ bwplot(formula,
     use it as approporiate.
 
     A potentially useful component of \code{scales} is this case might
-    be \code{abbreviate=TRUE}, in which case long labels which would
+    be \code{abbreviate = TRUE}, in which case long labels which would
     usually overlap will be abbreviated. \code{scales} could also
     contain a \code{minlength} argument in this case, which would be
     passed to the \code{abbreviate} function.
@@ -247,16 +249,16 @@ bwplot(formula,
     define customized panel functions. A panel function appropriate
     for the functions described here would usually expect arguments
     named \code{x} and \code{y}, which would be provided by the
-    conditioning process. It can also have other arguments. (It might be
+    conditioning process. It can also have other arguments. It might be
     useful to know in this context that all arguments passed to a high
-    level Trellis function such as \code{xyplot} that are not recognized
-    by it are passed through to the panel function. It is thus generally
-    good practice when defining panel functions to allow a \code{\dots}
-    argument.) Such extra arguments typically control graphical
-    parameters, but other uses are also common. See documentation for
-    individual panel functions for specifics.
+    level Trellis function (such as \code{xyplot}) that are not
+    recognized by it are passed through to the panel function. It is
+    thus generally good practice when defining panel functions to allow
+    a \code{\dots} argument. Such extra arguments typically control
+    graphical parameters, but other uses are also common. See
+    documentation for individual panel functions for specifics.
 
-    Note that unlike in S-PLUS, it is not guaranteed that panel
+    Note that unlike in S-Plus, it is not guaranteed that panel
     functions will be supplied only numeric vectors for the \code{x} and
     \code{y} arguments; they can be factors as well (but not
     shingles). panel functions need to handle this case, which to get
@@ -304,13 +306,11 @@ bwplot(formula,
     rule (see \emph{Visualizing Data} by William S. Cleveland for
     details). 
 
-    Of the available functions, banking is sensible only for
-    \code{xyplot}. If a \code{prepanel} function is specified, the
-    results are used to compute the aspect, otherwise some internal
-    computations are done inside each function. While this is allowed
-    for all functions, its behaviour is not defined for any function
-    other than \code{xyplot} (usually an aspect ratio of 1 results in
-    such cases).
+    If a \code{prepanel} function is specified, the \code{dx, dy}
+    components returned by it are used to compute the aspect, otherwise
+    the default prepanel function is used. Currently, only the default
+    prepanel function for \code{xyplot} produces sensible banking
+    calculations.
 
     The current implementation of banking is not very sophisticated, but
     is not totally vague either. See \code{\link{banking}} for details.
@@ -343,7 +343,7 @@ bwplot(formula,
     a grouping variable is present in the plot), or a list of parameters
     to be passed to \code{\link{simpleKey}}. If \code{auto.key} is not
     \code{FALSE} and no \code{key} argument is specified in the call,
-    \code{simpleKey} is called with \code{levels{groups}} as the first
+    \code{simpleKey} is called with \code{levels(groups)} as the first
     argument and the result is added as the \code{key} component of the
     final ``trellis'' object. (Note: this may not work in all high level
     functions.)
@@ -457,15 +457,15 @@ bwplot(formula,
     double height (i.e., contains ``\\n''-s) or if the default height
     seems too small or too large.
   }
-  \item{prepanel}{ function that takes arguments \code{x,y} (usually)
-    and returns a list containing four components \code{xlim, ylim, dx,
-      dy}. If \code{xlim} and \code{ylim} are not explicitly specified
-    (possibly as components in \code{scales}), then the actual limits of
-    the panels are guaranteed to include the limits returned by the
-    prepanel function. This happens globally if the \code{relation}
-    component of \code{scales} is "same", and on a panel by panel basis
-    otherwise. See \code{xlim} to see what forms of the components
-    \code{xlim, ylim} are allowed.
+  \item{prepanel}{ function that takes the same arguments as the
+    \code{panel} function and returns a list containing four components
+    \code{xlim, ylim, dx, dy}. If \code{xlim} and \code{ylim} are not
+    explicitly specified (possibly as components in \code{scales}), then
+    the actual limits of the panels are guaranteed to include the limits
+    returned by the prepanel function. This happens globally if the
+    \code{relation} component of \code{scales} is "same", and on a panel
+    by panel basis otherwise. See \code{xlim} to see what forms of the
+    components \code{xlim, ylim} are allowed.
 
     The \code{dx} and \code{dy} components are used for banking
     computations in case \code{aspect} is specified as "xy". See
@@ -494,7 +494,7 @@ bwplot(formula,
     (determined by \code{xlim, ylim, scales$limits} etc) are used for
     all the panels. For relation="free", limits for each panel is
     determined by the points in that panel. Behaviour for relation =
-    "sliced" is similar, except for that the length (max - min) of the
+    "sliced" is similar, except that the length (max - min) of the
     scales are constrained to remain the same across panels. The values
     of \code{xlim} etc, even if specified explicitly, are ignored if
     relation is different from "same".
@@ -507,8 +507,8 @@ bwplot(formula,
     from one side of the group of panels to the other. For more accurate
     control, alternating can be a vector (replicated to be as long as
     the number of rows or columns per page) consisting of the possible
-    numbers 0=do not draw, 1=bottom/left and 2=top/right. alternating
-    applies only when relation="same".
+    numbers 0=do not draw, 1=bottom/left, 2=top/right and
+    3=both. alternating applies only when relation="same".
 
     limits: same as xlim and ylim.
 
@@ -519,21 +519,24 @@ bwplot(formula,
     labels: Labels (strings or expressions) to go along with
     \code{at}. Can be a list like \code{at} as well.
 
-    cex: factor to control character sizes for axis labels.
+    cex: factor to control character sizes for axis labels. Can be a
+    vector of length 2, to control left/bottom and right/top separately.
 
     font: font face for axis labels (integer 1-4).
     
-    tck: factor to control length of tick marks.
+    tck: factor to control length of tick marks. Can be a vector of
+    length 2, to control left/bottom and right/top separately.
 
     col: color of ticks and labels.
 
-    rot: Angle by which the axis labels are to be rotated.
+    rot: Angle by which the axis labels are to be rotated. Can be a
+    vector of length 2, to control left/bottom and right/top separately.
 
     abbreviate: logical, whether to abbreviate the labels using
     \code{abbreviate}. Can be useful for long labels (e.g., in factors),
     especially on the x-axis.
 
-    minlength: argument to \code{abbreviate} is \code{abbreviate=TRUE}.
+    minlength: argument to \code{abbreviate} if \code{abbreviate=TRUE}.
     
     log: Use a log scale. Defaults to \code{FALSE}, other possible
     values are any number that works as a base for taking logarithm,
@@ -589,11 +592,10 @@ bwplot(formula,
   \item{\dots}{ other arguments, passed to the panel function }
 }
 \value{
-  An object of class ``trellis''. This does not actually plot anything
-  until printed by \code{print.trellis} (which usually happens
-  automatically when on the command line).
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
 }
-
 \details{
   These are for the most part decriptions generally applicable to all
   high level Lattice functions, with special emphasis on \code{xyplot,
@@ -601,7 +603,7 @@ bwplot(formula,
   should be studied in addition to this. 
 }
 \seealso{
-  \code{\link{Lattice}}
+  \code{\link{Lattice}},
   \code{\link{print.trellis}},
   \code{\link{shingle}},
   \code{\link{banking}},

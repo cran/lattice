@@ -116,8 +116,9 @@ parallel(formula,
   detailed usage.
 }
 \value{
-  An object of class ``trellis'', plotted by default by
-  \code{print.trellis}.
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
 }
 \seealso{
   \code{\link{xyplot}}, \code{\link{Lattice}} 

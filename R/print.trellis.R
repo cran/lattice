@@ -675,21 +675,21 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 
 ######
 
-        for (c in seq(along = key$col))
-            grid.pack(frame = key.gf,
-                      row = 1, col = 1,
-                      grob = grid.rect(y = unit(reccentre[c], "native"),
-                      height = unit(recdim[c], "native"),
-                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-                      draw = FALSE)
+#         for (c in seq(along = key$col))
+#             grid.pack(frame = key.gf,
+#                       row = 1, col = 1,
+#                       grob = grid.rect(y = unit(reccentre[c], "native"),
+#                       height = unit(recdim[c], "native"),
+#                       gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+#                       draw = FALSE)
 
-#         grid.pack(frame = key.gf, row = 1, col = 1,
-#                   grob =
-#                   grid.rect(x = rep(.5, length(reccentre)), 
-#                             y = reccentre, default.units = "native",
-#                             height = recdim, 
-#                             gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-#                   draw = FALSE)
+        grid.pack(frame = key.gf, row = 1, col = 1,
+                  grob =
+                  grid.rect(x = rep(.5, length(reccentre)), 
+                            y = reccentre, default.units = "native",
+                            height = recdim, 
+                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
+                  draw = FALSE)
 
         grid.pack(frame = key.gf, col = 1,
                   grob =

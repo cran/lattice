@@ -35,7 +35,9 @@ tmd(object, xlab = "mean", ylab = "difference", ...)
   behaviour is different from S-Plus.)
 }
 \value{
-  An object of class ``trellis''.
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{ \code{\link{panel.tmd}}, \code{\link{xyplot}},

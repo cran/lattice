@@ -27,7 +27,9 @@ qq(formula, f.value = ppoints, ...)
   \item{\dots}{Other arguments}
 }
 \value{
-  An object of class trellis, by default plotted by \code{print.trellis}.
+  An object of class ``trellis''. The `update' method can be used to
+  update components of the object and the `print' method (usually called
+  by default) will plot it on an appropriate plotting device.
 }
 \author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \details{

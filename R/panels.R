@@ -217,8 +217,8 @@ panel.loess <-
 
         add.line <- trellis.par.get("add.line")
         
-        smooth <- loess.smooth(x, y, span = span, family = family,
-                               degree = degree, evaluation = evaluation)
+        smooth <- modreg::loess.smooth(x, y, span = span, family = family,
+                                       degree = degree, evaluation = evaluation)
         grid.lines(x=smooth$x, y=smooth$y, default.units = "native",
                    gp = gpar(col = col.line, lty = lty, lwd = lwd))
     }
@@ -238,8 +238,8 @@ prepanel.loess <-
     if (length(x)>0) {
         add.line <- trellis.par.get("add.line")
         
-        smooth <- loess.smooth(x, y, span = span, family = family,
-                               degree = degree, evaluation = evaluation)
+        smooth <- modreg::loess.smooth(x, y, span = span, family = family,
+                                       degree = degree, evaluation = evaluation)
         list(xlim = range(x,smooth$x),
              ylim = range(y,smooth$y),
              dx = diff(smooth$x),

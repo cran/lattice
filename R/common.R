@@ -142,6 +142,7 @@ latticeParseFormula <-
     modelRHS <- model[[length(model)]]
     if (length(modelRHS) == 3 && modelRHS[[1]] == as.name("|"))
         modelRHS <- modelRHS[[2]]
+        
 
     env <- environment(model)
     modelRHS <- model[[length(model)]]

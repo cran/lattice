@@ -170,7 +170,7 @@ panel.levelplot <-
             ord <- order(x, y)
             m <- z[ord] + 10e-12 ## some problems otherwise
             for (i in seq(along = at)) {
-                val <- .Call("cont", m, ux, uy, as.double(at[i]),
+                val <- .Call("calculateContours", m, ux, uy, as.double(at[i]),
                              length(ux), length(uy), PACKAGE="lattice")
                 if (length(val[[1]]) > 3) {
                     if (is.null(labels))

@@ -2,25 +2,25 @@
 \alias{Lattice}
 \title{Lattice Graphics}
 \description{
-  Implementation of Trellis Graphics
+  Implementation of Trellis Graphics in R
 }
 \details{
   Trellis Graphics is a framework for data visualization developed at
   the Bell Labs by Rick Becker, Bill Cleveland et al, extending ideas
-  presented in Bill Cleveland's 1993 book \emph{Visualizing Data} (see
-  the references section for details).
+  presented in Bill Cleveland's 1993 book \emph{Visualizing Data}.
 
-  Lattice is an implementation of Trellis Graphics for R. Its interface
-  is based on the implementation in S-Plus, although there are several
-  differences. Existing Trellis code written for S-Plus should
-  \emph{ideally} work unchanged (or with minimal change) in Lattice. One
-  exception to this is when custom panel functions are used. See the
-  entry for \code{panel} in \code{help(xyplot)} for help with this aspect.
+  Lattice is best thought of as an implementation of Trellis Graphics
+  for R. Its interface is based on the implementation in S-Plus,
+  but there are several differences. To the extent possible, care has
+  been taken to ensure that existing Trellis code written for S-Plus
+  works unchanged (or with minimal change) in Lattice. If you are having
+  problems porting S-Plus code, read the entry for \code{panel} in
+  the documentation for \code{\link{xyplot}} (and perhaps the Lattice
+  website referenced below).
 
-  As of now, most high level Trellis functions in S-Plus have been
-  implemented, although the 3d display functions (notably
-  \code{wireframe} and \code{contourplot}) are often buggy and
-  inefficient.
+  Most high level Trellis functions in S-Plus are implemented, with the
+  exception of \code{piechart} (also, \code{\link{wireframe}} is still
+  quite slow).
 
   Lattice is built upon the Grid Graphics engine for R being developed
   by Paul Murrell and requires the \code{grid} add-on package.
@@ -31,6 +31,14 @@
   several documents outlining the use of Trellis graphics is available
   from Bell Lab's website that might provide a holistic introduction to
   the Trellis paradigm. Lattice also has a website with some tips.
+}
+\note{
+  High level Lattice functions (like \code{\link{xyplot}}) are different
+  from conventional S graphics functions because they don't actually
+  draw anything. Instead, they return an object of class ``trellis''
+  which has to be then \code{print}ed. This often causes confusion when
+  the high level functions are called inside another function (most
+  often \code{source}) and hence don't produce any output.
 }
 \seealso{
   To get a general idea of what arguments are generally accepted by
@@ -43,7 +51,7 @@
   current device, see \code{\link{trellis.device}}
 
   To learn about sophisticated (non-default) printing capabilities, see
-  \code{\link{print.trellis}}. 
+  \code{\link{print.trellis}}.
 
   Here is a list of `high level' functions in the Lattice library with a
   brief description of what they do:
