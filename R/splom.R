@@ -298,7 +298,7 @@ splom <-
 
 
     number.of.cond <- length(cond)
-    x <- as.data.frame(form$right)
+    x <- na.omit(as.data.frame(form$right))
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, nrow(x))))
