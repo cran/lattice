@@ -25,9 +25,8 @@
 
 prepanel.default.bwplot <-
     function(x, y, box.ratio,
-             horizontal = TRUE,
+             horizontal = TRUE, nlevels,
              origin = NULL, stack = FALSE,
-             ## levels.fos = if (horizontal) unique(y) else unique(x), 
              ...)
 {
     ## This function needs to work for all high level functions in the
@@ -36,13 +35,19 @@ prepanel.default.bwplot <-
     ## getting the ranges. For stacked barcharts, things are slightly
     ## complicated.
 
-    if (length(x) && length(y)) {
-        
+    if (length(x) && length(y))
+    {
         #if (!is.numeric(x)) x <- as.numeric(x)
         #if (!is.numeric(y)) y <- as.numeric(y)
 
         temp <- .5  #* box.ratio/(box.ratio+1)
         if (horizontal)
+        {
+            if (!is.factor(y)) ## y came from a shingle
+            {
+                if (missing(nlevels)) nlevels <- length(unique(y))
+                y <- factor(y, levels = 1:nlevels)
+            }
             list(xlim =
                  if (stack) {
                      foo1 <- if (any(x > 0)) range( by(x[x>0], y[x>0, drop = TRUE], sum)) else 0
@@ -51,17 +56,20 @@ prepanel.default.bwplot <-
                  }
                  else if (is.numeric(x)) range(x[is.finite(x)], origin)
                  else levels(x),
-                 ylim =
-                 if (is.numeric(y)) range(y[is.finite(y)])
-                 else levels(y),
-                 ##ylim = c(1-temp, levels.fos + temp),
-                 yat = if (is.factor(y)) sort(unique(as.numeric(y))) else NULL,
+                 ylim = levels(y),
+                 yat = sort(unique(as.numeric(y))),
                  dx = 1,
                  dy = 1)
-        else 
-            list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else levels(x),
-                 ##xlim = c(1-temp, levels.fos + temp),
-                 xat = if (is.factor(x)) sort(unique(as.numeric(x))) else NULL,
+        }
+        else
+        {
+            if (!is.factor(x)) ## x came from a shingle
+            {
+                if (missing(nlevels)) nlevels <- length(unique(x))
+                x <- factor(x, levels = 1:nlevels)
+            }
+            list(xlim = levels(x),
+                 xat = sort(unique(as.numeric(x))),
                  ylim =
                  if (stack) {
                      foo1 <- if (any(y > 0)) range( by(y[y>0], x[y>0], sum)) else 0
@@ -72,6 +80,7 @@ prepanel.default.bwplot <-
                  else levels(y),
                  dx = 1,
                  dy = 1)
+        }
     }
     else list(xlim = c(NA, NA),
               ylim = c(NA, NA),
@@ -112,12 +121,15 @@ panel.barchart <-
     groupSub <- function(groups, subscripts, ...)
         groups[subscripts]
 
-    if (horizontal) {
+    if (horizontal)
+    {
 
         ## No grouping
 
-        if (is.null(groups)) {
-            if (is.null(origin)) {
+        if (is.null(groups))
+        {
+            if (is.null(origin))
+            {
                 origin <- current.viewport()$xscale[1]
                 reference <- FALSE
             }
@@ -141,7 +153,8 @@ panel.barchart <-
 
         ## grouped, with stacked bars
 
-        else if (stack) {
+        else if (stack)
+        {
 
             if (!is.null(origin) && origin != 0)
                 warning("origin forced to 0 for stacked bars")
@@ -150,7 +163,11 @@ panel.barchart <-
             vals <- sort(unique(groups))
             nvals <- length(vals)
             groups <- groupSub(groups, ...)
+
             col <- rep(col, length = nvals)
+            border <- rep(border, length = nvals)
+            lty <- rep(lty, length = nvals)
+            lwd <- rep(lwd, length = nvals)
 
             height <- box.ratio/(1 + box.ratio)
 
@@ -160,7 +177,8 @@ panel.barchart <-
                              lty = reference.line$lty,
                              lwd = reference.line$lwd)
 
-            for (i in unique(y)) {
+            for (i in unique(y))
+            {
                 ok <- y == i
                 ord <- sort.list(groups[ok])
                 pos <- x[ok][ord] > 0
@@ -196,8 +214,10 @@ panel.barchart <-
 
         ## grouped, with side by side bars
 
-        else {
-            if (is.null(origin)) {
+        else
+        {
+            if (is.null(origin))
+            {
                 origin <- current.viewport()$xscale[1]
                 reference <- FALSE
             }
@@ -205,7 +225,11 @@ panel.barchart <-
             vals <- sort(unique(groups))
             nvals <- length(vals)
             groups <- groupSub(groups, ...)
+
             col <- rep(col, length = nvals)
+            border <- rep(border, length = nvals)
+            lty <- rep(lty, length = nvals)
+            lwd <- rep(lwd, length = nvals)
 
             height <- box.ratio/(1 + nvals * box.ratio)
             if (reference)
@@ -213,7 +237,8 @@ panel.barchart <-
                              col = reference.line$col,
                              lty = reference.line$lty,
                              lwd = reference.line$lwd)
-            for (i in unique(y)) {
+            for (i in unique(y))
+            {
                 ok <- y == i
                 nok <- sum(ok)
                 grid.rect(gp =
@@ -233,9 +258,12 @@ panel.barchart <-
     
     ## if not horizontal
 
-    else {
-        if (is.null(groups)) {
-            if (is.null(origin)) {
+    else
+    {
+        if (is.null(groups))
+        {
+            if (is.null(origin))
+            {
                 origin <- current.viewport()$yscale[1]
                 reference <- FALSE
             }
@@ -257,7 +285,8 @@ panel.barchart <-
                       just = c("centre", "bottom"),
                       default.units = "native")
         }
-        else if (stack) {
+        else if (stack)
+        {
 
             if (!is.null(origin) && origin != 0)
                 warning("origin forced to 0 for stacked bars")
@@ -266,7 +295,11 @@ panel.barchart <-
             vals <- sort(unique(groups))
             nvals <- length(vals)
             groups <- groupSub(groups, ...)
+
             col <- rep(col, length = nvals)
+            border <- rep(border, length = nvals)
+            lty <- rep(lty, length = nvals)
+            lwd <- rep(lwd, length = nvals)
 
             width <- box.ratio/(1 + box.ratio)
 
@@ -276,7 +309,8 @@ panel.barchart <-
                              lty = reference.line$lty,
                              lwd = reference.line$lwd)
 
-            for (i in unique(x)) {
+            for (i in unique(x))
+            {
                 ok <- x == i
                 ord <- sort.list(groups[ok])
                 pos <- y[ok][ord] > 0
@@ -311,8 +345,10 @@ panel.barchart <-
 
             
         }
-        else {
-            if (is.null(origin)) {
+        else
+        {
+            if (is.null(origin))
+            {
                 origin <- current.viewport()$yscale[1]
                 reference = FALSE
             }
@@ -320,7 +356,11 @@ panel.barchart <-
             vals <- sort(unique(groups))
             nvals <- length(vals)
             groups <- groupSub(groups, ...)
+
             col <- rep(col, length = nvals)
+            border <- rep(border, length = nvals)
+            lty <- rep(lty, length = nvals)
+            lwd <- rep(lwd, length = nvals)
 
             width <- box.ratio/(1 + nvals * box.ratio)
             if (reference)
@@ -328,7 +368,8 @@ panel.barchart <-
                              col = reference.line$col,
                              lty = reference.line$lty,
                              lwd = reference.line$lwd)
-            for (i in unique(x)) {
+            for (i in unique(x))
+            {
                 ok <- x == i
                 nok <- sum(ok)
                 grid.rect(gp =
@@ -370,8 +411,6 @@ panel.dotplot <-
     if (horizontal)
     {
         yscale <- current.viewport()$yscale
-        ##if (is.null(levels.fos))
-        ##    levels.fos <- floor(yscale[2])-ceiling(yscale[1])+1
         panel.abline(h = levels.fos,
                      col = col.line,
                      lty = lty, lwd = lwd)
@@ -388,8 +427,6 @@ panel.dotplot <-
     else
     {
         xscale <- current.viewport()$xscale
-        ##if (is.null(levels.fos))
-        ##    levels.fos <- floor(xscale[2])-ceiling(xscale[1])+1
         panel.abline(v = levels.fos, col = col.line,
                      lty = lty, lwd = lwd)
         if (is.null(groups)) 
@@ -462,11 +499,10 @@ panel.bwplot <-
         maxn <- max(by(x, y, length)) ## used if varwidth = TRUE
 
         yscale <- current.viewport()$yscale
-        ##if (is.null(levels.fos)) levels.fos <- floor(yscale[2])-ceiling(yscale[1])+1
         lower <- ceiling(yscale[1])
         height <- box.ratio/(1+box.ratio)
         xscale <- current.viewport()$xscale
-        ##if (levels.fos > 0)
+
         for (yval in levels.fos)
         {
 
@@ -541,12 +577,10 @@ panel.bwplot <-
         maxn <- max(by(y, x, length)) ## used if varwidth = TRUE
 
         xscale <- current.viewport()$xscale
-        ## if (is.null(levels.fos)) levels.fos <- floor(xscale[2])-ceiling(xscale[1])+1
         lower <- ceiling(xscale[1])
         width <- box.ratio/(1+box.ratio)
         yscale <- current.viewport()$yscale
-        ##if (levels.fos > 0)
-        ##for (i in 1:levels.fos) {
+
         for (xval in levels.fos) {
             ##xval  <- i
             stats <- boxplot.stats(y[x==xval], coef = coef)
@@ -945,11 +979,19 @@ bwplot <-
     foo$panel.args.common <- dots
     foo$panel.args.common$box.ratio <- box.ratio
     foo$panel.args.common$horizontal <- horizontal
-##    foo$panel.args.common$levels.fos <- ## fos - the factor/shingle in x/y
-##        if (horizontal) num.l.y else num.l.x
     if (subscripts) foo$panel.args.common$groups <- groups
 
-
+    ## only used if shingle, important if some levels are missing
+    if (horizontal)
+    {
+        if (!is.f.y) ## y shingle
+            foo$panel.args.common$nlevels <- num.l.y
+    }
+    else
+    {
+        if (!is.f.x) ## x shingle
+            foo$panel.args.common$nlevels <- num.l.x
+    }
 
     nplots <- prod(cond.max.level)
     if (nplots != prod(sapply(foo$condlevels, length))) stop("mismatch")
