@@ -14,13 +14,18 @@
 }
 \usage{
 panel.cloud(x, y, z, subscripts,
-    groups, distance, xlim, ylim, zlim,
-    panel.3d.cloud, panel.3d.wireframe,
-    rot.mat, aspect,
-    par.box,
-    xlab, ylab, zlab, scales.3d, 
-    proportion = 0.6, wireframe = FALSE,
-    scpos = list(x = 1, y = 8, z = 12), \dots, col.at, col.regions)
+            groups = NULL,
+            distance, xlim, ylim, zlim,
+            panel.3d.cloud = "panel.3dscatter",
+            panel.3d.wireframe = "panel.3dwire",
+            rot.mat, aspect,
+            par.box = NULL,
+            xlab, ylab, zlab, scales.3d,
+            proportion = 0.6, wireframe = FALSE,
+            scpos,
+            \dots,
+            col.at,
+            col.regions)
 panel.wireframe(\dots)
 ltransform3dMatrix(screen, R.mat)
 ltransform3dto3d(x, R.mat, za = 1 , zb = 0, zmin, zmax, dist)

@@ -57,5 +57,24 @@ x = sample(1:3, 100, replace=TRUE)
 histogram( ~ x, breaks=c(0,1.5,2.5,3.5), type='count')
 
 
+
+## splom pscales
+
+data(iris)
+iris2 <- iris[,1:4]
+
+splom(iris2, groups = iris$Species,
+      pscales = 10)
+
+splom(iris2, groups = iris$Species,
+      pscales = list(list(at = 6, lab = "six"), list(at = 3), list(at = 4), list(at = 1)))
+
+splom(iris2, groups = iris$Species,
+      pscales = list(list(at = 6, lab = "six", limits = c(-10, 10)),
+      list(at = 3), list(at = 4), list(limits = c(-5, 5))))
+
+
 demo("lattice")
 dev.off()
+
+

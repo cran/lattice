@@ -53,8 +53,8 @@ levels(states$state.region) <- c("Northeast", "South", "North\n Central",  "West
 xyplot(Murder  ~ Population | state.region, data = states,
        groups = as.character(state.name),
        panel = function(x, y, subscripts, groups)
-       grid.text(x=x, y=y, label=groups[subscripts], default.units = "native",
-                 gp = gpar(fontsize = 10, font=2, col = "blue"), rot = -50),
+       grid::grid.text(x=x, y=y, label=groups[subscripts], default.units = "native",
+                       gp = grid::gpar(fontsize = 10, font=2, col = "blue"), rot = -50),
        par.strip.text = list(cex = 1.3, font = 4, col = "brown", lines = 2),
        xlab = "Estimated Population\nJuly 1, 1975", 
        ylab = "Murder Rate \n(per 100,000 population)\n 1976", 

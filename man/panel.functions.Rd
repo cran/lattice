@@ -1,12 +1,12 @@
 \name{panel.functions}
 \alias{panel.functions}
 \alias{panel.abline}
+\alias{panel.curve}
 \alias{panel.fill}
 \alias{panel.grid}
 \alias{panel.lmline}
 \alias{panel.loess}
 \alias{panel.linejoin}
-\alias{panel.curve}
 \alias{panel.mathdensity}
 \title{Useful Panel Functions}
 \description{
@@ -19,32 +19,32 @@ panel.abline(a, b = NULL, h = numeric(0), v = numeric(0),
     col.line = add.line$col,
     lty = add.line$lty,
     lwd = add.line$lwd, 
-    ...)
+    \dots)
 panel.curve(expr, from, to, n = 101,
               curve.type = "l",
               col = add.line$col,
               lty = add.line$lty,
               lwd = add.line$lwd,
               type = NULL,
-              ...)
+              \dots)
 panel.linejoin(x, y, fun = mean, horizontal = TRUE, lwd = reference.line$lwd, 
-    lty = reference.line$lty, col = reference.line$col, col.line, 
-    ...)
+    lty = reference.line$lty, col, col.line = reference.line$col, 
+    \dots)
 }
 \usage{
-panel.abline(a, b, ...)
-panel.abline(coef, ...)
-panel.abline(reg, ...)
-panel.abline(h= ,v= , ...)
+panel.abline(a, b, \dots)
+panel.abline(coef, \dots)
+panel.abline(reg, \dots)
+panel.abline(h= ,v= , \dots)
 panel.curve(expr, from, to, n = 101,
-            curve.type = "l", ...)
-panel.fill(col="grey", ...)
-panel.grid(h=3, v=3, ...)
-panel.lmline(x,y,...) = panel.abline(lm(y~x),...)
+            curve.type = "l", \dots)
+panel.fill(col="grey", \dots)
+panel.grid(h=3, v=3, \dots)
+panel.lmline(x,y,\dots) = panel.abline(lm(y~x),\dots)
 panel.loess(x, y, span = 2/3, degree = 1,
             family = c("symmetric", "gaussian"),
             evaluation = 50, \dots)
-panel.linejoin(x, y, fun = mean, horizontal = TRUE, ...)
+panel.linejoin(x, y, fun = mean, horizontal = TRUE, \dots)
 panel.mathdensity(dmath = dnorm, args = list(mean=0, sd=1))
 }
 \arguments{

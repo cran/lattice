@@ -93,6 +93,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
         function(between = 2,
                  align = TRUE,
                  title = NULL,
+                 rep = TRUE,
                  background = trellis.par.get("background")$col,
                  border = FALSE,
                  transparent = FALSE, 
@@ -116,6 +117,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
             list(between = between,
                  align = align,
                  title = title,
+                 rep = rep,
                  background = background,
                  border = border,
                  transparent = transparent, 
@@ -190,7 +192,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
             tmplen <- max(unlist(lapply(pars,length)))
             max.length <- max(max.length, tmplen)
             components[[length(components)+1]] <-
-                list(type = "rectangles", pars = pars)
+                list(type = "rectangles", pars = pars, length = tmplen)
             
         }
         else if (curname == 3) { # "lines"
@@ -207,7 +209,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
             tmplen <- max(unlist(lapply(pars,length)))
             max.length <- max(max.length, tmplen)
             components[[length(components)+1]] <-
-                list(type = "lines", pars = pars)
+                list(type = "lines", pars = pars, length = tmplen)
             
         }
         else if (curname == 4) { # "points"
@@ -221,7 +223,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
             tmplen <- max(unlist(lapply(pars,length)))
             max.length <- max(max.length, tmplen)
             components[[length(components)+1]] <-
-                list(type = "points", pars = pars)
+                list(type = "points", pars = pars, length = tmplen)
 
         }
     }
@@ -237,11 +239,22 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
     ## The next part makes sure all components have same length,
     ## except text, which should be as long as the number of labels
 
+    ## Update (9/11/2003): but that doesn't always make sense --- Re:
+    ## r-help message from Alexander.Herr@csiro.au (though it seems
+    ## that's S+ behaviour on Linux at least). Each component should
+    ## be allowed to have its own length (that's what the lattice docs
+    ## suggest too, don't know why). Anyway, I'm adding a rep = TRUE
+    ## argument to the key list, which controls whether each column
+    ## will be repeated as necessary to have the same length.
+
+    
     for (i in 1:number.of.components)
         if (components[[i]]$type != "text") {
             components[[i]]$pars <-
-                lapply(components[[i]]$pars, rep, length = max.length)
-            components[[i]]$length <- max.length
+                lapply(components[[i]]$pars, rep,
+                       length = if (key$rep) max.length
+                       else components[[i]]$length)
+            if (key$rep) components[[i]]$length <- max.length
         }
         else{
             ## NB: rep doesn't work with expressions of length > 1
@@ -721,21 +734,21 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                              gp = gpar(fontsize = default.fontsize), 
                              draw = FALSE)
 
-        for (c in seq(along = key$col))
-            grid.pack(frame = key.gf,
-                      row = 1, col = 2,
-                      grob = grid.rect(y = unit(reccentre[c], "native"),
-                      height = unit(recdim[c], "native"),
-                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-                      draw = FALSE)
+#        for (c in seq(along = key$col))
+#            grid.pack(frame = key.gf,
+#                      row = 1, col = 2,
+#                      grob = grid.rect(y = unit(reccentre[c], "native"),
+#                      height = unit(recdim[c], "native"),
+#                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+#                      draw = FALSE)
 
-#         grid.pack(frame = key.gf, row = 1, col = 2,
-#                   grob =
-#                   grid.rect(x = rep(.5, length(reccentre)),
-#                             y = unit(reccentre, "native"),
-#                             height = unit(recdim, "native"),
-#                             gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-#                   draw = FALSE)
+        grid.pack(frame = key.gf, row = 1, col = 2,
+                  grob =
+                  grid.rect(x = rep(.5, length(reccentre)),
+                            y = unit(reccentre, "native"),
+                            height = unit(recdim, "native"),
+                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
+                  draw = FALSE)
 
         grid.pack(frame = key.gf, col = 2,
                   grob =
@@ -767,21 +780,21 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                              gp = gpar(fontsize = default.fontsize), 
                              draw = FALSE)
 
-        for (c in seq(along = key$col))
-            grid.pack(frame = key.gf,
-                      row = 3, col = 1,
-                      grob = grid.rect(x = unit(reccentre[c], "native"),
-                      width = unit(recdim[c], "native"),
-                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-                      draw = FALSE)
+#         for (c in seq(along = key$col))
+#             grid.pack(frame = key.gf,
+#                       row = 3, col = 1,
+#                       grob = grid.rect(x = unit(reccentre[c], "native"),
+#                       width = unit(recdim[c], "native"),
+#                       gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+#                       draw = FALSE)
 
-#         grid.pack(frame = key.gf, row = 3, col = 1,
-#                   grob =
-#                   grid.rect(x = unit(reccentre, "native"),
-#                             y = rep(.5, length(reccentre)),
-#                             width = unit(recdim, "native"),
-#                             gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-#                   draw = FALSE)
+        grid.pack(frame = key.gf, row = 3, col = 1,
+                  grob =
+                  grid.rect(x = unit(reccentre, "native"),
+                            y = rep(.5, length(reccentre)),
+                            width = unit(recdim, "native"),
+                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
+                  draw = FALSE)
 
         grid.pack(frame = key.gf, row = 3,
                   grob =
@@ -820,21 +833,21 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                              gp = gpar(fontsize = default.fontsize),
                              draw = FALSE)
         
-        for (c in seq(along = key$col))
-            grid.pack(frame = key.gf,
-                      row = 1, col = 1,
-                      grob = grid.rect(x = unit(reccentre[c], "native"),
-                      width = unit(recdim[c], "native"),
-                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
-                      draw = FALSE)
+#         for (c in seq(along = key$col))
+#             grid.pack(frame = key.gf,
+#                       row = 1, col = 1,
+#                       grob = grid.rect(x = unit(reccentre[c], "native"),
+#                       width = unit(recdim[c], "native"),
+#                       gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+#                       draw = FALSE)
 
-#         grid.pack(frame = key.gf, row = 1, col = 1,
-#                   grob =
-#                   grid.rect(x = unit(reccentre, "native"),
-#                             y = rep(.5, length(reccentre)),
-#                             width = unit(recdim, "native"),
-#                             gp = gpar(fill=key$col, col = NULL), draw = FALSE),
-#                   draw = FALSE)
+        grid.pack(frame = key.gf, row = 1, col = 1,
+                  grob =
+                  grid.rect(x = unit(reccentre, "native"),
+                            y = rep(.5, length(reccentre)),
+                            width = unit(recdim, "native"),
+                            gp = gpar(fill=key$col, col = NULL), draw = FALSE),
+                  draw = FALSE)
 
         grid.pack(frame = key.gf, row = 1,
                   grob =
@@ -903,8 +916,8 @@ print.trellis <-
         trellis.device(device = .Device, new = FALSE)
     bg = trellis.par.get("background")$col
     new <- TRUE
-    if (.lattice.print.more || !newpage) new <- FALSE
-    .lattice.print.more <<- more
+    if (get(".lattice.print.more", envir=.LatticeEnv) || !newpage) new <- FALSE
+    assign(".lattice.print.more", more, envir=.LatticeEnv)
     usual  <- (missing(position) & missing(split))
     ##if (!new && usual)
     ##    warning("more is relevant only when split/position is specified")
@@ -1749,7 +1762,7 @@ print.trellis <-
                                                    layout.pos.col = pos.col,
                                                    xscale = xscale,
                                                    yscale = yscale,
-                                                   clip = TRUE,
+                                                   clip = trellis.par.get("clip")$panel,
                                                    gp = gpar(fontsize =
                                                    fontsize.default)))
 
@@ -2006,7 +2019,7 @@ print.trellis <-
                                 {
                                     push.viewport(viewport(layout.pos.row = pos.row-i,
                                                            layout.pos.col = pos.col,
-                                                           clip = TRUE,
+                                                           clip = trellis.par.get("clip")$strip,
                                                            gp = gpar(fontsize = fontsize.default)))
                                     
                                     grid.rect()

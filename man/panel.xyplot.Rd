@@ -20,6 +20,7 @@ panel.xyplot(x, y, type="p",
              lwd = plot.line$lwd, ...)
 panel.splom(...) <- function (...) panel.xyplot(...)
 panel.qqmath(...) <- function (...) panel.xyplot(...)
+panel.qq(...)
 }
 \arguments{
   \item{x,y}{ variables to be plotted in the scatterplot}
@@ -43,15 +44,18 @@ panel.qqmath(...) <- function (...) panel.xyplot(...)
   \item{pch, lty, cex, lwd}{
     other graphical parameters.
   }
-  \item{\dots}{ other arguments, e.g., arguments to pass to
-    \code{panel.loess}.
+  \item{\dots}{ extra arguments, if any, for \code{panel.xyplot}. In
+    most cases \code{panel.xyplot} ignores these. For types "r" and
+    "smooth", these are passed on to \code{panel.lmline} and
+    \code{panel.loess} respectively.
   }
 }
 \details{ Creates scatterplot of \code{x} and \code{y}, with various
-  modifications possible via the type argument. \code{panel.qq} also
-  draws a 45 degree line. 
+  modifications possible via the type argument. \code{panel.qq} draws a
+  45 degree line before calling \code{panel.xyplot}.
 }
-\author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
-\seealso{\code{\link{panel.superpose}}, \code{\link{xyplot}},
+\author{ Deepayan Sarkar
+\email{deepayan@stat.wisc.edu}} \seealso{\code{\link{panel.superpose}},
+\code{\link{xyplot}},
   \code{\link{splom}},\code{\link{qqmath}}}
 \keyword{dplot}

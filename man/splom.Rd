@@ -2,25 +2,25 @@
 \title{Scatter Plot Matrices}
 \synopsis{
 splom(formula,
-             data = parent.frame(),
-             aspect = 1,
-             between = list(x = 0.5, y = 0.5),
-             layout = NULL,
-             panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
-             prepanel = NULL,
-             scales = list(),
-             strip = TRUE,
-             groups = NULL,
-             xlab = "Scatter Plot Matrix",
-             xlim,
-             ylab = NULL,
-             ylim,
-             superpanel = "panel.pairs",
-             pscales = 5,
-             varnames,
-             ...,
-             subscripts = !is.null(groups),
-             subset = TRUE)
+      data = parent.frame(),
+       aspect = 1,
+       between = list(x = 0.5, y = 0.5),
+       layout = NULL,
+       panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
+       prepanel = NULL,
+       scales = list(),
+       strip = TRUE,
+       groups = NULL,
+       xlab = "Scatter Plot Matrix",
+       xlim,
+       ylab = NULL,
+       ylim,
+       superpanel = "panel.pairs",
+       pscales = 5,
+       varnames,
+       ...,
+       subscripts = !is.null(groups),
+       subset = TRUE)
 parallel(formula, data = parent.frame(), aspect = "fill", between = list(x = 0.5, 
     y = 0.5), layout = NULL, panel = panel.parallel, prepanel = NULL, 
     scales = list(), strip = TRUE, groups = NULL, xlab = NULL, 
@@ -77,15 +77,11 @@ parallel(formula,
     matrix.
   }
   \item{pscales}{ 
-    a numeric value or a list. If pscales is a single number, it tells
-    the approximate number of equally-spaced ticks that should appear on 
-    each axis. If pscales is a list, it should have p components,
-    each of which is itself a list with two components: a numeric
-    vector at and a character vector labels. These two vectors tell
-    where labelled tick marks are placed on the axes, which are
-    drawn inside the diagonal cells. Factor variables are labelled
-    with the factor names. Use pscales=0 to supress the axes
-    entirely.  
+    a numeric value or a list, meant to be a less functional substitute
+    for the \code{scales} argument in \code{xyplot} etc. This argument
+    is passed to the \code{superpanel} function, and is handled by the
+    default superpanel function \code{panel.pairs}. The help page for
+    the latter documents this argument in more detail.
   }
   \item{varnames}{ 
     character vector giving the names of the p variables in x. By
@@ -97,15 +93,17 @@ parallel(formula,
   \code{splom} produces Scatter Plot Matrices. The role usually played by
   \code{panel} is taken over by \code{superpanel}, which determines how
   the columns of \code{x} are to be arranged for pairwise plots. The
-  only available option currently is \code{panel.pairs}. (Writing new
-  superpanel functions would need knowledge of grid.) 
+  only available option currently is \code{panel.pairs}.
 
-  The \code{scales} argument does not have its usual interpretation in
-  \code{splom}. Its function is partly served by \code{pscales}. However,
-  components of scale which are sensible would be supported (in future
-  if not already supported). The \code{rot} component should be
-  specified as a vector of length 2 for the labels of the horizontal and 
-  vertical labels respectively.
+  Many of the finer customizations usually done via arguments to high
+  level function like \code{xyplot} are instead done by
+  \code{panel.pairs} for \code{splom}. These include control of axis
+  limits, tick locations and prepanel calcultions. If you are trying to
+  fine-tune your \code{splom} plot, definitely look at the
+  \code{\link{panel.pairs}} help page. The \code{scales} argument is
+  usually not very useful in \code{splom} (see the examples for a
+  legitimate use, though), and trying to change it may have undesired
+  effects.
 
   \code{parallel} draws Parallel Coordinate Plots. (Difficult to
   describe, see example.)
@@ -138,10 +136,10 @@ splom(~iris[1:3]|Species, data = iris,
       layout=c(2,2), pscales = 0,
       varnames = c("Sepal\nLength", "Sepal\nWidth", "Petal\nLength"),
       page = function(...) {
-          grid.text(x = seq(.6, .8, len = 4), 
-                    y = seq(.9, .6, len = 4), 
-                    label = c("Three", "Varieties", "of", "Iris"),
-                    gp = gpar(fontsize=20))
+          ltext(x = seq(.6, .8, len = 4), 
+                y = seq(.9, .6, len = 4), 
+                lab = c("Three", "Varieties", "of", "Iris"),
+                cex = 2)
       })
 }
 \keyword{hplot}

@@ -3,6 +3,21 @@ postscript("scales.ps")
 
 library(lattice)
 
+
+
+## test for POSIXt handling
+
+y <- Sys.time() + 10000 * 1:100
+x <- rnorm(100)
+b <- gl(2,1,100)
+
+xyplot(y ~ x | b)
+xyplot(y ~ x | b, scales = list(relation = "free", rot = 0))
+xyplot(y ~ x | b, scales = "sliced")
+
+
+
+
 x <- rnorm(100)
 y <- 2 + 3 * runif(100)
 a <- gl(3, 1, 100)

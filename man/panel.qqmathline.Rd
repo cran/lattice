@@ -10,10 +10,13 @@
 panel.qqmathline(y, distribution, ...)
 }
 \arguments{
-  \item{y}{Sample}
+  \item{y}{ The original sample, possibly reduced to a fewer number of
+    quantiles, as determined by the \code{f.value} argument to
+    \code{qqmath}
+  }
   \item{distribution}{quantile function for reference theoretical
-    distribution. This is automatically passed in when this is used as a
-    panel function in \code{qqmath}.}
+    distribution.
+  }
   \item{\dots}{other arguments.}
 }
 \author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}

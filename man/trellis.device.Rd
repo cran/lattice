@@ -9,12 +9,12 @@
 }
 \usage{
 trellis.device(device = getOption("device"),
-               color = TRUE,
+               color = !(dev.name == "postscript"),
                theme = getOption("lattice.theme"),
                bg = NULL,
                new = TRUE,
                retain = FALSE,
-               ...)
+               \dots)
 canonical.theme(name, color)
 }
 \arguments{
@@ -23,7 +23,8 @@ canonical.theme(name, color)
     "windows", "mac", "postscript", "pdf", "png", etc.
   }
   \item{color}{ logical, whether the display should be color or black
-    and white.
+    and white. \code{FALSE} for postscript devices, \code{TRUE}
+    otherwise.
   }
   \item{theme}{ list of components that change the settings of the
     device opened, or, a function that when called produces such a

@@ -110,10 +110,11 @@ as.factorOrShingle <- function(x, subset = TRUE, drop = FALSE)
 
 Rows <- function(x, which)
 {
-    for (i in seq(along = x)) x[[i]] <- x[[i]][which]
+    for (i in seq(along = x)) x[[i]] <-
+        rep(x[[i]], length = max(which, length(which)))[which]
     x
 }
-## S-Plus trellis function needed for nlme.
+
 
 
 
@@ -457,6 +458,11 @@ lpoints <-
 
 lplot.xy <-
     function(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1, font = 1, ...)
+
+    ## currently uses grid.text for non-numeric pch. This would allow
+    ## pch like pch = 'string' or pch = expression(sigma). This
+    ## feature would disappear in the future.
+
 {
     x <- xy$x
     y <- xy$y
@@ -466,10 +472,22 @@ lplot.xy <-
                    default.units="native")
     
     if (type %in% c("p", "o", "b", "c"))
-        grid.points(x = x, y = y, size = unit(cex * 2.5, "mm"),
-                    gp = gpar(col = col),
+
+        if (is.numeric(pch))
+            grid.points(x = x, y = y, size = unit(cex * 2.5, "mm"),
+                    gp = gpar(col = col), #, cex = cex),
                     pch = pch, 
                     default.units="native")
+        else
+            grid.points(x = x, y = y, 
+                    gp = gpar(col = col, cex = cex),
+                    pch = pch, 
+                    default.units="native")
+
+
+            #grid.text(label = pch, x = x, y = y,
+            #          gp = gpar(col = col, fontsize = cex * trellis.par.get("fontsize")$default),
+            #          default.units = "native")
 
     if (type %in% c("s", "S")) {
         ord <- sort.list(x)

@@ -23,7 +23,7 @@ lpoints(x, y = NULL, type = "p", col = plot.symbol$col,
 lsegments(x0, y0, x1, y1, x2, y2, col = add.line$col, lty = add.line$lty, 
     lwd = add.line$lwd, \dots)
 ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
-    cex = add.text$cex, srt = 0, font = 1, adj = 0.5, pos, \dots)  
+    cex = add.text$cex, srt = 0, font = 1, adj = c(0.5, 0.5), pos, \dots)  
 }
 \usage{
 larrows(x0, y0, x1, y1, proportion, \dots)

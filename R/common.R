@@ -20,7 +20,6 @@
 
 
 
-
 cupdate <- function(index, maxim)
 {
     ##  This function is used to handle arbitrary number of
@@ -65,6 +64,7 @@ latticeParseFormula <-
     function(model, data, dimension = 2, subset = TRUE,
              groups = NULL, multiple = FALSE, outer = FALSE,
              subscripts = FALSE)
+    ## this function mostly written by Saikat
 {
     parseSide <-
         function(model)
@@ -176,9 +176,12 @@ latticeParseFormula <-
         ans$left <-
             lrep(concat(lapply(varsLHS,
                                function(i) {
+                                   tmp <- eval(i, data, env)
                                    tmp <-
-                                       eval(i, data, env)[subset,
-                                                          drop = TRUE]
+                                       if (is.factor(tmp) || is.shingle(tmp))
+                                           tmp[subset, drop = TRUE]
+                                       else
+                                           tmp[subset]
                                    if (inherits(tmp, "POSIXt"))
                                        tmp <- as.POSIXct(tmp)
                                    tmp
@@ -189,17 +192,26 @@ latticeParseFormula <-
         if (nLHS == 1 && nRHS == 1) {
             tmp <- eval(varsRHS[[1]], data, env)
             if (is.matrix(tmp)) tmp <- as.data.frame(tmp)
-            ans$right <- tmp[subset, drop = TRUE]
-            nobs <- length(tmp)
+            nobs <- if (is.data.frame(tmp)) nrow(tmp) else length(tmp)
+            if (is.data.frame(tmp))
+                ans$right <- tmp[subset, ] ## doesn't do the drop=TRUE thing for factors/shingles
+            else
+                ans$right <-
+                    if (is.factor(tmp) || is.shingle(tmp))
+                        tmp[subset, drop = TRUE]
+                    else tmp[subset]
         } else {
             ans$right <-
                 concat(lapply(varsRHS,
                               function(i) {
+                                  tmp <- eval(i, data, env)
                                   tmp <-
-                                      lrep(eval(i, data,
-                                                env)[subset,
-                                                     drop = TRUE],
-                                           nLHS)
+                                      if (is.factor(tmp) || is.shingle(tmp))
+                                          tmp[subset, drop = TRUE]
+                                      else
+                                          tmp[subset]
+                                  tmp <-
+                                      lrep(tmp, nLHS)
                                   if (inherits(tmp, "POSIXt"))
                                       tmp <- as.POSIXct(tmp)
                                   tmp
@@ -212,10 +224,19 @@ latticeParseFormula <-
              (modelRHS[[1]] == "*" || modelRHS[[1]] == "+")) {
         tmp <- eval(modelRHS[[2]], data, env)
         nobs <- length(tmp)
-        ans$right.x <- lrep(tmp[subset, drop=TRUE], nLHS)
+        tmp <-
+            if (is.factor(tmp) || is.shingle(tmp))
+                tmp[subset, drop = TRUE]
+            else tmp[subset]
+        ans$right.x <- lrep(tmp, nLHS)
         if (inherits(ans$right.x, "POSIXt")) ans$right.x <- as.POSIXct(ans$right.x)
+        tmp <- eval(modelRHS[[3]], data, env)
+        tmp <-
+            if (is.factor(tmp) || is.shingle(tmp))
+                tmp[subset, drop = TRUE]
+            else tmp[subset]
         ans$right.y <-
-            lrep(eval(modelRHS[[3]], data, env)[subset, drop=TRUE], nLHS)
+            lrep(tmp, nLHS)
         if (inherits(ans$right.y, "POSIXt")) ans$right.y <- as.POSIXct(ans$right.y)
         ans$right.x.name <- deparse(modelRHS[[2]])
         ans$right.y.name <- deparse(modelRHS[[3]])
@@ -275,6 +296,8 @@ banking <- function(dx, dy = 1)
     }
     else 1
 }
+
+
 
 
 
@@ -445,8 +468,6 @@ calculateAxisComponents <-
 
 
 
-
-
 extend.limits <-
     function(lim, length=1, axs = "r",
              prop = if (axs == "i") 0 else 0.07)
@@ -458,10 +479,12 @@ extend.limits <-
             stop("length and prop cannot both be specified")
         if (length <= 0) stop("length must be positive")
         if (!missing(length))
+        {
             prop <- (as.numeric(length) - as.numeric(diff(lim))) / (2 * as.numeric(diff(lim)))
-        if (lim[1]==lim[2]) lim + 0.5*c(-length,length)
+        }
+        if (lim[1]==lim[2]) lim + 0.5 * c(-length,length)
         else {
-            d <- as.numeric(diff(lim))
+            d <- diff(as.numeric(lim))
             lim + prop * d * c(-1,1)
         }
     }
@@ -670,7 +693,20 @@ limits.and.aspect <-
             x.slicelen <- if (is.numeric(xlim)) diff(range(xlim)) else length(xlim) + 2
         }
         else {
+
+            ## problem here: unlist loses class, important for
+            ## POSIXct. Adding temporary hack as workaround, needs
+            ## more thorough handling
+
+            ## WAS: just -- x.limits <- unlist(x.limits)
+
+            all.na <- unlist(lapply(x.limits, function(x) all(is.na(x))))
+            class.xlim <- lapply(x.limits[!all.na], class) ## a list now, may be length 0
             x.limits <- unlist(x.limits)
+            
+
+
+
             if (length(x.limits) > 0) {
                 if (is.numeric(x.limits)) {
                     x.limits <- extend.limits(range(x.limits, na.rm = TRUE), axs = x.axs)
@@ -680,6 +716,9 @@ limits.and.aspect <-
                     x.limits <- unique(x.limits[!is.na(x.limits)])
                     x.slicelen <- length(x.limits) + 2
                 }
+                ## put back POSIXct class (can't put back all, because 1:10 has class integer)
+                if (length(class.xlim) > 0 && all(class.xlim[[1]] == c("POSIXt", "POSIXct")))
+                    class(x.limits) <- c("POSIXt", "POSIXct")
             }
             else {
                 x.limits <- c(0,1)
@@ -743,7 +782,19 @@ limits.and.aspect <-
             y.slicelen <- if (is.numeric(ylim)) diff(range(ylim)) else length(ylim) + 2
         }
         else {
+
+            ## problem here: unlist loses class, important for
+            ## POSIXct. Adding temporary hack as workaround, needs
+            ## more thorough handling
+
+            ## WAS: just -- y.limits <- unlist(y.limits)
+
+            all.na <- unlist(lapply(y.limits, function(x) all(is.na(x))))
+            class.ylim <- lapply(y.limits[!all.na], class) ## a list now, may be length 0
             y.limits <- unlist(y.limits)
+            
+
+
             if (length(y.limits) > 0) {
                 if (is.numeric(y.limits)) {
                     y.limits <- extend.limits(range(y.limits, na.rm = TRUE), axs = y.axs)
@@ -753,6 +804,9 @@ limits.and.aspect <-
                     y.limits <- unique(y.limits[!is.na(y.limits)])
                     y.slicelen <- length(y.limits) + 2
                 }
+                ## put back POSIXct class (can't put back all, because 1:10 has class integer)
+                if (length(class.ylim) > 0 && all(class.ylim[[1]] == c("POSIXt", "POSIXct")))
+                    class(y.limits) <- c("POSIXt", "POSIXct")
             }
             else {
                 y.limits <- c(0,1)
@@ -804,27 +858,29 @@ limits.and.aspect <-
     }
 
 
-
-
     if (is.character(aspect))
         if (aspect == "xy") {
             aspect <- median(unlist(lapply(dxdy, banking)), na.rm = TRUE)
             if (y.relation == "free")
                 warning("aspect=xy when y-relation=free is not sensible")
             else aspect <- aspect *
-                if (y.relation == "sliced") y.slicelen
-                else { ## i.e., relation = same
-                    if (is.numeric(y.limits)) diff(y.limits)
-                    else length(y.limits) + 2
-                }
+                as.numeric(
+                           if (y.relation == "sliced") y.slicelen
+                           else { ## i.e., relation = same
+                               if (is.numeric(y.limits)) diff(y.limits)
+                               else length(y.limits) + 2
+                           }
+                           )
             if (x.relation == "free")
                 warning("aspect=xy when x-relation=free is not sensible")
             else aspect <- aspect /
-                if (x.relation == "sliced") x.slicelen
-                else {
-                    if (is.numeric(x.limits)) diff(x.limits)
-                    else length(x.limits) + 2
-                }
+                as.numeric(
+                           if (x.relation == "sliced") x.slicelen
+                           else {
+                               if (is.numeric(x.limits)) diff(x.limits)
+                               else length(x.limits) + 2
+                           }
+                           )
         }
     else aspect <- 1
 

@@ -68,53 +68,54 @@ p2 <- histogram( ~ height, data = singer, xlab = "Height")
 data(sunspot)
 p3 <- xyplot(sunspot~1:37, aspect="xy", type = "l")
 ## simple positioning by split
-print.trellis(p11, split=c(1,1,1,2), more=TRUE)
-print.trellis(p2, split=c(1,2,1,2))
+print(p11, split=c(1,1,1,2), more=TRUE)
+print(p2, split=c(1,2,1,2))
 
 ## Combining split and position:
-print.trellis(p11, position = c(0,0,.75,.75), split=c(1,1,1,2), more=TRUE)
-print.trellis(p12, position = c(0,0,.75,.75), split=c(1,2,1,2), more=TRUE)
-print.trellis(p3, position = c(.5,.75,1,1), more=FALSE)
+print(p11, position = c(0,0,.75,.75), split=c(1,1,1,2), more=TRUE)
+print(p12, position = c(0,0,.75,.75), split=c(1,2,1,2), more=TRUE)
+print(p3, position = c(.5,.75,1,1), more=FALSE)
 
 ## Embedding lattice plots inside a grid viewport
 ## Note: this is lattice specific, won't work in S-Plus
 
-data(iris)
-cur.settings <- trellis.par.get()
 
-grid.newpage()
-lset(list(background = list(col = "transparent")))
+# data(iris)
+# cur.settings <- trellis.par.get()
 
-grid.rect(gp = gpar(fill = "#fffff0"))
+# grid.newpage()
+# lset(list(background = list(col = "transparent")))
 
-push.viewport(viewport(x = .6, y = .8, h = .25, w = .8, angle = 5))
-print(densityplot(~ Petal.Length | Species, iris, plot.p = FALSE, col = 4,
-      layout = c(3, 1)), newpage = FALSE)
-pop.viewport()
+# grid.rect(gp = gpar(fill = "#fffff0"))
 
-push.viewport(viewport(x = .6, y = .6, h = .25, w = .75, angle = 25))
-print(densityplot(~ Petal.Width | Species, iris, plot.p = FALSE, col = 3,
-      layout = c(3, 1)), newpage = FALSE)
-pop.viewport()
+# push.viewport(viewport(x = .6, y = .8, h = .25, w = .8, angle = 5))
+# print(densityplot(~ Petal.Length | Species, iris, plot.p = FALSE, col = 4,
+#       layout = c(3, 1)), newpage = FALSE)
+# pop.viewport()
 
-push.viewport(viewport(x = .6, y = .3, h = .25, w = .7, angle = -5))
-print(densityplot(~ Sepal.Length | Species, iris, plot.p = FALSE,  col = 2,
-      layout = c(3, 1)), newpage = FALSE)
-pop.viewport()
+# push.viewport(viewport(x = .6, y = .6, h = .25, w = .75, angle = 25))
+# print(densityplot(~ Petal.Width | Species, iris, plot.p = FALSE, col = 3,
+#       layout = c(3, 1)), newpage = FALSE)
+# pop.viewport()
 
-push.viewport(viewport(x = .15, y = .5, h = .8, w = .25, angle = 10))
-lset(list(background = list(col = "#f0ffff")))
-print(densityplot(~ Sepal.Width | Species, iris, plot.p = FALSE, col = 1,
-      layout = c(1, 3)), newpage = FALSE)
-grid.rect()
-pop.viewport()
+# push.viewport(viewport(x = .6, y = .3, h = .25, w = .7, angle = -5))
+# print(densityplot(~ Sepal.Length | Species, iris, plot.p = FALSE,  col = 2,
+#       layout = c(3, 1)), newpage = FALSE)
+# pop.viewport()
 
-grid.text(lab = "Densities by Species in the Iris Data",
-          vp = viewport(x = .6, y = .1))
+# push.viewport(viewport(x = .15, y = .5, h = .8, w = .25, angle = 10))
+# lset(list(background = list(col = "#f0ffff")))
+# print(densityplot(~ Sepal.Width | Species, iris, plot.p = FALSE, col = 1,
+#       layout = c(1, 3)), newpage = FALSE)
+# grid.rect()
+# pop.viewport()
+
+# grid.text(lab = "Densities by Species in the Iris Data",
+#           vp = viewport(x = .6, y = .1))
 
 
 
-lset(cur.settings)
+# lset(cur.settings)
 
 }
 \keyword{hplot}

@@ -35,7 +35,7 @@
 \description{
   These functions are used by various Lattice routines.
 }
-\synopsis{
+\usage{
 generateNewName(names.current, new.prefix)
 lpretty(x, ...)
 construct.3d.scales(draw = TRUE, axs = "r", tck = 1, lty = 1, lwd = 1, distance = c(1, 
@@ -56,24 +56,24 @@ trellis.skeleton(as.table = FALSE, aspect = "fill", between = list(x = 0,
     y = 0), key = NULL, page = NULL, main = NULL, sub = NULL, 
     par.strip.text = list(), skip = FALSE, strip = strip.default, 
     xlab = NULL, ylab = NULL, panel, ...)
-}
-\usage{
+
+
+
+
+
 Rows(x, which)
+
+
+
 extend.limits(lim, length = 1, prop = 0.07) 
-lpretty(lim)
 calculateAxisComponents(x, at = FALSE, labels = FALSE, logpaste = "",
               abbreviate = NULL, minlength = 4,
-              format, ...) 
+              format.posixt, ...) 
 .lattice.print.more
 cupdate(index, maxim)
 do.breaks(endpoints, nint)
 ldrop.levels(x, subset)
-compute.layout(...)
 make.list.from.intervals(x)
-construct.scales(...)
-construct.3d.scales(...)
-limits.and.aspect(...)
-trellis.skeleton(...)
 prepanel.default.bwplot(...)
 prepanel.default.levelplot(x, y, wx, wy, subscripts, ...)
 prepanel.default.cloud(distance, xlim, ylim,
@@ -90,7 +90,6 @@ prepanel.default.xyplot(x, y, type, ...)
 is.characterOrExpression(x)
 rearrangeUnit(x, pos, u)
 latticeAsFormula(x)
-generateNewName(names.current, new.prefix)
 }
 \arguments{
   \item{length}{ desired length of the resulting interval, with center
@@ -116,7 +115,7 @@ generateNewName(names.current, new.prefix)
   \item{type}{ type argument as in \code{panel.xyplot}}
   \item{pos}{integer}
   \item{u}{grid unit object of length 1}
-  \item{at, labels, logpaste, abbreviate, minlength, format}{arguments
+  \item{at, labels, logpaste, abbreviate, minlength, format.posixt}{arguments
     used in \code{calculateAxisComponents}}
   \item{names.current, new.prefix}{names to disambiguate and new prefix}
   \item{\dots}{other arguments}

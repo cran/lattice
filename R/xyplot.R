@@ -22,15 +22,38 @@
 
 
 prepanel.default.xyplot <-
-    function(x, y, type, ...)
+    function(x, y, type, subscripts, groups, ...)
 {
+
     ## Note: shingles satisfy is.numeric()
     if (any(!is.na(x)) && any(!is.na(y))) {
-        ord <- sort.list(x)
-        list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else  levels(x),
+
+        if (!missing(groups))
+        {
+            vals <-
+                if (is.factor(groups)) levels(groups)
+                else sort(unique(groups))
+
+            dx <- numeric(0)
+            dy <- numeric(0)
+            for (i in seq(along=vals))
+            {
+                id <- (groups[subscripts] == vals[i])
+                ord <- sort.list(x)
+                dx <- c(dx, as.numeric(diff(x[ord])))
+                dy <- c(dy, as.numeric(diff(y[ord])))
+            }
+        }
+        else
+        {
+            ord <- sort.list(x)
+            dx = as.numeric(diff(x[ord]))
+            dy = as.numeric(diff(y[ord]))            
+        }
+        list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else levels(x),
              ylim = if (is.numeric(y)) range(y[is.finite(y)]) else levels(y),
-             dx = as.numeric(diff(x[ord])),
-             dy = as.numeric(diff(y[ord])))
+             dx = dx, dy = dy)
+
     }
     else list(xlim = c(NA, NA),
               ylim = c(NA, NA),

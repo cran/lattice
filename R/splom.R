@@ -48,6 +48,7 @@ panel.pairs <-
              subscripts,
              pscales = 5,
              panel.number = 0,  ## should always be supplied
+             prepanel.limits = function(x) extend.limits(range(as.numeric(x), na.rm = TRUE)), ## factors ??
              ...)
 {
     panel <- 
@@ -60,21 +61,21 @@ panel.pairs <-
     n.var <- ncol(z)
 
     if(n.var>0) {
-        ## there must be a better way to do the foll:
+
         lim <- list(1:n.var)
-        for(i in 1:n.var) {
-            lim[[i]] <- extend.limits(range(as.numeric(z[,i]), na.rm = TRUE))
-        }
-        ## should be further complicated by allowing for customization by
-        ## prepanel functions --- prepanel(z[i], z[j]) etc
+        for(i in 1:n.var) lim[[i]] <-
+            if (is.list(pscales) && !is.null(pscales[[i]]$lim))
+                pscales[[i]]$lim
+            else prepanel.limits(z[,i])
     }
+        
     ## maybe (ideally) this should be affected by scales
 
     draw <- is.list(pscales) || (is.numeric(pscales) && pscales!=0) # whether axes to be drawn
 
     splom.layout <- grid.layout(nrow=n.var, ncol=n.var)
 
-    if(n.var > 0 && any(subscripts)) {
+    if (n.var > 0 && any(subscripts)) {
 
         push.viewport(viewport(layout=splom.layout))
 
@@ -154,7 +155,9 @@ panel.pairs <-
                                 if (is.list(pscales) && !is.null(pscales[[i]]$at))
                                     pscales[[i]]$at
                                 else
-                                    lpretty(lim[[i]], n = pscales)
+                                    lpretty(lim[[i]],
+                                            n = if (is.numeric(pscales))
+                                            pscales else 5)
 
                             labels <-
                                 if (is.list(pscales) && !is.null(pscales[[i]]$lab))

@@ -381,11 +381,12 @@ bwplot(formula,
     graphical parameters, these would be used if relevant graphical
     components are omitted from the other components.
 
-    The length (number of rows) of each such column is taken to be the
-    largest of the lengths of the graphical components, including the
-    ones specified outside. The ``text'' component has to have a
-    character or expression vector as its first component, and the
-    length of this vector determines the number of rows.
+    The length (number of rows) of each such column (except ``text''s)
+    is taken to be the largest of the lengths of the graphical
+    components, including the ones specified outside (see the entry for
+    \code{rep} below for details on this). The ``text'' component has to
+    have a character or expression vector as its first component, and
+    the length of this vector determines the number of rows.
 
     The graphical components that can be included in \code{key} (and
     also in the components named ``text'', ``lines'', ``points'' and
@@ -404,7 +405,14 @@ bwplot(formula,
 
     \code{title}: string or expression, title of the key,
 
-    \code{cex.title}
+    \code{rep}: logical, defaults to TRUE. By default, it's assumed that
+    all columns in the key (except the ``text''s) will have the same
+    number of rows, and all components are replicated to be as long as
+    the longest. This can be suppressed by specifying \code{rep =
+      FALSE}, in which case the length of each column will be determined
+    by components of that colunm alone.
+
+    \code{cex.title}: cex for the title
 
     \code{background}: defaults to default background
 
@@ -495,11 +503,15 @@ bwplot(formula,
     (default), "free" and "sliced". For relation="same", the same limits
     (determined by \code{xlim, ylim, scales$limits} etc) are used for
     all the panels. For relation="free", limits for each panel is
-    determined by the points in that panel. Behaviour for relation =
-    "sliced" is similar, except that the length (max - min) of the
-    scales are constrained to remain the same across panels. The values
-    of \code{xlim} etc, even if specified explicitly, are ignored if
-    relation is different from "same".
+    determined by the points in that panel (via the \code{prepanel}
+    function). Behaviour for relation = "sliced" is similar, except that
+    the length (max - min) of the scales are constrained to remain the
+    same across panels (limits specified as character vectors, if any,
+    are ignored in these computations). If relation is not "same", the
+    value of \code{xlim/ ylim/ scales$limits} is normally ignored,
+    except when the latter is a list, when it is treated as if its
+    components were the limit values obtained from the prepanel
+    calculations for each panel.
 
     tick.number: Suggested number of ticks (ignored for a factor, shingle
     or character vector, in which case there's no natural rule for
@@ -580,12 +592,20 @@ bwplot(formula,
     \code{formula}. Specify as \code{NULL} to omit the label
     altogether. Fine control is possible, see entry for \code{sub}.
   }
-  \item{xlim}{ numeric vector of length 2 (possibly a DateTime object)
-    giving minimum and maximum for x-axis, or, a character vector,
-    expected to denote the levels of \code{x}. The latter form is
-    interpreted as a range containing c(1, length(xlim)), with the
-    character vector determining labels at tick positions
+  \item{xlim}{ Normally a numeric vector of length 2 (possibly a
+    DateTime object) giving minimum and maximum for the x-axis, or, a
+    character vector, expected to denote the levels of \code{x}. The
+    latter form is interpreted as a range containing c(1, length(xlim)),
+    with the character vector determining labels at tick positions
     \code{1:length(xlim)}
+
+    \code{xlim} could also be a list, with as many components as the
+    number of panels (recycled if necessary), with each component as
+    described above. This is meaningful only when
+    \code{scales$x$relation} is "free" or "sliced", in which case these
+    are treated as if they were the corresponding limit components
+    returned by prepanel calculations.
+
   }
   \item{ylab}{ character string or expression giving label for the
     y-axis. Defaults to the expression for \code{y} in
@@ -668,6 +688,7 @@ xyplot(sunspot ~ 1:37 ,type = "l", aspect="xy",
 data(iris)
 xyplot(Sepal.Length + Sepal.Width ~ Petal.Length + Petal.Width | Species, 
        data = iris, allow.multiple = TRUE, scales = "free",
+       layout = c(2, 2),
        auto.key = list(x = .6, y = .7, corner = c(0, 0)))
 
 data(state)

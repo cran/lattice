@@ -1,3 +1,113 @@
+
+2003-09-28  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* : started restructuring axis calculations, but too late for
+	1.8.0. So, took 0.8-2 and fixed doc mismatches, and also hacked in
+	a fix for POSIXt scales not being plotted for
+	relation="same". (This may have broken other things, but I hope
+	not.) Still no fix for MASS contourplot example with NA's.
+
+
+2003-09-15  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* R/miscellaneous.R: added some code to handle cex when pch =
+	character, using new grid feature. However, grid has a bug when
+	pch - numeric, so there's still a workaround in place, which
+	should eventually be removed. This overrides related changes on
+	2003-09-03
+
+	* man/panel.pairs.Rd: added doc for prepanel.limits, pscales
+
+	* tests/test.R: added code with splom pscales weirdness
+
+	* R/splom.R:
+	earlier interpretation of pscales was ambiguous. Changed to make
+	specification of limits, at and labels consistent. See panel.pairs
+	docs.
+
+	* man/splom.Rd:
+	moved bulk of pscales doc over to help page for panel.pairs
+
+
+2003-09-05  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* splom.R:
+	added a prepanel.limits argument to panel.pairs to allow custom axis
+	range calculations for each variable
+
+2003-09-03  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* miscellaneous.R:
+	lplot.xy modified to use grid.text when pch is non-numeric.  This
+	would allow pch like pch = 'string' or pch = expression(sigma). This
+	feature would disappear in the future.
+
+2003-08-29  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* levelplot.R:
+	the older contourplot routine went horribly wrong when there were NA's
+	in the z-values. This has now been addressed with a slightly crude
+	hack: all z-NA's are now replaced by min(z, na.rm = TRUE) for the
+	contour drawing routine. This may cause inaccuracies near the
+	"border", but should be OK in most real-life cases, where the non-NA
+	part should be a largish connected piece, with a fairly insignificant
+	boundary.
+
+	This incidentally fixes another bug, apparent when the at vector
+	does not cover the full z range (colors used to be recycled
+	instead of leaving blank spaces)
+
+2003-08-22  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* settings.R: (canonical.theme) also added clip option for the strip
+
+	* print.trellis.R:
+	clipping for panel and strip now determined by trellis setting "clip"
+
+	* settings.R:
+	added a clip = list(panel = TRUE) to the list of valid settings
+
+2003-08-21  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* levelplot.R (panel.levelplot):
+	shrinking had problems for constant z values within
+	a panel (diff(range()) = 0, leading to division by 0). Also, it turns
+	out that shrinking was being done based on range of z within each
+	panel, not the overall data frame. This could be misleading, so
+	changed.
+
+
+2003-08-20  Deepayan  <deepayan@stat.wisc.edu>
+
+	* common.R (calculateAxisComponents): the format argument renamed
+	to format.posixt (to avoid confusion with the format
+	function). More importantly, in the "plain numeric" case,
+	as.character(at) replaced with format(at). So now at = c(1, 1.5,
+	2) will be labeled as c("1.0", "1.5", "2.0") instead of c("1",
+	"1.5", "2"). Both changes suggested by Tom Short.
+
+	* common.R, settings.R, zzz.R: Supplemental changes related to
+	NAMESPACE. Also renamed man/lattice-internal.Rd to
+	man/lattice-internal.Rd.foo --- this is ignored by R CMD scripts,
+	but has been retained as a possibly useful reference for internal
+	(unexported) functions.
+
+2003-08-05  Deepayan  <deepayan@stat.wisc.edu>
+
+	* zzz.R: NAMESPACE changes (due to Prof Ripley)
+
+	* print.trellis.R:
+	changes associated with NAMESPACE (actually moving .lattice.print.more
+	to an environment)
+
+	* NAMESPACE: added NAMESPACE file
+	
+	* R/zzz.R, R/print.trellis.R, R/settings.R: changes related to
+	NAMESPACES (actually due to moving a couple of global variables to
+	a new environment (see R/zzz.R) ), due to Prof Ripley. Also
+	simplified trellis.par.get() a bit.
+
+	
 2003-05-31  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* bwplot.R, cloud.R, miscellaneous.R, xyplot.R:
@@ -167,7 +277,7 @@
 	the pscales argument didn't work when it was specified
 	as a list. Fixed.
 
-2003-03-07  Saikat DebRoy  <saikat@punashcha>
+2003-03-07  Saikat DebRoy  <saikat@stat.wisc.edu>
 
 	* common.R (latticeParseFormula):
 	Compute a new element of the answer, subscr, if subscripts=TRUE.

@@ -1,9 +1,11 @@
 \name{cloud}
 \title{3d Scatter Plot}
 \synopsis{
-    cloud(formula,
+cloud(formula,
              data = parent.frame(),
-             allow.multiple, outer, auto.key,
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = c(1,1),
              layout = NULL,
              panel = "panel.cloud",
@@ -12,11 +14,11 @@
              strip = TRUE,
              groups = NULL,
              xlab,
-             xlim = range(x),
+             xlim = if (is.factor(x)) levels(x) else range(x),
              ylab,
-             ylim = range(y),
+             ylim = if (is.factor(y)) levels(y) else range(y),
              zlab,
-             zlim = range(z),
+             zlim = if (is.factor(z)) levels(z) else range(z),
              distance = .2,
              perspective = TRUE,
              R.mat = diag(4),
@@ -148,7 +150,7 @@ wireframe(formula, data,
   light source (no shadows though). Details can be found in the help
   page for \code{\link{panel.cloud}}. Note that although arguments
   controlling these are actually arguments for the panel function, they
-  can be supplied to \code{wireframe} directly.
+  can be supplied to \code{cloud} and \code{wireframe} directly.
 
   \code{wireframe} can be extremely slow in rendering; this should
   improve sometime in the future. (For some reason, postscript output is
@@ -199,6 +201,10 @@ cloud(Sepal.Length ~ Petal.Length * Petal.Width, data = iris,
                  border = TRUE, 
                  points = Rows(trellis.par.get("superpose.symbol"), 1:3),
                  text = list(levels(iris$Species))))
+
+ocol <- trellis.par.get("axis.line")$col
+oclip <- trellis.par.get("clip")$panel
+lset(list(axis.line = list(col = "transparent"), clip = list(panel = FALSE)))
 print(cloud(Sepal.Length ~ Petal.Length * Petal.Width, 
             data = iris, cex = .8, 
             groups = Species, 
@@ -213,5 +219,6 @@ print(cloud(Sepal.Length ~ Petal.Length * Petal.Width,
             main = "Stereo",
             screen = list(z = 20, x = -70, y = 0)),
       split = c(2,1,2,1))
+lset(list(axis.line = list(col = ocol), clip = list(panel = oclip)))
 }
 \keyword{hplot}

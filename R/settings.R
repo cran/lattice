@@ -18,9 +18,6 @@
 ### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ### MA 02111-1307, USA
 
-
-lattice.theme <- list()
-
 col.whitebg <- function()
     list(background = list(col="transparent"),
          bar.fill = list(col="#c8ffc8"),
@@ -85,10 +82,15 @@ canonical.theme <- function(name = "null device", color = TRUE)
               "#0A0A0A", "#0D0D0D", "#0F0F0F", "#121212", "#151515",
               "#171717", "transparent")
 
+    ## The following definition is the basis for what elements are
+    ## valid in any setting. Adding something here should be necessary
+    ## and sufficient.
+
     ## color settings, modified later if postscript or color = FALSE
     ans <-
         list(fontsize = list(default = 10),
-             background = list(col = can.col[17]), 
+             background = list(col = can.col[17]),
+             clip = list(panel = TRUE, strip = TRUE),
              add.line = list(col = can.col[1], lty = 1, lwd = 1),
              add.text = list(cex = 1, col = can.col[1], font = 1),
              bar.fill = list(col = can.col[2]),
@@ -174,19 +176,24 @@ trellis.par.get <-
     ## the default device is opened if none already open
     if (is.null(dev.list())) trellis.device()
 
-    if (!(.Device %in% names(lattice.theme))) {
-        ## shouldn't happen
-        lattice.theme[[.Device]] <<- list()
-        device <- .Device
-        color <- !(device == "postscript")
-        lset(canonical.theme(device, color))
+    ## just in case settings for the current device haven't been
+    ## created yet, which may happen if the device is opened by x11(),
+    ## say, (i.e., not by trellis.device()) and no trellis object has
+    ## been printed on this device yet:
+
+    if (!(.Device %in% names(get("lattice.theme", envir = .LatticeEnv)))) {
+        trellis.device(device = .Device, new = FALSE)
     }
+
+    lattice.theme <- get("lattice.theme", envir = .LatticeEnv)
     if (is.null(name))
         lattice.theme[[.Device]]
     else if (name %in% names(lattice.theme[[.Device]]))
         lattice.theme[[.Device]][[name]]
     else NULL
 }
+
+
 
 trellis.par.set <-
     function(name, value, warn = TRUE)
@@ -199,7 +206,9 @@ trellis.par.set <-
 
     ## if (name %in% names(lattice.theme[[.Device]])) NEEDED as a safeguard ?
     if (!is.list(value)) stop("value must be a list")
-    lattice.theme[[.Device]][[name]] <<- value
+    lattice.theme <- get("lattice.theme", envir=.LatticeEnv)
+    lattice.theme[[.Device]][[name]] <- value
+    assign("lattice.theme", lattice.theme, envir=.LatticeEnv)
 }
 
 
@@ -223,13 +232,26 @@ trellis.device <-
         device.call <- device
         dev.name <- deparse(substitute(device))
     }
+
     ## Start the new device if necessary.
     ## new = FALSE ignored if no devices open.
     if (new || is.null(dev.list()))
     {
         device.call(...)
-        .lattice.print.more <<- FALSE
+        assign(".lattice.print.more", FALSE, envir = .LatticeEnv)
     }
+
+    ## Make sure there's an entry for this device in the theme list
+    lattice.theme <- get("lattice.theme", envir = .LatticeEnv)
+    if (!(.Device %in% names(lattice.theme))) {
+        lattice.theme[[.Device]] <- canonical.theme(name = .Device, color = color)
+        assign("lattice.theme", lattice.theme, envir = .LatticeEnv)
+    }
+
+    ## If retain = FALSE, overwrite with default settings for device
+    if (!retain) lset(canonical.theme(name=.Device, color=color))
+
+    ## get theme as list
     if (!is.null(theme) && !is.list(theme)) {
         if (is.character(theme)) theme <- get(theme)
         if (is.function(theme)) theme <- theme()
@@ -238,18 +260,12 @@ trellis.device <-
             theme <- NULL
         }
     }
-    ## If retain = TRUE, retain existing settings for this
-    ## particular device, if any. Ignores new.
-    if (retain && .Device %in% names(lattice.theme))
-    {
-        if (!is.null(theme)) lset(theme) 
-        return(invisible())
-    }
-    lset(canonical.theme(name=.Device, color=color))
-    if (!is.null(theme)) lset(theme)
-    if (!is.null(bg)) trellis.par.set("background", list(col = bg))
-}
 
+    ## apply theme and background
+    if (!is.null(theme)) lset(theme)
+    if (!is.null(bg)) lset(list(background = list(col = bg)))
+    return(invisible())
+}
 
 
 
@@ -276,9 +292,9 @@ show.settings <- function(x = NULL)
     if (is.null(theme) && is.null(x)) print("No active device") ## shouldn't happen
     else {
         if (is.null(theme)) { ## also shouldn't happen
-            print("No device is currently active but a theme has been explicitly specified.")
-            print("Default device options will be used to fill missing components")
-            print("of specified theme, if any.")
+            cat("\nNo device is currently active but a theme has been explicitly specified.")
+            cat("\nDefault device options will be used to fill missing components")
+            cat("\nof specified theme, if any.\n")
             theme <- canonical.theme(getOption("device"))
         }
         if (!is.null(x)) {
@@ -298,11 +314,12 @@ show.settings <- function(x = NULL)
         page.layout <- grid.layout(nrow = n.row, ncol = n.col,
                                    widths = unit(widths.x, widths.units),
                                    heights = unit(heights.x, heights.units))
-        if (!.lattice.print.more) grid.newpage()
-        .lattice.print.more <<- FALSE
+        if (!get(".lattice.print.more", envir=.LatticeEnv)) grid.newpage()
+        assign(".lattice.print.more", FALSE, envir=.LatticeEnv)
         grid.rect(gp = gpar(fill = theme$background$col,
                   col = "transparent"))
-        push.viewport(viewport(layout = page.layout, gp = gpar(fontsize = theme$fontsize$default)))
+        push.viewport(viewport(layout = page.layout,
+                               gp = gpar(fontsize = theme$fontsize$default)))
         superpose.symbol <- theme$superpose.symbol
         len <- length(superpose.symbol$col)
         push.viewport(viewport(layout.pos.row = 2,

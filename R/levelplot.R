@@ -1,7 +1,7 @@
 
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2003  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -50,7 +50,6 @@ prepanel.default.levelplot <-
          dx = if (is.numeric(x)) length(ux) else 1,
          dy = if (is.numeric(y)) length(uy) else 1)
 }
-
 
 
 
@@ -169,12 +168,28 @@ panel.levelplot <-
 
         
         if (contour) {
+
+
+            ## FIXME:
+
+            ## bad hack for when z contains NA's. Including anyway
+            ## since the result would be much worse without it (well,
+            ## that at least had the advantage of being obviously
+            ## broken, as opposed to this which will in certain cases
+            ## silently give the wrong result... still, shouldn't be
+            ## that bad)
+
+            ## z[is.na(z)] <- min(z, na.rm = TRUE)
+
+
+
             add.line <- trellis.par.get("add.line")
             add.text <- trellis.par.get("add.text")
             ux <- as.double(ux)
             uy <- as.double(uy)
             ord <- order(x, y)
             m <- z[ord] + 10e-12 ## some problems otherwise
+            
             for (i in seq(along = at)) {
                 val <- .Call("calculateContours", m, ux, uy, as.double(at[i]),
                              length(ux), length(uy), PACKAGE="lattice")
@@ -242,18 +257,6 @@ panel.levelplot <-
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -505,7 +508,7 @@ levelplot <-
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
-    id.na <- is.na(x)|is.na(y)|is.na(z)
+    id.na <- is.na(x)|is.na(y)  ##|is.na(z)
     for (var in cond)
         id.na <- id.na | is.na(var)
     if (!any(!id.na)) stop("nothing to draw")
@@ -546,7 +549,7 @@ levelplot <-
     ## give the widths and heights of the rectangles for each point.
     ## My algo works only when the x's and y's are really evaluated
     ## on a grid, that is, there is no numerical error. Splus also
-    ## doesn't work (in any meningful way, at least) in such cases,
+    ## doesn't work (in any meaningful way, at least) in such cases,
     ## but behaviour would be dissimilar in that case.
 
 #     ux <- sort(unique(x[!is.na(x)]))
@@ -563,9 +566,9 @@ levelplot <-
 #     ##wy <- wuy[match(y[!is.na(y)], uy)]
 #     wy <- wuy[match(y, uy)]
 
-    zcol <- numeric(length(z))
+    zcol <- rep(NA, length(z)) #numeric(length(z))
     for (i in seq(along=col.regions))
-        zcol[!id.na & z>=at[i] & z<at[i+1]] <- i
+        zcol[!id.na & !is.na(z) & z>=at[i] & z<at[i+1]] <- i
 
     foo$panel.args.common <-
         c(list(x=x, y=y, z=z, at=at, labels=labels,

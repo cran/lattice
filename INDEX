@@ -3,7 +3,6 @@ cloud                   3d Scatter Plot
 draw.colorkey           Produce a Colorkey for levelplot
 draw.key                Produce a Legend or Key
 histogram               Histograms and Kernel Density Plots
-lattice-Internal        Miscellaneous Functions used within Lattice
 latticeParseFormula     Parse Trellis formula
 Lattice                 Lattice Graphics
 levelplot               Level Plots
@@ -31,6 +30,7 @@ print.trellis           Print Trellis Objects
 qqmath                  Q-Q Plot with Theoretical Distribution
 qq                      Quantile-Quantile Plots of Two Samples
 rfs                     Residual and Fit Spread Plots
+Rows                    Extract 'rows' from a list
 shingles                shingles
 simpleKey               Function to generate a simple key
 splom                   Scatter Plot Matrices
