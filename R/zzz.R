@@ -22,7 +22,6 @@
   if (!require(grid))
       stop("lattice requires grid, but grid couldn't be loaded")
   autoload("loess.smooth", "modreg")
-  autoload("loess", "modreg")
 }
 
 ## Need global variable to handle more in print.trellis

@@ -409,7 +409,7 @@ panel.bwplot <-
     function(x, y, box.ratio=1, horizontal = TRUE, pch=box.dot$pch,
              col = box.dot$col, cex = box.dot$cex,
              fill = box.rectangle$fill,
-             levels.fos = NULL, ...)
+             levels.fos = NULL, coef = 1.5, ...)
 {
     
     x <- as.numeric(x)
@@ -434,7 +434,7 @@ panel.bwplot <-
             for (i in 1:levels.fos) {
 
                 yval  <- i
-                stats <- boxplot.stats(x[y==yval])
+                stats <- boxplot.stats(x[y==yval], coef = coef)
                 
                 
                 if (stats$n>0)
@@ -501,7 +501,7 @@ panel.bwplot <-
         if (levels.fos > 0)
             for (i in 1:levels.fos) {
                 xval  <- i
-                stats <- boxplot.stats(y[x==xval])
+                stats <- boxplot.stats(y[x==xval], coef = coef)
 
                 if (stats$n>0)
                 {

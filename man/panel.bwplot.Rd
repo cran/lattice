@@ -7,11 +7,11 @@
 \synopsis{
 panel.bwplot(x, y, box.ratio=1, horizontal = TRUE, pch=box.dot$pch,
              col=box.dot$col, cex = box.dot$cex, fill = box.rectangle$fill,
-             levels.fos = NULL, ...)
+             levels.fos = NULL, coef = 1.5, ...)
 }
 \usage{
 panel.bwplot(x, y, box.ratio = 1, horizontal, pch, col, cex,
-            fill = "transparent", ...)
+            fill = "transparent", coef = 1.5, ...)
 }
 \arguments{
   \item{x, y}{ numeric vector or factor. Boxplots drawn for each unique value of
@@ -24,7 +24,8 @@ panel.bwplot(x, y, box.ratio = 1, horizontal, pch, col, cex,
     explanation.
   }
   \item{pch, col, cex}{ graphical parameters controlling the dot}
-  \item{fill}{ color to fill the }
+  \item{fill}{ color to fill the boxplot}
+  \item{coef}{passed to \code{boxplot.stats}}
   \item{\dots}{ graphical parameters can be supplied}
 }
 \details{ Creates Box and Whisker plot of \code{x} for every level of

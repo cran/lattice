@@ -1,3 +1,40 @@
+2003-03-26  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* print.trellis.R: fixed problem with expression axis labels when
+	relation = "same". Reverted back to older slow version of
+	draw.colorkey because of (grid?) bug in newer version.
+
+
+2003-03-15  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* common.R:
+	fixed some problems when outer and conditioning variables interact
+
+	* print.trellis.R: fixed y-axis scales drawing
+
+	* common.R (latticeParseFormula):
+	added argument outer=FALSE. When outer = TRUE,
+	variables separated by + (when multiple = TRUE) are made into a
+	conditioning variable instead of grouping variable
+
+	* several: updated support for multiple LHS/RHS in formula,
+	auto.key, outer
+
+2003-03-14  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* levelplot.R: changed prepanel functions to handle factors
+	gracefully. Fixed problem with unequally spaced grid
+	points. Improved contourplot labelling. New argument shrink in
+	panel.levelplot, allowing rectangle dimensions to be proportional
+	to height. (Many of these were actually done much earlier, but
+	committed now)
+
+	* bwplot.R:
+	fixed some problems with processing of formula in dotplot etc before
+	calling bwplot
+
+	* common.R: removed latticeAsFormula, no use
+
 2003-03-14  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
 
 	* print.trellis.R (print.trellis):

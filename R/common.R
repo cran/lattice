@@ -142,7 +142,6 @@ latticeParseFormula <-
     modelRHS <- model[[length(model)]]
     if (length(modelRHS) == 3 && modelRHS[[1]] == as.name("|"))
         modelRHS <- modelRHS[[2]]
-        
 
     env <- environment(model)
     modelRHS <- model[[length(model)]]
@@ -188,6 +187,7 @@ latticeParseFormula <-
     if (dimension == 2) {
         if (nLHS == 1 && nRHS == 1) {
             tmp <- eval(varsRHS[[1]], data, env)
+            if (is.matrix(tmp)) tmp <- as.data.frame(tmp)
             ans$right <- tmp[subset, drop = TRUE]
             nobs <- length(tmp)
         } else {

@@ -675,13 +675,21 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 
 ######
 
-        grid.pack(frame = key.gf, row = 1, col = 1,
-                  grob =
-                  grid.rect(x = rep(.5, length(reccentre)), 
-                            y = reccentre, default.units = "native",
-                            height = recdim, 
-                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-                  draw = FALSE)
+        for (c in seq(along = key$col))
+            grid.pack(frame = key.gf,
+                      row = 1, col = 1,
+                      grob = grid.rect(y = unit(reccentre[c], "native"),
+                      height = unit(recdim[c], "native"),
+                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+                      draw = FALSE)
+
+#         grid.pack(frame = key.gf, row = 1, col = 1,
+#                   grob =
+#                   grid.rect(x = rep(.5, length(reccentre)), 
+#                             y = reccentre, default.units = "native",
+#                             height = recdim, 
+#                             gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
+#                   draw = FALSE)
 
         grid.pack(frame = key.gf, col = 1,
                   grob =
@@ -712,21 +720,29 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
         key.gf <- grid.frame(layout = key.layout, vp = vp,
                              gp = gpar(fontsize = default.fontsize), 
                              draw = FALSE)
-        
-        grid.pack(frame = key.gf, row = 1, col = 2,
-                  grob =
-                  grid.rect(x = rep(.5, length(reccentre)),
-                            y = unit(reccentre, "native"),
-                            height = unit(recdim, "native"),
-                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-                  draw = FALSE)
+
+        for (c in seq(along = key$col))
+            grid.pack(frame = key.gf,
+                      row = 1, col = 2,
+                      grob = grid.rect(y = unit(reccentre[c], "native"),
+                      height = unit(recdim[c], "native"),
+                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+                      draw = FALSE)
+
+#         grid.pack(frame = key.gf, row = 1, col = 2,
+#                   grob =
+#                   grid.rect(x = rep(.5, length(reccentre)),
+#                             y = unit(reccentre, "native"),
+#                             height = unit(recdim, "native"),
+#                             gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
+#                   draw = FALSE)
 
         grid.pack(frame = key.gf, col = 2,
                   grob =
                   grid.rect(height = key$height,
                             gp=gpar(col="black"), draw = FALSE),
                   draw = FALSE)
-        
+
         grid.pack(frame = key.gf, col = 2,
                   grob =
                   grid.text(label = paste(labels, "-", sep = ""),
@@ -750,14 +766,22 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
         key.gf <- grid.frame(layout = key.layout, vp = vp,
                              gp = gpar(fontsize = default.fontsize), 
                              draw = FALSE)
-        
-        grid.pack(frame = key.gf, row = 3, col = 1,
-                  grob =
-                  grid.rect(x = unit(reccentre, "native"),
-                            y = rep(.5, length(reccentre)),
-                            width = unit(recdim, "native"),
-                            gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
-                  draw = FALSE)
+
+        for (c in seq(along = key$col))
+            grid.pack(frame = key.gf,
+                      row = 3, col = 1,
+                      grob = grid.rect(x = unit(reccentre[c], "native"),
+                      width = unit(recdim[c], "native"),
+                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+                      draw = FALSE)
+
+#         grid.pack(frame = key.gf, row = 3, col = 1,
+#                   grob =
+#                   grid.rect(x = unit(reccentre, "native"),
+#                             y = rep(.5, length(reccentre)),
+#                             width = unit(recdim, "native"),
+#                             gp=gpar(fill=key$col,  col = NULL), draw = FALSE),
+#                   draw = FALSE)
 
         grid.pack(frame = key.gf, row = 3,
                   grob =
@@ -796,13 +820,21 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                              gp = gpar(fontsize = default.fontsize),
                              draw = FALSE)
         
-        grid.pack(frame = key.gf, row = 1, col = 1,
-                  grob =
-                  grid.rect(x = unit(reccentre, "native"),
-                            y = rep(.5, length(reccentre)),
-                            width = unit(recdim, "native"),
-                            gp = gpar(fill=key$col, col = NULL), draw = FALSE),
-                  draw = FALSE)
+        for (c in seq(along = key$col))
+            grid.pack(frame = key.gf,
+                      row = 1, col = 1,
+                      grob = grid.rect(x = unit(reccentre[c], "native"),
+                      width = unit(recdim[c], "native"),
+                      gp = gpar(fill = key$col[c], col = NULL), draw = FALSE),
+                      draw = FALSE)
+
+#         grid.pack(frame = key.gf, row = 1, col = 1,
+#                   grob =
+#                   grid.rect(x = unit(reccentre, "native"),
+#                             y = rep(.5, length(reccentre)),
+#                             width = unit(recdim, "native"),
+#                             gp = gpar(fill=key$col, col = NULL), draw = FALSE),
+#                   draw = FALSE)
 
         grid.pack(frame = key.gf, row = 1,
                   grob =
@@ -1209,19 +1241,25 @@ print.trellis <-
 
         if (x.relation.same) {
 
-            strbar <- 
-                as.list(calculateAxisComponents(x = x$x.limits,
-                                                at = x$x.scales$at,
-                                                labels = x$x.scales$lab,
-                                                have.log = have.xlog,
-                                                logbase = xlogbase,
-                                                logpaste = xlogpaste,
-                                                abbreviate = x$x.scales$abbr,
-                                                minlength = x$x.scales$minl,
-                                                n = x$x.scales$tick.number)$lab)
+            lab <- 
+                calculateAxisComponents(x = x$x.limits,
+                                        at = x$x.scales$at,
+                                        labels = x$x.scales$lab,
+                                        have.log = have.xlog,
+                                        logbase = xlogbase,
+                                        logpaste = xlogpaste,
+                                        abbreviate = x$x.scales$abbr,
+                                        minlength = x$x.scales$minl,
+                                        n = x$x.scales$tick.number)$lab
 
-            #for (ss in seq(along = x$x.scales$labels))
-            #    strbar <- c(strbar, list(x$x.scales$labels[ss]))
+            if (is.character(lab)) 
+                strbar <- as.list(lab)
+            else if (is.expression(lab)) {
+                strbar <- list() ## will contain list for max.unit data
+                for (ss in seq(along = lab))
+                    strbar <- c(strbar, list(lab[ss]))
+            }
+            else stop("Invalid value for labels")
 
             heights.x[5] <- 0.5 + max(0.001, x$x.scales$tck[2]) * 0.3
             ## tck = 2 is .5 lines + .6 lines
@@ -1410,20 +1448,25 @@ print.trellis <-
         
         if (y.relation.same) {
 
-            strbar <- 
-                as.list(calculateAxisComponents(x = x$y.limits,
-                                                at = x$y.scales$at,
-                                                labels = x$y.scales$lab,
-                                                have.log = have.ylog,
-                                                logbase = ylogbase,
-                                                logpaste = ylogpaste,
-                                                abbreviate = x$y.scales$abbr,
-                                                minlength = x$y.scales$minl,
-                                                n = x$y.scales$tick.number)$lab)
+            lab <- 
+                calculateAxisComponents(x = x$y.limits,
+                                        at = x$y.scales$at,
+                                        labels = x$y.scales$lab,
+                                        have.log = have.ylog,
+                                        logbase = ylogbase,
+                                        logpaste = ylogpaste,
+                                        abbreviate = x$y.scales$abbr,
+                                        minlength = x$y.scales$minl,
+                                        n = x$y.scales$tick.number)$lab
 
-            ##strbar <- list() ## will contain list for max.unit data
-            ##for (ss in seq(along = x$y.scales$labels))
-            ##    strbar <- c(strbar, list(x$y.scales$labels[ss]))
+            if (is.character(lab)) 
+                strbar <- as.list(lab)
+            else if (is.expression(lab)) {
+                strbar <- list() ## will contain list for max.unit data
+                for (ss in seq(along = lab))
+                    strbar <- c(strbar, list(lab[ss]))
+            }
+            else stop("Invalid value for labels")
 
             widths.x[5] <- 0.5 + max(0.001, x$y.scales$tck[1]) * 0.3
             ## tck = 2 is .5 lines + .6 lines
@@ -1437,7 +1480,7 @@ print.trellis <-
                     widths.insertlist.unit <-
                         unit.c(widths.insertlist.unit,
                                max(unit(1.0 * rep(yaxis.cex[1],
-                                                  length(strbar)), "strheight", strbar)))
+                                                  length(strbar)), "strheight", data = strbar)))
                 }
                 
                 else {

@@ -300,6 +300,7 @@ splom <-
 
     number.of.cond <- length(cond)
     x <- as.data.frame(form$right)
+
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, nrow(x))))
@@ -314,7 +315,7 @@ splom <-
     subscr <- seq(along=x[,1])
     x <- x[subset,, drop = TRUE]
     subscr <- subscr[subset, drop = TRUE]
-    
+
 
     ## create a skeleton trellis object with the
     ## less complicated components:

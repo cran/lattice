@@ -89,7 +89,16 @@ contourplot(formula, data, at,
     (if any) will be drawn at these heights, and the regions in between
     would be colored using \code{col.regions}.
   }
-  \item{col.regions}{color vector to be used if regions is TRUE}
+  \item{col.regions}{color vector to be used if regions is TRUE. The
+    general idea is that this should be a color vector of moderately
+    large length (by large, I mean longer than what you would expect the
+    number of regions to be. By default this is 100, which is quite
+    safe because a plot with even close to a 100 regions would usually
+    become very uninformative). It is expected that this vector would be
+    gradually varying in color (so that nearby colors would be similar),
+    and so when the colors are actually chosen, they are chosen to be
+    equally spaced along this vector. When there are more regions than
+    col.regions, the colors are recycled.}
   \item{colorkey}{logical specifying whether a color key is to be drawn
     alongside the plot, or a list describing the color key. The list may
     contain the following components:
@@ -157,6 +166,7 @@ levelplot(z~x*y, grid, cuts = 50, scales=list(log="e"), xlab="",
           ylab="", main="Weird Function", sub="with log scales",
           colorkey = FALSE, region = TRUE)
 #S+ example
+library(modreg)
 data(environmental)
 attach(environmental)
 ozo.m <- loess((ozone^(1/3)) ~ wind * temperature * radiation,
