@@ -1,5 +1,5 @@
 
-### Copyright 2000-2003 Deepayan Sarkar <deepayan@stat.wisc.edu>,
+### Copyright 2000-2004 Deepayan Sarkar <deepayan@stat.wisc.edu>,
 ###
 ### This file is part of the lattice library for R.  It is made
 ### available under the terms of the GNU General Public License,
@@ -19,21 +19,24 @@
 
 
 
-.onLoad <- function(lib, pkg) {
-    library.dynam(pkg, pkg, lib )
-    ## Note: grid functions will not be visible
-    ## if (!require(grid))
-    ##    stop("lattice requires grid, but grid couldn't be loaded")
-}
+
+
 
 .LatticeEnv <- new.env()
-
-## Need global variable to handle more in print.trellis
-assign(".lattice.print.more", FALSE, env = .LatticeEnv)
-assign("lattice.theme", list(), env = .LatticeEnv)
+assign("lattice.status",  list(), env = .LatticeEnv)
+assign("lattice.theme",   list(), env = .LatticeEnv)
 assign("lattice.options", list(), env = .LatticeEnv)
-assign("last.object", NULL, env = .LatticeEnv)
+assign("last.object",     NULL,   env = .LatticeEnv)
 
+
+
+
+.onLoad <- function(lib, pkg) 
+{
+    library.dynam(pkg, pkg, lib )
+    lattice.options(.defaultLatticeOptions())
+    lattice.setStatus(.defaultLatticeStatus())
+}
 
 .noGenerics <- TRUE
 
@@ -45,21 +48,20 @@ assign("last.object", NULL, env = .LatticeEnv)
 
 
 
+## .First.lib will be used if the NAMESPACE file is missing.  This is
+## useful during development, thanks to C-c C-l in Emacs/ESS. It won't
+## be used if NAMESPACE is present.
 
 
-
-## old (pre NAMESPACE version). If you need to rename the NAMESPACE
-## file (for testing, say), also uncomment the code below. Nothing
-## else need be changed.
-
-
-
-
-#.First.lib <- function(lib, pkg) {
-#    library.dynam(pkg, pkg, lib )
-#    if (!require(grid))
-#        stop("lattice requires grid, but grid couldn't be loaded")
-#}
+.First.lib <- function(lib, pkg) 
+{
+    cat("Note: you shouldn't be seeing this message unless\nyou are using a non-standard version of lattice",
+        fill = TRUE)
+    library.dynam(pkg, pkg, lib )
+    if (!require(grid)) stop("The grid package couldn't be loaded. \nPlease check your installation of R")
+    lattice.options(.defaultLatticeOptions())
+    lattice.setStatus(.defaultLatticeStatus())
+}
 
 
 

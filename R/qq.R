@@ -64,8 +64,9 @@ qq <-
              ylab,
              ylim,
              f.value = NULL,
-             drop.unused.levels = TRUE,
+             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
+             default.scales = list(),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -148,7 +149,8 @@ qq <-
 
     ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
-    foo <- c(foo, 
+    scales <- updateList(default.scales, scales)
+    foo <- c(foo,
              do.call("construct.scales", scales))
 
 

@@ -90,10 +90,10 @@ canonical.theme <- function(name = "null device", color = TRUE)
     ans <-
         list(fontsize         = list(text = 12, points = 8),
              background       = list(alpha = 1, col = can.col[17]),
-             clip             = list(panel = TRUE, strip = TRUE),
+             clip             = list(panel = "on", strip = "on"),
              add.line         = list(alpha = 1, col = can.col[1], lty = 1, lwd = 1),
              add.text         = list(alpha = 1, cex = 1, col = can.col[1], font = 1),
-             bar.fill         = list(alpha = 1, col = can.col[2]),
+             bar.fill         = list(alpha = 1, col = can.col[2], border = "black", lty = 1, lwd = 1),
              box.dot          = list(alpha = 1, col = can.col[1], cex = 1, font = 1, pch = 16),
              box.rectangle    = list(alpha = 1, col = can.col[2], fill = "transparent", lty = 1, lwd = 1),
              box.umbrella     = list(alpha = 1, col = can.col[2], lty = 2, lwd = 1),
@@ -106,14 +106,55 @@ canonical.theme <- function(name = "null device", color = TRUE)
              strip.shingle    = list(alpha = 1, col = can.col[c(5, 4, 2, 6, 3, 8, 7)]),
              strip.border     = list(alpha = 1, col = rep(can.col[1], 7), lty = rep(1, 7), lwd = rep(1, 7)),
              superpose.line   = list(alpha = 1, col = can.col[2:8], lty = rep(1, 7), lwd = rep(1, 7)),
-             superpose.symbol = list(alpha = rep(0, 7), cex = rep(0.8, 7), col = can.col[2:8], font = rep(1, 7), pch = rep(1, 7)),
-             superpose.fill   = list(alpha = rep(0, 7), col = can.col[2:8]),
+             superpose.symbol = list(alpha = rep(1, 7), cex = rep(0.8, 7), col = can.col[2:8],
+                                     font = rep(1, 7), pch = rep(1, 7)),
+             superpose.fill   = list(alpha = rep(1, 7), col = can.col[2:8],
+                                     border = rep("black", 7), lty = rep(1, 7), lwd = rep(1, 7)),
              regions          = list(alpha = 1, col = rev(cm.colors(100))),
              shade.colors     = list(alpha = 1, palette = function(irr, ref, height, saturation = .9) {
                  hsv(h = height, s = 1 - saturation * (1 - (1-ref)^0.5), v = irr)
              }),
              axis.line        = list(alpha = 1, col = can.col[1], lty = 1, lwd = 1),
              axis.text        = list(alpha = 1, cex = .8, col = can.col[1], font = 1),
+
+             ## NEW: controls widths of tick marks and padding of labels
+             axis.components  = list(left = list(tck = 1, pad1 = 1, pad2 = 1),
+                                     top = list(tck = 1, pad1 = 1, pad2 = 1),
+                                     right = list(tck = 1, pad1 = 1, pad2 = 1),
+                                     bottom = list(tck = 1, pad1 = 1, pad2 = 1)),
+             ## NEW: controls widths of basic layout's components
+             layout.heights   = list(top.padding = 1,
+                                     main = 1,
+                                     main.key.padding = 1,
+                                     key.top = 1,
+                                     key.axis.padding = 1,
+                                     axis.top = 1,
+                                     strip = 1,
+                                     panel = 1, ## shouldn't be changed
+                                     axis.panel = 1, ## can be useful
+                                     between = 1,
+                                     axis.bottom = 1,
+                                     axis.xlab.padding = 1,
+                                     xlab = 1,
+                                     xlab.key.padding = 1,
+                                     key.bottom = 1,
+                                     key.sub.padding = 1,
+                                     sub = 1,
+                                     bottom.padding = 1),
+             layout.widths    = list(left.padding = 1,
+                                     key.left = 1,
+                                     key.ylab.padding = 1,
+                                     ylab = 1,
+                                     ylab.axis.padding = 1,
+                                     axis.left = 1,
+                                     axis.panel = 1, ## can be useful
+                                     panel = 1, ## shouldn't be changed
+                                     between = 1,
+                                     axis.right = 1,
+                                     axis.key.padding = 1,
+                                     key.right = 1,
+                                     right.padding = 1),
+
              box.3d           = list(alpha = 1, col = can.col[1], lty = 1, lwd = 1),
              par.xlab.text    = list(alpha = 1, cex = 1, col = can.col[1], font = 1),
              par.ylab.text    = list(alpha = 1, cex = 1, col = can.col[1], font = 1),
@@ -123,7 +164,8 @@ canonical.theme <- function(name = "null device", color = TRUE)
 
     if (color)
     {
-        if (name == "postscript" || name == "pdf") {
+        if (name == "postscript" || name == "pdf")
+        {
             ans$plot.symbol$col <- can.col[6]
             ans$plot.line$col <- can.col[6]
             ans$dot.symbol$col <- can.col[6]
@@ -159,7 +201,7 @@ canonical.theme <- function(name = "null device", color = TRUE)
         ans$superpose.symbol$col <- can.col[rep(1, 7)]
         ans$superpose.symbol$cex <- rep(0.7, 7)
         ans$superpose.symbol$pch <- c(1,3,6,0,5,16,17)
-        ans$superpose.fill$col <- gray(0:6/6)
+        ans$superpose.fill$col <- gray( (c(6, 12, 7, 11, 8, 10, 9)/15)^.8 )
         ##ans$superpose.symbol$pch <- c("o","+",">","s","w","#","{")
     }
     ans
@@ -195,20 +237,40 @@ trellis.par.get <-
 
 
 trellis.par.set <-
-    function(name, value, warn = TRUE)
+    function(name, value, ..., theme, warn = TRUE)
 {
     ## the default device is opened if none already open
     if (is.null(dev.list())) {
         trellis.device()
-        if (warn) cat("Note: The default device has been opened to honour attempt to modify trellis settings\n\n")
+        if (warn)
+            cat("Note: The default device has been opened to honour attempt to modify trellis settings\n",
+                fill = TRUE)
     }
 
+
+
+
+
     ## if (name %in% names(lattice.theme[[.Device]])) NEEDED as a safeguard ?
-    if (!is.list(value)) stop("value must be a list")
+    ## if (!is.list(value)) stop("value must be a list")
     lattice.theme <- get("lattice.theme", envir = .LatticeEnv)
     ## make sure a list for this device is present
     if (is.null(lattice.theme[[.Device]])) trellis.device(device = .Device, new = FALSE)
-    lattice.theme[[.Device]][[name]] <- value
+    ## WAS: lattice.theme[[.Device]][[name]] <- value
+
+    if (missing(theme))
+        if (!missing(value))
+        {
+            theme <- list(value)
+            names(theme) <- name
+        }
+        else if (!missing(name) && is.list(name))
+        {
+            theme <- name
+        }
+        else theme <- list(...)
+
+    lattice.theme[[.Device]] <- updateList(lattice.theme[[.Device]], theme)
     assign("lattice.theme", lattice.theme, envir=.LatticeEnv)
     invisible()
 }
@@ -218,8 +280,8 @@ trellis.par.set <-
 trellis.device <-
     function(device = getOption("device"),
              color = !(dev.name == "postscript"),
-             theme = getOption("lattice.theme"),
-             bg = NULL,
+             theme = lattice.getOption("default.theme"),
+##             bg = NULL,
              new = TRUE,
              retain = FALSE,
              ...)
@@ -228,16 +290,19 @@ trellis.device <-
     if (is.character(device))
     {
         if (new || is.null(dev.list()))
-        {   # to make sure this works even if package graphics is not loaded
+        {   # to make sure this works even if package grDevices is not loaded
             device.call <- try(get(device), silent = TRUE)
             if (inherits(device.call, "try-error"))
-                device.call <- try(utils::getFromNamespace(device, "graphics"), silent = TRUE)
+                device.call <-
+                    try(utils::getFromNamespace(device, "grDevices"),
+                        silent = TRUE)
             if (inherits(device.call, "try-error"))
                 stop(paste("Could not find device function", device))
         }
         dev.name <- device
     }
-    else {
+    else
+    {
         device.call <- device
         dev.name <- deparse(substitute(device))
     }
@@ -245,35 +310,43 @@ trellis.device <-
     ## Start the new device if necessary.
     ## new = FALSE ignored if no devices open.
 
+
+    ## FIXME: remove this warning in some future version
+    if ("bg" %in% names(list(...)))
+        warning("trellis.device has changed, 'bg' may not be doing what you think it is")
+
     if (new || is.null(dev.list()))
     {
         device.call(...)
-        assign(".lattice.print.more", FALSE, envir = .LatticeEnv)
+        lattice.setStatus(print.more = FALSE)
     }
 
     ## Make sure there's an entry for this device in the theme list
     lattice.theme <- get("lattice.theme", envir = .LatticeEnv)
-    if (!(.Device %in% names(lattice.theme))) {
+    if (!(.Device %in% names(lattice.theme)))
+    {
         lattice.theme[[.Device]] <- canonical.theme(name = .Device, color = color)
         assign("lattice.theme", lattice.theme, envir = .LatticeEnv)
     }
 
     ## If retain = FALSE, overwrite with default settings for device
-    if (!retain) lset(canonical.theme(name=.Device, color=color))
+    if (!retain) trellis.par.set(canonical.theme(name=.Device, color=color))
 
     ## get theme as list
-    if (!is.null(theme) && !is.list(theme)) {
+    if (!is.null(theme) && !is.list(theme))
+    {
         if (is.character(theme)) theme <- get(theme)
         if (is.function(theme)) theme <- theme()
-        if (!is.list(theme)) {
+        if (!is.list(theme))
+        {
             warning("Invalid theme specified")
             theme <- NULL
         }
     }
 
-    ## apply theme and background
-    if (!is.null(theme)) lset(theme)
-    if (!is.null(bg)) lset(list(background = list(col = bg)))
+    ## apply theme 
+    if (!is.null(theme)) trellis.par.set(theme)
+##    if (!is.null(bg)) trellis.par.set(list(background = list(col = bg)))
     return(invisible())
 }
 
@@ -281,12 +354,15 @@ trellis.device <-
 
 lset <- function(theme = col.whitebg())
 {
-    for (item in names(theme)) {
-        foo <- trellis.par.get(item)
-        bar <- theme[[item]]
-        foo[names(bar)] <- bar
-        trellis.par.set(item, foo)
-    }
+    .Deprecated("trellis.par.set")
+    trellis.par.set(theme = theme)
+#     for (item in names(theme))
+#     {
+#         foo <- trellis.par.get(item)
+#         bar <- theme[[item]]
+#         foo[names(bar)] <- bar
+#         trellis.par.set(item, foo)
+#     }
 }
 
 
@@ -324,19 +400,20 @@ show.settings <- function(x = NULL)
         page.layout <- grid.layout(nrow = n.row, ncol = n.col,
                                    widths = unit(widths.x, widths.units),
                                    heights = unit(heights.x, heights.units))
-        if (!get(".lattice.print.more", envir=.LatticeEnv)) grid.newpage()
-        assign(".lattice.print.more", FALSE, envir=.LatticeEnv)
+        if (!lattice.getStatus("print.more")) grid.newpage()
+        lattice.setStatus(print.more = FALSE)
         grid.rect(gp = gpar(fill = theme$background$col,
                   col = "transparent"))
         pushViewport(viewport(layout = page.layout,
-                               gp = gpar(fontsize = theme$fontsize$text)))
+                              gp = gpar(fontsize = theme$fontsize$text)))
         superpose.symbol <- theme$superpose.symbol
         len <- length(superpose.symbol$col)
         pushViewport(viewport(layout.pos.row = 2,
-                               layout.pos.col = 2,
-                               yscale = c(0,len+1),
-                               xscale = c(0,len+1)))
-        for (i in 1:len) {
+                              layout.pos.col = 2,
+                              yscale = c(0,len+1),
+                              xscale = c(0,len+1)))
+        for (i in 1:len)
+        {
             lpoints(y = rep(i, len), x = 1:len,
                     col = superpose.symbol$col[i],
                     cex = superpose.symbol$cex[i],
@@ -503,9 +580,9 @@ show.settings <- function(x = NULL)
                   vp = viewport(layout.pos.row = 9, layout.pos.col = 2))
         bar.fill <- theme$bar.fill
         pushViewport(viewport(layout.pos.row = 8,
-                               layout.pos.col = 4,
-                               yscale = extend.limits(c(0,6)),
-                               xscale = extend.limits(c(1,10))))
+                              layout.pos.col = 4,
+                              yscale = extend.limits(c(0,6)),
+                              xscale = extend.limits(c(1,10))))
         grid.rect(x = c(3.5, 4.5, 5.5, 6.5, 7.5), w = rep(5,5),
                   y = c(1,2,3,4,5), h = rep(.5, ,5),
                   default.units = "native",
@@ -515,9 +592,9 @@ show.settings <- function(x = NULL)
         grid.text(lab = "plot.shingle[bar.fill]",
                   vp = viewport(layout.pos.row = 9, layout.pos.col = 4))
         pushViewport(viewport(layout.pos.row = 8,
-                               layout.pos.col = 6,
-                               yscale = extend.limits(c(0,7)),
-                               xscale = extend.limits(c(0,7))))
+                              layout.pos.col = 6,
+                              yscale = extend.limits(c(0,7)),
+                              xscale = extend.limits(c(0,7))))
         grid.rect(y = c(.5, 1, 1.5, 2, 2.5, 3, 3.5), w = rep(1,7),
                   x = c(.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5), h = 1:7,
                   default.units = "native",
@@ -569,25 +646,155 @@ lattice.getOption <- function(name)
     get("lattice.options", envir = .LatticeEnv)[[name]]
 }
 
+
+## FIXME: lattice.options(foo == 1) doesn't work?
 lattice.options <- function(...)
 {
+    ## this would have been really simple if only form allowed were
+    ## lattice.options("foo", "bar") and
+    ## lattice.options(foo=1, bar=2). But it could also be
+    ## lattice.options(foo=1, "bar"), which makes some juggling necessary
+    
     new <- list(...)
-    if (length(new) == 1 && is.list(new[[1]])) new <- new[[1]]
-    print(new)
+    if (is.null(names(new)) && length(new) == 1 && is.list(new[[1]])) new <- new[[1]]
     old <- .LatticeEnv$lattice.options
     ## any reason to prefer get("lattice.options", envir = .LatticeEnv)?
-    if (length(new) == 0) return(old) ## no args, returns full options list
+
+    ## if no args supplied, returns full options list
+    if (length(new) == 0) return(old) 
+
     nm <- names(new)
     if (is.null(nm)) return(old[unlist(new)]) ## typically getting opions, not setting
     isNamed <- nm != "" ## typically all named when setting, but could have mix
     if (any(!isNamed)) nm[!isNamed] <- unlist(new[!isNamed])
     ## so now everything has non-"" names, but only the isNamed ones should be set
     ## everything should be returned, however
+
     retVal <- old[nm]
     names(retVal) <- nm
     nm <- nm[isNamed]
-    .LatticeEnv$lattice.options[nm] <- new[nm]
-    retVal
+    modified <- updateList(retVal[nm], new[nm])
+    .LatticeEnv$lattice.options[names(modified)] <- modified
+    invisible(retVal)
 }
 
+
+
+.defaultLatticeOptions <- function()
+    list(save.object = TRUE,
+         drop.unused.levels = list(cond = TRUE, data = TRUE),
+         default.theme = getOption("lattice.theme"), ## for back compatibility, usually NULL
+         axis.padding = list(numeric = 0.07, factor = 0.6),
+
+         ## extends limits by this amount, to provide padding for
+         ## numeric and factor scales respectively. Note that the
+         ## value for numeric is multiplicative, while factor is
+         ## additive
+
+         axis.units =
+         list(outer =
+              list(left =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm")),
+                   top =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm")),
+                   right =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm")),
+                   bottom =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm"))),
+
+              inner =
+              list(left =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm")),
+                   top =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm")),
+                   right =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm")),
+                   bottom =
+                   list(tick = list(x = 2, units = "mm"),
+                        pad1 = list(x = 2, units = "mm"),
+                        pad2 = list(x = 2, units = "mm")))),
+
+
+         layout.heights =
+         list(top.padding = list(x = 2, units = "mm", data = NULL),
+              main = list(x = 0, units = "grobheight", data = textGrob(lab="")),
+              main.key.padding = list(x = 2, units = "mm", data = NULL),
+              key.top = list(x = 0, units = "grobheight", data = textGrob(lab="")),
+              key.axis.padding = list(x = 2, units = "mm", data = NULL),
+              axis.top = list(x = 0, units = "mm", data = NULL),
+              strip = list(x = 1, units = "lines", data = NULL),
+              panel = list(x = 1, units = "null", data = NULL),
+              axis.panel = list(x = 0, units = "mm", data = NULL),
+              between = list(x = 5, units = "mm", data = NULL),
+              axis.bottom = list(x = 0, units = "mm", data = NULL),
+              axis.xlab.padding = list(x = 2, units = "mm", data = NULL),
+              xlab = list(x = 0, units = "grobheight", data = textGrob(lab="")),
+              xlab.key.padding = list(x = 2, units = "mm", data = NULL),
+              key.bottom = list(x = 0, units = "grobheight", data = textGrob(lab="")),
+              key.sub.padding = list(x = 2, units = "mm", data = NULL),
+              sub = list(x = 0, units = "grobheight", data = textGrob(lab="")),
+              bottom.padding = list(x = 2, units = "mm", data = NULL)),
+         layout.widths =
+         list(left.padding = list(x = 2, units = "mm", data = NULL),
+              key.left = list(x = 0, units = "grobwidth", data = textGrob(lab="")),
+              key.ylab.padding = list(x = 2, units = "mm", data = NULL),
+              ylab = list(x = 0, units = "grobheight", data = textGrob(lab="")),
+              ylab.axis.padding = list(x = 2, units = "mm", data = NULL),
+              axis.left = list(x = 0, units = "mm", data = NULL),
+              axis.panel = list(x = 0, units = "mm", data = NULL),
+              panel = list(x = 1, units = "null", data = NULL),
+              between = list(x = 5, units = "mm", data = NULL),
+              axis.right = list(x = 0, units = "mm", data = NULL),
+              axis.key.padding = list(x = 2, units = "mm", data = NULL),
+              key.right = list(x = 0, units = "grobwidth", data = textGrob(lab="")),
+              right.padding = list(x = 2, units = "mm", data = NULL)),
+
+         highlight.gpar = list(col = "red", lwd = 2)
+
+         )
+
+
+
+
+
+
+lattice.getStatus <- function(name)
+    get("lattice.status", envir = .LatticeEnv)[[name]]
+
+lattice.setStatus <- function (...) 
+{
+    dots <- list(...)
+    if (is.null(names(dots)) && length(dots) == 1 && is.list(dots[[1]]))
+        dots <- dots[[1]]
+    if (length(dots) == 0) 
+        return()
+    lattice.status <- get("lattice.status", envir = .LatticeEnv)
+    lattice.status[names(dots)] <- dots
+    assign("lattice.status", lattice.status, env = .LatticeEnv)
+}
+    
+
+
+
+.defaultLatticeStatus <- function()
+    list(print.more = FALSE,
+         current.plot.saved = FALSE,
+         current.plot.multipage = FALSE,
+         current.focus.row = 0,
+         current.focus.column = 0,
+         vp.highlighted = FALSE)
 

@@ -1,13 +1,14 @@
 
+require(grid)
+old.prompt <- grid.prompt(TRUE)
 
-opar <- par(ask = TRUE)
 
 ## store current settings, to be restored later
 
 old.settings <- trellis.par.get()
 
 ## changing settings to new 'theme'
-lset(theme = col.whitebg())
+trellis.par.set(theme = col.whitebg())
 
 ## simulated example, histogram and kernel density estimate superposed
 x <- rnorm(500)
@@ -20,7 +21,7 @@ histogram(x, type = "density",
 
 ## Using a custom panel function to superpose a fitted normal density
 ## on a Kernel Density Estimate
-data(singer)
+
 densityplot( ~ height | voice.part, data = singer, layout = c(2, 4),  
             xlab = "Height (inches)",
             ylab = "Kernel Density\n with Normal Fit",
@@ -32,7 +33,7 @@ densityplot( ~ height | voice.part, data = singer, layout = c(2, 4),
             } )
 
 ## user defined panel functions and fonts
-data(state)
+
 states <- data.frame(state.x77,
                      state.name = dimnames(state.x77)[[1]], 
                      state.region = factor(state.region)) 
@@ -48,9 +49,9 @@ xyplot(Murder ~ Population | state.region, data = states,
        main = list("Murder Rates in US states", col = "brown", font = 4))
 
 ##graphical parameters for xlab etc can also be changed permanently
-lset(list(par.xlab.text = list(font = 2),
-          par.ylab.text = list(font = 2),
-          par.main.text = list(font = 4, col = "brown")))
+trellis.par.set(list(par.xlab.text = list(font = 2),
+                     par.ylab.text = list(font = 2),
+                     par.main.text = list(font = 4, col = "brown")))
 
 ## Same with some multiple line text
 levels(states$state.region) <-
@@ -66,15 +67,15 @@ xyplot(Murder  ~ Population | state.region, data = states,
        main = "Murder Rates in US states")
 
 ##setting these back to their defaults
-lset(list(par.xlab.text = list(font = 1),
-          par.ylab.text = list(font = 1),
-          par.main.text = list(font = 2, col = "black")))
+trellis.par.set(list(par.xlab.text = list(font = 1),
+                     par.ylab.text = list(font = 1),
+                     par.main.text = list(font = 2, col = "black")))
 
 
 ##levelplot
-data(volcano)
+
 levelplot(volcano, colorkey = list(space = "top"),
-          sub = "Maunga Whau volcano")
+          sub = "Maunga Whau volcano", aspect = "iso")
 
 ## wireframe
 wireframe(volcano, shade = TRUE,
@@ -100,7 +101,7 @@ wireframe(zzz ~ xx * yy, shade = TRUE, light.source = c(3,3,3))
 
 
 ## Example with panel.superpose. 
-data(iris)
+
 xyplot(Petal.Length~Petal.Width, data = iris, groups=Species, 
        panel = panel.superpose,
        type = c("p", "smooth"), span=.75,
@@ -144,8 +145,53 @@ xyplot(y~x | a, aspect = "fill",
        sub=expression(frac(demonstrating, expressions)))
 
 
+## grob's as xlab, ylab 
 
-lset(theme = old.settings)
+qq(gl(2, 100) ~ c(runif(100, min = -2, max = 2), rnorm(100)),
+   xlab =
+   textGrob(rep("Uniform", 2), 
+            x = unit(.5, "npc") + unit(c(.5, 0), "mm"),
+            y = unit(.5, "npc") + unit(c(0, .5), "mm"),
+            gp = gpar(col = c("black", "red"), cex = 3)),
+   ylab =
+   textGrob(rep("Normal", 2), rot = 90,
+            x = unit(.5, "npc") + unit(c(.5, 0), "mm"),
+            y = unit(.5, "npc") + unit(c(0, .5), "mm"),
+            gp = gpar(col = c("black", "red"), cex = 3)),
+   main = "Q-Q plot")
 
-par(opar)
+
+## non-trivial strip function
+
+barchart(variety ~ yield | year * site, barley,
+         layout = c(4, 3),
+         between = list(x = c(0, 0.5, 0)),
+         strip =
+         function(which.given,
+                  which.panel,
+                  factor.levels,
+                  bg = trellis.par.get("strip.background")$col[which.given],
+                  ...) {
+             if (which.given == 1)
+             {
+                 grid.rect(x = .26, just = "right",
+                           gp = gpar(fill = bg, col = "transparent"))
+                 ltext(factor.levels[which.panel[which.given]],
+                       x = .24, y = .5, adj = 1)
+             }
+             if (which.given == 2)
+             {
+                 grid.rect(x = .26, just = "left",
+                           gp = gpar(fill = bg, col = "transparent"))
+                 ltext(factor.levels[which.panel[which.given]],
+                       x = .28, y = .5, adj = 0)
+             }
+             grid.rect()
+         }, par.strip.text = list(lines = 0.4))
+
+
+trellis.par.set(theme = old.settings)
+
+grid.prompt(old.prompt)
+
 

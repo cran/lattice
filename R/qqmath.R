@@ -78,8 +78,9 @@ qqmath <-
 ###          f.value = ppoints,
              f.value = NULL,
              distribution = qnorm,
-             drop.unused.levels = TRUE,
+             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
+             default.scales = list(),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -159,6 +160,7 @@ qqmath <-
 
     ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
+    scales <- updateList(default.scales, scales)
     foo <- c(foo, 
              do.call("construct.scales", scales))
 
@@ -180,7 +182,8 @@ qqmath <-
 
     have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
     have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
-    if (have.xlog) {
+    if (have.xlog)
+    {
         xlog <- foo$x.scales$log
         xbase <-
             if (is.logical(xlog)) 10
@@ -235,7 +238,8 @@ qqmath <-
                     levels(var)[[cond.current.level[i]]][2]))
             else (as.numeric(var) == cond.current.level[i])
         }
-        if (any(id)) {
+        if (any(id))
+        {
             foo$panel.args[[panel.number]] <-
                 if (is.null(f.value)) # exact data instead of quantiles
                     list(x = distribution(ppoints(length(x[id]))), 

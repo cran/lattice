@@ -9,7 +9,8 @@ qq(formula, data = parent.frame(), aspect = "fill",
     panel = panel.qq, prepanel = NULL, scales = list(), strip = TRUE, 
     groups = NULL, xlab, xlim, ylab, ylim, f.value = NULL, 
     drop.unused.levels,
-    ..., subscripts = !is.null(groups), subset = TRUE)
+    ..., default.scales,
+    subscripts = !is.null(groups), subset = TRUE)
 }
 \usage{
 qq(formula, f.value = NULL, ...)
@@ -60,7 +61,6 @@ qq(formula, f.value = NULL, ...)
 }
 
 \examples{
-data(singer)
 qq(voice.part ~ height, aspect = 1, data = singer,
    subset = (voice.part == "Bass 2" | voice.part == "Tenor 1"))
 }

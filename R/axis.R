@@ -72,14 +72,13 @@ calculateAxisComponents <- function(x, ..., abbreviate = NULL, minlength = 4)
 
 
 formattedTicksAndLabels <- function(x, ...)
-
     UseMethod("formattedTicksAndLabels")
 
 
 
 
 formattedTicksAndLabels.default <-
-    function (x, at = FALSE, labels = FALSE, logsc = FALSE,
+    function (x, at = FALSE, used.at = NULL, num.limit = NULL, labels = FALSE, logsc = FALSE,
               abbreviate = NULL, minlength = 4, format.posixt, ...)
 
     ## meant for when x is numeric
@@ -128,7 +127,7 @@ formattedTicksAndLabels.default <-
 
 
 formattedTicksAndLabels.date <-
-    function (x, at = FALSE, labels = FALSE, logsc = FALSE,
+    function (x, at = FALSE, used.at = NULL, num.limit = NULL, labels = FALSE, logsc = FALSE,
               abbreviate = NULL, minlength = 4, format.posixt, ...)
 {
     ## handle log scales (not very meaningful, though)
@@ -170,13 +169,16 @@ formattedTicksAndLabels.date <-
 
 
 formattedTicksAndLabels.character <-
-    function (x, at = FALSE, labels = FALSE, logsc = FALSE,
+    function (x, at = FALSE, used.at = NULL, num.limit = NULL, labels = FALSE, logsc = FALSE,
               abbreviate = NULL, minlength = 4, format.posixt, ...)
 {
-    ans <- list(at = if (is.logical(at)) seq(along = x) else at,
-                labels = if (is.logical(labels)) x else labels,
+    retain <- if (is.null(used.at) || any(is.na(used.at))) TRUE else used.at
+    ans <- list(at = if (is.logical(at)) seq(along = x)[retain] else at,
+                labels = if (is.logical(labels)) x[retain] else labels,
                 check.overlap = FALSE)
-    ans$num.limit <- c(0, length(ans$at) + 1)
+    ans$num.limit <- c(-1, 1) * lattice.getOption("axis.padding")$factor + 
+        if (is.null(num.limit) || any(is.na(num.limit))) range(ans$at)
+        else num.limit
     ans
 }
 
@@ -186,13 +188,16 @@ formattedTicksAndLabels.character <-
 
 
 formattedTicksAndLabels.expression <-
-    function (x, at = FALSE, labels = FALSE, logsc = FALSE,
+    function (x, at = FALSE, used.at = NULL, num.limit = NULL, labels = FALSE, logsc = FALSE,
               abbreviate = NULL, minlength = 4, format.posixt, ...)
 {
-    ans <- list(at = if (is.logical(at)) seq(along = x) else at,
-                labels = if (is.logical(labels)) x else labels,
+    retain <- if (is.null(used.at) || any(is.na(used.at))) TRUE else used.at
+    ans <- list(at = if (is.logical(at)) seq(along = x)[retain] else at,
+                labels = if (is.logical(labels)) x[retain] else labels,
                 check.overlap = FALSE)
-    ans$num.limit <- c(0, length(ans$at) + 1)
+    ans$num.limit <- c(-1, 1) * lattice.getOption("axis.padding")$factor + 
+        if (is.null(num.limit) || any(is.na(num.limit))) range(ans$at)
+        else num.limit
     ans
 }
 
@@ -201,7 +206,7 @@ formattedTicksAndLabels.expression <-
 
 
 formattedTicksAndLabels.POSIXct <-
-    function (x, at = FALSE, labels = FALSE, logsc = FALSE, 
+    function (x, at = FALSE, used.at = NULL, num.limit = NULL, labels = FALSE, logsc = FALSE, 
               abbreviate = NULL, minlength = 4,
               format.posixt = NULL, ...) 
 {
@@ -283,5 +288,211 @@ formattedTicksAndLabels.POSIXct <-
          check.overlap = FALSE,
          num.limit = num.lim)
 }
+
+
+
+
+
+
+
+
+
+panel.axis <-
+    function(side = c("bottom", "left", "top", "right"),
+             at = pretty(scale.range),
+             labels = TRUE,
+             draw.labels = TRUE,
+             check.overlap = FALSE,
+             outside = FALSE,
+             tick = TRUE,
+             half = !outside, ## whether only half of the ticks will be labeled
+             which.half = switch(side, bottom = "lower", left = "upper", top = "upper", right = "lower"),
+
+             tck = as.numeric(tick),
+             rot = if (is.logical(labels)) 0 else c(90, 0),
+
+             text.col = axis.text$col,
+             text.alpha = axis.text$alpha,
+             text.cex = axis.text$cex,
+             text.font = axis.text$font,
+             text.fontfamily = axis.text$fontfamily,
+             text.fontface = axis.text$fontface,
+
+             line.col = axis.line$col,
+             line.lty = axis.line$lty,
+             line.lwd = axis.line$lwd,
+             line.alpha = axis.line$alpha)
+{
+    side <- match.arg(side)
+    orientation <- if (outside) "outer" else "inner"
+    cvp <- current.viewport() ## grid should have accessors for xscale and yscale
+    scale.range <-
+        range(switch(side,
+                     left = cvp$yscale,
+                     top = cvp$xscale,
+                     right = cvp$yscale,
+                     bottom = cvp$xscale))
+
+    axis.line <- trellis.par.get("axis.line")
+    axis.text <- trellis.par.get("axis.text")
+    rot <- rep(rot, length = 2) ## for x- and y-axes respectively
+
+#    if (missing(at) || is.null(at))
+#    {
+#        
+#        warning("nothing to draw if at not specified")
+#        return()
+#    }
+
+    if (is.null(at) || length(at) == 0) return()
+    keep.at <- TRUE
+    if (check.overlap) ## remove ticks close to limits
+    {
+        pad <- lattice.getOption("axis.padding")$numeric
+        scale.range <-
+            extend.limits(scale.range,
+                          prop = - 0.99 * pad / (1 + 2 * pad))
+
+        ## This 'just' includes the original range, assuming scales
+        ## were extended in the usual manner.  This is not exactly
+        ## what axis.padding was designed for, but it should be a good
+        ## enough default.  Of course, we can always add a new option
+        ## specially for this, but right now that seems overkill.
+
+        keep.at <- at >= scale.range[1] & at <= scale.range[2]
+    }
+
+    if (is.logical(labels))
+        labels <-
+            if (labels) format(at, trim = TRUE)
+            else NULL
+
+    at <- at[keep.at]
+    labels <- labels[keep.at]
+
+    nal <- length(at) / 2 + 0.5
+    all.id <- seq(along = at)
+    lower.id <- all.id <= nal
+    upper.id <- all.id >= nal
+    axid <-
+        if (half)
+        {
+            if (which.half == "lower") lower.id else upper.id
+        }
+        else all.id
+
+    gp.line <- gpar(col = line.col, alpha = line.alpha,
+                    lty = line.lty, lwd = line.lwd)
+    gp.text <- gpar(col = text.col, cex = text.cex, alpha = text.alpha,
+                    fontface = chooseFace(text.fontface, text.font),
+                    fontfamily = text.fontfamily)
+
+    ## We now compute some spacing information based on settings
+    ## (combining trellis settings and the (newer) lattice.options).
+    ## These can only be controlled via these settings and not by
+    ## arguments to this function, for convenience for one thing, and
+    ## also because the same settings will be used elsewhere to leave
+    ## appropriate space.
+
+
+    ## unit representing tick marks
+
+    axis.units <- lattice.getOption("axis.units")[[orientation]][[side]]
+    ## axis.units is of the form:
+    ##     list(outer = list(left = list(tick=, pad1=, pad2=), top = list(...), ...),
+    ##          inner = list(...) )
+    axis.settings <- trellis.par.get("axis.components")[[side]]
+
+    tck.unit.x <- tck * axis.settings$tck * axis.units$tick$x
+    tck.unit <- unit(x = tck.unit.x, units = axis.units$tick$units)
+    lab.unit <-
+        if (tck.unit.x > 0) tck.unit + unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
+        else unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
+    orient.factor <- if (outside) -1 else 1
+
+    switch(side, 
+           bottom = 
+           grid.segments(x0 = unit(at[axid], "native"),
+                         x1 = unit(at[axid], "native"),
+                         y0 = unit(0, "npc"),
+                         y1 = orient.factor * tck.unit,
+                         gp = gp.line),
+           top = 
+           grid.segments(x0 = unit(at[axid], "native"),
+                         x1 = unit(at[axid], "native"),
+                         y0 = unit(1, "npc"),
+                         y1 = unit(1, "npc") - orient.factor * tck.unit,
+                         gp = gp.line),
+           left = 
+           grid.segments(y0 = unit(at[axid], "native"),
+                         y1 = unit(at[axid], "native"),
+                         x0 = unit(0, "npc"),
+                         x1 = orient.factor * tck.unit,
+                         gp = gp.line),
+           right =
+           grid.segments(y0 = unit(at[axid], "native"),
+                         y1 = unit(at[axid], "native"),
+                         x0 = unit(1, "npc"),
+                         x1 = unit(1, "npc") - orient.factor * tck.unit,
+                         gp = gp.line))
+
+    if (draw.labels && !is.null(labels))
+    {
+        
+        {
+            just <-
+                if (outside)
+                    switch(side,
+                           bottom = if (rot[1] == 0) c("centre", "top") else c("right", "centre"),
+                           top = if (rot[1] == 0) c("centre", "bottom") else c("left", "centre"),
+                           left = if (rot[2] == 90) c("centre", "bottom") else c("right", "centre"),
+                           right = if (rot[2] == 90) c("centre", "top") else c("left", "centre"))
+                else
+                    switch(side,
+                           bottom = if (rot[1] == 0) c("centre", "bottom") else c("left", "centre"),
+                           top = if (rot[1] == 0) c("centre", "top") else c("right", "centre"),
+                           left = if (rot[2] == 90) c("centre", "top") else c("left", "centre"),
+                           right = if (rot[2] == 90) c("centre", "bottom") else c("right", "centre"))
+        }
+        switch(side,
+               bottom =
+               grid.text(label = labels[axid],
+                         x = unit(at[axid], "native"),
+                         y = orient.factor * lab.unit,
+                         rot = rot[1],
+                         check.overlap = check.overlap,
+                         just = just,
+                         gp = gp.text),
+               top =
+               grid.text(label = labels[axid],
+                         x = unit(at[axid], "native"),
+                         y = unit(1, "npc") - orient.factor * lab.unit,
+                         rot = rot[1],
+                         check.overlap = check.overlap,
+                         just = just,
+                         gp = gp.text),
+               left =
+               grid.text(label = labels[axid],
+                         y = unit(at[axid], "native"),
+                         x = orient.factor * lab.unit,
+                         rot = rot[2],
+                         check.overlap = check.overlap,
+                         just = just,
+                         gp = gp.text),
+               right =
+               grid.text(label = labels[axid],
+                         y = unit(at[axid], "native"),
+                         x = unit(1, "npc") - orient.factor * lab.unit,
+                         rot = rot[2],
+                         check.overlap = check.overlap,
+                         just = just,
+                         gp = gp.text))
+    }
+    return()
+}
+
+
+
+
 
 

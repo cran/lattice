@@ -388,7 +388,7 @@ banking <- function(dx, dy = 1)
 
 extend.limits <-
     function(lim, length=1, axs = "r",
-             prop = if (axs == "i") 0 else 0.07)
+             prop = if (axs == "i") 0 else lattice.getOption("axis.padding")$numeric)
 {
     if (!is.numeric(lim)) NA
     else if(length(lim)==2) {
@@ -408,7 +408,7 @@ extend.limits <-
     }
     else {
         print(lim)
-        stop("improper length of lim in extend.limits")
+        stop("improper length of lim")
     }
 }
 
@@ -605,43 +605,3 @@ compute.layout <-
 
 
 
-
-
-
-construct.legend <-
-    function(legend = NULL, key = NULL, fun = "draw.key")
-{
-    if (is.null(legend) && is.null(key)) return(NULL)
-
-    if (is.null(legend)) legend <- list()
-
-    if (!is.null(key))
-    {
-        space <- key$space
-        x <- y <- corner <- NULL
-
-        if (is.null(space))
-            {
-                if (any(c("x", "y", "corner") %in% names(key)))
-                {
-                    space <- "inside"
-                    x <- key$x
-                    y <- key$y
-                    corner <- key$corner
-                }
-                else
-                    space <- "top"
-            }
-        if (space != "inside" && space %in% names(legend))
-            stop(paste("component", space, "duplicated in key and legend"))
-
-        key.legend <- list(fun = fun, args = list(key = key, draw = FALSE))
-        key.legend$x <- x
-        key.legend$y <- y
-        key.legend$corner <- corner
-
-        legend <- c(list(key.legend), legend)
-        names(legend)[1] <- space
-    }
-    legend
-}

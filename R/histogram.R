@@ -157,8 +157,9 @@ histogram <-
              breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
              else do.breaks(endpoints, nint),
              equal.widths = TRUE,
-             drop.unused.levels = TRUE,
+             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
+             default.scales = list(),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -242,6 +243,7 @@ histogram <-
 
     ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
+    scales <- updateList(default.scales, scales)
     foo <- c(foo,
              do.call("construct.scales", scales))
 

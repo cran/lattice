@@ -20,6 +20,7 @@ splom(formula,
              varnames,
              drop.unused.levels,
              ...,
+             default.scales,
              subset = TRUE)
 parallel(formula,
              data = parent.frame(),
@@ -37,6 +38,7 @@ parallel(formula,
              varnames,
              drop.unused.levels,
              ...,
+             default.scales,
              subset = TRUE)
 }
 \usage{
@@ -144,7 +146,6 @@ parallel(formula,
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
-data(iris)
 super.sym <- trellis.par.get("superpose.symbol")
 splom(~iris[1:4], groups = Species, data = iris,
       panel = panel.superpose,

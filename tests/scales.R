@@ -4,6 +4,29 @@ postscript("scales.ps")
 library(lattice)
 
 
+
+## relation = "free" for factors
+
+dat <- data.frame(a=letters[1:5], b=c("A","A","A","B","B"), y=1:5) 
+dotplot(y ~ a | b, data=dat, scales = "same") 
+dotplot(y ~ a | b, data=dat, scales = "free") 
+dotplot(y ~ a | b, data=dat, scales = "sliced") 
+
+
+
+dat <- data.frame(a=letters[1:10], b=c("A","A","A","B","B", "A", "B", "B", "A", "A"))
+dat <- dat[sample(1:10, 200, rep = TRUE), ]
+dat$y <- rnorm(200, mean = unclass(dat$a))
+
+bwplot(a ~ y | b, data=dat, scales = "same") 
+bwplot(a ~ y | b, data=dat, scales = "free") 
+bwplot(a ~ y | b, data=dat, scales = "sliced") 
+
+
+
+
+
+
 ## text axis colors
 
 xyplot(1:10 ~ 1:10,

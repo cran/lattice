@@ -93,8 +93,9 @@ parallel <-
              ylab = NULL,
              ylim,
              varnames,
-             drop.unused.levels = TRUE,
+             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
+             default.scales = list(y = list(alternating = FALSE)),
              subset = TRUE)
 {
 
@@ -193,11 +194,12 @@ parallel <-
     
     ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
-    if (is.null(scales$alternating)) {
-        if (is.null(scales$y)) scales$y <- list(alternating = FALSE)
-        else if (is.null(scales$y$alternating)) scales$y$alternating <- FALSE
-        ## bug if y="free" but who cares
-    }
+#     if (is.null(scales$alternating)) {
+#         if (is.null(scales$y)) scales$y <- list(alternating = FALSE)
+#         else if (is.null(scales$y$alternating)) scales$y$alternating <- FALSE
+#         ## bug if y="free" but who cares
+#     }
+    scales <- updateList(default.scales, scales)
     foo <- c(foo, 
              do.call("construct.scales", scales))
 

@@ -1,16 +1,17 @@
 \name{print.trellis}
+\alias{print.trellis}
 \title{Print Trellis Objects}
 \usage{
 \method{print}{trellis}(x, position, split,
      more = FALSE, newpage = TRUE,
-     panel.height = list(1, "null"),
-     panel.width = list(1, "null"),
-     ...)
+     panel.height = lattice.getOption("layout.heights")$panel,
+     panel.width = lattice.getOption("layout.widths")$panel,
+     save.object = lattice.getOption("save.object"),
+     \dots)
 }
 \description{
   Print (plot) a trellis object.
 }
-\alias{print.trellis}
 \arguments{
   \item{x}{ The object to be plotted, of class ``trellis''}
   \item{position}{ a vector of 4 numbers, typically c(xmin, ymin, xmax,
@@ -43,6 +44,17 @@
     non-default values of the \code{aspect} argument in the original
     high level call (no error will be produced, but the resulting
     behaviour is undefined).
+  }
+  \item{save.object}{
+    logical, specifying whether the object being printed is to be
+    saved.  The last object thus saved can be subsequently retrieved.
+    This is an experimental feature that should allow access to a
+    panel's data after the plot is done, making it possible to enhance
+    the plot after the fact.  This also allows the user to invoke the
+    \code{update} method on the current plot, even if it was not
+    assigned to a variable explicitly.
+
+    Note that there is no actual public API yet to do these things.
   }
   \item{\dots}{extra arguments, ignored}
 }
@@ -88,12 +100,12 @@
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
-data(singer)
+
 p11 <- histogram( ~ height | voice.part, data = singer, xlab="Height")
 p12 <- densityplot( ~ height | voice.part, data = singer, xlab = "Height")
 p2 <- histogram( ~ height, data = singer, xlab = "Height")
-data(sunspot)
-p3 <- xyplot(sunspot~1:37, aspect="xy", type = "l")
+
+
 ## simple positioning by split
 print(p11, split=c(1,1,1,2), more=TRUE)
 print(p2, split=c(1,2,1,2))
@@ -101,13 +113,13 @@ print(p2, split=c(1,2,1,2))
 ## Combining split and position:
 print(p11, position = c(0,0,.75,.75), split=c(1,1,1,2), more=TRUE)
 print(p12, position = c(0,0,.75,.75), split=c(1,2,1,2), more=TRUE)
-print(p3, position = c(.5,.75,1,1), more=FALSE)
+print(p2, position = c(.5,.75,1,1), more=FALSE)
 
 ## Using seekViewport
-data(longley)
 
 ## repeat same plot, with different polynomial fits in each panel
 xyplot(Armed.Forces ~ Year, longley, index.cond = list(rep(1, 6)),
+       layout = c(3, 2),
        panel = function(x, y, panel.counter, ...)
        {
            panel.xyplot(x, y, ...)
@@ -116,27 +128,27 @@ xyplot(Armed.Forces ~ Year, longley, index.cond = list(rep(1, 6)),
        })
 
 \dontrun{
-grid::seekViewport("panel.1")
+grid::seekViewport(trellis.vpname("panel", 1, 1))
 cat("Click somewhere inside the first panel:\n")
 ltext(grid::grid.locator(), lab = "linear")
 }
 
-grid::seekViewport("panel.1")
+grid::seekViewport(trellis.vpname("panel", 1, 1))
 grid::grid.text("linear")
 
-grid::seekViewport("panel.2")
+grid::seekViewport(trellis.vpname("panel", 2, 1))
 grid::grid.text("quadratic")
 
-grid::seekViewport("panel.3")
+grid::seekViewport(trellis.vpname("panel", 3, 1))
 grid::grid.text("cubic")
 
-grid::seekViewport("panel.4")
+grid::seekViewport(trellis.vpname("panel", 1, 2))
 grid::grid.text("degree 4")
 
-grid::seekViewport("panel.5")
+grid::seekViewport(trellis.vpname("panel", 2, 2))
 grid::grid.text("degree 5")
 
-grid::seekViewport("panel.6")
+grid::seekViewport(trellis.vpname("panel", 3, 2))
 grid::grid.text("degree 6")
 }
 \keyword{hplot}
