@@ -88,7 +88,6 @@ panel.identify <-
                 warning("nearest point already identified")
         }
     }
-    which(!unmarked)
 }
 
 
