@@ -70,7 +70,7 @@ panel.superpose.2(x, y, subscripts, groups, type="p", ...)
 \examples{
 data(barley)
 dotplot(variety ~ yield | site, barley, groups = year,
-        layout = c(1, 6), aspect = .5, pch = 16,
+        layout = c(1, 6), aspect = .5,
         col.line = c("grey", "transparent"),  
         panel = "panel.superpose",
         panel.groups = "panel.dotplot")

@@ -25,6 +25,7 @@
 prepanel.default.levelplot <-
     function(x, y, wx, wy, subscripts, ...)
 {
+    if (!any(x)) return(list(c(NA, NA), c(NA, NA), 1, 1))
     xlim <- range(x[subscripts] + wx[subscripts]/2,
                   x[subscripts] - wx[subscripts]/2)
     ylim <- range(y[subscripts] + wy[subscripts]/2,

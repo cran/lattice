@@ -25,10 +25,14 @@ prepanel.default.xyplot <-
     function(x, y, type, ...)
 {
     ord <- order(x)
-    list(xlim = range(x),
-         ylim = range(y),
-         dx = diff(x[ord]),
-         dy = diff(y[ord]))
+    if (any(x))
+        list(xlim = range(x),
+             ylim = range(y),
+             dx = diff(x[ord]),
+             dy = diff(y[ord]))
+    else list(c(NA, NA),
+              c(NA, NA),
+              1, 1)
 }
 
 

@@ -26,17 +26,22 @@ prepanel.default.bwplot <-
              horizontal = TRUE,
              levels.fos = length(unique(y)), ...)
 {
-    temp <- .5  #* box.ratio/(box.ratio+1)
-    if (horizontal)
-        list(xlim = range(x[is.finite(x)]),
-             ylim = c(1-temp, levels.fos + temp),
-             dx = 1,
-             dy = 1)
-    else 
-        list(xlim = c(1-temp, levels.fos + temp),
-             ylim = range(y[is.finite(y)]),
-             dx = 1,
-             dy = 1)
+    if (any(x)) {
+        temp <- .5  #* box.ratio/(box.ratio+1)
+        if (horizontal)
+            list(xlim = range(x[is.finite(x)]),
+                 ylim = c(1-temp, levels.fos + temp),
+                 dx = 1,
+                 dy = 1)
+        else 
+            list(xlim = c(1-temp, levels.fos + temp),
+                 ylim = range(y[is.finite(y)]),
+                 dx = 1,
+                 dy = 1)
+    }
+    else list(c(NA, NA),
+              c(NA, NA),
+              1, 1)
 }
 
 

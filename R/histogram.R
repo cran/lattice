@@ -36,8 +36,8 @@ prepanel.default.histogram <-
     if (length(x)<1)
         list(xlim = NA,
              ylim = NA,
-             dx = NA,
-             dy = NA)
+             dx = 1,
+             dy = 1)
     else
     {
         if (is.null(breaks)) {

@@ -235,6 +235,7 @@ construct.3d.scales <-
                  relation = relation)
     yfoo <- xfoo
     zfoo <- xfoo
+    distance <- rep(distance, length = 3)
     xfoo$distance <- distance[1]
     yfoo$distance <- distance[2]
     zfoo$distance <- distance[3]

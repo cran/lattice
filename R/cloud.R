@@ -173,9 +173,9 @@ panel.cloud <-
             if (is.logical(scales.3d$z.scales$at))
                 lpretty(zlim, scales.3d$z.scales$tick.number)
             else scales.3d$z.scales$at
-        x.at <- x.at[x.at >= xlim[1] & x.at < xlim[2]]
-        y.at <- y.at[y.at >= ylim[1] & y.at < ylim[2]]
-        z.at <- z.at[z.at >= zlim[1] & z.at < zlim[2]]
+        x.at <- x.at[x.at >= xlim[1] & x.at <= xlim[2]]
+        y.at <- y.at[y.at >= ylim[1] & y.at <= ylim[2]]
+        z.at <- z.at[z.at >= zlim[1] & z.at <= zlim[2]]
         x.at.lab <-
             if (is.logical(scales.3d$x.scales$labels))
                 as.character(x.at)
@@ -188,8 +188,6 @@ panel.cloud <-
             if (is.logical(scales.3d$z.scales$labels))
                 as.character(z.at)
             else as.character(scales.3d$z.scales$labels)
-
-    
 
         ## box ranges and lengths
         cmin <- lapply(corners, min)

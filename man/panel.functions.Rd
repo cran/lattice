@@ -1,4 +1,5 @@
 \name{panel.functions}
+\alias{panel.functions}
 \alias{panel.abline}
 \alias{panel.fill}
 \alias{panel.grid}

@@ -24,6 +24,7 @@
 prepanel.default.qq <-
     function(x, y, ...)
 {
+    if (!any(x)) return(list(c(NA, NA), c(NA, NA), 1, 1)) else
     list(xlim = range(x, y),
          ylim = range(x, y),
          dx = 1,
@@ -37,7 +38,7 @@ panel.qq <-
     function(...)
 {
     reference.line <- trellis.par.get("reference.line")
-    panel.abline(0,1,
+    panel.abline(0, 1,
                  col = reference.line$col,
                  lty = reference.line$lty,
                  lwd = reference.line$lwd)
@@ -111,7 +112,7 @@ qq <-
         else paste("y:", as.character(unique(levels(y)[[1]])))
     
     if(missing(ylab)) ylab <-
-        if (is.f.y) unique(levels(y))[y]
+        if (is.f.y) unique(levels(y))[2]
         else paste("y:", as.character(unique(levels(y)[[2]])))
 
 
@@ -138,7 +139,7 @@ qq <-
             else paste("y:", as.character(unique(levels(y)[[1]])))
     if (is.list(foo$ylab) && !is.character(foo$ylab$label))
         foo$ylab$label <-
-            if (is.f.y) unique(levels(y))[y]
+            if (is.f.y) unique(levels(y))[2]
             else paste("y:", as.character(unique(levels(y)[[2]])))
 
     ## Step 2: Compute scales.common (leaving out limits for now)

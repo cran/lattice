@@ -34,8 +34,8 @@ prepanel.default.densityplot <-
     if (length(x)<1)
         list(xlim = NA,
              ylim = NA,
-             dx = NA,
-             dy = NA)
+             dx = 1,
+             dy = 1)
     else
     {
         h <- do.call("density", c(list(x=x), darg))

@@ -821,10 +821,17 @@ print.trellis <-
         panel.aspect <- if(layout.respect) panel.height else 1
 
         plots.per.page <- x$layout[2]
-        m <- round(sqrt(x$layout[2] * device.aspect/panel.aspect))
-        n <- ceiling(x$layout[2]/m)
+        m <- max (1, round(sqrt(x$layout[2] * device.aspect/panel.aspect)))
+        ## changes made to fix bug (PR#1744)
+        n <- ceiling(plots.per.page/m)
+        m <- ceiling(plots.per.page/n)
         x$layout[1] <- n
         x$layout[2] <- m
+
+        #print(plots.per.page)
+        #print(panel.aspect)
+        #print(n)
+        #print(m)
     }
     else plots.per.page <- x$layout[1] * x$layout[2] 
 

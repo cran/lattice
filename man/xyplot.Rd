@@ -358,6 +358,11 @@ stripplot(formula, data, panel = "panel.stripplot",
     The return value of the prepanel function need not have all the
     components named above; in case some are missing, they are replaced
     by the usual componentwise defaults.
+
+    The prepanel function is responsible for providing a meaningful
+    return value when the \code{x, y} (etc.) variables are zero-length
+    vectors. When nothing is appropriate, values of NA should be
+    returned for the \code{xlim} and \code{ylim} components.
   }
   \item{scales}{ list determining how the x- and y-axes (tick marks and
     labels) are drawn. The list contains parameters in name=value form,
