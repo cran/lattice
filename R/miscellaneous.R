@@ -123,9 +123,13 @@ Rows <- function(x, which)
 }
 
 
-reorder.factor <- function(Factor, X, Function = mean, ...)
-    ordered(Factor,
-            levels = names(sort(tapply(X, Factor, Function, ...))))
+reorder.factor <- function(Factor, X, Function = mean,
+                           ..., 
+                           order = is.ordered(Factor))
+    (if (order) ordered else factor)(Factor,
+                                     levels = names(sort(tapply(X,
+                                     Factor, Function, ...))))
+
 
 
 
@@ -224,6 +228,7 @@ strip.default <-
              shingle.intervals,
              strip.names = c(FALSE, TRUE),
              style = 1,
+             ## FIXME: not sure how to incorporate alpha in strip colors
              bg = trellis.par.get("strip.background")$col[which.given],
              fg = trellis.par.get("strip.shingle")$col[which.given],
              par.strip.text = trellis.par.get("add.text"))
@@ -244,6 +249,7 @@ strip.default <-
             grid.text(label = name,
                       gp = 
                       gpar(col = par.strip.text$col,
+                           alpha = par.strip.text$alpha,
                            fontfamily = par.strip.text$fontfamily,
                            fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                            cex = par.strip.text$cex))
@@ -259,6 +265,7 @@ strip.default <-
                           x=unit(0.5, "npc") - unit(1, "mm"),
                           gp =
                           gpar(col = par.strip.text$col,
+                               alpha = par.strip.text$alpha,
                                fontfamily = par.strip.text$fontfamily,
                                fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                                cex = par.strip.text$cex),
@@ -267,6 +274,7 @@ strip.default <-
                           x=unit(0.5, "npc"),
                           gp =
                           gpar(col = par.strip.text$col,
+                               alpha = par.strip.text$alpha,
                                fontfamily = par.strip.text$fontfamily,
                                fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                                cex = par.strip.text$cex))
@@ -274,6 +282,7 @@ strip.default <-
                           x=unit(0.5, "npc") + unit(1, "mm"),
                           gp =
                           gpar(col = par.strip.text$col,
+                               alpha = par.strip.text$alpha,
                                fontfamily = par.strip.text$fontfamily,
                                fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                                cex = par.strip.text$cex),
@@ -282,6 +291,7 @@ strip.default <-
             else grid.text(label = x[level],
                            gp =
                            gpar(col = par.strip.text$col,
+                                alpha = par.strip.text$alpha,
                                 fontfamily = par.strip.text$fontfamily,
                                 fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                                 cex = par.strip.text$cex))
@@ -294,6 +304,7 @@ strip.default <-
                       x = (2*1:num-1)/(2*num),
                       gp =
                       gpar(col = par.strip.text$col,
+                           alpha = par.strip.text$alpha,
                            fontfamily = par.strip.text$fontfamily,
                            fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                            cex = par.strip.text$cex))
@@ -308,6 +319,7 @@ strip.default <-
                       else x[level],
                       gp =
                       gpar(col = par.strip.text$col, 
+                           alpha = par.strip.text$alpha,
                            fontfamily = par.strip.text$fontfamily,
                            fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                            cex = par.strip.text$cex))
@@ -321,6 +333,7 @@ strip.default <-
                       x = (2* 1:num - 1)/(2*num),   #using default.units
                       gp =
                       gpar(col = par.strip.text$col, 
+                           alpha = par.strip.text$alpha,
                            fontfamily = par.strip.text$fontfamily,
                            fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                            cex = par.strip.text$cex))
@@ -331,6 +344,7 @@ strip.default <-
                       x = (2* level - 1)/(2*num),   #using default.units
                       gp =
                       gpar(col = par.strip.text$col, 
+                           alpha = par.strip.text$alpha,
                            fontfamily = par.strip.text$fontfamily,
                            fontface = chooseFace(par.strip.text$fontface, par.strip.text$font),
                            cex = par.strip.text$cex))
@@ -347,6 +361,7 @@ strip.default <-
 lsegments <-
     function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
              col = add.line$col,
+             alpha = add.line$alpha,
              lty = add.line$lty,
              lwd = add.line$lwd, ...)
 {
@@ -362,7 +377,7 @@ lsegments <-
     grid.segments(x0 = x0, x1 = x1,
                   y0 = y0, y1 = y1,
                   gp = gpar(lty=lty,
-                  col=col, lwd=lwd),
+                  col=col, lwd=lwd, alpha = alpha),
                   default.units="native")
 }
 
@@ -406,6 +421,7 @@ larrows <-
 ltext <-
     function(x, y = NULL, labels = seq(along = x),
              col = add.text$col,
+             alpha = add.text$alpha,
              cex = add.text$cex,
              srt = 0,
              font = add.text$font,
@@ -447,7 +463,7 @@ ltext <-
     if (length(adj) == 1) adj <- c(adj, .5)
     grid.text(label = labels, x = ux, y = uy,
               gp =
-              gpar(col = col,
+              gpar(col = col, alpha = alpha, 
                    fontfamily = fontfamily,
                    fontface = chooseFace(fontface, font),
                    cex = cex),
@@ -467,12 +483,13 @@ ltext <-
 llines <-
     function(x, y = NULL, type = "l",
              col = plot.line$col,
+             alpha = plot.line$alpha,
              lty = plot.line$lty,
              lwd = plot.line$lwd, ...)
 {
     plot.line <- trellis.par.get("plot.line")
     lplot.xy(xy.coords(x, y), type = type,
-             col = col, lty = lty, lwd = lwd, ...)
+             col = col, lty = lty, lwd = lwd, alpha = alpha, ...)
 }
 
 
@@ -482,6 +499,7 @@ lpoints <-
     function(x, y = NULL, type = "p",
              col = plot.symbol$col,
              pch = plot.symbol$pch,
+             alpha = plot.symbol$alpha,
              font = plot.symbol$font,
              fontfamily = plot.symbol$fontfamily,
              fontface = plot.symbol$fontface,
@@ -491,7 +509,7 @@ lpoints <-
     lplot.xy(xy.coords(x, y), type = type,
              col = col, pch = pch, font = font,
              fontfamily = fontfamily, fontface = fontface,
-             cex = cex, ...)
+             cex = cex, alpha = alpha, ...)
 }
 
 
@@ -502,7 +520,7 @@ lpoints <-
 lplot.xy <-
     function(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
              font = 1, fontfamily = NULL, fontface = NULL,
-             col.line = col,
+             col.line = col, alpha = 0,
              ...)
 {
     x <- xy$x
@@ -512,22 +530,22 @@ lplot.xy <-
 
     if (length(x) == 0) return()
 
-    if (type %in% c("l", "o", "b", "c"))
+    else if (type %in% c("l", "o", "b", "c"))
         grid.lines(x = x, y = y,
-                   gp = gpar(lty = lty, col = col.line, lwd = lwd),
+                   gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
                    default.units = "native")
     
-    if (type %in% c("p", "o", "b", "c"))
+    else if (type %in% c("p", "o", "b", "c"))
         grid.points(x = x, y = y, 
                     gp =
-                    gpar(col = col, cex = cex,
+                    gpar(col = col, cex = cex, alpha = alpha,
                          fontsize = fontsize.points,
                          fontfamily = fontfamily,
                          fontface = chooseFace(fontface, font)),
                     pch = pch, 
                     default.units = "native")
 
-    if (type %in% c("s", "S"))
+    else if (type %in% c("s", "S"))
     {
         ord <- sort.list(x)
         n <- length(x)
@@ -539,25 +557,42 @@ lplot.xy <-
         xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
         yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
         grid.lines(x=xx, y=yy,
-                   gp = gpar(lty=lty, col=col.line, lwd=lwd),
+                   gp = gpar(lty=lty, col=col.line, lwd=lwd, alpha = alpha),
                    default.units="native")
     }
 
-    if (type == "h") {
-
+    else if (type == "h") {
         ylim <- current.viewport()$yscale
-
         zero <-
             if (ylim[1] > 0) ylim[1]
             else if (ylim[2] < 0) ylim[2]
             else 0
-
-        ##print(zero) ?
-        ##print(x) 
         for (i in seq(along=x))
             grid.lines(x = rep(x[i],2), y = c(y[i], zero),
-                       gp = gpar(lty = lty, col = col.line, lwd = lwd),
+                       gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
                        default.units = "native")
+    }
+    else if (type == "h") {
+        ylim <- current.viewport()$yscale
+        zero <-
+            if (ylim[1] > 0) ylim[1]
+            else if (ylim[2] < 0) ylim[2]
+            else 0
+        grid.segments(x0 = x, x1 = x,
+                      y0 = y, y1 = zero,
+                      gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
+                      default.units="native")
+    }
+    else if (type == "H") {
+        xlim <- current.viewport()$xscale
+        zero <-
+            if (xlim[1] > 0) xlim[1]
+            else if (xlim[2] < 0) xlim[2]
+            else 0
+        grid.segments(x0 = x, x1 = zero,
+                      y0 = y, y1 = y,
+                      gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
+                      default.units="native")
     }
     return()
 }

@@ -10,8 +10,7 @@ panel.barchart(x, y, box.ratio = 1,
                origin = NULL, reference = TRUE,
                stack = FALSE,
                groups = NULL, 
-               col = if (is.null(groups)) bar.fill$col else
-               regions$col,
+               col = if (is.null(groups)) bar.fill$col else superpose.fill$col,
                \dots)
 }
 \arguments{
@@ -42,7 +41,7 @@ panel.barchart(x, y, box.ratio = 1,
   \item{groups}{ optional grouping variable}
   \item{col}{ Color of the bars. By default, the trellis parameter
     \code{bar.fill} is used if there is no grouping variable, otherwise
-    \code{regions} is used. 
+    \code{superpose.fill} is used. 
   }
   \item{\dots}{ extra arguments will be accepted but ignored }
 }

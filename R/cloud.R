@@ -92,10 +92,13 @@ ltransform3dto3d <- function(x, R.mat, dist = 0) {
 
 
 prepanel.default.cloud <-
-    function(distance = 0, xlim, ylim, zlim, zoom = 1,
-             rot.mat, aspect, ...)
+    function(perspective = TRUE,
+             distance = if (perspective) 0.2 else 0, 
+             xlim, ylim, zlim, zoom = 0.8,
+             screen = list(z = 40, x = -60),
+             R.mat = diag(4), aspect, ...)
 {
-
+    rot.mat <- ltransform3dMatrix(screen = screen, R.mat = R.mat)
     aspect <- rep(aspect, length=2)
     corners <-
         rbind(x = c(-1,1,1,-1,-1,1,1,-1),
@@ -310,7 +313,7 @@ panel.3dwire <-
              ylim.scaled,
              zlim.scaled,
              col = "black",
-             col.groups = superpose.line$col,
+             col.groups = superpose.fill$col,
              polynum = 100,
              ...)
 {
@@ -341,10 +344,6 @@ panel.3dwire <-
 
 
 
-
-
-
-
     ## 2004-03-12 new experimental stuff: when x, y, z are all
     ## matrices of the same dimension, they represent a 3-D surface
     ## parametrized on a 2-D grid (the details of the parametrizing
@@ -363,7 +362,7 @@ panel.3dwire <-
     else
     {
         ngroups <- if (is.matrix(z)) ncol(z) else 1
-        superpose.line <- trellis.par.get("superpose.line")
+        superpose.fill <- trellis.par.get("superpose.fill")
         col.groups <- rep(col.groups, length = ngroups)
         if (length(col) > 1) col <- rep(col, length = ngroups)
 
@@ -396,22 +395,26 @@ panel.3dwire <-
         if (shade) {
             pol.fill <- character(polynum)
             pol.col <- "transparent"
+            pol.alpha <- trellis.par.get("shade.colors")$alpha
         }
         else if (length(col.regions) > 1) {
             pol.fill <- vector(mode(col.regions), polynum)
             pol.col <-
                 if (ngroups == 1 || length(col) == 1) col[1]
                 else vector(mode(col), polynum)
+            pol.alpha <- trellis.par.get("regions")$alpha
         }
         else if (ngroups == 1) {
             pol.fill <- col.regions[1]
             pol.col <- col[1]
+            pol.alpha <- trellis.par.get("regions")$alpha
         }
         else {
             pol.fill <- vector(mode(col.groups), polynum)
             pol.col <-
                 if (length(col) == 1) col[1]
                 else vector(mode(col), polynum)
+            pol.alpha <- superpose.fill$alpha
         }
 
 
@@ -421,6 +424,7 @@ panel.3dwire <-
 
             function(xx, yy, misc)
             {
+
                 ## misc:
                 ## 1: cos angle between normal and incident light
                 ## 2: cos angle between reflected light and eye
@@ -443,7 +447,9 @@ panel.3dwire <-
                     {
                         grid.polygon(x = pol.x, y = pol.y, id.length = rep(3, polynum),
                                      default.units = "native",
-                                     gp = gpar(fill = pol.fill, col = pol.col))
+                                     gp = gpar(fill = pol.fill,
+                                     col = pol.col,
+                                     alpha = pol.alpha))
                         count <<- 0
                     }
                 }
@@ -466,12 +472,16 @@ panel.3dwire <-
               PACKAGE="lattice")
 
 
+
+
+
         if (count > 0)
         {
             grid.polygon(x = pol.x[1:(count * 3)], y = pol.y[1:(count * 3)],
                          default.units = "native", id.length = rep(3, count),
                          gp = gpar(fill = rep(pol.fill, length = count),
-                         col = rep(pol.col, length = count)))
+                         col = rep(pol.col, length = count),
+                         alpha = pol.alpha))
         }
 
     }
@@ -487,11 +497,13 @@ panel.3dwire <-
             pol.col <-
                 if (ngroups == 1 || length(col) == 1) col[1]
                 else vector(mode(col), polynum)
+            pol.alpha <- trellis.par.get("regions")$alpha
         }
         else if (ngroups == 1)
         {
             pol.fill <- col.regions[1]
             pol.col <- col[1]
+            pol.alpha <- trellis.par.get("regions")$alpha
         }
         else
         {
@@ -499,6 +511,7 @@ panel.3dwire <-
             pol.col <-
                 if (length(col) == 1) col[1]
                 else vector(mode(col), polynum)
+            pol.alpha <- superpose.fill$alpha
         }
 
 
@@ -540,7 +553,9 @@ panel.3dwire <-
 
                         grid.polygon(x = pol.x, y = pol.y, id.length = rep(4, polynum),
                                      default.units = "native",
-                                     gp = gpar(fill = pol.fill, col = pol.col))
+                                     gp = gpar(fill = pol.fill,
+                                     col = pol.col,
+                                     alpha = pol.alpha))
                         count <<- 0
                     }
                 }
@@ -569,7 +584,8 @@ panel.3dwire <-
             grid.polygon(x = pol.x[1:(count * 4)], y = pol.y[1:(count * 4)],
                          default.units = "native", id.length = rep(4, count),
                          gp = gpar(fill = rep(pol.fill, length = count),
-                         col = rep(pol.col, length = count)))
+                         col = rep(pol.col, length = count),
+                         alpha = pol.alpha))
         }
 
     }
@@ -589,12 +605,15 @@ panel.3dwire <-
 
 
 panel.cloud <-
-    function(x, y, z, subscripts,
+    function(x, y, subscripts, z,
              groups = NULL,
-             distance, xlim, ylim, zlim,
+             perspective = TRUE,
+             distance = if (perspective) 0.2 else 0, 
+             xlim, ylim, zlim,
              panel.3d.cloud = "panel.3dscatter",
              panel.3d.wireframe = "panel.3dwire",
-             rot.mat, aspect,
+             screen = list(z = 40, x = -60),
+             R.mat = diag(4), aspect,
              par.box = NULL,
 
              xlab, ylab, zlab,
@@ -605,8 +624,8 @@ panel.cloud <-
 
              ## The main problem with scales is that it is difficult
              ## to figure out the best way to place the scales.  They
-             ## be specified explicitly using scpos if default is not
-             ## OK
+             ## can be specified explicitly using scpos if default is
+             ## not OK
 
              scpos,
              ...,
@@ -618,6 +637,9 @@ panel.cloud <-
     mode(x) <- "numeric"
     mode(y) <- "numeric"
     mode(z) <- "numeric"
+
+    ## calculate rotation matrix:
+    rot.mat <- ltransform3dMatrix(screen = screen, R.mat = R.mat)
 
 
 
@@ -1369,7 +1391,8 @@ wireframe <-
 
 
 
-
+## FIXME: need settings for wireframe line colors (wires), cloud
+## points/cross lines (cloud.3d),
 
 
 
@@ -1393,14 +1416,17 @@ cloud <-
              ylim = if (is.factor(y)) levels(y) else range(y, na.rm = TRUE),
              zlab,
              zlim = if (is.factor(z)) levels(z) else range(z, na.rm = TRUE),
-             distance = .2,
-             perspective = TRUE,
-             R.mat = diag(4),
-             screen = list(z = 40, x = -60),
-             zoom = .8,
+
+#             distance = .2,
+#             perspective = TRUE,
+#             R.mat = diag(4),
+#             screen = list(z = 40, x = -60),
+             zoom = 0.8,
              at,
-             pretty = FALSE,
              drape = FALSE,
+
+
+             pretty = FALSE,
              drop.unused.levels = TRUE,
              ...,
              colorkey = any(drape),
@@ -1628,11 +1654,6 @@ cloud <-
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
 
-    ## calculate rotation matrix:
-
-
-    rot.mat <- ltransform3dMatrix(screen = screen, R.mat = R.mat)
-
     if (!drape) col.regions <- trellis.par.get("background")$col
 
     ## region
@@ -1675,14 +1696,20 @@ cloud <-
 
 
     foo$panel.args.common <-
-        c(list(x = x, y = y, z = z, rot.mat = rot.mat, zoom = zoom,
+        c(list(x = x, y = y, z = z,
+
+               ##rot.mat = rot.mat,
+               zoom = zoom,
+
                xlim = xlim, ylim = ylim, zlim = zlim,
                xlab = xlab, ylab = ylab, zlab = zlab,
                xlab.default = form$right.x.name,
                ylab.default = form$right.y.name,
                zlab.default = form$left.name,
                aspect = aspect,
-               distance = if (perspective) distance else 0,
+
+               ##distance = if (perspective) distance else 0,
+
                scales.3d = scales.3d,
                col.at = at, col.regions = col.regions),
           dots)

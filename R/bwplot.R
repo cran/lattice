@@ -29,7 +29,9 @@ prepanel.default.bwplot <-
              origin = NULL, stack = FALSE,
              levels.fos = length(unique(y)), ...)
 {
-
+str(x)
+print(stack)
+str(y)
     ## This function needs to work for all high level functions in the
     ## bwplot family, namely bwplot, dotplot, stripplot and
     ## barchart. For all but barchart, this is simply a question of
@@ -44,12 +46,11 @@ prepanel.default.bwplot <-
         temp <- .5  #* box.ratio/(box.ratio+1)
         if (horizontal)
             list(xlim =
-                 if (stack)
-             {
-                 foo1 <- if (any(x > 0)) range( by(x[x>0], y[x>0, drop = TRUE], sum)) else 0
-                 foo2 <- if (any(x < 0)) range( by(x[x<0], y[x<0, drop = TRUE], sum)) else 0
-                 range(foo1, foo2)
-             }
+                 if (stack) {
+                     foo1 <- if (any(x > 0)) range( by(x[x>0], y[x>0, drop = TRUE], sum)) else 0
+                     foo2 <- if (any(x < 0)) range( by(x[x<0], y[x<0, drop = TRUE], sum)) else 0
+                     range(foo1, foo2)
+                 }
                  else if (is.numeric(x)) range(x[is.finite(x)], origin)
                  else levels(x),
                  ylim =
@@ -62,12 +63,11 @@ prepanel.default.bwplot <-
             list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else levels(x),
                  ##xlim = c(1-temp, levels.fos + temp),
                  ylim =
-                 if (stack)
-             {
-                 foo1 <- if (any(y > 0)) range( by(y[y>0], x[y>0], sum)) else 0
-                 foo2 <- if (any(y < 0)) range( by(y[y<0], x[y<0], sum)) else 0
-                 range(foo1, foo2)
-             }
+                 if (stack) {
+                     foo1 <- if (any(y > 0)) range( by(y[y>0], x[y>0], sum)) else 0
+                     foo2 <- if (any(y < 0)) range( by(y[y<0], x[y<0], sum)) else 0
+                     range(foo1, foo2)
+                 }
                  else if (is.numeric(y)) range(y[is.finite(y)], origin)
                  else levels(y),
                  dx = 1,
@@ -88,8 +88,7 @@ panel.barchart <-
              origin = NULL, reference = TRUE,
              stack = FALSE,
              groups = NULL, 
-             col = if (is.null(groups)) bar.fill$col else
-             regions$col,
+             col = if (is.null(groups)) bar.fill$col else superpose.fill$col,
              ...)
 {
     x <- as.numeric(x)
@@ -98,6 +97,7 @@ panel.barchart <-
     if (length(x) < 1) return()
 
     bar.fill <- trellis.par.get("bar.fill")
+    superpose.fill <- trellis.par.get("superpose.fill")
     reference.line <- trellis.par.get("reference.line")
 
 
@@ -145,12 +145,7 @@ panel.barchart <-
             vals <- sort(unique(groups))
             nvals <- length(vals)
             groups <- groupSub(groups, ...)
-
-            regions <- trellis.par.get("regions")
-            numcol.r <- length(col)
-            col <- 
-                if (numcol.r <= nvals) rep(col, length = nvals)
-                else col[floor(1+(vals-1)*(numcol.r-1)/(nvals-1))]
+            col <- rep(col, length = nvals)
 
             height <- box.ratio/(1 + box.ratio)
 
@@ -197,13 +192,8 @@ panel.barchart <-
             vals <- sort(unique(groups))
             nvals <- length(vals)
             groups <- groupSub(groups, ...)
+            col <- rep(col, length = nvals)
 
-            regions <- trellis.par.get("regions")
-            numcol.r <- length(col)
-            col <- 
-                if (numcol.r <= nvals) rep(col, length = nvals)
-                else col[floor(1+(vals-1)*(numcol.r-1)/(nvals-1))]
-            
             height <- box.ratio/(1 + nvals * box.ratio)
             if (reference)
                 panel.abline(v = origin,
@@ -364,10 +354,12 @@ panel.dotplot <-
         panel.abline(h=1:levels.fos, col=col.line,
                      lty=lty, lwd=lwd)
         if (is.null(groups)) 
-            panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+            panel.xyplot(x = x, y = y, col = col, pch = pch, lty = lty, lwd = lwd, 
+                         horizontal = horizontal, ...)
         else
             panel.superpose(x = x, y = y, groups = groups,
-                            col = col, pch = pch, ...)
+                            col = col, pch = pch, lty = lty, lwd = lwd, 
+                            horizontal = horizontal, ...)
     }
     else {
         xscale <- current.viewport()$xscale
@@ -376,10 +368,13 @@ panel.dotplot <-
         panel.abline(v=1:levels.fos, col=col.line,
                      lty=lty, lwd=lwd)
         if (is.null(groups)) 
-            panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+            panel.xyplot(x = x, y = y, col = col, pch = pch,
+                         lty = lty, lwd = lwd, 
+                         horizontal = horizontal, ...)
         else 
             panel.superpose(x = x, y = y, groups = groups,
-                            col = col, pch = pch, ...)
+                            col = col, pch = pch, lty = lty, lwd = lwd, 
+                            horizontal = horizontal, ...)
     }
 }
 
@@ -400,8 +395,10 @@ panel.stripplot <-
     x.jitter  <-
         if (!horizontal && jitter.data) jitter(x, factor = factor)
         else x
-    if (is.null(groups)) panel.xyplot(x = x.jitter, y = y.jitter, ...)
-    else panel.superpose(x = x.jitter, y = y.jitter, groups = groups, ...)
+    if (is.null(groups)) panel.xyplot(x = x.jitter, y = y.jitter,
+                                      horizontal = horizontal, ...)
+    else panel.superpose(x = x.jitter, y = y.jitter, groups = groups,
+                         horizontal = horizontal, ...)
 }
 
 
@@ -587,16 +584,6 @@ panel.bwplot <-
     }
 }
 
-# The following needs to work:
-
-# k <- 10# (optional)
-# fubar <- function() {
-#     k <- -1
-#     data = list(x=1:10)
-#     names(data$x) <- 1:10
-#     barchart(x^k, data)
-# }
-# fubar()
 
 
 
@@ -633,7 +620,9 @@ dotplot <-
                         panel = panel,
                         box.ratio = 0),
                    dots)
-    do.call("bwplot", call.list)
+    ans <- do.call("bwplot", call.list)
+    ans$call <- match.call()
+    ans
 }
 
 
@@ -669,8 +658,9 @@ barchart <-
                         panel = panel,
                         box.ratio = box.ratio),
                    dots)
-    do.call("bwplot", call.list)
-
+    ans <- do.call("bwplot", call.list)
+    ans$call <- match.call()
+    ans
 }
 
 
@@ -710,8 +700,9 @@ stripplot <-
                         box.ratio = box.ratio),
                    dots)
 
-    do.call("bwplot", call.list)
-
+    ans <- do.call("bwplot", call.list)
+    ans$call <- match.call()
+    ans
 }
 
 
