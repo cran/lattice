@@ -14,15 +14,15 @@
 larrows(\dots)
 llines(x, y = NULL, type = "l", col = plot.line$col, lty = plot.line$lty, 
     lwd = plot.line$lwd, \dots)
-lplot.xy(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1, 
-    \dots)  
+lplot.xy(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
+font =1, \dots)  
 lpoints(x, y = NULL, type = "p", col = plot.symbol$col,
         pch = plot.symbol$pch, 
         cex = plot.symbol$cex, \dots)  
 lsegments(x0, y0, x1, y1, col = add.line$col, lty = add.line$lty, 
     lwd = add.line$lwd, \dots)
-ltext(x, y = NULL, labels = seq(along = x), col = add.text$col, 
-    cex = add.text$cex, srt = 0, adj = 0.5, \dots)  
+ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
+    cex = add.text$cex, srt = 0, font = 1, adj = 0.5, \dots)  
 }
 \usage{
 larrows(x0, y0, x1, y1, \dots)
@@ -39,8 +39,7 @@ ltext(x, \dots)
 \details{
   These functions are meant to be grid replacements of the corresponding
   base R graphics functions, to allow existing Trellis code to be used
-  with minimal modification. These are not particularly efficient, and 
-  grid functions should probably be used when possible.
+  with minimal modification. 
 
   See the documentation of the base functions for usage. Not all
   arguments are always supported. These all correspond to the default

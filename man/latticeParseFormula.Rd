@@ -28,7 +28,7 @@ latticeParseFormula(model, data, dimension = 2)
     be useful by itself. \code{y} and \code{g_1,\dots,\g_n} may be missing.
 }
 \seealso{
-    \code{\link{trellis.args}}, \code{\link{Lattice}}
+    \code{\link{xyplot}}, \code{\link{Lattice}}
 }
 \author{Saikat DebRoy \email{saikat@stat.wisc.edu}}
 \keyword{utilities}

@@ -217,7 +217,7 @@ parallel <-
     ## Step 5: Process cond
 
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
-    cond.max.level <- unlist(lapply(cond, numlevels))
+    cond.max.level <- unlist(lapply(cond, nlevels))
 
 
     id.na <- F
@@ -259,10 +259,10 @@ parallel <-
                         var <- cond[[i]]
                         id <- id &
                         if (is.shingle(var))
-                            ((var$x >=
-                              var$int[cond.current.level[i], 1])
-                             & (var$x <=
-                                var$int[cond.current.level[i], 2]))
+                            ((var >=
+                              levels(var)[[cond.current.level[i]]][1])
+                             & (var <=
+                                levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
 

@@ -60,14 +60,13 @@ panel.xyplot <-
 
 
         if ("p" %in% type)
-            grid.points(x = x, y = y, size = unit(cex * 2.5, "mm"),
-                        gp = gpar(col = col.symbol, cex = cex),
-                        pch=pch, 
-                        default.units="native")
+            lpoints(x = x, y = y, cex = cex,
+                    col = col.symbol, pch=pch)
+
 
         if ("l" %in% type)
-            grid.lines(x=x, y=y, gp = gpar(lty=lty, col=col.line, lwd=lwd),
-                                 default.units="native")
+            llines(x=x, y=y, lty=lty, col=col.line, lwd=lwd)
+
 
         if ("h" %in% type)
             llines(x=x, y=y, type = "h", lty=lty, col=col.line, lwd=lwd)
@@ -83,9 +82,8 @@ panel.xyplot <-
             yy[2*1:n-1] <- y[ord]
             xx[2*1:(n-1)] <- x[ord][-1]
             yy[2*1:(n-1)] <- y[ord][-n]
-            grid.lines(x=xx, y=yy,
-                       gp = gpar(lty=lty, col=col.line, lwd=lwd),
-                       default.units="native")
+            llines(x=xx, y=yy,
+                   lty=lty, col=col.line, lwd=lwd)
         }
         if ("S" %in% type) {
             ord <- order(x)
@@ -97,9 +95,8 @@ panel.xyplot <-
             yy[2*1:n-1] <- y[ord]
             xx[2*1:(n-1)] <- x[ord][-n]
             yy[2*1:(n-1)] <- y[ord][-1]
-            grid.lines(x=xx, y=yy,
-                       gp = gpar(lty=lty, col=col.line, lwd=lwd),
-                       default.units="native")
+            llines(x=xx, y=yy,
+                   lty=lty, col=col.line, lwd=lwd)
         }
         if ("r" %in% type) {
             panel.lmline(x, y, col = col.line, lty = lty, lwd = lwd, ...)
@@ -245,7 +242,7 @@ xyplot <-
     ## Step 5: Process cond
 
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
-    cond.max.level <- unlist(lapply(cond, numlevels))
+    cond.max.level <- unlist(lapply(cond, nlevels))
 
 
     id.na <- is.na(x)|is.na(y)
@@ -285,13 +282,10 @@ xyplot <-
                         var <- cond[[i]]
                         id <- id &
                         if (is.shingle(var))
-                            ((var$x >=
-                              var$int[cond.current.level[i], 1])
-                             & (var$x <=
-                                var$int[cond.current.level[i], 2]))
+                            ((var >= levels(var)[[cond.current.level[i]]][1])
+                             & (var <= levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
-
                     foo$panel.args[[panel.number]] <-
                         list(x = x[id], y = y[id])
                     if (subscripts)

@@ -1,17 +1,15 @@
 Lattice                  Lattice Graphics
 banking                  Banking
-barchart                 Bar Graphs
-bwplot                   Box and Whisker Plots
 cloud                    3d Scatter Plot --- not functional yet
-densityplot              Kernel Probability Density Plots
-dotplot                  Dot Plots
 draw.colorkey            Produce a Colorkey for levelplot
 draw.key                 Produce a Legend or Key
-histogram                Histograms
+histogram                Histograms and Kernel Density Plots
 lattice-Internal         Miscellaneous Functions used within Lattice
 latticeParseFormula      Parse Trellis formula
 levelplot                Level Plots
 llines                   Lattice Replacements of base graphics functions
+lset                     Simple Interfaces to modify Trellis Settings and
+                         Lattice Themes
 oneway                   Fit One-way Model
 panel.barchart           Default Panel Functions for barchart
 panel.bwplot             Default Panel Function for bwplot
@@ -28,7 +26,6 @@ panel.stripplot          Default Panel Function for stripplot
 panel.superpose          Panel Function for Display Marked by groups
 panel.tmd                Panel function for tmd
 panel.xyplot             Default Panel Function for xyplot
-parallel                 Parallel Coordinate Plots
 prepanel.functions       Useful Prepanel Function for Lattice
 print.trellis            Print Trellis Objects
 qq                       Quantile-Quantile Plots of Two Samples
@@ -37,14 +34,11 @@ rfs                      Residual and Fit Spread Plots
 shingles                 shingles
 splom                    Scatter Plot Matrices
 strip.default            Default Trellis strip function
-stripplot                Strip Plots
 tmd                      Tukey Mean-Difference Plot
-trellis.3d.args          Arguments to 3d Trellis Functions
-trellis.args             Trellis Arguments
 trellis.datasets         Data Sets in the Lattice library
 trellis.device           Initializing Trellis Displays
 trellis.object           Lattice Display Object
 trellis.par.get          Manipulating Graphical Parameters for Trellis
                          Displays
 update.trellis           Update Trellis Object
-xyplot                   Conditioning Plots
+xyplot                   Common Bivariate Trellis Plots

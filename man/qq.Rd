@@ -29,11 +29,14 @@ qq(formula, f.value = ppoints, ...)
 \value{
   An object of class trellis, by default plotted by \code{print.trellis}.
 }
-\author{Deepayan Sarkar \url{deepayan@stat.wisc.edu}}
-\note{The x and y scale limits are by default the ranges of the original
-  data, instead of the range of the actual quantiles that are to be
-  plotted. This will probably change later.}
-\seealso{\code{\link{trellis.args}}, \code{\link{panel.qq}},
+\author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
+\details{
+  These and all other high level Trellis functions have several
+  arguments in common. These are extensively documented only in the
+  help page for \code{xyplot}, which should be consulted to learn more
+  detailed usage.
+}
+\seealso{\code{\link{xyplot}}, \code{\link{panel.qq}},
   \code{\link{Lattice}}
 }
 \examples{

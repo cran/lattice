@@ -1,3 +1,8 @@
+2002-01-10  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R: Too many changes to list, mainly in print.trellis and
+	documentation. 
+
 2001-08-08  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* R/levelplot.R: Implemented preliminary levelplot (no contourplot

@@ -1,4 +1,4 @@
-% $Id: levelplot.Rd,v 1.6 2001/09/17 01:50:35 deepayan Exp $
+% $Id: levelplot.Rd,v 1.9 2002/01/11 04:04:30 deepayan Exp $
 \name{levelplot}
 \title{Level Plots}
 \synopsis{
@@ -8,9 +8,6 @@ levelplot(formula, data = parent.frame(), aspect = "fill", layout = NULL,
     col.regions = terrain.colors(length(at) - 1), colorkey = NULL, 
     contour = FALSE, cuts = 15, labels = format(at), pretty = FALSE, 
     region = TRUE, ..., subscripts = TRUE, subset = TRUE) 
-contourplot(formula, data, aspect, layout, panel, prepanel,
-    scales, strip, groups, xlab, xlim, ylab, ylim,
-    contour, pretty, region, ..., subscripts, subset)
 }
 \usage{
 levelplot(formula,
@@ -23,17 +20,11 @@ levelplot(formula,
           pretty = FALSE,
           region = TRUE,
           ...)
-contourplot(formula,
-            contour = TRUE,
-            pretty = TRUE,
-            region = FALSE,
-            ...)
 }
 \description{
   Draw Level Plots. Contourplots are as yet unimplemented.
 }
 \alias{levelplot}
-\alias{contourplot}
 \arguments{
   \item{formula}{a formula of the form \code{z ~ x * y | g1 * g2 * ...},
     where \code{z} is a numeric response, and \code{x, y} are numeric
@@ -98,10 +89,13 @@ contourplot(formula,
   \item{\dots}{other arguments}
 }
 \details{
-  for other arguments, see the documentation for \code{trellis.args}
+  These and all other high level Trellis functions have several
+  arguments in common. These are extensively documented only in the
+  help page for \code{xyplot}, which should be consulted to learn more
+  detailed usage. 
 }
 \seealso{
-  \code{\link{trellis.args}}, \code{\link{Lattice}} 
+  \code{\link{xyplot}}, \code{\link{Lattice}}, \code{\link{panel.levelplot}} 
 }
 \author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
@@ -128,18 +122,14 @@ wtr.marginal <- list(wind = w.marginal, temperature = t.marginal,
 grid <- expand.grid(wtr.marginal)
 grid[, "fit"] <- c(predict(ozo.m, grid))
 levelplot(fit ~ wind * temperature | radiation, data = grid,
-        contour = T, labels = F,
-        xlab = "Wind Speed (mph)",
-        ylab = "Temperature (F)",
-        main = "Cube Root Ozone (cube root ppb)",
-        col.regions = trellis.par.get("regions")$col)
+          contour = T, labels = F,
+          xlab = "Wind Speed (mph)",
+          ylab = "Temperature (F)",
+          main = "Cube Root Ozone (cube root ppb)",
+          col.regions = trellis.par.get("regions")$col)
 detach()
-data(volcano)
-levelplot(volcano)
 }
 \keyword{hplot}
-
-
 
 
 

@@ -24,7 +24,7 @@
 prepanel.default.bwplot <-
     function(x, y, box.ratio, num.l.y = length(unique(y)), ...)
 {
-    temp <- .5*box.ratio/(box.ratio+1)
+    temp <- .5  #* box.ratio/(box.ratio+1)
     list(xlim = range(x[is.finite(x)]),
          ylim = c(1-temp, num.l.y + temp),
          dx = 1,
@@ -217,12 +217,27 @@ dotplot <-
         else if (is.character(prepanel)) get(prepanel)
         else eval(prepanel)
 
-    do.call("bwplot",
-            c(list(formula = formula, data = data,
-                   groups = groups, subset = subset,
-                   panel = panel, prepanel = prepanel, strip = strip,
-                   box.ratio = 0),
-              dots))
+    formname <- deparse(substitute(formula))
+    form <- eval(substitute(formula), data, parent.frame())
+
+    call.list <- c(list(groups = groups, subset = subset,
+                        panel = panel, prepanel = prepanel, strip = strip,
+                        box.ratio = 0),
+                   dots)
+    
+    if (!inherits(form, "formula") && is.numeric(form)) {
+        call.list$formula <- form
+        if (is.null(call.list$xlab)) call.list$xlab <- formname
+        else if (is.list(call.list$xlab) && is.null(call.list$xlab$lab))
+            call.list$xlab$label <- formname 
+    }
+    else {
+        call.list$formula <- formula
+        call.list$data <- data
+    }
+
+    do.call("bwplot", call.list)
+
     ## lapply(dots, eval, data, parent.frame())))
 }
 
@@ -288,13 +303,28 @@ stripplot <-
         else if (is.character(prepanel)) get(prepanel)
         else eval(prepanel)
 
-    do.call("bwplot",
-            c(list(formula = formula, data = data,
-                   groups = groups, subset = subset,
-                   panel = panel, prepanel = prepanel, strip = strip,
-                   jitter = jitter, factor = factor, 
-                   box.ratio = box.ratio),
-              dots))
+    formname <- deparse(substitute(formula))
+    form <- eval(substitute(formula), data, parent.frame())
+
+    call.list <- c(list(groups = groups, subset = subset,
+                        panel = panel, prepanel = prepanel, strip = strip,
+                        jitter = jitter, factor = factor,
+                        box.ratio = 0),
+                   dots)
+    
+    if (!inherits(form, "formula") && is.numeric(form)) {
+        call.list$formula <- form
+        if (is.null(call.list$xlab)) call.list$xlab <- formname
+        else if (is.list(call.list$xlab) && is.null(call.list$xlab$lab))
+            call.list$xlab$label <- formname 
+    }
+    else {
+        call.list$formula <- formula
+        call.list$data <- data
+    }
+
+    do.call("bwplot", call.list)
+
     ## lapply(dots, eval, data, parent.frame())))
 }
 
@@ -334,8 +364,25 @@ bwplot <-
         else eval(prepanel)
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
+
+    formname <- deparse(substitute(formula))
+    formula <- eval(substitute(formula), data, parent.frame())
+
+    form <-
+        if (inherits(formula, "formula"))
+            latticeParseFormula(formula, data)
+        else {
+            if (!is.numeric(formula)) stop("invalid formula")
+            else {
+                list(left = rep("", length(formula)),
+                     right = formula,
+                     condition = NULL,
+                     left.name = "",
+                     right.name = formname)
+            }
+        }
+    if (is.null(form$left)) form$left <- rep("", length(form$right))
     
-    form <- latticeParseFormula(formula, data)
     cond <- form$condition
     number.of.cond <- length(cond)
     y <- form$left
@@ -363,7 +410,7 @@ bwplot <-
     }
     y <- as.factorOrShingle(y)
     is.f.y <- is.factor(y)  # used throughout the rest of the code
-    num.l.y <- numlevels(y)
+    num.l.y <- nlevels(y)
 
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- if (is.f.y) NULL else form$left.name
@@ -451,7 +498,7 @@ bwplot <-
     ## Step 5: Process cond
 
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
-    cond.max.level <- unlist(lapply(cond, numlevels))
+    cond.max.level <- unlist(lapply(cond, nlevels))
 
 
     id.na <- is.na(x)|is.na(y)
@@ -492,13 +539,13 @@ bwplot <-
                         var <- cond[[i]]
                         id <- id &
                         if (is.shingle(var))
-                            ((var$x >=
-                              var$int[cond.current.level[i], 1])
-                             & (var$x <=
-                                var$int[cond.current.level[i], 2]))
+                            ((var >=
+                              levels(var)[[cond.current.level[i]]][1])
+                             & (var <=
+                                levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
-
+                    
                     if (is.f.y) 
                         foo$panel.args[[panel.number]] <-
                             list(x = x[id],
@@ -508,7 +555,7 @@ bwplot <-
                         panel.x <- numeric(0)
                         panel.y <- numeric(0)
                         for (k in 1:num.l.y) {
-                            tid <- id & (y$x >= y$int[k,1]) & (y$x <= y$int[k,2])
+                            tid <- id & (y >= levels(y)[[k]][1]) & (y <= levels(y)[[k]][2])
                             panel.x <- c(panel.x, x[tid])
                             panel.y <- c(panel.y, rep(k,length(tid[tid])))
                         }

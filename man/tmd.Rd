@@ -37,13 +37,11 @@ tmd(object, xlab = "mean", ylab = "difference", ...)
   An object of class ``trellis''.
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
-\seealso{ \code{\link{panel.tmd}}, \code{\link{trellis.args}},
+\seealso{ \code{\link{panel.tmd}}, \code{\link{xyplot}},
   \code{\link{Lattice}}
 }
 \examples{
 data(singer)
 tmd(qqmath(~height|voice.part, data = singer))
-tmd(qq(voice.part ~ height, aspect = 1, data = singer,
-   subset = (voice.part == "Bass 2" | voice.part == "Tenor 1")))
 }
 \keyword{dplot}

@@ -103,16 +103,16 @@ qq <-
     x <- as.numeric(x)
     y <- as.factorOrShingle(y)
     is.f.y <- is.factor(y)
-    num.l.y <- numlevels(y)
+    num.l.y <- nlevels(y)
     if (num.l.y!=2) stop("y must have exactly 2 levels")
 
     if(missing(xlab)) xlab <-
         if (is.f.y) unique(levels(y))[1]
-        else paste("y:", as.character(unique(y$int[1,])))
+        else paste("y:", as.character(unique(levels(y)[[1]])))
     
     if(missing(ylab)) ylab <-
         if (is.f.y) unique(levels(y))[y]
-        else paste("y:", as.character(unique(y$int[2,])))
+        else paste("y:", as.character(unique(levels(y)[[2]])))
 
 
     ## create a skeleton trellis object with the
@@ -135,11 +135,11 @@ qq <-
     if (is.list(foo$xlab) && !is.character(foo$xlab$label))
         foo$xlab$label <-
             if (is.f.y) unique(levels(y))[1]
-            else paste("y:", as.character(unique(y$int[1,])))
+            else paste("y:", as.character(unique(levels(y)[[1]])))
     if (is.list(foo$ylab) && !is.character(foo$ylab$label))
         foo$ylab$label <-
             if (is.f.y) unique(levels(y))[y]
-            else paste("y:", as.character(unique(y$int[2,])))
+            else paste("y:", as.character(unique(levels(y)[[2]])))
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
@@ -190,7 +190,7 @@ qq <-
     ## Step 5: Process cond
 
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
-    cond.max.level <- unlist(lapply(cond, numlevels))
+    cond.max.level <- unlist(lapply(cond, nlevels))
 
 
     id.na <- is.na(x)|is.na(y)
@@ -230,10 +230,10 @@ qq <-
                         var <- cond[[i]]
                         id <- id &
                         if (is.shingle(var))
-                            ((var$x >=
-                              var$int[cond.current.level[i], 1])
-                             & (var$x <=
-                                var$int[cond.current.level[i], 2]))
+                            ((var >=
+                              levels(var)[[cond.current.level[i]]][1])
+                             & (var <=
+                                levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
 
@@ -247,10 +247,10 @@ qq <-
                         }
                         else {
                             tx <- x[id]
-                            ty <- y$x[id]
+                            ty <- y[id]
                             ly <- levels(y)
-                            x.val <- tx[ty>=ly[1,1] & ty <=ly[1,2]]
-                            y.val <- tx[ty>=ly[2,1] & ty <=ly[2,2]]
+                            x.val <- tx[ty>=ly[[1]][1] & ty <=ly[[1]][2]]
+                            y.val <- tx[ty>=ly[[2]][1] & ty <=ly[[2]][2]]
                         }
                         n <- max(length(x.val), length(y.val))
                         p  <- f.value(n)

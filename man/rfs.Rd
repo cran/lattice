@@ -24,7 +24,7 @@ rfs(model, layout=c(2, 1), xlab="f-value", ...)
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{oneway}}, \code{\link{qqmath}},
-  \code{\link{trellis.args}}, \code{\link{Lattice}}
+  \code{\link{xyplot}}, \code{\link{Lattice}}
 }
 \examples{
 data(singer)

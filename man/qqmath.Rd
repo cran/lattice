@@ -34,10 +34,16 @@ qqmath(formula, distribution = qnorm, f.value = ppoints,...)
   \item{\dots}{Other arguments}
 }
 \value{
-  An object of class trellis, py default plotted by \code{print.trellis}.
+  An object of class trellis, by default plotted by \code{print.trellis}.
+}
+\details{
+  These and all other high level Trellis functions have several
+  arguments in common. These are extensively documented only in the
+  help page for \code{xyplot}, which should be consulted to learn more
+  detailed usage.
 }
 \author{Deepayan Sarkar \url{deepayan@stat.wisc.edu}}
-\seealso{\code{\link{trellis.args}}, \code{\link{panel.qqmath}},
+\seealso{\code{\link{xyplot}}, \code{\link{panel.qqmath}},
   \code{\link{panel.qqmathline}}, \code{\link{prepanel.qqmathline}},
   \code{\link{Lattice}}
 }

@@ -1,3 +1,60 @@
+
+
+
+
+  
+
+Changes in lattice 0.4
+======================
+
+Some of the implementation details have changed a lot. This might
+cause some old code to fail, though no such instances are known.
+
+No significant new features have been added, but there are several
+bugfixes (notably in levelplot). The important changes are:
+
+
+ o documentation restructured. There is no topic called `trellis.args'
+   any more. The detailed description of the arguments common to all
+   high level trellis functions can be found under help(xyplot)
+
+ o a (as yet very small) demo, called by demo("lattice")
+
+ o Clipping: whatever is drawn by the panel function is now clipped to
+   inside the panel region. Strip texts are clipped to inside the
+   strips.
+
+ o Axis tick labels by default do not overlap, some tick marks are
+   left unlabelled if necessary.
+
+ o The argument list for strip.default changed to be like S
+
+ o levels() and nlevels() give sensible answers for shingles. new
+   print methods for shingles and levels of shingles
+
+ o colorkey (currently used only in levelplot) can now be placed to
+   the left, top or bottom as well
+
+ o new ``lines'' component in the par.strip.text argument that can be
+   used to change the height of strips 
+
+ o xlab, main etc can be double height strings (containing "\n"-s),
+   the spaces allocated for these would be automatically adjusted
+
+ o strip.default now has style=5
+
+ o new panel.superpose.2 (suggested by Neil Klepeis)
+
+ o the default colour settings are sometimes not appropriate on a
+   white background. There is a new setting with some darker colours 
+   that can be set by calling lset(theme = "white.bg"). see ?lset
+   for details.
+
+
+
+
+
+
   
 
 Changes in lattice 0.3
@@ -58,7 +115,17 @@ includes lpoints, llines, ltext and lsegments.
 Using Lattice and base R graphics concurrently
 ==============================================
 
-Grid/Lattice graphics should now mix (almost?) seamlessly
+Grid graphics normally do not mix with usual R graphics. However,
+end-users typically might want to use lattice functions concurrently
+with traditional R graphics. To allow this without intermittent calls
+to grid.stop() and grid.start(), print.trellis (which ultimately does
+all the plotting in lattice) now tries to preserve the state of the
+device on which it plots. By default, library(lattice) opens a device
+in grid enabled mode. It can be reverted to non grid mode by
+grid.stop(). Subsequently, both Lattice functions and traditional
+graphics functions can be used. Devices opened by trellis.device()
+start in non-grid mode, unless grid.start() is called.
+
 
 
 Still Missing
@@ -73,6 +140,10 @@ Still Missing
  o Fonts 
 
  o axis labels badly implemented, no checking for overlaps.
+
+
+
+
 
 
 

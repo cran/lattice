@@ -35,18 +35,19 @@ plot.shingle <-
                 layout=c(1,1,1),
                 page = NULL,
                 panel = function(x, col) {
-                    ## x is the matrix of intervals
-                    num.l.y <- nrow(x)
-                    for(i in seq(along = x[,1]))
-                        grid.rect(x = x[i,] %*% c(.5,.5),
-                                  y = i,
-                                  width = diff(x[i,]),
-                                  height = .5,
-                                  default.units = "native",
-                                  gp = gpar(fill=col)) 
+                    ## x is the list of intervals
+                    num.l.y <- length(x)
+                    if (num.l.y>0)
+                        for(i in 1:num.l.y)
+                            grid.rect(x = x[[i]] %*% c(.5,.5),
+                                      y = i,
+                                      width = diff(x[[i]]),
+                                      height = .5,
+                                      default.units = "native",
+                                      gp = gpar(fill=col)) 
                 },
                 panel.args = list(list()),
-                panel.args.common = list(x=x$int, col = col),
+                panel.args.common = list(x=levels(x), col = col),
                 par.strip.text = trellis.par.get("add.text"),
                 skip = FALSE,
                 strip = FALSE,
@@ -63,8 +64,8 @@ plot.shingle <-
                 fontsize.normal = 10,
                 fontsize.small = 8)
     
-    num.l.y <- nrow(x$int)
-    foo$x.limits <- extend.limits(range(x$x, x$int))
+    num.l.y <- nlevels(x)
+    foo$x.limits <- extend.limits(range(x, levels(x)))
     foo$y.limits <- extend.limits(c(1,num.l.y),
                                   length = .5+num.l.y)
 

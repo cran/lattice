@@ -6,40 +6,56 @@ splom(formula, data = parent.frame(), aspect = 1, between = list(x = 0.5,
     scales = list(), strip = TRUE, groups = NULL, xlab = "Scatter Plot Matrix", 
     xlim, ylab = NULL, ylim, superpanel = panel.pairs, pscales = 5, 
     varnames, ..., subscripts = !is.null(groups), subset = TRUE)
+parallel(formula, data = parent.frame(), aspect = "fill", between = list(x = 0.5, 
+    y = 0.5), layout = NULL, panel = panel.parallel, prepanel = NULL, 
+    scales = list(), strip = TRUE, groups = NULL, xlab = NULL, 
+    xlim, ylab = NULL, ylim, varnames, ..., subscripts = !is.null(groups), 
+    subset = TRUE)
 }
 \usage{
 splom(formula,
+      data,
       aspect = 1,
       between = list(x = 0.5, y = 0.5),
-      panel = panel.splom,
-      superpanel = panel.pairs,
+      panel = "panel.splom",
+      superpanel = "panel.pairs",
       pscales = 5,
       varnames, \dots)
+parallel(formula,
+         data = list(x = 0.5, y = 0.5),
+         between,
+         panel = "panel.parallel",
+         varnames,
+         \dots)
 }
 \description{
-  Draw scatter plot matrices
+  Draw Conditional Scatter Plot Matrices and Parallel Coordinate Plots
 }
 \alias{splom}
+\alias{parallel}
 \arguments{
-  \item{formula}{a formula describing the form of the plot.  A
-    formula of the form \code{~ x | g1 * g2 * ...}, where \code{x} is a
-    matrix with p columns, with rows giving the variables of which the
-    pairwise scatterplots will be produced, conditional on the 
-    variables \code{g1,g2,...}.
-    
-    Each of \code{g1,g2,...} must be either factors or shingles.
-
+  \item{formula}{ a formula describing the structure of the plot, which
+    should be of the form \code{~ x | g1 * g2 * \dots}, where \code{x}
+    is a data frame or a matrix. Each of \code{g1,g2,\dots} must be
+    either factors or shingles. The conditioning variables
+    \code{g1,g2,\dots} may be omitted, in which case the leading
+    \code{~} may also be omitted.
+  }
+  \item{data}{a data frame containing values for any variables in the
+    formula. By default the environment where the function 
+    was called from is used.
   }
   \item{aspect}{ 
-    aspect ratio of each panel (and subpanel), square by default.
+    aspect ratio of each panel (and subpanel), square by default for
+    \code{splom}.
   }
   \item{between}{ 
     to avoid confusion between panels and subpanels, the default is to
     show the panels of a splom plot with space between them.
   }
-  \item{panel}{ 
+  \item{panel}{
     function that is used to plot the data on each subpanel of a splom
-    display.  
+    display. Usual interpretation for \code{densityplot}.
   }
   \item{superpanel}{ 
     function that sets up the splom display, by default as a scatterplot
@@ -63,21 +79,33 @@ splom(formula,
   \item{\dots}{ other arguments}
 }
 \details{
-  see the documentation for \code{trellis.args}
+  \code{splom} produces Scatter Plot Matrices. The role usually played by
+  \code{panel} is taken over by \code{superpanel}, which determines how
+  the columns of \code{x} are to be arranged for pairwise plots. The
+  only available option currently is \code{panel.pairs}. (Writing new
+  superpanel functions would need knowledge of grid.) 
 
-  The \code{scales} argument does not have its ususal interpretation.
-  Its function is partly served by \code{pscales}. However,
-  components of scale which are sensible would be
-  supported (in future if not already supported). The \code{rot}
-  component should be specified as a vector of length 2 for the labels
-  of the horizontal and vertical labels respectively.
+  The \code{scales} argument does not have its usual interpretation in
+  \code{splom}. Its function is partly served by \code{pscales}. However,
+  components of scale which are sensible would be supported (in future
+  if not already supported). The \code{rot} component should be
+  specified as a vector of length 2 for the labels of the horizontal and 
+  vertical labels respectively.
+
+  \code{parallel} draws Parallel Coordinate Plots. (Difficult to
+  describe, see example.)
+  
+  These and all other high level Trellis functions have several
+  arguments in common. These are extensively documented only in the
+  help page for \code{xyplot}, which should be consulted to learn more
+  detailed usage.
 }
 \value{
   An object of class ``trellis'', plotted by default by
   \code{print.trellis}.
 }
 \seealso{
-  \code{\link{trellis.args}}, \code{\link{Lattice}} 
+  \code{\link{xyplot}}, \code{\link{Lattice}} 
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{

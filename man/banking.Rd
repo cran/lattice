@@ -19,7 +19,7 @@ banking(dx, dy)
   the above absolute slopes a 45 degree line. (Confused ? see code.)
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
-\seealso{\code{\link{Lattice}}, \code{\link{trellis.args}}}
+\seealso{\code{\link{Lattice}}, \code{\link{xyplot}}}
 \keyword{dplot}
 
 

@@ -221,7 +221,8 @@ limits.and.aspect <-
     x.limits <- as.list(1:nplots)
     y.limits <- as.list(1:nplots)
     dxdy <- as.list(1:nplots)
-    
+
+
     for (count in 1:nplots)
     {
         if (is.list(panel.args[[count]])) {
@@ -321,6 +322,7 @@ trellis.skeleton <-
                 x.between = 0,
                 y.between = 0,
                 par.strip.text = trellis.par.get("add.text"))
+    foo$par.strip.text$lines <- 1
 
     if (!is.null(between$x)) foo$x.between <- between$x
     if (!is.null(between$y)) foo$y.between <- between$y
@@ -328,19 +330,23 @@ trellis.skeleton <-
     foo$par.strip.text[names(par.strip.text)] <- par.strip.text
 
     if (!is.null(main)) {
-        foo$main <- list(label = main[[1]], col = "black", cex = 1, font = 1)
+        text <- trellis.par.get("par.main.text")
+        foo$main <- list(label = main[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(main)) foo$main[names(main)] <- main
     }
     if (!is.null(sub)) {
-        foo$sub <- list(label = sub[[1]], col = "black", cex = 1, font = 1)
+        text <- trellis.par.get("par.sub.text")
+        foo$sub <- list(label = sub[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(sub)) foo$sub[names(sub)] <- sub
     }
     if (!is.null(xlab)) {
-        foo$xlab <- list(label = xlab[[1]], col = "black", cex = 1, font = 1)
+        text <- trellis.par.get("par.xlab.text")
+        foo$xlab <- list(label = xlab[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(xlab)) foo$xlab[names(xlab)] <- xlab
     }
     if (!is.null(ylab)) {
-        foo$ylab <- list(label = ylab[[1]], col = "black", cex = 1, font = 1)
+        text <- trellis.par.get("par.ylab.text")
+        foo$ylab <- list(label = ylab[[1]], col = text$col, cex = text$cex, font = text$font)
         if (is.list(ylab)) foo$ylab[names(ylab)] <- ylab
     }
     list(foo = foo, dots = list(...))

@@ -82,6 +82,7 @@ panel.pairs <-
             {
                 push.viewport(viewport(layout.pos.row = n.var-i+1,
                                        layout.pos.col = j,
+                                       clip = TRUE,
                                        gp = gpar(fontsize = fontsize.small),
                                        xscale = lim[[j]],
                                        yscale = lim[[i]]))
@@ -275,8 +276,27 @@ splom <-
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
     
-    form <- latticeParseFormula(formula, data)
+
+
+    formname <- deparse(substitute(formula))
+    formula <- eval(substitute(formula), data, parent.frame())
+
+    form <-
+        if (inherits(formula, "formula"))
+            latticeParseFormula(formula, data)
+        else 
+            list(left = NULL,
+                 right = as.data.frame(formula),
+                 condition = NULL,
+                 left.name = "",
+                 right.name = formname)
+
+
+    ##form <- latticeParseFormula(formula, data)
+
     cond <- form$condition
+
+
     number.of.cond <- length(cond)
     x <- as.data.frame(form$right)
     if (number.of.cond == 0) {
@@ -386,7 +406,7 @@ splom <-
     ## Step 5: Process cond
 
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
-    cond.max.level <- unlist(lapply(cond, numlevels))
+    cond.max.level <- unlist(lapply(cond, nlevels))
 
 
     id.na <- F
@@ -433,10 +453,10 @@ splom <-
                         var <- cond[[i]]
                         id <- id &
                         if (is.shingle(var))
-                            ((var$x >=
-                              var$int[cond.current.level[i], 1])
-                             & (var$x <=
-                                var$int[cond.current.level[i], 2]))
+                            ((var >=
+                              levels(var)[[cond.current.level[i]]][1])
+                             & (var <=
+                                levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
 

@@ -5,47 +5,37 @@
   Implementation of Trellis Graphics
 }
 \details{
-  Lattice is an implementation of Trellis Graphics (see the references
-  for details). It is intended to emulate the
-  implementation of Trellis in S, and perhaps to add some functionality
-  of its own. Existing Trellis code written for S-Plus should
-  \emph{ideally} work unchanged in Lattice, one unavoidable
-  exception being custom panel functions (see the entry for \code{panel}
-  in \code{help(trellis.args)}, and also \code{llines} for a collection
-    of functions meant to ease the conversion).  
+  Trellis Graphics is a framework for data visualization developed at
+  the Bell Labs by Rick Becker, Bill Cleveland et al, extending ideas
+  presented in Bill Cleveland's 1993 book \emph{Visualizing Data} (see
+  the references section for details).
 
-  As of now, this implementation is very much incomplete;
-  however, what has been implemented should be useful. (Note that there
-  are no plans to implement the 3D display functions in the immediate
-  future). 
+  Lattice is an implementation of Trellis Graphics that aims to emulate
+  the implementation in S/S-Plus, and perhaps to add some functionality
+  of its own. As of now, it is incomplete in that the 3D display
+  functions and contourplots are unimplemented. However, what has been
+  already implemented should be useful. Lattice is built upon the Grid
+  Graphics engine for R being developed by Paul Murrell and requires the
+  \code{grid} package.
 
-  This implementation depends heavily on a new Graphics engine (Grid) for
-  R being developed by Paul Murrell.
+  Existing Trellis code written for S-Plus should \emph{ideally} work
+  unchanged in Lattice. One unavoidable exception to this is when custom
+  panel functions are used. See the entry for \code{panel} in
+  \code{help(xyplot)} for help with this aspect.
 
   Type \code{library(help = lattice)} to see a list of (public)
-  Lattice graphics functions.
-}
-\note{
-  The description of arguments in the documentation for
-  \code{trellis.args} is meant to work for all Lattice
-  functions. However, many of these (such as \code{aspect="xy"}) do not
-  make much sense for many of the functions. These functions would still
-  accept these arguments, but the resulting behaviour is not very well
-  defined in many cases. The ultimate goal, of course, is to incorporate
-  the most sensible behaviour and document it, but that is not a top
-  priority right now. The general idea is that if something does
-  not work as it should with \code{xyplot}, however weird the options, 
-  it's a bug and should be reported. However, other functions such
-  as \code{splom, parallel, histogram} etc are only expected to work
-  when they are doing what they are designed to do, and might not handle
-  weird prepanel functions and the like very well.
+  Lattice graphics functions for which further documentation is
+  available. Apart from the documentation accompanying this package, 
+  several documents outlining the use of Trellis graphics is available
+  from Bell Lab's website that might provide a holistic introduction to
+  the Trellis paradigm.
 }
 \seealso{
   To get a general idea of what arguments are generally accepted by
-  Lattice  functions, see \code{\link{trellis.args}}.
+  Lattice functions, see \code{\link{xyplot}}.
 
   To learn how to customise the Graphical parameters used by the Lattice
-  functions, see \code{\link{trellis.settings}}.
+  functions, see \code{\link{xyplot}}.
 
   To learn how to initialise new devices or change the settings of the
   current device, see \code{\link{trellis.device}}
@@ -59,7 +49,7 @@
   \bold{Univariate:}  
 
   \code{\link{barchart}} bar plots
-  
+
   \code{\link{bwplot}} box and whisker plots
 
   \code{\link{densityplot}} kernel density plots  
@@ -99,10 +89,10 @@
 \references{
   Bell Lab's Trellis Page:
   \url{http://cm.bell-labs.com/cm/ms/departments/sia/project/trellis/}
-  
+
   Cleveland, W.S. (1993) \emph{Visualizing Data}.
-  
-  Becker, R.A., Cleveland, W.S. and Shyu, M. 
+
+  Becker, R.A., Cleveland, W.S. and Shyu, M.
   ``The Visual Design and Control of Trellis Display'',
   \emph{Journal of Computational and Graphical Statistics}
 }

@@ -9,6 +9,7 @@
 \alias{construct.scales}
 \alias{limits.and.aspect}
 \alias{trellis.skeleton}
+\alias{make.list.from.intervals}
 \alias{prepanel.default.bwplot}
 \alias{prepanel.default.levelplot}
 \alias{prepanel.default.cloud}
@@ -52,6 +53,7 @@ cupdate(index, maxim)
 do.breaks(endpoints, nint)
 ldrop.levels(x, subset)
 compute.layout(...)
+make.list.from.intervals(x)
 construct.scales(...)
 limits.and.aspect(...)
 trellis.skeleton(...)
@@ -85,7 +87,8 @@ prepanel.default.xyplot(x, y, type, ...)
   \item{maxim}{max values of levels}
   \item{endpoints}{see histogram}
   \item{nint}{see histogram}
-  \item{distance, xlim, ylim, zlim, zoom, rot.mat,aspect}{see panel.cloud}
+  \item{zoom, rot.mat,aspect}{see panel.cloud}
+  \item{distance, xlim, ylim, zlim}{see panel.cloud}
   \item{wx, wy, subscripts}{see panel.levelplot}
   \item{type}{ type argument as in \code{panel.xyplot}}
   \item{\dots}{other arguments}
@@ -97,11 +100,6 @@ prepanel.default.xyplot(x, y, type, ...)
   \code{lpretty} is used instead of pretty (which gives very non-pretty
   results in some cases, particularly densityplot).
   
-  \code{banking} is a crude banking function used when aspect="xy" in
-  \code{xyplot}. It just orders the absolute slopes and returns a value
-  which when adjusted by the panel scale limits will make the median of
-  the above absolute slopes a 45 degree line. (Confused ? see code.)
-
   \code{ldrop.levels} returns an object of the same class as \code{x},
   with the redundant factor/shingle levels dropped, if any. Used to
   avoid empty panels when using the \code{subset} argument.

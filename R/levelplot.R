@@ -39,13 +39,14 @@ prepanel.default.levelplot <-
 panel.levelplot <-
     function(x, y, z, wx, wy, zcol, col.regions, subscripts, ...)
 {
+    ## z not really needed here, but probably would be for contourplot
     if (any(subscripts)) {
-        for (i in seq(along=col.regions)) {
-            ok <- (zcol==i)[subscripts]
-            grid.rect(x = x[ok],
-                      y = y[ok],
-                      width = wx[ok],
-                      height = wy[ok],
+        for (i in seq(along = col.regions)) {
+            ok <- (zcol[subscripts]==i)
+            grid.rect(x = x[subscripts][ok],
+                      y = y[subscripts][ok],
+                      width = wx[subscripts][ok],
+                      height = wy[subscripts][ok],
                       default.units = "native",
                       gp = gpar(fill=col.regions[i], col = NULL))
         }
@@ -59,50 +60,50 @@ panel.levelplot <-
 
 
 
-contourplot <-
-    function(formula,
-             data = parent.frame(),
-             aspect = "fill",
-             layout = NULL,
-             panel = "panel.levelplot",
-             prepanel = NULL,
-             scales = list(),
-             strip = TRUE,
-             groups = NULL,
-             xlab,
-             xlim,
-             ylab,
-             ylim,
-             contour = TRUE,
-             pretty = TRUE,
-             region = FALSE,
-             ...,
-             subscripts = TRUE,
-             subset = TRUE)
+# contourplot <-
+#     function(formula,
+#              data = parent.frame(),
+#              aspect = "fill",
+#              layout = NULL,
+#              panel = "panel.levelplot",
+#              prepanel = NULL,
+#              scales = list(),
+#              strip = TRUE,
+#              groups = NULL,
+#              xlab,
+#              xlim,
+#              ylab,
+#              ylim,
+#              contour = TRUE,
+#              pretty = TRUE,
+#              region = FALSE,
+#              ...,
+#              subscripts = TRUE,
+#              subset = TRUE)
 
-{
-    ## m <- match.call(expand.dots = FALSE)
-    dots <- list(...)
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
+# {
+#     ## m <- match.call(expand.dots = FALSE)
+#     dots <- list(...)
+#     groups <- eval(substitute(groups), data, parent.frame())
+#     subset <- eval(substitute(subset), data, parent.frame())
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
+#     if (!is.function(panel)) panel <- eval(panel)
+#     if (!is.function(strip)) strip <- eval(strip)
 
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
+#     prepanel <-
+#         if (is.function(prepanel)) prepanel 
+#         else if (is.character(prepanel)) get(prepanel)
+#         else eval(prepanel)
 
-    do.call("levelplot",
-            c(list(formula = formula, data = data,
-                   groups = groups, subset = subset,
-                   panel = panel, prepanel = prepanel, strip = strip,
-                   contour = contour,
-                   pretty = pretty,
-                   region = region),
-              dots))
-}
+#     do.call("levelplot",
+#             c(list(formula = formula, data = data,
+#                    groups = groups, subset = subset,
+#                    panel = panel, prepanel = prepanel, strip = strip,
+#                    contour = contour,
+#                    pretty = pretty,
+#                    region = region),
+#               dots))
+# }
 
 
 
@@ -222,7 +223,7 @@ levelplot <-
 
     ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
-    foo <- c(foo, 
+    foo <- c(foo,
              do.call("construct.scales", scales))
 
 
@@ -267,8 +268,7 @@ levelplot <-
     ## Step 5: Process cond
 
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
-    cond.max.level <- unlist(lapply(cond, numlevels))
-
+    cond.max.level <- unlist(lapply(cond, nlevels))
 
     id.na <- is.na(x)|is.na(y)|is.na(z)
     for (var in cond)
@@ -323,18 +323,20 @@ levelplot <-
     ## doesn't work (in any meningful way, at least) in such cases,
     ## but behaviour would be dissimilar in that case.
 
-    ux <- sort(unique(x))
+    ux <- sort(unique(x[!is.na(x)]))
     dux <- diff(ux)
     wux <- .5 * (c(dux[1], dux) + c(dux, dux[length(dux)]))
+    ##wx <- wux[match(x[!is.na(x)], ux)]
     wx <- wux[match(x, ux)]
-    uy <- sort(unique(y))
+    uy <- sort(unique(y[!is.na(y)]))
     duy <- diff(uy)
     wuy <- .5 * (c(duy[1], duy) + c(duy, duy[length(duy)]))
+    ##wy <- wuy[match(y[!is.na(y)], uy)]
     wy <- wuy[match(y, uy)]
 
     zcol <- numeric(length(z))
     for (i in seq(along=col.regions))
-        zcol[z>=at[i] & z<at[i+1]] <- i
+        zcol[!id.na & z>=at[i] & z<at[i+1]] <- i
 
     foo$panel.args.common <-
         c(list(x=x, y=y, z=z,
@@ -351,7 +353,7 @@ levelplot <-
     nplots <- plots.per.page * number.of.pages
 
     foo$panel.args <- as.list(1:nplots)
-    cond.current.level <- rep(1,number.of.cond)
+    cond.current.level <- rep(1, number.of.cond)
     panel.number <- 1 # this is a counter for panel number
 
     for (page.number in 1:number.of.pages)
@@ -367,10 +369,10 @@ levelplot <-
                         var <- cond[[i]]
                         id <- id &
                         if (is.shingle(var))
-                            ((var$x >=
-                              var$int[cond.current.level[i], 1])
-                             & (var$x <=
-                                var$int[cond.current.level[i], 2]))
+                            ((var >=
+                              levels(var)[[cond.current.level[i]]][1])
+                             & (var <=
+                                levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
 

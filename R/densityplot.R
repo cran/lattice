@@ -50,7 +50,7 @@ prepanel.default.densityplot <-
 
 panel.densityplot <-
     function(x,
-             darg,
+             darg = list(n = 30),
              plot.points = TRUE,
              ref = FALSE,
              ...)
@@ -66,7 +66,7 @@ panel.densityplot <-
         h <- do.call("density", c(list(x=x), darg))
         lim <- current.viewport()$xscale
         id <- (h$x>=lim[1] & h$x<=lim[2])
-        panel.xyplot(x = h$x[id], y = h$y[id], type = "l", ...)
+        llines(x = h$x[id], y = h$y[id], ...)
         if (plot.points) panel.xyplot(x=x, y=rep(0, length(x)), cex=.5, ...) 
     }
 }
@@ -132,7 +132,27 @@ densityplot <-
     
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
     
-    form <- latticeParseFormula(formula, data)
+    formname <- deparse(substitute(formula))
+    formula <- eval(substitute(formula), data, parent.frame())
+
+    form <-
+        if (inherits(formula, "formula"))
+            latticeParseFormula(formula, data)
+        else {
+            if (!is.numeric(formula)) stop("invalid formula")
+            else {
+                list(left = NULL,
+                     right = formula,
+                     condition = NULL,
+                     left.name = "",
+                     right.name = formname)
+            }
+        }
+
+    ##form <- latticeParseFormula(formula, data)
+
+
+
     cond <- form$condition
     number.of.cond <- length(cond)
     x <- form$right
@@ -222,7 +242,7 @@ densityplot <-
     ## Step 5: Process cond
 
     cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
-    cond.max.level <- unlist(lapply(cond, numlevels))
+    cond.max.level <- unlist(lapply(cond, nlevels))
 
 
     id.na <- is.na(x)
@@ -261,10 +281,10 @@ densityplot <-
                         var <- cond[[i]]
                         id <- id &
                         if (is.shingle(var))
-                            ((var$x >=
-                              var$int[cond.current.level[i], 1])
-                             & (var$x <=
-                                var$int[cond.current.level[i], 2]))
+                            ((var >=
+                              levels(var)[[cond.current.level[i]]][1])
+                             & (var <=
+                                levels(var)[[cond.current.level[i]]][2]))
                         else (as.numeric(var) == cond.current.level[i])
                     }
 

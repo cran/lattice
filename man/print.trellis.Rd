@@ -34,7 +34,7 @@
 \note{ Trying to position multipage displays will mess things up.
   }
 \seealso{
-  \code{\link[grid]{grid.newpage}}, \code{\link{Lattice}}
+  \code{\link{Lattice}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
