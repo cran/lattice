@@ -188,7 +188,7 @@ panel.3dscatter <-
             pch <- rep(pch, length = nvals)[groups]
         }
         m <- ltransform3dto3d(rbind(x, y, z), rot.mat, za, zb, zback, zfront, distance)
-        ord <- order(m[3,])
+        ord <- sort.list(m[3,])
         if (type == 'p')
             lpoints(x = m[1,ord], y = m[2,ord],
                     col = col.point[ord],

@@ -92,6 +92,40 @@ panel.abline <-
 
 
 
+panel.curve <-
+    function (expr, from, to, n = 101,
+              curve.type = "l",
+              col = add.line$col,
+              lty = add.line$lty,
+              lwd = add.line$lwd,
+              type = NULL, ## avoid type meant for panel.xyplot etc
+              ...)
+    ## curve has a log option. Unfortunately there is no easy way to
+    ## read in the lattice log options (specified via scales) into the
+    ## panel function. Maybe some day if grid natively supports log
+    ## scales and lattice is redesigned to take advantage of that
+{
+    add.line <- trellis.par.get("add.line")
+    sexpr <- substitute(expr)
+    if (is.name(sexpr)) {
+        fcall <- paste(sexpr, "(x)")
+        expr <- parse(text = fcall)
+    }
+    else {
+        if (!(is.call(sexpr) && match("x", all.vars(sexpr), nomatch = 0))) 
+            stop("'expr' must be a function or an expression containing 'x'")
+        expr <- sexpr
+    }
+    lims <- current.viewport()$xscale
+    if (missing(from)) 
+        from <- lims[1]
+    if (missing(to)) 
+        to <- lims[2]
+    x <- seq(from, to, length = n)
+    y <- eval(expr, envir = list(x = x), enclos = parent.frame())
+    llines(x, y, type = curve.type, col = col, lty = lty, lwd = lwd, ...)
+}
+
 
 
 

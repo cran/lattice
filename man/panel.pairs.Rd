@@ -19,7 +19,7 @@ panel.pairs(z, panel = panel.splom,
     function accepts an argument named \code{subscripts}.}
   \item{subscripts}{ The indices of the rows of \code{z} that are to be
     displayed in this (super)panel.}
-  \item{fontsize.small}{ Fontsize to be used for the axis labels inside.}
+%%  \item{fontsize.small}{ Fontsize to be used for the axis labels inside.}
   \item{pscales}{ Controls axis labels, passed down from \code{splom}}
   \item{panel.number}{ the sequential index of the panel in the Lattice
     plot which this function will draw. Passed to the `panel' function

@@ -16,6 +16,9 @@ panel.levelplot(x, y, z, zcol,
                 col = add.line$col,
                 lty = add.line$lty,
                 lwd = add.line$lwd,
+                cex = add.text$cex,
+                font = add.text$font,
+                col.text = add.text$col,
                 \dots,
                 col.regions)
 }
@@ -30,7 +33,8 @@ panel.levelplot(x, y, z, zcol,
   \item{label.style}{}
   \item{contour}{logical}
   \item{region}{logical}
-  \item{col, lty, lwd}{graphical parameters for contour lines}
+  \item{col, lty, lwd}{ graphical parameters for contour lines}
+  \item{cex, font, col.text}{ graphical parameters for contour labels}
   \item{\dots}{extra parameters }
   \item{col.regions}{colors indexed by zcol} 
 }

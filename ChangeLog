@@ -1,4 +1,24 @@
-2003-05-22  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-05-31  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* bwplot.R, cloud.R, miscellaneous.R, xyplot.R:
+	changed order to sort.list where appropriate
+
+2003-05-29  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* levelplot.R: added na.rm = TRUE to min in min(abs(slopes))
+	because sometimes slopes can be NaN. Also, added graphics
+	parameters for panel.levelplot labels
+
+2003-05-24  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* panels.R:
+	added a function called panel.curve, similar to curve() in base.
+
+	* R/panel.functions.Rd: added docs for panel.curve
+
+	* man/panel.pairs.Rd: added doc entry for 'panel.number'
+
+2003-05-22  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* tests/scales.R: added output file name
 
@@ -8,7 +28,7 @@
 
 	* tests/dotplotscoping.R: added output filename
 
-2003-05-22  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-05-22  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* DESCRIPTION: updated DESCRIPTION
 
@@ -23,7 +43,7 @@
 	 anyone is ever going to use it).
 
 
-2003-05-22  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-05-22  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* splom.R:
 	panel functions can now optionally ask for a panel.number argument,
@@ -32,11 +52,11 @@
 	splom, because of the unusual nature of the panel/superpanel
 	arguments. This has been fixed.
 
-2003-05-19  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-05-19  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* man: fixed minor doc problems to pass R CMD check
 
-2003-05-18  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-05-18  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* R: Almost all files updated to fix bugs related to the scales
 	argument --- limits inside scales had a bad bug which is now
@@ -141,7 +161,7 @@
 	(possibly quoted) function, which when called will return a list.
 
 
-2003-03-09  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-03-09  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* splom.R (panel.pairs):
 	the pscales argument didn't work when it was specified
@@ -152,7 +172,7 @@
 	* common.R (latticeParseFormula):
 	Compute a new element of the answer, subscr, if subscripts=TRUE.
 
-2003-03-07  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+2003-03-07  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* common.R (latticeParseFormula):
 	added a subscripts = FALSE argument, which is

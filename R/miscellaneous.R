@@ -1,7 +1,7 @@
 
 
 
-### Copyright 2001-2002 Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2003 Deepayan Sarkar <deepayan@stat.wisc.edu> and 
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -472,7 +472,7 @@ lplot.xy <-
                     default.units="native")
 
     if (type %in% c("s", "S")) {
-        ord <- order(x)
+        ord <- sort.list(x)
         n <- length(x)
         xx <- numeric(2*n-1)
         yy <- numeric(2*n-1)
@@ -503,6 +503,7 @@ lplot.xy <-
                        default.units="native")
     }
 }
+
 
 
 

@@ -68,6 +68,9 @@ panel.levelplot <-
              col = add.line$col,
              lty = add.line$lty,
              lwd = add.line$lwd,
+             cex = add.text$cex,
+             font = add.text$font,
+             col.text = add.text$col,
              ...,
              col.regions)
 {
@@ -165,6 +168,7 @@ panel.levelplot <-
         
         if (contour) {
             add.line <- trellis.par.get("add.line")
+            add.text <- trellis.par.get("add.text")
             ux <- as.double(ux)
             uy <- as.double(uy)
             ord <- order(x, y)
@@ -210,7 +214,7 @@ panel.levelplot <-
                                           (val[[2]] + val[[4]] - 2 * ry[1])/diff(ry),
                                           (2 * ry[2] - val[[2]] - val[[4]])/diff(ry))
 
-                            textloc <- which(abs(slopes) == min(abs(slopes)))[1]
+                            textloc <- which(abs(slopes) == min(abs(slopes), na.rm = TRUE))[1]
                             rotangle <- 0
 
                             if ( depth[textloc] < .05 ) {
@@ -226,6 +230,7 @@ panel.levelplot <-
 
                         ltext(lab = labels$lab[i], adj = c(.5, 0),
                               srt = rotangle,
+                              col = col.text, cex = cex, font = font,
                               x = .5 * (val[[1]][textloc]+val[[3]][textloc]),
                               y = .5 * (val[[2]][textloc]+val[[4]][textloc]))
 

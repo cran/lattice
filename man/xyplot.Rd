@@ -75,6 +75,7 @@ xyplot(formula,
        ylab,
        ylim,
        \dots,
+       panel.groups = "panel.xyplot",
        subscripts,
        subset)
 dotplot(formula,
@@ -104,6 +105,7 @@ bwplot(formula,
        panel = "panel.bwplot",
        box.ratio = 1,
        ...,
+       horizontal,
        subset = TRUE)
 }
 
@@ -499,7 +501,9 @@ bwplot(formula,
     of \code{xlim} etc, even if specified explicitly, are ignored if
     relation is different from "same".
 
-    tick.number: Suggested number of ticks.
+    tick.number: Suggested number of ticks (ignored for a factor, shingle
+    or character vector, in which case there's no natural rule for
+    leaving out some of the labels. But see xlim).
     
     draw = TRUE: logical, whether to draw the axis at all.
 
@@ -589,7 +593,16 @@ bwplot(formula,
   }
   \item{ylim}{ same as \code{xlim}, applied to the y-axis. 
   }
-  \item{\dots}{ other arguments, passed to the panel function }
+  \item{\dots}{ other arguments, passed to the panel function.
+
+    The arguments \code{horizontal} and \code{panel.groups} are
+    documented here to avoid confusion, but they are actually not
+    recognised by these high level functions. Rather, they are passed
+    along to the panel function, as are any other unrecognized
+    arguments.
+
+  }
+
 }
 \value{
   An object of class ``trellis''. The `update' method can be used to

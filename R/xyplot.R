@@ -26,7 +26,7 @@ prepanel.default.xyplot <-
 {
     ## Note: shingles satisfy is.numeric()
     if (any(!is.na(x)) && any(!is.na(y))) {
-        ord <- order(x)
+        ord <- sort.list(x)
         list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else  levels(x),
              ylim = if (is.numeric(y)) range(y[is.finite(y)]) else levels(y),
              dx = as.numeric(diff(x[ord])),
@@ -81,7 +81,7 @@ panel.xyplot <-
 
 
         if ("s" %in% type) {
-            ord <- order(x)
+            ord <- sort.list(x)
             n <- length(x)
             xx <- numeric(2*n-1)
             yy <- numeric(2*n-1)
@@ -94,7 +94,7 @@ panel.xyplot <-
                    lty=lty, col=col.line, lwd=lwd)
         }
         if ("S" %in% type) {
-            ord <- order(x)
+            ord <- sort.list(x)
             n <- length(x)
             xx <- numeric(2*n-1)
             yy <- numeric(2*n-1)

@@ -27,7 +27,7 @@ ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
 }
 \usage{
 larrows(x0, y0, x1, y1, proportion, \dots)
-llines(x, \dots)
+llines(x, y, \dots)
 lplot.xy(xy, \dots)
 lpoints(x, \dots)
 lsegments(x0, y0, x1, y1, \dots)

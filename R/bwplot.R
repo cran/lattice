@@ -160,7 +160,7 @@ panel.barchart <-
 
             for (i in unique(y)) {
                 ok <- y == i
-                ord <- order(groups[ok])
+                ord <- sort.list(groups[ok])
                 pos <- x[ok][ord] > 0
                 nok <- sum(pos)
                 if (nok > 0)
@@ -272,7 +272,7 @@ panel.barchart <-
 
             for (i in unique(x)) {
                 ok <- x == i
-                ord <- order(groups[ok])
+                ord <- sort.list(groups[ok])
                 pos <- y[ok][ord] > 0
                 nok <- sum(pos)
                 if (nok > 0)
