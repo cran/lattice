@@ -51,6 +51,7 @@ export("[.shingle", as.factorOrShingle, as.shingle, banking, barchart,
        panel.text,
 
        strip.custom, trellis.last.object
+
        )
 
 
@@ -59,11 +60,13 @@ S3method("[", shingle)
 S3method(as.data.frame, shingle)
 S3method(plot, shingle)
 S3method(print, shingle)
-S3method(print, shingleLevel)
-S3method(print, trellis)
 S3method(summary, shingle)
+S3method(print, shingleLevel)
+
+S3method(print, trellis)
 S3method(update, trellis)
 S3method(summary, trellis)
+
 
 
 ### Local variables:
