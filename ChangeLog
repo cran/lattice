@@ -1,11 +1,152 @@
+2003-03-14  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
 
+	* print.trellis.R (print.trellis):
+	Among other things, a rewrite of how axis ticks and
+	annotation are drawn (mainly how the parameters translate to physical
+	dimensions). The tck, rot and cex components of scales can now be
+	length 2 vectors, for bottom/left and top/right scales. tck can be
+	negative, giving ticks inside panels. panel functions with a
+	... argument are now passed a variable called panel.number, giving the
+	sequence number of the panel (not sure what happens when skip is
+	non-FALSE)
+
+	* plot.shingle.R:
+	modified plot.shingel to make tck, cex and rot 2-vectors
+
+
+2003-03-13  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* bwplot.R: added code to panel.barchart (also panel.dotplot) to handle
+	groups. Substantially changed the way arguments are processed in
+	barchart, dotplot and stripplot before being passed on to bwplot. When
+	y is missing, and x has non-null names(), names are used as the y
+	variable.
+
+	Also added changes necessary to enable multiple LHS and RHS is formula
+	with allow.multiple = TRUE.
+
+
+2003-03-13  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* common.R (construct.scales):
+	made changes so that cex, tck and rot can now be
+	length 2 vectors in scales, affecting scales at the bottom/left and
+	top/right of panels respectively. Associated changes in print.trellis
+	later.
+
+2003-03-13  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* settings.R (trellis.device):
+	Changed the default for the theme argument from NULL
+	to getOption("lattice.theme"), which can be either a list, or a
+	(possibly quoted) function, which when called will return a list.
+
+
+2003-03-09  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* splom.R (panel.pairs):
+	the pscales argument didn't work when it was specified
+	as a list. Fixed.
+
+2003-03-07  Saikat DebRoy  <saikat@punashcha>
+
+	* common.R (latticeParseFormula):
+	Compute a new element of the answer, subscr, if subscripts=TRUE.
+
+2003-03-07  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* common.R (latticeParseFormula):
+	added a subscripts = FALSE argument, which is
+	not used anywhere yet.
+
+
+2003-03-05  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* print.trellis.R (print.trellis): added two new arguments to
+	print.trellis;
+
+           panel.height = list(1, "null"),
+	   panel.width = list(1, "null"),
+
+	which can be used to specify explicitly the dimensions of each
+	panel in terms of grid units. Any unit is allowed as long as it
+	does not need a 'data'. Not too difficult to add that, but
+	probably unnecessary. Behaviour is undefined (well, it is defined,
+	but I don't want anyone to count on it) when aspect is not "free"
+	in the object being printed. Docs not updated yet.
+
+2003-03-05  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* print.trellis.R (draw.colorkey): Colorkey changed to use the
+	vector fill gpar when drawing rectangles. This means all
+	rectangles are drawn at one go, hence less things to grid.pack(),
+	hence faster when lots of cuts in levelplot/wireframe.
+	
+
+2003-03-04  Saikat DebRoy  <saikat@stat.wisc.edu>
+
+	* common.R (latticeParseFormula):
+	Fix concat() to handle shingles correctly.
+
+2003-03-03  Saikat DebRoy  <saikat@stat.wisc.edu>
+
+	* R/common.R (latticeParseFormula):
+	Allow the possibility of having multiple
+	variables in LHS or RHS of the model formula (eg. y1+y2 ~ x1+x2).
+
+2003-03-03  Saikat DebRoy  <saikat@stat.wisc.edu>
+
+	* R/common.R (latticeParseFormula):
+	Use the environment of the model as enclos
+	argument in calls to eval().
+	
+2003-02-24  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/zzz.R: Restructured .First.lib following suggestions from
+	Prof Ripley. Changed library(grid) to require(grid), with an
+	error message if that fails.
+
+	* R/levelplot.R: xlab, ylab, etc in contourplot was not passed on
+	properly to levelplot. Fixed. 
+
+2003-01-30  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/densityplot.R: changed prepanel.default.densityplot to return
+	range instead of some-stupid-thing else when a groups argument is
+	given.
+
+2003-01-16  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/settings.R: changed trellis.par.get so that when called with
+	no device open, it starts the default device a la print.trellis
+	
+
+2003-01-15  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/levelplot.R: levelplot used to calculate wx and wy, which was
+	not a good idea since this should have been done inside the panel
+	and prepanel functions. The prepanel function has been rewritten,
+	fixing a bug, but some more reorganization still needs to be done.
+	
+
+2002-12-18  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/miscellaneous.R: fixed problem the with 'adj' argument in
+	ltext (used to ignore second component, PR#2380). added 'pos'
+	argument as in text. No offset yet, though.
+
+	* R/panels.R: Changed panel.superpose to pass groups and
+	subscripts to panel.groups (PR#2377). Not very obvious how groups
+	might help, but I guess more information is better than
+	less. Also, several other panel functions didn't recognize the
+	col.line argument, this was fixed.
 
 
 2002-12-15  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* R/common.R: The changes in lattice 0.5-0.6 added some code that
 	gave bad results when some panels had all NA's. That hopefully
-	fixed. 
+	fixed.
 
 	* R/miscellaneous.R: lplot.xy used to call grid.text instead of
 	grid.points when pch was a character. Fixed this.

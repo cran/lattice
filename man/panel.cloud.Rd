@@ -1,8 +1,8 @@
 \name{panel.cloud}
 \alias{panel.cloud}
 \alias{panel.wireframe}
+\alias{panel.3dscatter.old}
 \alias{panel.3dscatter}
-\alias{panel.3dscatter.new}
 \alias{panel.3dwire}
 \alias{palette.shade}
 \alias{ltransform3dMatrix}
@@ -24,13 +24,13 @@ panel.cloud(x, y, z, subscripts,
 panel.wireframe(\dots)
 ltransform3dMatrix(screen, R.mat)
 ltransform3dto3d(x, R.mat, za = 1 , zb = 0, zmin, zmax, dist)
-panel.3dscatter(x, y, z, rot.mat = diag(4), za, zb,
+panel.3dscatter.old(x, y, z, rot.mat = diag(4), za, zb,
              zback, zfront, distance,
              groups = NULL,
              subpanel = if (is.null(groups)) "panel.xyplot"
              else "panel.superpose",
              ...)
-panel.3dscatter.new(x, y, z, rot.mat = diag(4), za, zb,
+panel.3dscatter(x, y, z, rot.mat = diag(4), za, zb,
              zback, zfront, distance,
              zlim, zero,
              groups = NULL, subscripts = TRUE,

@@ -124,7 +124,7 @@ prepanel.default.cloud <-
 
             
 
-panel.3dscatter <-
+panel.3dscatter.old <-
     function(x, y, z, rot.mat = diag(4), za, zb,  zback,
              zfront, distance, groups = NULL,
              subpanel = if (is.null(groups)) "panel.xyplot"
@@ -140,7 +140,7 @@ panel.3dscatter <-
 
 
 
-panel.3dscatter.new <-
+panel.3dscatter <-
     function(x, y, z, rot.mat = diag(4), za, zb,
              zback, zfront, distance,
              zlim, zero,
@@ -207,6 +207,9 @@ panel.3dscatter.new <-
                       col = col.line[ord],
                       lty = lty[ord],
                       lwd = lwd[ord])
+        }
+        else {
+            warning(paste("type =", type, "not implemented, consider using 'panel.3d.cloud = panel.3dscatter.old'"))
         }
     }
 }
@@ -536,34 +539,57 @@ panel.cloud <-
         axes[,3:4] <- axes[,3:4] * (1 + scales.3d$y.scales$distance/10)
         axes[,5:6] <- axes[,5:6] * (1 + scales.3d$z.scales$distance/10)
 
+
+
+        ## FIXME: The following should be split into blocks of
+        ## is.characterOrExpression(xlim)...
+
         x.at <-
-            if (is.logical(scales.3d$x.scales$at))
-                lpretty(xlim, scales.3d$x.scales$tick.number)
+            if (is.logical(scales.3d$x.scales$at)) 
+                if (is.characterOrExpression(xlim)) seq(along = xlim)
+                else lpretty(xlim, scales.3d$x.scales$tick.number)
             else scales.3d$x.scales$at
         y.at <- 
-            if (is.logical(scales.3d$y.scales$at))
-                lpretty(ylim, scales.3d$y.scales$tick.number)
+            if (is.logical(scales.3d$y.scales$at)) 
+                if (is.characterOrExpression(ylim)) seq(along = ylim)
+                else lpretty(ylim, scales.3d$y.scales$tick.number)
             else scales.3d$y.scales$at
         z.at <- 
-            if (is.logical(scales.3d$z.scales$at))
-                lpretty(zlim, scales.3d$z.scales$tick.number)
+            if (is.logical(scales.3d$z.scales$at)) 
+                if (is.characterOrExpression(zlim)) seq(along = zlim)
+                else lpretty(zlim, scales.3d$z.scales$tick.number)
             else scales.3d$z.scales$at
-        x.at <- x.at[x.at >= xlim[1] & x.at <= xlim[2]]
-        y.at <- y.at[y.at >= ylim[1] & y.at <= ylim[2]]
-        z.at <- z.at[z.at >= zlim[1] & z.at <= zlim[2]]
         x.at.lab <-
             if (is.logical(scales.3d$x.scales$labels))
-                as.character(x.at)
+                if (is.characterOrExpression(xlim)) xlim
+                else as.character(x.at)
             else as.character(scales.3d$x.scales$labels)
         y.at.lab <-
             if (is.logical(scales.3d$y.scales$labels))
-                as.character(y.at)
+                if (is.characterOrExpression(ylim)) ylim
+                else as.character(y.at)
             else as.character(scales.3d$y.scales$labels)
         z.at.lab <-
             if (is.logical(scales.3d$z.scales$labels))
-                as.character(z.at)
+                if (is.characterOrExpression(zlim)) zlim
+                else as.character(z.at)
             else as.character(scales.3d$z.scales$labels)
+        if (is.characterOrExpression(xlim)) {
+            xlim <- c(0, length(xlim) + 1)
+        }
+        if (is.characterOrExpression(ylim)) {
+            ylim <- c(0, length(ylim) + 1)
+        }
+        if (is.characterOrExpression(zlim)) {
+            zlim <- c(0, length(zlim) + 1)
+        }
+        x.at <- x.at[x.at >= xlim[1] & x.at <= xlim[2]]
+        y.at <- y.at[y.at >= ylim[1] & y.at <= ylim[2]]
+        z.at <- z.at[z.at >= zlim[1] & z.at <= zlim[2]]
 
+        x.at.lab <- x.at.lab[x.at >= xlim[1] & x.at <= xlim[2]]
+        y.at.lab <- y.at.lab[y.at >= ylim[1] & y.at <= ylim[2]]
+        z.at.lab <- z.at.lab[z.at >= zlim[1] & z.at <= zlim[2]]
 
         
 
@@ -823,7 +849,6 @@ panel.cloud <-
             }
         }
 
-
         if (!is.null(xlab)) ltext(xlab$lab, x = tlabs[1, 1], y = tlabs[2, 1],
                                   cex = xlab$cex, rot = xlab$rot,
                                   font = xlab$font, col = xlab$col)
@@ -918,6 +943,9 @@ wireframe <-
 cloud <-
     function(formula,
              data = parent.frame(),
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = c(1,1),
              layout = NULL,
              panel = "panel.cloud",
@@ -949,21 +977,17 @@ cloud <-
     ##dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
 
     ## Step 1: Evaluate x, y, z etc. and do some preprocessing
-
 
     formula <- eval(substitute(formula), data, parent.frame())
     form <-
         if (inherits(formula, "formula"))
-            latticeParseFormula(formula, data, dim = 3)
+            latticeParseFormula(formula, data, dim = 3, subset = subset,
+                                groups = groups, multiple = allow.multiple,
+                                outer = outer, subscripts = TRUE)
         else {
             if (!is.matrix(formula)) stop("invalid formula")
             else {
@@ -976,6 +1000,19 @@ cloud <-
                      right.x.name = "", right.y.name = "")
             }
         }
+
+    groups <- form$groups
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+    
+    if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
+    if (subscripts) subscr <- form$subscr
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
 
 
     cond <- form$condition
@@ -990,13 +1027,6 @@ cloud <-
         layout <- c(1,1,1)
         number.of.cond <- 1
     }
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-    subscr <- seq(along=x)
-    x <- x[subset, drop = TRUE]
-    y <- y[subset, drop = TRUE]
-    z <- z[subset, drop = TRUE]
-    subscr <- subscr[subset, drop = TRUE]
     
     if (missing(xlab)) xlab <- form$right.x.name
     if (missing(ylab)) ylab <- form$right.y.name
@@ -1031,28 +1061,37 @@ cloud <-
     if (!is.null(xlab)) {
         text <- trellis.par.get("par.xlab.text")
         if (is.null(text)) text <- list(cex = 1, col = "black", font = 1)
-        xlab <- list(label = xlab[[1]], col = text$col, rot = 0,
-                     cex = text$cex, font = text$font)
+        xlab <-
+            list(label =
+                 if (is.characterOrExpression(xlab)) xlab
+                 else xlab[[1]],
+                 col = text$col, rot = 0,
+                 cex = text$cex, font = text$font)
         if (is.list(xlab)) xlab[names(xlab)] <- xlab
     }
     if (!is.null(ylab)) {
         text <- trellis.par.get("par.ylab.text")
         if (is.null(text)) text <- list(cex = 1, col = "black", font = 1)
-        ylab <- list(label = ylab[[1]], col = text$col,  rot = 0,
-                         cex = text$cex, font = text$font)
+        ylab <-
+            list(label =
+                 if (is.characterOrExpression(ylab)) ylab
+                 else ylab[[1]],
+                 col = text$col,  rot = 0,
+                 cex = text$cex, font = text$font)
         if (is.list(ylab)) ylab[names(ylab)] <- ylab
     }
     if (!is.null(zlab)) {
         text <- trellis.par.get("par.zlab.text")
         if (is.null(text)) text <- list(cex = 1, col = "black", font = 1)
-        zlab <- list(label = zlab[[1]], col = text$col, rot = 0,
-                         cex = text$cex, font = text$font)
+        zlab <-
+            list(label =
+                 if (is.characterOrExpression(zlab)) zlab
+                 else zlab[[1]],
+                 col = text$col, rot = 0,
+                 cex = text$cex, font = text$font)
         if (is.list(zlab)) zlab[names(zlab)] <- zlab
     }
     ##-----------------------------------------------------------------
-
-
-
 
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
@@ -1128,7 +1167,6 @@ cloud <-
     
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
@@ -1194,13 +1232,6 @@ cloud <-
     else {
         col.regions <- trellis.par.get("background")$col
     }
-
-
-
-
-
-
-
 
 
     ## maybe *lim = NULL with relation = "free" ? 
@@ -1269,6 +1300,12 @@ cloud <-
                                panel.args = foo$panel.args,
                                aspect = 1,
                                nplots = nplots))
+
+    if (is.null(foo$key) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+        foo$key <- do.call("simpleKey",
+                           c(list(levels(as.factor(groups))),
+                             if (is.list(auto.key)) auto.key else list()))
 
     class(foo) <- "trellis"
     foo

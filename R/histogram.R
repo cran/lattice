@@ -134,6 +134,9 @@ panel.histogram <- function(x,
 histogram <-
     function(formula,
              data = parent.frame(),
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = "fill",
              layout = NULL,
              panel = "panel.histogram",
@@ -160,32 +163,34 @@ histogram <-
     ## dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
+    ## Step 1: Evaluate x, y, etc. and do some preprocessing
+
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+
+    formname <- deparse(substitute(formula))
+    formula <- eval(substitute(formula), data, parent.frame())
+
+    if (!inherits(formula, "formula"))
+        formula <- as.formula(paste("~", formname))
+    
+    form <-
+        latticeParseFormula(formula, data, subset = subset,
+                            groups = groups, multiple = allow.multiple,
+                            outer = outer, subscripts = TRUE)
+
+    groups <- form$groups
+
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
+
+    if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
+    if (subscripts) subscr <- form$subscr
 
     prepanel <-
         if (is.function(prepanel)) prepanel 
         else if (is.character(prepanel)) get(prepanel)
         else eval(prepanel)
-
-    ## Step 1: Evaluate x, y, etc. and do some preprocessing
-
-    formname <- deparse(substitute(formula))
-    formula <- eval(substitute(formula), data, parent.frame())
-
-    form <-
-        if (inherits(formula, "formula"))
-            latticeParseFormula(formula, data)
-        else {
-            if (!is.numeric(formula)) stop("invalid formula")
-            else {
-                list(left = NULL,
-                     right = formula,
-                     condition = NULL,
-                     left.name = "",
-                     right.name = formname)
-            }
-        }
 
     cond <- form$condition
     number.of.cond <- length(cond)
@@ -197,12 +202,11 @@ histogram <-
         number.of.cond <- 1
     }
 
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
-    if(subscripts) subscr <- seq(along=x)
-    x <- x[subset, drop = TRUE]
-    if (subscripts) subscr <- subscr[subset, drop = TRUE]
+
+
+
+
+
     
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- TRUE
@@ -283,9 +287,8 @@ histogram <-
         else if (type == "percent") "Percent of Total"
         else "Density"
 
-        ## Step 5: Process cond
+    ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
@@ -365,6 +368,12 @@ histogram <-
                                panel.args = foo$panel.args,
                                aspect = aspect,
                                nplots = nplots))
+
+    if (is.null(foo$key) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+        foo$key <- do.call("simpleKey",
+                           c(list(levels(as.factor(groups))),
+                             if (is.list(auto.key)) auto.key else list()))
 
     class(foo) <- "trellis"
     foo

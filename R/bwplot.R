@@ -1,6 +1,6 @@
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2003 Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -21,25 +21,55 @@
 
 
 
+
+
 prepanel.default.bwplot <-
     function(x, y, box.ratio,
              horizontal = TRUE,
+             origin = NULL, stack = FALSE,
              levels.fos = length(unique(y)), ...)
 {
+
+    ## This function needs to work for all high level functions in the
+    ## bwplot family, namely bwplot, dotplot, stripplot and
+    ## barchart. For all but barchart, this is simply a question of
+    ## getting the ranges. For stacked barcharts, things are slightly
+    ## complicated.
+
     if (length(x) && length(y)) {
         
-        if (!is.numeric(x)) x <- as.numeric(x)
-        if (!is.numeric(y)) y <- as.numeric(y)
+        #if (!is.numeric(x)) x <- as.numeric(x)
+        #if (!is.numeric(y)) y <- as.numeric(y)
 
         temp <- .5  #* box.ratio/(box.ratio+1)
         if (horizontal)
-            list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else levels(x),
-                 ylim = c(1-temp, levels.fos + temp),
+            list(xlim =
+                 if (stack)
+             {
+                 foo1 <- if (any(x > 0)) range( by(x[x>0], y[x>0, drop = TRUE], sum)) else 0
+                 foo2 <- if (any(x < 0)) range( by(x[x<0], y[x<0, drop = TRUE], sum)) else 0
+                 range(foo1, foo2)
+             }
+                 else if (is.numeric(x)) range(x[is.finite(x)], origin)
+                 else levels(x),
+                 ylim =
+                 if (is.numeric(y)) range(y[is.finite(y)])
+                 else levels(y),
+                 ##ylim = c(1-temp, levels.fos + temp),
                  dx = 1,
                  dy = 1)
         else 
-            list(xlim = c(1-temp, levels.fos + temp),
-                 ylim = if (is.numeric(y)) range(y[is.finite(y)]) else levels(y),
+            list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else levels(x),
+                 ##xlim = c(1-temp, levels.fos + temp),
+                 ylim =
+                 if (stack)
+             {
+                 foo1 <- if (any(y > 0)) range( by(y[y>0], x[y>0], sum)) else 0
+                 foo2 <- if (any(y < 0)) range( by(y[y<0], x[y<0], sum)) else 0
+                 range(foo1, foo2)
+             }
+                 else if (is.numeric(y)) range(y[is.finite(y)], origin)
+                 else levels(y),
                  dx = 1,
                  dy = 1)
     }
@@ -53,38 +83,253 @@ prepanel.default.bwplot <-
 
 
 panel.barchart <-
-    function(x, y, box.ratio=1, horizontal = TRUE, col=bar.fill$col, ...)
+    function(x, y, box.ratio = 1,
+             horizontal = TRUE,
+             origin = NULL, reference = TRUE,
+             stack = FALSE,
+             groups = NULL, 
+             col = if (is.null(groups)) bar.fill$col else
+             regions$col,
+             ...)
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
 
     bar.fill <- trellis.par.get("bar.fill")
+    reference.line <- trellis.par.get("reference.line")
+
+
+    ## function defined here so that panel.barchart doesn't need to
+    ## have a subscript argument (which would make stripplot always
+    ## pass the subscripts to the trellis object, which is unnecessary
+    ## when groups = NULL)
+
+    groupSub <- function(groups, subscripts, ...)
+        groups[subscripts]
+
     if (horizontal) {
-        xmin <- current.viewport()$xscale[1]
-        height <- box.ratio/(1+box.ratio)
+
+        ## No grouping
+
+        if (is.null(groups)) {
+            if (is.null(origin)) {
+                origin <- current.viewport()$xscale[1]
+                reference <- FALSE
+            }
+            height <- box.ratio/(1+box.ratio)
         
-        for (i in seq(along=x)) {
+            if (reference)
+                panel.abline(v = origin,
+                             col = reference.line$col,
+                             lty = reference.line$lty,
+                             lwd = reference.line$lwd)
             grid.rect(gp = gpar(fill = col),
-                      y = y[i],
-                      x = unit(0,"npc"),
-                      height = height,
-                      width = x[i]-xmin,
+                      y = y,
+                      x = rep(origin, length(y)),
+                      height = rep(height, length(y)),
+                      width = x - origin,
                       just = c("left", "centre"),
                       default.units = "native")
         }
+
+        ## grouped, with stacked bars
+
+        else if (stack) {
+
+            if (!is.null(origin) && origin != 0)
+                warning("origin forced to 0 for stacked bars")
+
+            groups <- as.numeric(groups)
+            vals <- sort(unique(groups))
+            nvals <- length(vals)
+            groups <- groupSub(groups, ...)
+
+            regions <- trellis.par.get("regions")
+            numcol.r <- length(col)
+            col <- 
+                if (numcol.r <= nvals) rep(col, length = nvals)
+                else col[floor(1+(vals-1)*(numcol.r-1)/(nvals-1))]
+
+            height <- box.ratio/(1 + box.ratio)
+
+            if (reference)
+                panel.abline(v = origin,
+                             col = reference.line$col,
+                             lty = reference.line$lty,
+                             lwd = reference.line$lwd)
+
+            for (i in unique(y)) {
+                ok <- y == i
+                ord <- order(groups[ok])
+                pos <- x[ok][ord] > 0
+                nok <- sum(pos)
+                if (nok > 0)
+                    grid.rect(gp = gpar(fill = col[groups[ok][ord][pos]]),
+                              y = rep(i, nok),
+                              x = cumsum(c(0, x[ok][ord][pos][-nok])),
+                              height = rep(height, nok),
+                              width = x[ok][ord][pos],
+                              just = c("left", "centre"),
+                              default.units = "native")
+                neg <- x[ok][ord] < 0
+                nok <- sum(neg)
+                if (nok > 0)
+                    grid.rect(gp = gpar(fill = col[groups[ok][ord][neg]]),
+                              y = rep(i, nok),
+                              x = cumsum(c(0, x[ok][ord][neg][-nok])),
+                              height = rep(height, nok),
+                              width = x[ok][ord][neg],
+                              just = c("left", "centre"),
+                              default.units = "native")
+            }
+        }
+
+        ## grouped, with side by side bars
+
+        else {
+            if (is.null(origin)) {
+                origin <- current.viewport()$xscale[1]
+                reference <- FALSE
+            }
+            groups <- as.numeric(groups)
+            vals <- sort(unique(groups))
+            nvals <- length(vals)
+            groups <- groupSub(groups, ...)
+
+            regions <- trellis.par.get("regions")
+            numcol.r <- length(col)
+            col <- 
+                if (numcol.r <= nvals) rep(col, length = nvals)
+                else col[floor(1+(vals-1)*(numcol.r-1)/(nvals-1))]
+            
+            height <- box.ratio/(1 + nvals * box.ratio)
+            if (reference)
+                panel.abline(v = origin,
+                             col = reference.line$col,
+                             lty = reference.line$lty,
+                             lwd = reference.line$lwd)
+            for (i in unique(y)) {
+                ok <- y == i
+                nok <- sum(ok)
+                grid.rect(gp = gpar(fill = col[groups[ok]]),
+                          y = (i + height * (groups[ok] - (nvals + 1)/2)),
+                          x = rep(origin, nok), 
+                          height = rep(height, nok),
+                          width = x[ok] - origin,
+                          just = c("left", "centre"),
+                          default.units = "native")
+            }
+        }
     }
+    
+    ## if not horizontal
+
     else {
-        ymin <- current.viewport()$yscale[1]
-        width <- box.ratio/(1+box.ratio)
+        if (is.null(groups)) {
+            if (is.null(origin)) {
+                origin <- current.viewport()$yscale[1]
+                reference <- FALSE
+            }
+            width <- box.ratio/(1+box.ratio)
         
-        for (i in seq(along=y)) {
+            if (reference)
+                panel.abline(h = origin,
+                             col = reference.line$col,
+                             lty = reference.line$lty,
+                             lwd = reference.line$lwd)
+
             grid.rect(gp = gpar(fill = col),
-                      x = x[i],
-                      y = unit(0,"npc"),
-                      height = y[i] - ymin,
-                      width = width,
+                      x = x,
+                      y = rep(origin, length(x)),
+                      width = rep(width, length(x)),
+                      height = y - origin,
                       just = c("centre", "bottom"),
                       default.units = "native")
+        }
+        else if (stack) {
+
+            if (!is.null(origin) && origin != 0)
+                warning("origin forced to 0 for stacked bars")
+
+            groups <- as.numeric(groups)
+            vals <- sort(unique(groups))
+            nvals <- length(vals)
+            groups <- groupSub(groups, ...)
+
+            regions <- trellis.par.get("regions")
+            numcol.r <- length(col)
+            col <- 
+                if (numcol.r <= nvals) rep(col, length = nvals)
+                else col[floor(1+(vals-1)*(numcol.r-1)/(nvals-1))]
+            
+            width <- box.ratio/(1 + box.ratio)
+
+            if (reference)
+                panel.abline(h = origin,
+                             col = reference.line$col,
+                             lty = reference.line$lty,
+                             lwd = reference.line$lwd)
+
+            for (i in unique(x)) {
+                ok <- x == i
+                ord <- order(groups[ok])
+                pos <- y[ok][ord] > 0
+                nok <- sum(pos)
+                if (nok > 0)
+                    grid.rect(gp = gpar(fill = col[groups[ok][ord][pos]]),
+                              x = rep(i, nok),
+                              y = cumsum(c(0, y[ok][ord][pos][-nok])),
+                              width = rep(width, nok),
+                              height = y[ok][ord][pos],
+                              just = c("centre", "bottom"),
+                              default.units = "native")
+                neg <- y[ok][ord] < 0
+                nok <- sum(neg)
+                if (nok > 0)
+                    grid.rect(gp = gpar(fill = col[groups[ok][ord][neg]]),
+                              x = rep(i, nok),
+                              y = cumsum(c(0, y[ok][ord][neg][-nok])),
+                              width = rep(width, nok),
+                              height = y[ok][ord][neg],
+                              just = c("centre", "bottom"),
+                              default.units = "native")
+            }
+
+            
+        }
+        else {
+            if (is.null(origin)) {
+                origin <- current.viewport()$yscale[1]
+                reference = FALSE
+            }
+            groups <- as.numeric(groups)
+            vals <- sort(unique(groups))
+            nvals <- length(vals)
+            groups <- groupSub(groups, ...)
+
+            regions <- trellis.par.get("regions")
+            numcol.r <- length(col)
+            col <- 
+                if (numcol.r <= nvals) rep(col, length = nvals)
+                else col[floor(1+(vals-1)*(numcol.r-1)/(nvals-1))]
+            
+            width <- box.ratio/(1 + nvals * box.ratio)
+            if (reference)
+                panel.abline(h = origin,
+                             col = reference.line$col,
+                             lty = reference.line$lty,
+                             lwd = reference.line$lwd)
+            for (i in unique(x)) {
+                ok <- x == i
+                nok <- sum(ok)
+                grid.rect(gp = gpar(fill = col[groups[ok]]),
+                          x = (i + width * (groups[ok] - (nvals + 1)/2)),
+                          y = rep(origin, nok), 
+                          width = rep(width, nok),
+                          height = y[ok] - origin,
+                          just = c("centre", "bottom"),
+                          default.units = "native")
+            }
         }
     }
 }
@@ -92,35 +337,47 @@ panel.barchart <-
 
 
 
-
-
 panel.dotplot <-
     function(x, y, horizontal = TRUE,
-             pch = dot.symbol$pch,
-             col = dot.symbol$col,
+             pch = if (is.null(groups)) dot.symbol$pch else sup.symbol$pch,
+             col = if (is.null(groups)) dot.symbol$col else sup.symbol$col,
              lty = dot.line$lty,
              lwd = dot.line$lwd,
              col.line = dot.line$col,
-             levels.fos = NULL, ...)
+             levels.fos = NULL,
+             groups = NULL,
+             ...)
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
 
     dot.line <- trellis.par.get("dot.line")
     dot.symbol <- trellis.par.get("dot.symbol")
+    sup.symbol <- trellis.par.get("superpose.symbol")
+
     if (horizontal) {
         yscale <- current.viewport()$yscale
-        if (is.null(levels.fos)) levels.fos <- floor(yscale[2])-ceiling(yscale[1])+1
+        if (is.null(levels.fos))
+            levels.fos <- floor(yscale[2])-ceiling(yscale[1])+1
         panel.abline(h=1:levels.fos, col=col.line,
                      lty=lty, lwd=lwd)
-        panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+        if (is.null(groups)) 
+            panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+        else
+            panel.superpose(x = x, y = y, groups = groups,
+                            col = col, pch = pch, ...)
     }
     else {
         xscale <- current.viewport()$xscale
-        if (is.null(levels.fos)) levels.fos <- floor(xscale[2])-ceiling(xscale[1])+1
+        if (is.null(levels.fos))
+            levels.fos <- floor(xscale[2])-ceiling(xscale[1])+1
         panel.abline(v=1:levels.fos, col=col.line,
                      lty=lty, lwd=lwd)
-        panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+        if (is.null(groups)) 
+            panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+        else 
+            panel.superpose(x = x, y = y, groups = groups,
+                            col = col, pch = pch, ...)
     }
 }
 
@@ -129,21 +386,19 @@ panel.dotplot <-
 
 
 panel.stripplot <-
-    function(x, y, jitter.data = FALSE, factor = 0.5, horizontal = TRUE,
-             pch=plot.symbol$pch, col=plot.symbol$col, ...)
+    function(x, y, jitter.data = FALSE, factor = 0.5,
+             horizontal = TRUE, groups = NULL, ...)
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
-
-    plot.symbol <- trellis.par.get("plot.symbol")
     y.jitter  <-
         if (horizontal && jitter.data) jitter(y, factor = factor)
         else y
     x.jitter  <-
         if (!horizontal && jitter.data) jitter(x, factor = factor)
         else x
-    panel.xyplot(x = x.jitter, y = y.jitter, pch = pch, col = col, ...)
-    
+    if (is.null(groups)) panel.xyplot(x = x.jitter, y = y.jitter, ...)
+    else panel.superpose(x = x.jitter, y = y.jitter, ...)
 }
 
 
@@ -305,55 +560,47 @@ panel.bwplot <-
     }
 }
 
+# The following needs to work:
+
+# k <- 10# (optional)
+# fubar <- function() {
+#     k <- -1
+#     data = list(x=1:10)
+#     names(data$x) <- 1:10
+#     barchart(x^k, data)
+# }
+# fubar()
+
 
 
 dotplot <-
     function(formula,
              data = parent.frame(),
              panel = "panel.dotplot",
-             prepanel = NULL,
-             strip = TRUE,
              groups = NULL,
-             horizontal = NULL,
              ...,
              subset = TRUE)
 {
 
     ## m <- match.call(expand.dots = FALSE)
+    ## lapply(dots, eval, data, parent.frame())))
+
     dots <- list(...)
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
-    formname <- deparse(substitute(formula))
-    form <- eval(substitute(formula), data, parent.frame())
-
-    call.list <- c(list(groups = groups, subset = subset, horizontal = horizontal,
-                        panel = panel, prepanel = prepanel, strip = strip,
+    foo <- substitute(formula)
+    if (!(is.call(foo) && foo[[1]] == "~")) {
+        formula <- as.formula(paste("~", deparse(foo)))
+        environment(formula) <- parent.frame()
+    }
+    call.list <- c(list(formula = formula, data = data,
+                        groups = groups,
+                        subset = subset,
+                        panel = panel,
                         box.ratio = 0),
                    dots)
-
-    if (!inherits(form, "formula") && is.numeric(form)) {
-        call.list$formula <- form
-        if (is.null(call.list$xlab)) call.list$xlab <- formname
-        else if (is.list(call.list$xlab) && is.null(call.list$xlab$lab))
-            call.list$xlab$label <- formname 
-    }
-    else {
-        call.list$formula <- formula
-        call.list$data <- data
-    }
-
     do.call("bwplot", call.list)
-
-    ## lapply(dots, eval, data, parent.frame())))
 }
 
 
@@ -362,99 +609,73 @@ barchart <-
     function(formula,
              data = parent.frame(),
              panel = "panel.barchart",
-             prepanel = NULL,
-             strip = TRUE,
              box.ratio = 2,
              groups = NULL,
-             horizontal = NULL,
              ...,
              subset = TRUE)
 {
 
-    ## m <- match.call(expand.dots = FALSE)
     dots <- list(...)
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
+    foo <- substitute(formula)
+    if (!(is.call(foo) && foo[[1]] == "~")) {
+        formula <- as.formula(paste("~", deparse(foo)))
+        environment(formula) <- parent.frame()
+    }
+    call.list <- c(list(formula = formula, data = data,
+                        groups = groups,
+                        subset = subset,
+                        panel = panel,
+                        box.ratio = box.ratio),
+                   dots)
+    do.call("bwplot", call.list)
 
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
-    do.call("bwplot",
-            c(list(formula = formula, data = data, horizontal = horizontal,
-                   groups = groups, subset = subset,
-                   panel = panel, prepanel = prepanel, strip = strip,
-                   box.ratio = box.ratio),
-              dots))
-    ## lapply(dots, eval, data, parent.frame())))
 }
 
 
 stripplot <-
     function(formula,
              data = parent.frame(),
-             panel = if (is.null(groups)) "panel.stripplot"
-             else "panel.superpose",
-             panel.groups = "panel.stripplot",
-             prepanel = NULL,
-             strip = TRUE,
+             panel = "panel.stripplot",
              jitter = FALSE,
              factor = .5,
              box.ratio = if (jitter) 1 else 0,
              groups = NULL,
-             horizontal = NULL,
              ...,
              subset = TRUE)
 {
-    ## m <- match.call(expand.dots = FALSE)
+
     dots <- list(...)
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
-    formname <- deparse(substitute(formula))
-    form <- eval(substitute(formula), data, parent.frame())
-
-    call.list <- c(list(groups = groups, subset = subset,
-                        horizontal = horizontal,
+    foo <- substitute(formula)
+    if (!(is.call(foo) && foo[[1]] == "~")) {
+        formula <- as.formula(paste("~", deparse(foo)))
+        environment(formula) <- parent.frame()
+    }
+    call.list <- c(list(formula = formula, data = data,
                         panel = panel,
-                        panel.groups = panel.groups,
-                        prepanel = prepanel, strip = strip,
-                        jitter = jitter, factor = factor,
-                        box.ratio = 0),
+                        jitter = jitter,
+                        factor = factor,
+                        groups = groups,
+                        subset = subset,
+                        box.ratio = box.ratio),
                    dots)
-    
-    if (!inherits(form, "formula") && is.numeric(form)) {
-        call.list$formula <- form
-        if (is.null(call.list$xlab)) call.list$xlab <- formname
-        else if (is.list(call.list$xlab) && is.null(call.list$xlab$lab))
-            call.list$xlab$label <- formname 
-    }
-    else {
-        call.list$formula <- formula
-        call.list$data <- data
-    }
 
     do.call("bwplot", call.list)
 
-    ## lapply(dots, eval, data, parent.frame())))
 }
 
 
 bwplot <-
     function(formula,
              data = parent.frame(),
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = "fill",
              layout = NULL,
              panel = "panel.bwplot",
@@ -479,45 +700,42 @@ bwplot <-
 
     dots <- list(...)
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
 
     formname <- deparse(substitute(formula))
     formula <- eval(substitute(formula), data, parent.frame())
 
+    if (!inherits(formula, "formula"))
+        formula <- as.formula(paste("~", formname))
+    
     form <-
-        if (inherits(formula, "formula"))
-            latticeParseFormula(formula, data)
-        else {
-            if (!is.numeric(formula)) stop("invalid formula")
-            else {
-                list(left = rep("", length(formula)),
-                     right = formula,
-                     condition = NULL,
-                     left.name = "",
-                     right.name = formname)
-            }
-        }
-    if (is.null(form$left)) form$left <- rep("", length(form$right))
+        latticeParseFormula(formula, data, subset = subset,
+                            groups = groups, multiple = allow.multiple,
+                            outer = outer, subscripts = TRUE)
+
+
+    groups <- form$groups
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
+    if (subscripts) subscr <- form$subscr
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
 
     cond <- form$condition
     number.of.cond <- length(cond)
-    y <- form$left
     x <- form$right
-
-    if (is.null(horizontal)) {
-        horizontal <-
-            if ((is.factor(x) || is.shingle(x)) && is.numeric(y)) FALSE
-            else TRUE
-    }
-
+    y <- form$left
+    if (is.null(y))
+        y <- rep(if (is.null(names(x))) '' else names(x), length = length(x))
     if (number.of.cond == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, length(x))))
@@ -525,18 +743,16 @@ bwplot <-
         number.of.cond <- 1
     }
 
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
 
-    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
-    if (subscripts) subscr <- seq(along=x)
-    x <- x[subset, drop = TRUE]
-    y <- y[subset, drop = TRUE]
-    if (subscripts) subscr <- subscr[subset, drop = TRUE]
+    if (is.null(horizontal)) {
+        horizontal <-
+            if ((is.factor(x) || is.shingle(x)) && is.numeric(y)) FALSE
+            else TRUE
+    }
+
 
     if (horizontal) {
         if (!(is.numeric(x))) {
-            ## x <- as.numeric(x)
             warning("x should be numeric")
         }
         y <- as.factorOrShingle(y)
@@ -548,7 +764,6 @@ bwplot <-
     }
     else {
         if (!(is.numeric(y))) {
-        ##    y <- as.numeric(y)
             warning("y should be numeric")
         }
         x <- as.factorOrShingle(x)
@@ -605,17 +820,6 @@ bwplot <-
     foo <- c(foo,
              do.call("construct.scales", scales))
 
-    if (horizontal) {
-        if (is.logical(foo$y.scales$at)) foo$y.scales$at <- 1:num.l.y
-        if (is.f.y && is.logical(foo$y.scales$labels))
-            foo$y.scales$labels <- levels(y)
-    }
-    else {
-        if (is.logical(foo$x.scales$at)) foo$x.scales$at <- 1:num.l.x
-        if (is.f.x && is.logical(foo$x.scales$labels))
-            foo$x.scales$labels <- levels(x)
-    }
-
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
@@ -657,7 +861,6 @@ bwplot <-
     
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
@@ -709,50 +912,62 @@ bwplot <-
                     }
 
                     if (horizontal) {
-                        if (is.f.y) 
+                        if (is.f.y) {
                             foo$panel.args[[panel.number]] <-
                                 list(x = x[id],
                                      ##y = as.numeric(y[id]))
                                      y = y[id])
-                            
+                            if (subscripts)
+                                foo$panel.args[[panel.number]]$subscripts <-
+                                    subscr[id]
+                        }
                         else {  # shingle
                             panel.x <- numeric(0)
                             panel.y <- numeric(0)
+                            if (subscripts) panel.subscr <- numeric(0)
                             for (k in 1:num.l.y) {
                                 tid <- id & (y >= levels(y)[[k]][1]) & (y <= levels(y)[[k]][2])
                                 panel.x <- c(panel.x, x[tid])
                                 panel.y <- c(panel.y, rep(k,length(tid[tid])))
+                                if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
                             }
                             foo$panel.args[[panel.number]] <-
                                 list(x = panel.x,
                                      y = panel.y)
+                            if (subscripts)
+                                foo$panel.args[[panel.number]]$subscripts <-
+                                    panel.subscr
+
                         }
                     }
                     else {
-                        if (is.f.x)
+                        if (is.f.x) {
                             foo$panel.args[[panel.number]] <-
                                 ##list(x = as.numeric(x[id]),
                                 list(x = x[id],
                                      y = y[id])
-                            
+                            if (subscripts)
+                                foo$panel.args[[panel.number]]$subscripts <-
+                                    subscr[id]
+                        }
                         else {  # shingle
                             panel.x <- numeric(0)
                             panel.y <- numeric(0)
+                            if (subscripts) panel.subscr <- numeric(0)
                             for (k in 1:num.l.x) {
                                 tid <- id & (x >= levels(x)[[k]][1]) & (x <= levels(x)[[k]][2])
                                 panel.y <- c(panel.y, y[tid])
                                 panel.x <- c(panel.x, rep(k,length(tid[tid])))
+                                if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
                             }
                             foo$panel.args[[panel.number]] <-
                                 list(x = panel.x,
                                      y = panel.y)
+                            if (subscripts)
+                                foo$panel.args[[panel.number]]$subscripts <-
+                                    panel.subscr
                         }
                     }
-
-
-                    if (subscripts)
-                        foo$panel.args[[panel.number]]$subscripts <-
-                            subscr[id]
 
                     cond.current.level <-
                         cupdate(cond.current.level,
@@ -774,20 +989,13 @@ bwplot <-
                                aspect = aspect,
                                nplots = nplots))
 
+    if (is.null(foo$key) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+        foo$key <- do.call("simpleKey",
+                           c(list(levels(as.factor(groups))),
+                             if (is.list(auto.key)) auto.key else list()))
+
     class(foo) <- "trellis"
     foo
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -23,7 +23,7 @@ lpoints(x, y = NULL, type = "p", col = plot.symbol$col,
 lsegments(x0, y0, x1, y1, col = add.line$col, lty = add.line$lty, 
     lwd = add.line$lwd, \dots)
 ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
-    cex = add.text$cex, srt = 0, font = 1, adj = 0.5, \dots)  
+    cex = add.text$cex, srt = 0, font = 1, adj = 0.5, pos, \dots)  
 }
 \usage{
 larrows(x0, y0, x1, y1, proportion, \dots)
@@ -45,8 +45,9 @@ ltext(x, \dots)
   with minimal modification. 
 
   See the documentation of the base functions for usage. Not all
-  arguments are always supported. These all correspond to the default
-  methods only. In particular, \code{larrows} does not draw arrows.
+  arguments are always supported. All these correspond to the default
+  methods only. For \code{ltext}, only values 0, .5 and 1 for \code{adj}
+  have any effect.
 }
 \seealso{\code{\link{points}}, \code{\link{lines}},
   \code{\link{text}}, \code{\link{segments}},

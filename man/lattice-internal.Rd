@@ -2,6 +2,7 @@
 \alias{Rows}
 \alias{extend.limits}
 \alias{lpretty}
+\alias{generateNewName}
 \alias{calculateAxisComponents}
 \alias{cupdate}
 \alias{.lattice.print.more}
@@ -29,11 +30,13 @@
 \alias{ldrop.levels.default}
 \alias{is.characterOrExpression}
 \alias{rearrangeUnit}
+\alias{latticeAsFormula}
 \title{Miscellaneous Functions used within Lattice}
 \description{
   These functions are used by various Lattice routines.
 }
 \synopsis{
+generateNewName(names.current, new.prefix)
 lpretty(x, ...)
 construct.3d.scales(draw = TRUE, tck = 1, lty = 1, lwd = 1, distance = c(1, 
     1, 1), tick.number = 5, cex = 1, rot = FALSE, at = FALSE, 
@@ -85,7 +88,9 @@ prepanel.default.splom(...)
 prepanel.default.tmd(...)
 prepanel.default.xyplot(x, y, type, ...)
 is.characterOrExpression(x)
-rearrangeUnit(x, pos, u) 
+rearrangeUnit(x, pos, u)
+latticeAsFormula(x)
+generateNewName(names.current, new.prefix)
 }
 \arguments{
   \item{length}{ desired length of the resulting interval, with center
@@ -113,6 +118,7 @@ rearrangeUnit(x, pos, u)
   \item{u}{grid unit object of length 1}
   \item{at, labels, logpaste, abbreviate, minlength, format}{arguments
     used in \code{calculateAxisComponents}}
+  \item{names.current, new.prefix}{names to disambiguate and new prefix}
   \item{\dots}{other arguments}
 }
 \details{

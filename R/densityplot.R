@@ -59,13 +59,13 @@ prepanel.default.densityplot <-
             id <- (groups[subscripts] == vals[i])
             if (any(id)) {
                 h <- do.call("density", c(list(x=x[id]), darg))
-                xl <- c(xl, range(h$x))
-                yl <- c(yl, range(h$y))
+                xl <- c(xl, h$x)
+                yl <- c(yl, h$y)
                 dxl <- c(dxl, diff(h$x))
                 dyl <- c(dyl, diff(h$y))
             }
         }
-        list(xlim = xl, ylim = yl, dx = dxl, dy = dyl)
+        list(xlim = range(xl), ylim = range(yl), dx = dxl, dy = dyl)
     }
 }
 
@@ -109,6 +109,9 @@ panel.densityplot <-
 densityplot <-
     function(formula,
              data = parent.frame(),
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = "fill",
              layout = NULL,
              panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
@@ -140,14 +143,6 @@ densityplot <-
     ## dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
     ## darg is a list that gives arguments to density()
     darg <- list()
     darg$bw <- bw
@@ -164,26 +159,32 @@ densityplot <-
     
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
     
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+
     formname <- deparse(substitute(formula))
     formula <- eval(substitute(formula), data, parent.frame())
 
+    if (!inherits(formula, "formula"))
+        formula <- as.formula(paste("~", formname))
+    
     form <-
-        if (inherits(formula, "formula"))
-            latticeParseFormula(formula, data)
-        else {
-            if (!is.numeric(formula)) stop("invalid formula")
-            else {
-                list(left = NULL,
-                     right = formula,
-                     condition = NULL,
-                     left.name = "",
-                     right.name = formname)
-            }
-        }
+        latticeParseFormula(formula, data, subset = subset,
+                            groups = groups, multiple = allow.multiple,
+                            outer = outer, subscripts = TRUE)
 
-    ##form <- latticeParseFormula(formula, data)
+    groups <- form$groups
 
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
 
+    if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
+    if (subscripts) subscr <- form$subscr
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
 
     cond <- form$condition
     number.of.cond <- length(cond)
@@ -195,13 +196,6 @@ densityplot <-
         number.of.cond <- 1
     }
 
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
-    if(subscripts) subscr <- seq(along=x)
-    x <- x[subset, drop = TRUE]
-    if (subscripts) subscr <- subscr[subset, drop = TRUE]
-    
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- "Density"
 
@@ -273,7 +267,6 @@ densityplot <-
 
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
@@ -348,6 +341,12 @@ densityplot <-
                                panel.args = foo$panel.args,
                                aspect = aspect,
                                nplots = nplots))
+
+    if (is.null(foo$key) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+        foo$key <- do.call("simpleKey",
+                           c(list(levels(as.factor(groups))),
+                             if (is.list(auto.key)) auto.key else list()))
 
     class(foo) <- "trellis"
     foo

@@ -1,16 +1,14 @@
 \name{panel.dotplot}
 \alias{panel.dotplot}
-\title{ Default Panel Functions for dotplot}
+\title{ Default Panel Function for dotplot}
 \description{
-  This is the default panel function for \code{dotplot}.
-}
-\synopsis{
-panel.dotplot(x, y, horizontal = TRUE, pch = dot.symbol$pch, col = dot.symbol$col, 
-    lty = dot.line$lty, lwd = dot.line$lwd, col.line = dot.line$col, 
-    levels.fos = NULL, ...) 
+  Default panel function for \code{dotplot}.
 }
 \usage{
-panel.dotplot(x, y, horizontal, ...)
+panel.dotplot(x, y, horizontal = TRUE,
+              pch, col, lty, lwd, col.line,
+              levels.fos = NULL, groups = NULL,
+              \dots)
 }
 \arguments{
   \item{x,y}{ variables to be plotted in the panel. Typically y is the
@@ -21,9 +19,13 @@ panel.dotplot(x, y, horizontal, ...)
     accordingly. See documentation of \code{bwplot} for a fuller
     explanation.
   }
-  \item{\dots}{ graphical parameters can be supplied}
+  \item{pch, col, lty, lwd, col.line}{ graphical parameters}
+  \item{levels.fos}{ number of levels of \code{y}}
+  \item{groups}{ grouping variable (affects graphical parameters)}
+  \item{\dots}{ extra parameters, ignored}
 }
-\details{ Creates Dotplot of \code{x} against \code{y}
+\details{ Creates (possibly grouped) Dotplot of \code{x} against
+  \code{y}
 }
 \seealso{\code{\link{dotplot}}}
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}

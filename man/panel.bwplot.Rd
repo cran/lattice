@@ -27,10 +27,12 @@ panel.bwplot(x, y, box.ratio = 1, horizontal, pch, col, cex,
   \item{fill}{ color to fill the }
   \item{\dots}{ graphical parameters can be supplied}
 }
-\details{ Creates Box and Whisker plot of \code{x} for every level of \code{y}
+\details{ Creates Box and Whisker plot of \code{x} for every level of
+  \code{y}. The actual boxplot statistics are calculated using
+  \code{boxplot.stats} 
 }
 \seealso{
-  \code{\link{bwplot}}
+  \code{\link{bwplot}}, \code{\link{boxplot.stats}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \keyword{dplot}

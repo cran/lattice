@@ -24,10 +24,13 @@
 
 panel.abline <-
     function(a, b = NULL, h = numeric(0), v = numeric(0),
-             col = add.line$col, lty = add.line$lty,
+             col, col.line = add.line$col, lty = add.line$lty,
              lwd = add.line$lwd, ...)
 {
     add.line <- trellis.par.get("add.line")
+    if (!missing(col)) {
+        if (missing(col.line)) col.line <- col
+    }
     
     if (!missing(a)) {
         if (inherits(a,"lm")) {
@@ -71,7 +74,7 @@ panel.abline <-
             
             if (length(x)>0)
                 grid.lines(x=x, y = y, default.units="native",
-                           gp = gpar(col=col, lty=lty, lwd=lwd))
+                           gp = gpar(col=col.line, lty=lty, lwd=lwd))
         }
     }
     
@@ -79,10 +82,10 @@ panel.abline <-
     v <- as.numeric(v)
     
     for(i in seq(along=h))
-        grid.lines(y=rep(h[i],2), default.units="native", gp = gpar(col=col,lty=lty,lwd=lwd))
+        grid.lines(y=rep(h[i],2), default.units="native", gp = gpar(col=col.line,lty=lty,lwd=lwd))
 
     for(i in seq(along=v))
-        grid.lines(x=rep(v[i],2), default.units="native", gp = gpar(col=col,lty=lty,lwd=lwd))
+        grid.lines(x=rep(v[i],2), default.units="native", gp = gpar(col=col.line,lty=lty,lwd=lwd))
     
 }
 
@@ -111,21 +114,26 @@ panel.fill <-
 
 
 panel.grid <-
-    function(h=3, v=3, col=reference.line$col, lty=reference.line$lty,
-             lwd=reference.line$lwd, ...)
+    function(h = 3, v = 3,
+             col, col.line = reference.line$col,
+             lty = reference.line$lty,
+             lwd = reference.line$lwd, ...)
 {
     reference.line <- trellis.par.get("reference.line")
+    if (!missing(col)) {
+        if (missing(col.line)) col.line <- col
+    }
 
     if (h>0)
         for(i in 1:h)
             grid.lines(y=rep(i/(h+1),2),
-                       gp = gpar(col = col, lty = lty, lwd = lwd),
+                       gp = gpar(col = col.line, lty = lty, lwd = lwd),
                        default.units="npc")
 
     if (v>0)
         for(i in 1:v)
             grid.lines(x=rep(i/(v+1),2),
-                       gp = gpar(col = col, lty = lty, lwd = lwd),
+                       gp = gpar(col = col.line, lty = lty, lwd = lwd),
                        default.units="npc")
 
 
@@ -135,11 +143,11 @@ panel.grid <-
     if (h<0)
     {
         scale <- current.viewport()$yscale
-        at <- lpretty(scale)
+        at <- pretty(scale)
         at <- at[at>scale[1] & at < scale[2]]
         for(i in seq(along=at))
             grid.lines(y=rep(at[i],2), default.units="native",
-                       gp = gpar(col = col, lty = lty, lwd = lwd))
+                       gp = gpar(col = col.line, lty = lty, lwd = lwd))
     }
     if (v<0)
     {
@@ -148,7 +156,7 @@ panel.grid <-
         at <- at[at>scale[1] & at < scale[2]]
         for(i in seq(along=at))
             grid.lines(x=rep(at[i],2), default.units="native",
-                       gp = gpar(col = col, lty = lty, lwd = lwd))
+                       gp = gpar(col = col.line, lty = lty, lwd = lwd))
     }
 }
 
@@ -181,23 +189,38 @@ prepanel.lmline <-
 }
 
 
+
+
+
+
+
+
+
+
 panel.loess <-
     function(x, y, span = 2/3, degree = 1,
              family = c("symmetric", "gaussian"),
              evaluation = 50,
              lwd = add.line$lwd, lty = add.line$lty,
-             col = add.line$col, ...)
+             col,
+             col.line = add.line$col,
+             ...)
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
 
     if (length(x)>0) {
+
+        if (!missing(col)) {
+            if (missing(col.line)) col.line <- col
+        }
+
         add.line <- trellis.par.get("add.line")
         
         smooth <- loess.smooth(x, y, span = span, family = family,
                                degree = degree, evaluation = evaluation)
         grid.lines(x=smooth$x, y=smooth$y, default.units = "native",
-                   gp = gpar(col = col, lty = lty, lwd = lwd))
+                   gp = gpar(col = col.line, lty = lty, lwd = lwd))
     }
 }
 
@@ -222,7 +245,7 @@ prepanel.loess <-
              dx = diff(smooth$x),
              dy = diff(smooth$y))
     }
-    else list(xlim=c(0,1), ylim=c(0,1), dx=1, dy=1)
+    else list(xlim=c(NA,NA), ylim=c(NA,NA), dx=NA, dy=NA)
 }
 
 
@@ -286,7 +309,9 @@ panel.superpose <-
         for (i in seq(along=vals)) {
             id <- (groups[subscripts] == vals[i])
             if (any(id)) {
-                args <- list(x=x[id], 
+                args <- list(x=x[id],
+                             groups = groups,
+                             subscripts = subscripts[id],
                              pch = pch[i], cex = cex[i],
                              col.line = col.line[i],
                              col.symbol = col.symbol[i],
@@ -370,15 +395,17 @@ panel.linejoin <-
              horizontal = TRUE,
              lwd = reference.line$lwd,
              lty = reference.line$lty,
-             col = reference.line$col,
-             col.line,
+             col,
+             col.line = reference.line$col,
              ...)
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
 
     reference.line = trellis.par.get("reference.line")
-    if (missing(col.line)) col.line <- col
+    if (!missing(col)) {
+        if (missing(col.line)) col.line <- col
+    }
     if (horizontal) {
         vals <- unique(sort(y))
         yy <- seq(along = vals)
@@ -403,14 +430,20 @@ panel.mathdensity <-
     function(dmath = dnorm,
              args = list(mean = 0, sd = 1),
              n = 50,
-             col = reference.line$col,
-             lwd = reference.line$lwd, ...)
+             col,
+             col.line = reference.line$col,
+             lwd = reference.line$lwd,
+             lty = reference.line$lty,
+             ...)
 {
-
     reference.line <- trellis.par.get("reference.line")
+    if (!missing(col)) {
+        if (missing(col.line)) col.line <- col
+    }
     x <- do.breaks(endpoints = current.viewport()$xscale,
                    nint = n)
     y <- do.call("dmath", c(list(x = x),args))
-    panel.xyplot(x = x, y = y, type = "l", col = col, lwd = lwd, ...)
-    
+    llines(x = x, y = y, col = col.line, lwd = lwd, lty = lty, ...)
 }
+
+

@@ -77,9 +77,12 @@ is.characterOrExpression <- function(x)
 ## in addition, takes subsets
 as.factorOrShingle <- function(x, subset = TRUE, drop = FALSE)
 {
-    if (is.character(x)) as.factor(x)[subset, drop = drop]
-    else if (is.numeric(x)) as.shingle(x)[subset, drop = drop]
-    else x[subset, drop = drop]
+    x <-
+        if (is.numeric(x))
+            as.shingle(x)
+        else ##if (is.character(x)) or logical or ??
+            as.factor(x)
+    x[subset, drop = drop]
 }
 
 
@@ -386,15 +389,28 @@ ltext <-
              cex = add.text$cex,
              srt = 0,
              font = 1,
-             adj = .5, ...)
+             adj = c(.5, .5),
+             pos,
+             ...)
 {
     add.text <- trellis.par.get("add.text")
     xy <- xy.coords(x, y)
+    if (!missing(pos))
+        adj <-
+            if (pos == 1) c(.5, 1)
+            else if (pos == 2) c(1, .5)
+            else if (pos == 3) c(.5, 0)
+            else if (pos == 4) c(0, .5)
+    if (length(adj) == 1) adj <- c(adj, .5)
     grid.text(label = labels, x = xy$x, y = xy$y,
               gp = gpar(col = col, font = font,
               fontsize = cex * trellis.par.get("fontsize")$default),
-              just = c(if (adj == 0) "left"
-              else if (adj == 1) c("right", "centre") else "centre", "centre"),
+              just = c(if (adj[1] == 0) "left"
+              else if (adj[1] == 1) c("right")
+              else "centre",
+              if (adj[2] == 0) "bottom"
+              else if (adj[2] == 1) c("top")
+              else "centre"),
               rot = srt,
               default.units = "native")
 }

@@ -1,8 +1,11 @@
 \name{print.trellis}
 \title{Print Trellis Objects}
 \usage{
-\method{print}{trellis}(x, position, split, more = FALSE,
-  newpage = TRUE, ...)
+\method{print}{trellis}(x, position, split,
+     more = FALSE, newpage = TRUE,
+     panel.height = list(1, "null"),
+     panel.width = list(1, "null"),
+     ...)
 }
 \description{
   Print (plot) a trellis object.
@@ -28,6 +31,14 @@
     including lattice plots in an arbitrary grid viewport (see the
     details section).
   }
+  \item{panel.width, panel.height}{ lists with 2 components, that should
+    be valid \code{x} and \code{units} arguments to \code{unit()} (the
+    \code{data} argument cannot be specified currently, but can be
+    considered for addition). The resulting \code{unit} object will be
+    the width/height of each panel in the Lattice plot. These arguments
+    can be used to explicitly control the dimensions of the panel,
+    rather than letting them expand to maximize available space.
+  }
   \item{\dots}{extra arguments, ignored}
 }
 \details{
@@ -36,13 +47,17 @@
     bwplot} etc. It is usually called automatically when a trellis
   object is produced. It can also be called explicitly to control plot
   positioning by means of the arguments \code{split} and
-  \code{position}.
+  \code{position}. When \code{newpage = FALSE}, the current grid
+  viewport is treated as the plotting area, making it possible to embed
+  a Lattice plot inside an arbitrary grid viewport.
 }
-\note{ Trying to position multipage displays will
-mess things up.
-  }
+
+\note{
+  Trying to position multipage displays will mess things up.
+}
+
 \seealso{
-  \code{\link{Lattice}}
+  \code{\link{Lattice}}, \code{\link[grid]{unit}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{

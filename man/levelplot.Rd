@@ -1,14 +1,7 @@
-% $Id: levelplot.Rd,v 1.12 2002/08/09 00:48:44 deepayan Exp $
 \name{levelplot}
 \title{Level Plots}
 \synopsis{
-levelplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
-    panel = "panel.levelplot", prepanel = NULL, scales = list(), 
-    strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, at, 
-    col.regions = terrain.colors(length(at) - 1), colorkey = NULL, 
-    contour = FALSE, cuts = 15, labels = format(at), pretty = FALSE, 
-    region = TRUE, ..., subscripts = TRUE, subset = TRUE) 
-contourplot(formula,
+levelplot(formula,
              data = parent.frame(),
              aspect = "fill",
              layout = NULL,
@@ -21,27 +14,44 @@ contourplot(formula,
              xlim,
              ylab,
              ylim,
+             at,
+             contour = FALSE,
+             cuts = 15,
+             labels = FALSE,
+             pretty = FALSE,
+             region = TRUE,
+             ...,
+             colorkey = region,
+             col.regions = trellis.par.get("regions")$col,
+             subscripts = TRUE,
+             subset = TRUE)
+contourplot(formula,
+             data = parent.frame(),
+             panel = "panel.levelplot",
+             prepanel = NULL,
+             strip = TRUE,
+             groups = NULL,
              cuts = 7,
+             labels = TRUE,
              contour = TRUE,
              pretty = TRUE,
              region = FALSE,
              ...,
-             subscripts = TRUE,
              subset = TRUE)
 }
 \usage{
 levelplot(formula, data,
           at,
-          col.regions = trellis.par.get("regions")$col,
-          colorkey = region,
           contour = FALSE,
           cuts = 15,
-          labels = format(at),
           pretty = FALSE,
           region = TRUE,
-          ...)
+          ...,
+          col.regions = trellis.par.get("regions")$col,
+          colorkey = region)
 contourplot(formula, data, at,
             contour = TRUE,
+            labels = format(at),
             cuts = 7,
             pretty = TRUE,
             ...)
@@ -109,8 +119,9 @@ contourplot(formula, data, at,
   \item{contour}{ logical, whether to draw contour lines.
   }
   \item{cuts}{ number of levels the range of \code{z} would be divided into}
-  \item{labels}{ character vector of labels for contour lines, not
-    implemented yet.}
+  \item{labels}{ logical specifying whether contour lines should be
+    labelled, or character vector of labels for contour lines. This is
+    not well-implemented yet, don't count on it}
   \item{pretty}{ logical, whether to use pretty labels}
   \item{region}{ logical, whether regions between contour lines should
     be filled
@@ -121,10 +132,17 @@ contourplot(formula, data, at,
   These and all other high level Trellis functions have several
   arguments in common. These are extensively documented only in the
   help page for \code{xyplot}, which should be consulted to learn more
-  detailed usage. 
+  detailed usage.
+
+  Other useful arguments are mentioned in the help page for the default
+  panel function \code{\link{panel.levelplot}} (these are formally
+  arguments to the panel function, but can be specified in the high
+  level calls directly).
 }
+
 \seealso{
-  \code{\link{xyplot}}, \code{\link{Lattice}}, \code{\link{panel.levelplot}} 
+  \code{\link{xyplot}}, \code{\link{Lattice}},
+  \code{\link{panel.levelplot}} 
 }
 \author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{

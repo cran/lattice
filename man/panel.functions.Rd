@@ -14,7 +14,8 @@
 }
 \synopsis{
 panel.abline(a, b = NULL, h = numeric(0), v = numeric(0),
-    col = add.line$col,
+    col,
+    col.line = add.line$col,
     lty = add.line$lty,
     lwd = add.line$lwd, 
     ...)
@@ -64,7 +65,9 @@ panel.mathdensity(dmath = dnorm, args = list(mean=0, sd=1))
     given a numeric vector named \code{x}, e.g., \code{dnorm}}
   \item{args}{ list giving additional arguments to be passed to dmath}
   \item{\dots}{ graphical parameters can be supplied. see function
-    definition for details. 
+    definition for details. Color can usually be specified by \code{col,
+      col.line} and \code{col.symbol}, the last two overriding the first
+    for lines and points respectively.
   }
 }
 \details{
@@ -84,7 +87,7 @@ panel.mathdensity(dmath = dnorm, args = list(mean=0, sd=1))
   density function. Can be useful in conjunction with \code{histogram}
   and \code{densityplot} to visually estimate goodness of fit.
 }
-\seealso{\code{\link[modreg]{loess.smooth}},
+\seealso{\code{\link[modreg:scatter.smooth]{loess.smooth}},
   \code{\link{trellis.par.get}}}
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \keyword{dplot}

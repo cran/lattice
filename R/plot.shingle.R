@@ -75,12 +75,12 @@ plot.shingle <-
                          alternating = 1,
                          at = FALSE,
                          labels = FALSE,
-                         tck = 1,
+                         tck = c(1, 1),
                          font = 1,
                          col = FALSE,
                          log = FALSE,
-                         cex = 1,
-                         rot = FALSE,
+                         cex = c(1, 1),
+                         rot = c(FALSE, FALSE),
                          tick.number = 5)
     
     foo$y.scales <- list(relation = "same",
@@ -88,12 +88,12 @@ plot.shingle <-
                          alternating = 1,
                          at = 1:num.l.y,
                          labels = FALSE,
-                         tck = 1,
+                         tck = c(1, 1),
                          font = 1,
                          col = FALSE,
                          log = FALSE,
-                         cex = 1,
-                         rot = FALSE,
+                         cex = c(1, 1),
+                         rot = c(FALSE, FALSE),
                          tick.number = num.l.y)
     
     class(foo) <- "trellis"

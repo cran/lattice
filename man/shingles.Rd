@@ -1,4 +1,4 @@
-% $Id: shingles.Rd,v 1.13 2002/04/02 19:42:47 deepayan Exp $
+% $Id: shingles.Rd,v 1.14 2003/03/03 01:03:32 deepayan Exp $
 \name{shingles}
 \alias{equal.count}
 \alias{plot.shingle}

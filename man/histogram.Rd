@@ -1,19 +1,64 @@
 \name{histogram}
 \title{Histograms and Kernel Density Plots}
 \synopsis{
-histogram(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
-    panel = panel.histogram, prepanel = NULL, scales = list(), 
-    strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, type = c("percent", 
-    "count", "density"), nint, endpoints = range(x[!is.na(x)]), breaks,
-    equal.widths = TRUE, ..., subscripts = !is.null(groups), 
-    subset = TRUE)
-densityplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
-    panel = panel.densityplot, prepanel = NULL, scales = list(), 
-    strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, bw = NULL, 
-    adjust = NULL, kernel = NULL, window = NULL, width = NULL, 
-    give.Rkern = FALSE, n = 50, from = NULL, to = NULL, cut = NULL, 
-    na.rm = NULL, ..., panel.groups = "panel.densityplot",
-    subscripts = !is.null(groups), subset = TRUE)
+histogram(formula,
+          data = parent.frame(),
+          allow.multiple = FALSE,
+          outer = FALSE,
+          auto.key = FALSE,
+          aspect = "fill",
+          layout = NULL,
+          panel = "panel.histogram",
+          prepanel = NULL,
+          scales = list(),
+          strip = TRUE,
+          groups = NULL,
+          xlab,
+          xlim,
+          ylab,
+          ylim,
+          type = c("percent", "count", "density"),
+          nint = if (is.factor(x)) length(levels(x))
+          else round(log2(length(x)) + 1),
+          endpoints = extend.limits(range(x[!is.na(x)]), prop = 0.04),
+          breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
+          else do.breaks(endpoints, nint),
+          equal.widths = TRUE,
+          ...,
+          subscripts = !is.null(groups),
+          subset = TRUE)
+
+densityplot(formula,
+            data = parent.frame(),
+            allow.multiple = FALSE,
+            outer = FALSE,
+            auto.key = FALSE,
+            aspect = "fill",
+            layout = NULL,
+            panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
+            prepanel = NULL,
+            scales = list(),
+            strip = TRUE,
+            groups = NULL,
+            xlab,
+            xlim,
+            ylab,
+            ylim,
+            bw = NULL,
+            adjust = NULL,
+            kernel = NULL,
+            window = NULL,
+            width = NULL,
+            give.Rkern = FALSE,
+            n = 50,
+            from = NULL,
+            to = NULL,
+            cut = NULL,
+            na.rm = NULL,
+            ...,
+            panel.groups = "panel.densityplot",
+            subscripts = !is.null(groups),
+            subset = TRUE)
 }
 \usage{
 histogram(formula,
@@ -44,6 +89,11 @@ densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE,
     
     \code{x} can be numeric (or factor for \code{histogram}), and each
     of \code{g1,g2,\dots} must be either factors or shingles.
+
+    As a special case, the right hand side of the formula (\code{x}) can
+    actually contain more than one variable separated by a '+'
+    sign. What happens in this case is described in details in the
+    documentation for \code{\link{xyplot}}.
   }
   \item{data}{ optional data frame in which variables are to be
     evaluated} 

@@ -1,6 +1,6 @@
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2003  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -69,7 +69,7 @@ panel.pairs <-
     }
     ## maybe (ideally) this should be affected by scales
 
-    draw <- is.numeric(pscales) && pscales!=0 # whether axes to be drawn
+    draw <- is.list(pscales) || (is.numeric(pscales) && pscales!=0) # whether axes to be drawn
 
     splom.layout <- grid.layout(nrow=n.var, ncol=n.var)
 
@@ -174,7 +174,7 @@ panel.pairs <-
                                                x = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
                                                gp = gpar(col = axis.line$col))
                                     
-                                    grid.text(label = as.character(axls[tt]),
+                                    grid.text(label = labels[tt],
                                               x = unit(1,"npc") - unit(.5, "lines"),
                                               y = unit(axls[tt], "native"),
                                               just = c("right", "centre"))
@@ -183,7 +183,7 @@ panel.pairs <-
                                                y = unit(c(0,.25), "lines"),
                                                gp = gpar(col = axis.line$col))
                                     
-                                    grid.text(label = as.character(axls[tt]),
+                                    grid.text(label = labels[tt],
                                               y = unit(0.5, "lines"),
                                               x = unit(axls[tt], "native"),
                                               just = c("centre", "bottom"))
@@ -195,7 +195,7 @@ panel.pairs <-
                                                x = unit(c(0,0.25), "lines"),
                                                gp = gpar(col = axis.line$col))
                                     
-                                    grid.text(label = as.character(axls[tt]),
+                                    grid.text(label = labels[tt],
                                               x = unit(0.5, "lines"),
                                               y = unit(axls[tt], "native"),
                                               just = c("left", "centre"))
@@ -204,7 +204,7 @@ panel.pairs <-
                                                y = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
                                                gp = gpar(col = axis.line$col))
                                     
-                                    grid.text(label = as.character(axls[tt]),
+                                    grid.text(label = labels[tt],
                                               y = unit(1,"npc") - unit(.5, "lines"),
                                               x = unit(axls[tt], "native"),
                                               just = c("centre", "top"))

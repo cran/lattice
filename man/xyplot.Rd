@@ -1,36 +1,66 @@
 \name{xyplot}
 \title{Common Bivariate Trellis Plots}
+\alias{barchart}
+\alias{bwplot}
+\alias{dotplot}
+\alias{stripplot}
+\alias{xyplot}
 \synopsis{
-xyplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
-    panel = if (is.null(groups)) "panel.xyplot" else "panel.superpose", 
-    prepanel = NULL, scales = list(), 
-    strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, ..., 
-    subscripts = !is.null(groups), subset = TRUE)
-barchart(formula, data = parent.frame(), panel = "panel.barchart", 
-    prepanel = NULL, strip = TRUE, box.ratio = 2, groups = NULL, horizontal,
-    ..., subset = TRUE)  
-bwplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
-    panel = panel.bwplot, prepanel = NULL, scales = list(), strip = TRUE, 
-    groups = NULL, xlab, xlim, ylab, ylim, box.ratio = 1, horizontal, ..., 
-    subscripts = !missing(groups), subset = TRUE)
-dotplot(formula, data = parent.frame(), panel = "panel.dotplot", 
-    prepanel = NULL, strip = TRUE, groups = NULL, horizontal, ...,
-    subset = TRUE)   
-stripplot(formula, data = parent.frame(),
-    panel = if (is.null(groups)) "panel.stripplot" else "panel.superpose", 
-    panel.groups = "panel.stripplot", prepanel = NULL, strip = TRUE, 
-    jitter = FALSE, factor = 0.5, box.ratio = if (jitter) 1 else 0, 
-    groups = NULL, horizontal = NULL, ..., subset = TRUE) 
+xyplot(formula,
+       data = parent.frame(),
+       allow.multiple = FALSE,
+       outer = FALSE,
+       auto.key = FALSE,
+       aspect = "fill",
+       layout = NULL,
+       panel = if (is.null(groups)) "panel.xyplot"
+       else "panel.superpose",
+       prepanel = NULL,
+       scales = list(),
+       strip = TRUE,
+       groups = NULL,
+       xlab,
+       xlim,
+       ylab,
+       ylim,
+       ...,
+       subscripts = !is.null(groups),
+       subset = TRUE)
+bwplot(formula,
+       data = parent.frame(),
+       allow.multiple = FALSE,
+       outer = FALSE,
+       auto.key = FALSE,
+       aspect = "fill",
+       layout = NULL,
+       panel = "panel.bwplot",
+       prepanel = NULL,
+       scales = list(),
+       strip = TRUE,
+       groups = NULL,
+       xlab,
+       xlim,
+       ylab,
+       ylim,
+       box.ratio = 1,
+       horizontal = NULL,
+       ...,
+       subscripts = !is.null(groups),
+       subset = TRUE)
 }
 \usage{
 xyplot(formula,
        data = parent.frame(),
-       panel = if (is.null(groups)) "panel.xyplot" else "panel.superpose", 
+       panel = if (is.null(groups)) "panel.xyplot"
+               else "panel.superpose",
+       allow.multiple = TRUE,
+       outer,
        aspect = "fill",
        as.table = FALSE,
        between,
        groups,
        key,
+       auto.key = FALSE,
        layout,
        main,
        page,
@@ -47,20 +77,43 @@ xyplot(formula,
        \dots,
        subscripts,
        subset)
-barchart(formula, data, panel = "panel.barchart", box.ratio = 2,
-         horizontal, \dots)
-bwplot(formula, data, panel = "panel.bwplot", box.ratio = 1,
-       horizontal, \dots)
-dotplot(formula, data, panel = "panel.dotplot", \dots)
-stripplot(formula, data, panel = "panel.stripplot",
-          jitter = FALSE, factor = .5, box.ratio, \dots)
+dotplot(formula,
+        data, 
+        panel = "panel.dotplot",
+        groups = NULL,
+        ...,
+        subset = TRUE)
+barchart(formula,
+         data,
+         panel = "panel.barchart",
+         box.ratio = 2,
+         groups = NULL,
+         ...,
+         subset = TRUE)
+stripplot(formula,
+          data,
+          panel = "panel.stripplot",
+          jitter = FALSE,
+          factor = .5,
+          box.ratio = if (jitter) 1 else 0,
+          groups = NULL,
+          ...,
+          subset = TRUE)
+bwplot(formula,
+       data,
+       panel = "panel.bwplot",
+       box.ratio = 1,
+       ...,
+       subset = TRUE)
 }
+
 \description{
   These are the most commonly used Trellis functions to look at pairs of
   variables. By far the most common is \code{xyplot}, designed mainly
-  for two continuous variates, which produces Conditional
-  Scatterplots. The others are useful when one of the variates is a
-  factor. See details below.
+  for two continuous variates (though factors can be supplied as well,
+  in which case they will simply be coerced to numeric), which produces
+  Conditional Scatterplots. The others are useful when one of the
+  variates is a factor or a shingle. See details below.
 
   Most of the arguments documented here are also applicable for many of
   the other Trellis functions. These are not described in any detail
@@ -73,46 +126,67 @@ stripplot(formula, data, panel = "panel.stripplot",
   are described only in the help pages for these panel functions, but
   can usually be supplied as arguments to the high level plot.  
 }
-\alias{barchart}
-\alias{bwplot}
-\alias{dotplot}
-\alias{stripplot}
-\alias{xyplot}
 \arguments{
   \item{formula}{a formula describing the form of conditioning plot. The
     formula is generally of the form \code{y ~ x | g1 * g2 * \dots},
     indicating that plots of \code{y} (on the y axis) versus \code{x}
     (on the x axis) should be produced conditional on the given
     variables \code{g1,g2,\dots}. However, the given variables
-    \code{g1,g2,\dots} may be omitted. For Splus compatibility, the
+    \code{g1,g2,\dots} may be omitted. For S-PLUS compatibility, the
     formula can also be written as \code{y ~ x | g1 + g2 + \dots}.
 
-    The given variables \code{g1,g2,\dots} must be either factors or
+    The given variables \code{g1, g2, \dots} must be either factors or
     shingles (Shingles are a way of processing numeric variables for use
-    in conditioning. See documentation of \code{shingle} for
+    in conditioning. See documentation of \code{\link{shingle}} for
     details. Like factors, they have a `level' attribute, which is used
     in producing the conditioning plots). For each unique combination of
     the levels of the conditioning variables \code{g1, g2, \dots}, a
     separate panel is produced using the points \code{(x,y)} for the
-    subset of the data defined by that combination.
+    subset of the data (also called packet) defined by that combination.
 
     Numeric conditioning variables are converted to shingles by the
-    function \code{shingle} (however, using \code{equal.count} might be
-    more appropriate in many cases) and character vectors are coerced to
-    factors. The formula can involve expressions,
-    e.g. \code{sqrt(),log()}.
+    function \code{shingle} (however, using \code{\link{equal.count}}
+    might be more appropriate in many cases) and character vectors are
+    coerced to factors.
 
-    The \code{x} and \code{y} variables both need to be numeric in
-    \code{xyplot} (they are coerced to numeric if not). In the other 
-    four functions documented here, exactly one of \code{x} and \code{y} 
-    need to be numeric, and the other a factor or shingle. Which of
-    these will happen is determined by the \code{horizontal} argument
-    --- if \code{horizontal=TRUE}, then \code{y} will be coerced to be a
-    factor or shingle, otherwise \code{x}. The default value of
-    \code{horizontal} is \code{FALSE} is \code{x} is a factor or
-    shingle, \code{TRUE} otherwise. (The functionality provided by
-    \code{horizontal=FALSE} is not S-compatible.)
+    The formula can involve expressions, e.g. \code{sqrt(),log()}.
 
+    A special case is when the left and/or right sides of the formula
+    (before the conditioning variables) contain a `+' sign, e.g.,
+    \code{y1+y2 ~ x | a*b}. Normally, this would result in the sum of
+    the vectors \code{y1} and \code{y2} being plotted against
+    \code{x}. However, if the \code{allow.multiple} flag is set to
+    \code{TRUE}, this is treated differently. The formula given above,
+    for instance, would be taken to mean that the user wants to plot
+    both \code{y1~x | a*b} and \code{y2~x | a*b}, but with the
+    \code{y1~x} and \code{y2~x} superposed in each panel (this is
+    slightly more complicated in \code{barchart}). The two parts
+    would be distinguished by different graphical parameters. This is
+    essentially what the \code{groups} argument would produce, if
+    \code{y1} and \code{y2} were concatenated to produce a longer
+    vector, with the \code{groups} argument being an indicator of which
+    rows come from which variable. In fact, this is exactly what is done
+    internally using the \code{\link{reshape}} function. This feature
+    cannot be used in conjunction with the \code{groups} argument.
+
+    A variation on this feature is when the \code{outer} argument is set
+    to \code{TRUE} as well as \code{allow.multiple}. In that case, the
+    plots are not superposed in each panel, but instead separated into
+    different panels (as if a new conditioning variable has been added).
+    
+    The \code{x} and \code{y} variables should both be numeric in
+    \code{xyplot}, and an attempt is made to coerce them if
+    not. However, if either is a factor, the levels of that factor are
+    used as axis labels. In the other four functions documented here,
+    exactly one of \code{x} and \code{y} should be numeric, and the
+    other a factor or shingle. Which of these will happen is determined
+    by the \code{horizontal} argument --- if \code{horizontal=TRUE},
+    then \code{y} will be coerced to be a factor or shingle, otherwise
+    \code{x}. The default value of \code{horizontal} is \code{FALSE} if
+    \code{x} is a factor or shingle, \code{TRUE} otherwise. (The
+    functionality provided by \code{horizontal=FALSE} is not
+    S-compatible.)
+  
     All points with at least one of its values missing (NA) in any
     of the variates involved are omitted from the plot.
   }
@@ -121,8 +195,13 @@ stripplot(formula, data, panel = "panel.stripplot",
     By default the environment where the function was called from is
     used. 
   }
-  \item{box.ratio}{ gives the ratio of the width of the rectangles to the
-    inter rectangle space.
+  \item{allow.multiple, outer}{
+    logical flags to control what happens with formulas like \code{y1 +
+      y2 ~ x}. See the entry for \code{formula} for details.
+  }
+  \item{box.ratio}{ applicable to \code{bwplot, bachart} and
+    \code{strpplot}, specifies the ratio of the width of the rectangles
+    to the inter rectangle space.
   }
   \item{horizontal}{ logical, applicable to \code{bwplot, dotplot,
       barchart} and \code{stripplot}. Determines which of \code{x} and
@@ -148,7 +227,6 @@ stripplot(formula, data, panel = "panel.stripplot",
   The following arguments are common to all the functions documented
   here, as well as most other high level Trellis functions. These are
   not documented elsewhere, except to override the usage given here.
-
 
   \item{panel}{ Once the subset of rows defined by each unique
     combination of the levels of the grouping variables are obtained
@@ -178,6 +256,12 @@ stripplot(formula, data, panel = "panel.stripplot",
     parameters, but other uses are also common. See documentation for
     individual panel functions for specifics.
 
+    Note that unlike in S-PLUS, it is not guaranteed that panel
+    functions will be supplied only numeric vectors for the \code{x} and
+    \code{y} arguments; they can be factors as well (but not
+    shingles). panel functions need to handle this case, which to get
+    the old behaviour could simply coerce them to numeric.
+
     Technically speaking, panel functions must be written using Grid
     graphics functions. However, knowledge of Grid is usually not 
     necessary to construct new custom panel functions, there are several
@@ -196,13 +280,16 @@ stripplot(formula, data, panel = "panel.stripplot",
     function predefined for use in such cases is \code{panel.superpose},
     which can be combined with different \code{panel.groups}
     functions. See the examples section for an interaction plot
-    constructed this way.
+    constructed this way. Several other panel functions can also handle
+    the groups argument, including the default ones for \code{barchart,
+      dotplot} and \code{stripplot}.
 
     \code{panel.xyplot} has an argument called \code{type} which is
-    often useful (see separate documentation). panel functions for
-    \code{bwplot} and friends should have an argument called
-    \code{horizontal} to account for the cases when \code{x} is the
-    factor or shingle.
+    worth mentioning here because it is quite frequently used (and as
+    mentioned above, can be passed to \code{xyplot} directly).  panel
+    functions for \code{bwplot} and friends should have an argument
+    called \code{horizontal} to account for the cases when \code{x} is
+    the factor or shingle.
   }
   \item{panel.groups}{ relevant for \code{xyplot} and \code{densityplot}
     only, applies when \code{panel} is \code{panel.superpose} (which
@@ -245,16 +332,36 @@ stripplot(formula, data, panel = "panel.stripplot",
     to allow display controls (color, lty etc) to vary according
     to a grouping variable. Formally, if groups is specified, then
     \code{groups} along with \code{subscripts} is passed to the panel
-    function, which is expected to handle these arguments. 
+    function, which is expected to handle these arguments.
+
+    It is very common to use a key (legend) when a grouping
+    variable is specified. See entries for \code{key, auto.key} and
+    \code{\link{simpleKey}} for how to draw a key.
+  }
+  \item{auto.key}{
+    A logical (indicating whether a key is to be drawn automatically when
+    a grouping variable is present in the plot), or a list of parameters
+    to be passed to \code{\link{simpleKey}}. If \code{auto.key} is not
+    \code{FALSE} and no \code{key} argument is specified in the call,
+    \code{simpleKey} is called with \code{levels{groups}} as the first
+    argument and the result is added as the \code{key} component of the
+    final ``trellis'' object. (Note: this may not work in all high level
+    functions.)
+
+    \code{simpleKey} uses the trellis settings to determine the
+    graphical parameters in the key, so this will be meaningful only if
+    the settings are used in the plot as well.
   }
   \item{key}{
-    A list of arguments that define a legend to be drawn on the plot.
+    A list of arguments that define a legend to be drawn on the plot
+    (see also the less flexible but usually sufficient shortcut function
+    \code{\link{simpleKey}} that can generate such a list).
 
     The position of the legend can be controlled in either of two
     possible  ways. If a component called \code{space} is present, the
     key is positioned outside the plot region, in one of the four sides, 
     determined by the value of \code{space}, which can be one of
-    ``top'', ``bootom'', ``left'' and  ``right''. Alternately, the key
+    ``top'', ``bottom'', ``left'' and  ``right''. Alternatively, the key
     can be positioned inside the plot region by specifying components
     \code{x,y} and \code{corner}. \code{x} and \code{y} determine the
     location of the corner of the key given by \code{corner}, which can
@@ -481,6 +588,12 @@ stripplot(formula, data, panel = "panel.stripplot",
   }
   \item{\dots}{ other arguments, passed to the panel function }
 }
+\value{
+  An object of class ``trellis''. This does not actually plot anything
+  until printed by \code{print.trellis} (which usually happens
+  automatically when on the command line).
+}
+
 \details{
   These are for the most part decriptions generally applicable to all
   high level Lattice functions, with special emphasis on \code{xyplot,
@@ -488,8 +601,11 @@ stripplot(formula, data, panel = "panel.stripplot",
   should be studied in addition to this. 
 }
 \seealso{
+  \code{\link{Lattice}}
+  \code{\link{print.trellis}},
   \code{\link{shingle}},
   \code{\link{banking}},
+  \code{\link{reshape}}
   \code{\link{panel.xyplot}},
   \code{\link{panel.bwplot}},
   \code{\link{panel.barchart}},
@@ -499,7 +615,7 @@ stripplot(formula, data, panel = "panel.stripplot",
   \code{\link{panel.loess}},
   \code{\link{panel.linejoin}},
   \code{\link{strip.default}},
-  \code{\link{Lattice}}
+  \code{\link{simpleKey}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
@@ -524,11 +640,20 @@ xyplot(NOx ~ C | EE, data = ethanol,
            panel.loess(x,y, span=1)
        },
        aspect = "xy")
-## banking
+
+## banking to 45 degrees
+
 data(sunspot)
 xyplot(sunspot ~ 1:37 ,type = "l", aspect="xy",
        scales = list(y = list(log = TRUE)),
        sub = "log scales")
+
+## Multiple variables in formula for grouped displays
+
+data(iris)
+xyplot(Sepal.Length + Sepal.Width ~ Petal.Length + Petal.Width | Species, 
+       data = iris, allow.multiple = TRUE, scales = "free",
+       auto.key = list(x = .6, y = .7, corner = c(0, 0)))
 
 data(state)
 ## user defined panel functions
@@ -539,27 +664,28 @@ xyplot(Murder ~ Population | state.region, data = states,
        groups = as.character(state.name), 
        panel = function(x, y, subscripts, groups)  
        ltext(x=x, y=y, label=groups[subscripts], cex=.7, font=3))
+
 data(barley)
-barchart(yield ~ variety | year * site, data = barley, #aspect = 2.5,
+barchart(yield ~ variety | site, data = barley,
+         groups = year, layout = c(1,6),
          ylab = "Barley Yield (bushels/acre)",
-         scales = list(x = list(0, abbreviate = TRUE,
+         scales = list(x = list(abbreviate = TRUE,
                        minlength = 5)))
+barchart(yield ~ variety | site, data = barley,
+         groups = year, layout = c(1,6), stack = TRUE, 
+         auto.key = list(points = FALSE, rectangles = TRUE, space = "right"),
+         ylab = "Barley Yield (bushels/acre)",
+         scales = list(x = list(rot = 45)))
+
 data(singer)
 bwplot(voice.part ~ height, data=singer, xlab="Height (inches)")
 dotplot(variety ~ yield | year * site, data=barley)
+
 dotplot(variety ~ yield | site, data = barley, groups = year,
-        panel = function(x, y, subscripts, ...) {
-            dot.line <- trellis.par.get("dot.line")
-            panel.abline(h = y, col = dot.line$col,
-                         lty = dot.line$lty)
-            panel.superpose(x, y, subscripts, ...)
-        },
-        key = list(space="right", transparent = TRUE,
-                   points=list(pch=trellis.par.get("superpose.symbol")$pch[1:2],
-                               col=trellis.par.get("superpose.symbol")$col[1:2]),
-                   text=list(c("1932", "1931"))),
+        key = simpleKey(levels(barley$year), space = "right"),
         xlab = "Barley Yield (bushels/acre) ",
         aspect=0.5, layout = c(1,6), ylab=NULL)
+
 stripplot(voice.part ~ jitter(height), data = singer, aspect = 1,
           jitter = TRUE, xlab = "Height (inches)")
 ## Interaction Plot

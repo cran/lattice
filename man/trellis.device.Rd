@@ -10,7 +10,7 @@
 \usage{
 trellis.device(device = getOption("device"),
                color = TRUE,
-               theme = NULL,
+               theme = getOption("lattice.theme"),
                bg = NULL,
                new = TRUE,
                retain = FALSE,
@@ -20,12 +20,21 @@ canonical.theme(name, color)
 \arguments{
   \item{device}{ name of a function (possibly as a character string)
     that initializes a device. Admissible values include "x11",
-    "windows", "mac", "postscript", "pdf", "png" etc.
+    "windows", "mac", "postscript", "pdf", "png", etc.
   }
-  \item{color}{ whether the display should be color or black and white.
+  \item{color}{ logical, whether the display should be color or black
+    and white.
   }
   \item{theme}{ list of components that change the settings of the
-    device opened }
+    device opened, or, a function that when called produces such a
+    list. The function name can be supplied as a quoted string. A
+    possible usage is to change the default settings at session startup,
+    for example by setting \code{options(lattice.theme =
+      "col.whitebg")}. If \code{theme} is a function, it will not be
+    supplied any arguments, however, it is guaranteed that a device will
+    already be open when it is called, so one may use \code{.Device}
+    inside the function to ascertain what device has been opened.
+  }
   \item{bg}{ background color for the device.}
   \item{new}{ logical flag indicating whether a new device should be
     started. If \code{FALSE},  the options for the current device are

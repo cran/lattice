@@ -171,23 +171,15 @@ canonical.theme <- function(name = "null device", color = TRUE)
 trellis.par.get <-
     function(name = NULL)
 {
-    ## this first block is needed to handle the unfortunate but
-    ## inevitable case where a high level lattice function tries to
-    ## access trellis parameters when in fact no device is open. There
-    ## is of course no way of knowing at this point which device the
-    ## final plot will be drawn to, so the default that would have
-    ## been created using trellis.device() without arguments is used
+    ## the default device is opened if none already open
+    if (is.null(dev.list())) trellis.device()
 
     if (!(.Device %in% names(lattice.theme))) {
+        ## shouldn't happen
         lattice.theme[[.Device]] <<- list()
-        device <-
-            if (is.null(dev.list())) {
-                warning("No Active Device, using default values")
-                getOption("device")
-            }
-            else .Device
+        device <- .Device
         color <- !(device == "postscript")
-        lset(canonical.theme(device, color), warn = FALSE)
+        lset(canonical.theme(device, color))
     }
     if (is.null(name))
         lattice.theme[[.Device]]
@@ -199,9 +191,14 @@ trellis.par.get <-
 trellis.par.set <-
     function(name, value, warn = TRUE)
 {
+    ## the default device is opened if none already open
+    if (is.null(dev.list())) {
+        trellis.device()
+        if (warn) cat("Note: The default device has been opened to honour attempt to modify trellis settings\n\n")
+    }
+
     ## if (name %in% names(lattice.theme[[.Device]])) NEEDED as a safeguard ?
     if (!is.list(value)) stop("value must be a list")
-    if (warn && is.null(dev.list())) stop("No device is currently Active")
     lattice.theme[[.Device]][[name]] <<- value
 }
 
@@ -210,7 +207,7 @@ trellis.par.set <-
 trellis.device <-
     function(device = getOption("device"),
              color = !(dev.name == "postscript"),
-             theme = NULL,
+             theme = getOption("lattice.theme"),
              bg = NULL,
              new = TRUE,
              retain = FALSE,
@@ -232,6 +229,14 @@ trellis.device <-
     {
         device.call(...)
         .lattice.print.more <<- FALSE
+    }
+    if (!is.null(theme) && !is.list(theme)) {
+        if (is.character(theme)) theme <- get(theme)
+        if (is.function(theme)) theme <- theme()
+        if (!is.list(theme)) {
+            warning("Invalid theme specified")
+            theme <- NULL
+        }
     }
     ## If retain = TRUE, retain existing settings for this
     ## particular device, if any. Ignores new.

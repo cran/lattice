@@ -3,6 +3,7 @@
 \synopsis{
     cloud(formula,
              data = parent.frame(),
+             allow.multiple, outer, auto.key,
              aspect = c(1,1),
              layout = NULL,
              panel = "panel.cloud",

@@ -6,7 +6,9 @@
   \code{panel.superpose}
 }
 \usage{
-panel.stripplot(x, y, jitter.data = F, factor, horizontal, pch, col, ...)
+panel.stripplot(x, y, jitter.data = FALSE, factor = 0.5,
+                horizontal = TRUE, groups = NULL,
+                \dots)
 }
 \arguments{
   \item{x,y}{ coordinates of points to be plotted}
@@ -19,8 +21,10 @@ panel.stripplot(x, y, jitter.data = F, factor, horizontal, pch, col, ...)
     accordingly. See documentation of \code{bwplot} for a fuller
     explanation.
   }
-  \item{pch, col}{ graphical parameters can be supplied.}
-  \item{\dots}{other arguments}
+  \item{groups}{ optional grouping variable }
+  \item{\dots}{ graphical parameters etc can be supplied, passed to
+    \code{panel.xyplot} or \code{panel.superpose}, depending on whether
+    \code{groups} is present}
 }
 \details{ Creates stripplot (one dimensional scatterplot) of \code{x}
   for each level of \code{y}

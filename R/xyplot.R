@@ -122,6 +122,9 @@ panel.xyplot <-
 xyplot <-
     function(formula,
              data = parent.frame(),
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = "fill",
              layout = NULL,
              panel = if (is.null(groups)) "panel.xyplot"
@@ -143,17 +146,28 @@ xyplot <-
     dots <- list(...)
 
     groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+
+    ## Step 1: Evaluate x, y, etc. and do some preprocessing
+
+    form <-
+        latticeParseFormula(formula, data, subset = subset,
+                            groups = groups, multiple = allow.multiple,
+                            outer = outer, subscripts = TRUE)
+
+    groups <- form$groups
+
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
+    
+    if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
+    if (subscripts) subscr <- form$subscr
 
     prepanel <-
         if (is.function(prepanel)) prepanel 
         else if (is.character(prepanel)) get(prepanel)
         else eval(prepanel)
 
-    ## Step 1: Evaluate x, y, etc. and do some preprocessing
-
-    form <- latticeParseFormula(formula, data)
     cond <- form$condition
     number.of.cond <- length(cond)
     y <- form$left
@@ -165,23 +179,14 @@ xyplot <-
         number.of.cond <- 1
     }
 
-    subset <- eval(substitute(subset), data, parent.frame())
-    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
-    if(subscripts) subscr <- seq(along=x)
-    x <- x[subset, drop = TRUE]
-    y <- y[subset, drop = TRUE]
-    if (subscripts) subscr <- subscr[subset, drop = TRUE]
-    
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- form$left.name
 
+    ## S-Plus requires both x and y to be numeric, but we
+    ## don't. Question is, should we give a warning ?
 
-    ## Convert both x and y to numeric: WHY ? (take c/o POSIXct)
-    if(!(is.numeric(x) && is.numeric(y)))
-        warning("Both x and y should be numeric")
-    ##if (!(is.numeric(x))) x <- as.numeric(x)
-    ##if (!(is.numeric(y))) y <- as.numeric(y)
-
+    if (!(is.numeric(x) && is.numeric(y)))
+        warning("x and y are not both numeric")
 
 
     ## create a skeleton trellis object with the
@@ -254,9 +259,7 @@ xyplot <-
     
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
-
 
     id.na <- is.na(x)|is.na(y)
     for (var in cond)
@@ -324,6 +327,12 @@ xyplot <-
                                panel.args = foo$panel.args,
                                aspect = aspect,
                                nplots = nplots))
+
+    if (is.null(foo$key) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+        foo$key <- do.call("simpleKey",
+                           c(list(levels(as.factor(groups))),
+                             if (is.list(auto.key)) auto.key else list()))
 
     class(foo) <- "trellis"
     foo

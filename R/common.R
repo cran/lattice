@@ -1,6 +1,5 @@
-
-
-### Copyright 2001-2002  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2003  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2003  Saikat DebRoy <saikat@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -48,9 +47,36 @@ cupdate <- function(index, maxim)
 
 
 
-latticeParseFormula <-
-    function(model, data, dimension = 2)
+
+generateNewName <- function(names.current, new.prefix="gvar")
 {
+    names.current <- as.character(names.current)
+    new.prefix <- as.character(new.prefix)
+    newnames <- c(new.prefix,
+                  paste(gvar, seq(along=names.current), sep=""))
+    newnames[!(newnames %in% names.current)][1]
+}
+
+
+
+
+
+latticeParseFormula <-
+    function(model, data, dimension = 2, subset = TRUE,
+             groups = NULL, multiple = FALSE, outer = FALSE,
+             subscripts = FALSE)
+{
+    parseSide <-
+        function(model)
+        {
+            model.vars <- list()
+            while (length(model) == 3 && model[[1]] == as.name("+")) {
+                model.vars <- c(model.vars, model[[3]])
+                model <- model[[2]]
+            }
+            rev(c(model.vars, model))
+        }
+
     parseCond <-
         function(model)
         {
@@ -63,8 +89,32 @@ latticeParseFormula <-
             }
             rev(c(model.vars, model))
         }
+
+    lrep <-
+        function(x, n)
+        {
+            save.attr <- attributes(x)
+            x <- rep(x, n)
+            attributes(x) <- save.attr
+            x
+        }
+
+    concat <-
+        function(arglist)
+        {
+            if (length(arglist) == 1)
+                arglist[[1]]
+            else if (any(sapply(arglist, is.factor))) {
+                factor(unlist(lapply(arglist, as.character)))
+            } else if (any(sapply(arglist, is.shingle))) {
+                stop("shingles can not be concatenated")
+            } else do.call("c", arglist)
+        }
+    
     if (!inherits(model, "formula"))
         stop("model must be a formula object")
+    if (multiple && !outer && !is.null(groups))
+        stop("groups argument is non NULL with multiple = TRUE and outer = FALSE")
 
     ans <- if (dimension == 2) {
         list(left = NULL, right = NULL, condition = NULL,
@@ -77,43 +127,137 @@ latticeParseFormula <-
     }
     else stop(paste("invalid dimension : ", dimension))
 
+    
     if (length(model) == 3) {
-        ans$left <- eval(model[[2]], data)
-        if (inherits(ans$left, "POSIXt")) ans$left <- as.POSIXct(ans$left)
-        ans$left.name <- deparse(model[[2]])
-    }
-    model <- model[[length(model)]]
-    if (length(model) == 3 && model[[1]] == as.name("|")) {
-        model.vars <- parseCond(model[[3]])
-        ans$condition <- vector("list", length(model.vars))
-        names(ans$condition) <- sapply(model.vars, deparse)
-        for (i in seq(along = model.vars)) {
-            ans$condition[[i]] <- eval(model.vars[[i]], data)
-            if (inherits(ans$condition[[i]], "POSIXt"))
-                ans$condition[[i]] <- as.POSIXct(ans$condition[[i]])
+        if (multiple) {
+            varsLHS <- parseSide(model[[2]])
+            nLHS <- length(varsLHS)
+        } else {
+            varsLHS <- list(model[[2]])
+            nLHS <- 1
         }
-        model <- model[[2]]
+    } else {
+        nLHS <- 1
     }
+    modelRHS <- model[[length(model)]]
+    if (length(modelRHS) == 3 && modelRHS[[1]] == as.name("|"))
+        modelRHS <- modelRHS[[2]]
+        
+
+    env <- environment(model)
+    modelRHS <- model[[length(model)]]
+    if (length(modelRHS) == 3 && modelRHS[[1]] == as.name("|")) {
+        modelRHS.vars <- parseCond(modelRHS[[3]])
+        modelRHS <- modelRHS[[2]]
+        if (multiple && dimension == 2) {
+            varsRHS <- parseSide(modelRHS)
+            nRHS <- length(varsRHS)
+        } else {
+            varsRHS <- list(modelRHS)
+            nRHS <- 1
+        }
+        ans$condition <- vector("list", length(modelRHS.vars))
+        names(ans$condition) <- sapply(modelRHS.vars, deparse)
+        for (i in seq(along = modelRHS.vars)) {
+            ans$condition[[i]] <-
+                lrep(as.factorOrShingle(eval(modelRHS.vars[[i]], data, env),
+                                        subset, drop = TRUE), nLHS*nRHS)
+        }
+    } else if (multiple && dimension == 2) {
+        varsRHS <- parseSide(modelRHS)
+        nRHS <- length(varsRHS)
+    } else {
+        varsRHS <- list(modelRHS)
+        nRHS <- 1
+    }
+
+    if (length(model) == 3) {
+        ans$left.name <- deparse(model[[2]])
+        ans$left <-
+            lrep(concat(lapply(varsLHS,
+                               function(i) {
+                                   tmp <-
+                                       eval(i, data, env)[subset,
+                                                          drop = TRUE]
+                                   if (inherits(tmp, "POSIXt"))
+                                       tmp <- as.POSIXct(tmp)
+                                   tmp
+                               })), nRHS)
+    }
+
     if (dimension == 2) {
-        ans$right <- eval(model, data)
-        if (inherits(ans$right, "POSIXt")) ans$right <- as.POSIXct(ans$right)
-        ans$right.name <- deparse(model)
+        if (nLHS == 1 && nRHS == 1) {
+            tmp <- eval(varsRHS[[1]], data, env)
+            ans$right <- tmp[subset, drop = TRUE]
+            nobs <- length(tmp)
+        } else {
+            ans$right <-
+                concat(lapply(varsRHS,
+                              function(i) {
+                                  tmp <-
+                                      lrep(eval(i, data,
+                                                env)[subset,
+                                                     drop = TRUE],
+                                           nLHS)
+                                  if (inherits(tmp, "POSIXt"))
+                                      tmp <- as.POSIXct(tmp)
+                                  tmp
+                              }))
+        }
+        ans$right.name <- deparse(modelRHS)
+        nRows <- length(ans$right)/(nLHS * nRHS)
     }
-    else if (dimension == 3 && length(model) == 3 &&
-             (model[[1]] == "*" || model[[1]] == "+")) {
-        ans$right.x <- eval(model[[2]], data)
+    else if (dimension == 3 && length(modelRHS) == 3 &&
+             (modelRHS[[1]] == "*" || modelRHS[[1]] == "+")) {
+        tmp <- eval(modelRHS[[2]], data, env)
+        nobs <- length(tmp)
+        ans$right.x <- lrep(tmp[subset, drop=TRUE], nLHS)
         if (inherits(ans$right.x, "POSIXt")) ans$right.x <- as.POSIXct(ans$right.x)
-        ans$right.y <- eval(model[[3]], data)
+        ans$right.y <-
+            lrep(eval(modelRHS[[3]], data, env)[subset, drop=TRUE], nLHS)
         if (inherits(ans$right.y, "POSIXt")) ans$right.y <- as.POSIXct(ans$right.y)
-        ans$right.x.name <- deparse(model[[2]])
-        ans$right.y.name <- deparse(model[[3]])
+        ans$right.x.name <- deparse(modelRHS[[2]])
+        ans$right.y.name <- deparse(modelRHS[[3]])
+        nRows <- length(ans$right.x)/nLHS
     }
     else stop("invalid model")
+    
+    if (nLHS > 1)
+        LHSgroups <- rep(gl(nLHS, nRows, labels=sapply(varsLHS,
+                                         deparse)), nRHS)
+    if (nRHS > 1)
+        RHSgroups <- gl(nRHS, nRows*nLHS, labels=sapply(varsRHS, deparse))
+    newFactor <- 
+        if (nLHS > 1 && nRHS > 1) {
+            factor(paste(LHSgroups, RHSgroups, sep=" * "))
+        } else if (nLHS > 1)
+            LHSgroups
+        else if (nRHS > 1)
+            RHSgroups
+        else NULL
 
+    if (outer) {
+        if (!is.null(groups)) ans$groups <- rep(groups, nLHS * nRHS)
+        if (!is.null(newFactor)) {
+            if (is.null(ans$cond))
+                ans$condition <- list(newFactor)
+            else
+                ans$condition[[length(ans$condition) + 1]] <- newFactor
+        }
+    }
+    else {
+        ans$groups <-
+            if (is.null(newFactor)) groups
+            else newFactor
+    }
+
+    if (subscripts)
+        ans$subscr <-
+            if (nLHS == 1 && nRHS == 1)
+                seq(length=nobs)[subset]
+            else seq(length=nRows*nLHS*nRHS)
     ans
 }
-
-
 
 
 banking <- function(dx, dy = 1)
@@ -174,7 +318,7 @@ calculateAxisComponents <-
                     check.overlap = TRUE,
                     num.limit = c(0,1))
     }
-    else if (is.character(x)) { ## factor
+    else if (is.characterOrExpression(x)) { ## factor
         ans <- list(at = if (is.logical(at)) seq(along = x) else at,
                     labels = if (is.logical(labels)) x else labels,
                     check.overlap = FALSE)
@@ -306,7 +450,8 @@ calculateAxisComponents <-
 
 
 extend.limits <-
-    function(lim, length=1, prop = 0.07)
+    function(lim, length=1, axs = "r",
+             prop = if (axs == "i") 0 else 0.07)
 {
     if (!is.numeric(lim)) NA
     else if(length(lim)==2) {
@@ -352,9 +497,12 @@ construct.scales <-
              y = NULL,
              ...)   ## FIXME: how to handle ...
 {
+
     xfoo <- list(draw = draw, tck = tck,
                  tick.number = tick.number,
-                 cex = cex, rot = rot, font = font,
+                 cex = cex,
+                 rot = rot,
+                 font = font,
                  at = at, labels = labels,
                  col = col, log = log,
                  alternating = alternating,
@@ -378,6 +526,10 @@ construct.scales <-
         yfoo$alternating <-
             if (yfoo$alternating) c(1,2)
             else 1
+    for (nm in c("tck", "cex", "rot")) {
+        xfoo[[nm]] <- rep(xfoo[[nm]], length = 2)
+        yfoo[[nm]] <- rep(yfoo[[nm]], length = 2)
+    }
     list(x.scales = xfoo, y.scales = yfoo)
 }
 
@@ -448,7 +600,6 @@ limits.and.aspect <-
              nplots,
              ...)  ## extra arguments for prepanel (for qqmathline)
 {
-
     if (nplots<1) stop("need at least one panel")
     x.limits <- vector("list", nplots)
     y.limits <- vector("list", nplots)
@@ -509,10 +660,9 @@ limits.and.aspect <-
         }
         else {
             x.limits <- unlist(x.limits)
-            x.limits <- range(x.limits, na.rm = TRUE)
             if (length(x.limits) > 0) {
                 if (is.numeric(x.limits)) {
-                    x.limits <- extend.limits(x.limits)
+                    x.limits <- extend.limits(range(x.limits, na.rm = TRUE))
                     x.slicelen <- diff(range(x.limits))
                 }
                 else {
@@ -558,7 +708,7 @@ limits.and.aspect <-
     }
     else if (x.relation == "free") {
         for (i in seq(along = x.limits)) {
-            if (is.numeric(x.limits[[i]]))
+            if (is.numeric(x.limits[[i]])) 
                 x.limits[[i]] <- extend.limits(x.limits[[i]])
             ## o.w., keep it as it is
         }
@@ -576,10 +726,9 @@ limits.and.aspect <-
         }
         else {
             y.limits <- unlist(y.limits)
-            y.limits <- range(y.limits, na.rm = TRUE)
             if (length(y.limits) > 0) {
                 if (is.numeric(y.limits)) {
-                    y.limits <- extend.limits(y.limits)
+                    y.limits <- extend.limits(range(y.limits, na.rm = TRUE))
                     y.slicelen <- diff(range(y.limits))
                 }
                 else {
@@ -623,11 +772,19 @@ limits.and.aspect <-
             if (y.relation == "free")
                 warning("aspect=xy when y-relation=free is not sensible")
             else aspect <- aspect *
-                if (y.relation == "sliced") y.slicelen else diff(y.limits)
+                if (y.relation == "sliced") y.slicelen
+                else { ## i.e., relation = same
+                    if (is.numeric(y.limits)) diff(y.limits)
+                    else length(y.limits) + 2
+                }
             if (x.relation == "free")
                 warning("aspect=xy when x-relation=free is not sensible")
             else aspect <- aspect /
-                if (x.relation == "sliced") x.slicelen else diff(x.limits)
+                if (x.relation == "sliced") x.slicelen
+                else {
+                    if (is.numeric(x.limits)) diff(x.limits)
+                    else length(x.limits) + 2
+                }
         }
     else aspect <- 1
 
