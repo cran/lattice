@@ -46,7 +46,6 @@ panel.pairs <-
     function(z, panel = "panel.splom", groups = NULL,
              panel.subscripts,
              subscripts,
-             fontsize.small = 8,
              pscales = 5,
              ...)
 {
@@ -56,13 +55,14 @@ panel.pairs <-
         else eval(panel)
 
     axis.line <- trellis.par.get("axis.line")
+    axis.text <- trellis.par.get("axis.text")
     n.var <- ncol(z)
 
     if(n.var>0) {
         ## there must be a better way to do the foll:
         lim <- list(1:n.var)
         for(i in 1:n.var) {
-            lim[[i]] <- extend.limits(range( as.numeric(z[,i]), na.rm = TRUE  ))
+            lim[[i]] <- extend.limits(range(as.numeric(z[,i]), na.rm = TRUE))
         }
         ## should be further complicated by allowing for customization by
         ## prepanel functions --- prepanel(z[i], z[j]) etc
@@ -83,15 +83,15 @@ panel.pairs <-
                 push.viewport(viewport(layout.pos.row = n.var-i+1,
                                        layout.pos.col = j,
                                        clip = TRUE,
-                                       gp = gpar(fontsize = fontsize.small),
+                                       ##gp = gpar(fontsize = fontsize.small),
                                        xscale = lim[[j]],
                                        yscale = lim[[i]]))
 
                 if(i == j)
                 {
                     if (!is.null(colnames(z)))
-                        grid.text(colnames(z)[i],
-                                  gp = gpar(fontsize = 10))
+                        grid.text(colnames(z)[i])
+                    ##gp = gpar(fontsize = 10))
                     if (draw) {
                         ## plot axes
 
@@ -315,9 +315,6 @@ splom <-
     x <- x[subset,, drop = TRUE]
     subscr <- subscr[subset, drop = TRUE]
     
-    ##if(!(is.numeric(x) && is.numeric(y)))
-    ##    warning("Both x and y should be numeric")    WHAT ?
-
 
     ## create a skeleton trellis object with the
     ## less complicated components:
@@ -337,9 +334,9 @@ splom <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- "Scatter Plot Matrix"
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab <- NULL
 
     ## Step 2: Compute scales.common (leaving out limits for now)
@@ -409,7 +406,9 @@ splom <-
     cond.max.level <- unlist(lapply(cond, nlevels))
 
 
-    ## id.na only decides whether to draw anything, not used subsequently
+    ## id.na used only to see if any plotting is needed. Not used
+    ## subsequently, unlike other functions
+
     id.na <- FALSE
     for (j in 1:ncol(x))
         id.na <- id.na | is.na(x[,j])

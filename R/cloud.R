@@ -3,7 +3,7 @@
 
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2002  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -24,42 +24,54 @@
 
 
 
-prepanel.default.cloud <-
-    function(distance, xlim, ylim, zlim, zoom = 1,
-             rot.mat = rot.mat, aspect = aspect, ...)
-{
-    aspect <- rep(aspect, length=2)
 
-    corners <-
-        rbind(x = c(-1,1,1,-1,-1,1,1,-1) / 2,
-              y = c(-1,-1,-1,-1,1,1,1,1) / 2 * aspect[1],
-              z = c(-1,-1,1,1,-1,-1,1,1) / 2 * aspect[2])
 
-    ## box ranges and lengths
-    cmin <- lapply(corners, min)
-    cmax <- lapply(corners, max)
-    clen <- lapply(corners, function(x) diff(range(x)))
 
-    ##if (!missing(R.mat))
-    ##  {;} #do something
 
-    corners <- rot.mat %*% corners
+## Plan: to make things more modular than they are now. As a first
+## step, get a function that does a 3d transformation. Probably a good
+## idea to do things in terms of homogeneous coordinates
 
-    zback <- min(corners[3,])
-    zfront <- max(corners[3,])
-    za <- (zfront * (1-distance) - zback) / (zfront - zback)
-    zb <- distance / (zfront - zback)
 
-    corners[1,] <- (za + zb * corners[3,]) * corners[1,]
-    corners[2,] <- (za + zb * corners[3,]) * corners[2,]
+ltransform3dMatrix <- function(screen, R.mat = diag(4)) {
 
-    xrng <- range(corners[1,])
-    yrng <- range(corners[2,])
-    slicelen <- max(diff(xrng), diff(yrng))
+    rot.mat <- diag(3)
+    screen.names <- names(screen)
+    screen <- lapply(screen, "*", pi/180)
 
-    list(xlim = extend.limits(xrng, length = slicelen) / zoom,
-         ylim = extend.limits(yrng, length = slicelen) / zoom,
-         dx = 1, dy = 1)
+    for(i in seq(along=screen.names)) {
+        th <- screen[[i]]
+        cth <- cos(th)
+        sth <- sin(th)
+        tmp.mat <- 
+            (if (screen.names[i]=="x")
+             matrix(c(1, 0, 0, 0, cth, sth, 0, -sth, cth), 3, 3)
+            else if (screen.names[i]=="y")
+             matrix(c(cth, 0, -sth, 0, 1, 0, sth, 0, cth), 3, 3)
+            else if (screen.names[i]=="z")
+             matrix(c(cth, sth, 0, -sth, cth, 0, 0, 0, 1), 3, 3))
+        rot.mat <- tmp.mat %*% rot.mat
+    }
+    rot.mat <- cbind(rot.mat, c(0,0,0))
+    rot.mat <- rbind(rot.mat, c(0,0,0,1))
+    if (!missing(R.mat)) rot.mat <- rot.mat %*% R.mat
+    rot.mat
+}
+
+
+
+
+
+ltransform3dto3d <- function(x, R.mat, za = 1 , zb = 0) {
+    tdata <- R.mat %*% rbind(x, 1)
+    tdata[1,] <- tdata[1,]/tdata[4,]
+    tdata[2,] <- tdata[2,]/tdata[4,]
+    tdata[3,] <- tdata[3,]/tdata[4,]
+    if (!missing(za) && !missing(zb)) {
+        tdata[1,] <- (za + zb * tdata[3,]) * tdata[1,]
+        tdata[2,] <- (za + zb * tdata[3,]) * tdata[2,]
+    }
+    tdata[1:3, ]
 }
 
 
@@ -68,15 +80,207 @@ prepanel.default.cloud <-
 
 
 
+prepanel.default.cloud <-
+    function(distance, xlim, ylim, zlim, zoom = 1,
+             rot.mat = rot.mat, aspect = aspect, ...)
+{
+    aspect <- rep(aspect, length=2)
+    corners <-
+        rbind(x = c(-1,1,1,-1,-1,1,1,-1) / 2,
+              y = c(-1,-1,-1,-1,1,1,1,1) / 2 * aspect[1],
+              z = c(-1,-1,1,1,-1,-1,1,1) / 2 * aspect[2])
+    corners <- ltransform3dto3d(corners, rot.mat)
+    zback <- min(corners[3,])
+    zfront <- max(corners[3,])
+    za <- (zfront * (1-distance) - zback) / (zfront - zback)
+    zb <- distance / (zfront - zback)
+    corners[1,] <- (za + zb * corners[3,]) * corners[1,]
+    corners[2,] <- (za + zb * corners[3,]) * corners[2,]
+    xrng <- range(corners[1,])
+    yrng <- range(corners[2,])
+    slicelen <- max(diff(xrng), diff(yrng))
+    list(xlim = extend.limits(xrng, length = slicelen) / zoom,
+         ylim = extend.limits(yrng, length = slicelen) / zoom,
+         dx = 1, dy = 1)
+}
+
+
+
+            
+
+panel.3dscatter <-
+    function(x, y, z, rot.mat = diag(4), za, zb, groups = NULL,
+             subpanel = if (is.null(groups)) "panel.xyplot"
+             else "panel.superpose",
+             ...)
+{
+    subpanel <-
+        if (is.character(subpanel)) get(subpanel)
+        else eval(subpanel)
+    m <- ltransform3dto3d(rbind(x, y, z), rot.mat, za, zb)
+    subpanel(x = m[1,], y = m[2,], groups = groups, ...)
+}
+
+
+
+
+####################################################################
+##          Interface to New Experimental C code                  ##
+####################################################################
+
+
+
+palette.shade <- function(cosangle, height, saturation = .3, ...) {
+    hsv(h = height,
+        s = saturation,
+        v = cosangle)
+}
+
+
+
+panel.3dwire <- 
+    function(x, y, z, rot.mat = diag(4), za, zb,
+             minz = 0, maxz = 1,
+             col.at, col.regions,
+             shade = FALSE,
+             shade.colors = palette.shade,
+             light.source = c(1, 0, 0),
+             col = "black",
+             col.groups = superpose.line$col,
+             ...)
+{
+    
+    ## x, y, z are in a special form here (compared to most other
+    ## places in lattice). x and y are short ascending, describing the
+    ## grid, and z is the corresponding z values in the order (x1,y1),
+    ## (x1,y2), ... . length(z) == length(x) * length(y). Sometimes, z
+    ## might be a matrix, which indicates multiple surfaces. Above
+    ## description true for each column in that case.
+
+    lenz <- maxz - minz
+    ngroups <- if (is.matrix(z)) ncol(z) else 1
+    superpose.line <- trellis.par.get("superpose.line")
+    col.groups <- rep(col.groups, ngroups)
+    light.source <- light.source/sqrt(sum(light.source * light.source))
+
+    shade.colors <-
+        if (is.character(shade.colors)) get(shade.colors)
+        else eval(shade.colors)
+    
+    wirePolygon <-
+        if (shade)
+            function(xx, yy, misc) {
+                ## xx, yy : coordinates of quadrilateral
+                grid.polygon(x = xx, y = yy,
+                             default.units = "native",
+                             gp =
+                             gpar(fill = 
+                                  shade.colors(misc[1],
+                                               (misc[2] - minz)/lenz), 
+                                  col = "transparent"))
+            }
+        else if (length(col.regions) > 1)
+            function(xx, yy, misc) {
+                grid.polygon(x = xx, y = yy,
+                             default.units = "native",
+                             gp =
+                             gpar(fill =
+                                  col.regions[(seq(along = col.at)[col.at > misc[2]])[1] - 1 ],
+                                  col = col))
+            }
+        else if (ngroups == 1)
+            function(xx, yy, misc) {
+                grid.polygon(x = xx, y = yy,
+                             default.units = "native",
+                             gp =
+                             gpar(fill = col.regions[1],
+                                  col = col))
+            }
+        else
+            function(xx, yy, misc) {
+                grid.polygon(x = xx, y = yy,
+                             default.units = "native",
+                             gp =
+                             gpar(fill = col.groups[1 + as.integer(misc[3])],
+                                  col = col))
+
+            }
+
+
+    #print(x)
+    #print(y)
+    #print(z)
+
+    
+    .Call("wireframePanelCalculations",
+          as.double(x),
+          as.double(y),
+          as.double(z),
+          as.double(rot.mat),
+          as.double(za),
+          as.double(zb),
+          length(x),
+          length(y),
+          as.integer(ngroups),
+          as.double(light.source),
+          environment(),
+          PACKAGE="lattice")
+          
+}
+      
+
+
+
+
+
+# panel.3dwire.old <- 
+#     function(x, y, z, rot.mat = diag(4), za, zb, zcol,
+#              ...)
+# {
+
+#     ## x, y, z are in a special form here (compared to most other
+#     ## places in lattice). x and y are short ascending, describing the
+#     ## grid, and z is the corresponding z values in the order (x1,y1),
+#     ## (x1,y2), ... . length(z) == length(x) * length(y). Sometimes, z
+#     ## might be a matrix, which indicates multiple surfaces. Above
+#     ## description true for each column in that case.
+
+#     grid <- rbind(t(as.matrix(expand.grid(yy = y, xx = x)))[2:1,], z)
+#     grid <- ltransform3dto3d(grid, rot.mat, za, zb)
+
+#     nx <- length(x)
+#     ny <- length(y)
+
+#     ordvec <- (1: ((nx -1 ) * ny)  )[- (1:(nx - 1)) * ny]
+#     ordvec <- ordvec[order(pmax(grid[3, ordvec],
+#                                 grid[3, ordvec + ny],
+#                                 grid[3, ordvec + ny + 1],
+#                                 grid[3, ordvec + 1] ))]
+    
+#     ##zcol <- zcol[id0][ord]
+
+#     for (i in ordvec)
+#         grid.polygon(x = grid[1, c(i, i + ny, i + ny + 1, i + 1)],
+#                      y = grid[2, c(i, i + ny, i + ny + 1, i + 1)],
+#                      default.units = "native",
+#                      gp = gpar(fill = "white", col = "black"))
+# }
+      
+
+
+
 
 
 
 
 panel.cloud <-
-    function(x, y, z, subscripts, distance, xlim, ylim, zlim,
-             subpanel = "panel.xyplot",
-             rot.mat = rot.mat, aspect = aspect,
-             zcol, col.regions, par.box = NULL,
+    function(x, y, z, subscripts,
+             groups = NULL,
+             distance, xlim, ylim, zlim,
+             panel.3d.cloud = "panel.3dscatter",
+             panel.3d.wireframe = "panel.3dwire",
+             rot.mat, aspect,
+             par.box = NULL,
              ## next few arguments are an attempt to support
              ## scales. The main problem with scales is that it is
              ## difficult to figure out the best way to place the
@@ -85,57 +289,100 @@ panel.cloud <-
              ## proper implementation
              xlab, ylab, zlab, scales.3d,
              proportion = 0.6, wireframe = FALSE,
-             scpos = list(x = 1, y = 8, z = 12), 
-             ...)
+             scpos,
+             ...,
+             col.at,
+             col.regions)
 {
-    if (any(subscripts)) {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+    z <- as.numeric(z)
+
+    if (any(subscripts)) { ## otherwise nothing to draw (not even box ?)
 
         par.box.final <- trellis.par.get("box.3d")
         if (!is.null(par.box)) par.box.final[names(par.box)] <- par.box
-
-        subpanel <-
-            if (is.character(subpanel)) get(subpanel)
-            else eval(subpanel)
 
         aspect <- rep(aspect, length=2)
 
         x <- x[subscripts]
         y <- y[subscripts]
         z <- z[subscripts]
-
-        if (wireframe) {
-            ord <- order(y, x)
-            x <- x[ord]
-            y <- y[ord]
-            z <- z[ord]
-            nx <- length(unique(x))
-            ny <- length(unique(y))
-            len <- length(z)
-            if (nx * ny != len) stop("Incorrect arguments")
-            zcol <- rep(zcol, len)
-
-            idtf <- c(rep( c(rep(TRUE, nx-1), FALSE), ny-1 ), rep(FALSE, nx))
-            id0 <- (1:(nx*ny))[idtf]
-            id1 <- id0 + 1
-            id2 <- id1 + nx
-            id3 <- id0 + nx
-        }
-
-
+              
         corners <-
-            data.frame(x = c(-1,1,1,-1,-1,1,1,-1) / 2,
-                       y = c(-1,-1,-1,-1,1,1,1,1) / 2 * aspect[1],
-                       z = c(-1,-1,1,1,-1,-1,1,1) / 2 * aspect[2])
-
+            data.frame(x = c(-1, 1, 1,-1,-1, 1, 1,-1) / 2,
+                       y = c(-1,-1,-1,-1, 1, 1, 1, 1) / 2 * aspect[1],
+                       z = c(-1,-1, 1, 1,-1,-1, 1, 1) / 2 * aspect[2])
+              
         ## these are box boundaries
-        ##pre <- c(1,2,3,4,2,3,4,1,5,6,7,8)
-        ##nxt <- c(2,3,4,1,6,7,8,5,6,7,8,5)  old -- as backup
-
+                      
         pre <- c(1,2,4,1,2,3,4,1,5,6,8,5)
         nxt <- c(2,3,3,4,6,7,8,5,6,7,7,8)
 
+        ## The corners are defined in terms of coordinates in 3-D
+        ## space as above. The actual choice of coordinates ideally
+        ## should not affect anything, but I haven't checked. Box
+        ## boundaries are defined as pairs of corners. The numbers of
+        ## the corners and boundaries are helpful in keeping track of
+        ## things, and are described in the diagram below.
+
+
+        ##                          
+        ##                          
+        ##                                   L-11                  
+        ##                           8------------------------7    
+        ##                         / |                       /|    
+        ##                        /  |                      / |    
+        ##                    L-7/   |L-12              L-6/  |    
+        ##                      /    |                    /   |    
+        ##                     /     |                   /    |    
+        ##                    /      |        L-3       /     |L-10 
+        ##                   4-------------------------3      |
+        ##                   |       |                 |      |
+        ##                   |       |                 |      |
+        ##                   |       |                 |      |
+        ##                   |       |    L-9          |      |
+        ##                L-4|       5-----------------|------6 
+        ##                   |      /                  |     / 
+        ##                   |     /                   |    /  
+        ##                   |    /                 L-2|   /L-5
+        ##                   |   /                     |  / 
+        ##                   |  /L-8                   | / 
+        ##                   | /                       |/
+        ##                   |/                        |
+        ##                   1-------------------------2
+        ##                (0,0,0)          L-1           
+        ##                                            
+        
+
         ## SCALES : very beta
 
+        tmp <- ltransform3dto3d(t(as.matrix(corners)), rot.mat)
+        farthest <- 1  ## used later also
+        farval <- tmp[3,1]
+
+        for (i in 2:8)
+            if (tmp[3,i] < farval) {
+                farthest <- i
+                farval <- tmp[3,i]
+            }
+
+        scale.position <-
+            if (farthest == 1) list(x = 9, y = 5, z = 2)
+            else if (farthest == 2) list(x = 9, y = 8, z = 10)
+            else if (farthest == 3) list(x = 11, y = 7, z = 10)
+            else if (farthest == 4) list(x = 11, y = 6, z = 2)
+            else if (farthest == 5) list(x = 1, y = 5, z = 4)
+            else if (farthest == 6) list(x = 1, y = 8, z = 12)
+            else if (farthest == 7) list(x = 3, y = 7, z = 2)
+            else if (farthest == 8) list(x = 3, y = 6, z = 10)
+
+        if (!missing(scpos))
+            scale.position[names(scpos)] <- scpos
+
+        scpos <- scale.position
+
+        
         labs <- rbind(x = c(0, corners$x[pre[scpos$y]], corners$x[pre[scpos$z]]),
                       y = c(corners$y[pre[scpos$x]], 0, corners$y[pre[scpos$z]]),
                       z = c(corners$z[pre[scpos$x]], corners$z[pre[scpos$y]], 0))
@@ -189,20 +436,21 @@ panel.cloud <-
                 as.character(z.at)
             else as.character(scales.3d$z.scales$labels)
 
+
+        
+
         ## box ranges and lengths
         cmin <- lapply(corners, min)
         cmax <- lapply(corners, max)
         clen <- lapply(corners, function(x) diff(range(x)))
 
-        ##if (!missing(R.mat))
-        ##  {;} #do something
 
-        ## transformed data
-        tdata <- rbind(x = cmin$x + clen$x * (x-xlim[1])/diff(xlim),
-                       y = cmin$y + clen$y * (y-ylim[1])/diff(ylim),
-                       z = cmin$z + clen$z * (z-zlim[1])/diff(zlim))
+        ## scaled (to bounding box) data
+        x <- cmin$x + clen$x * (x-xlim[1])/diff(xlim)
+        y <- cmin$y + clen$y * (y-ylim[1])/diff(ylim)
+        z <- cmin$z + clen$z * (z-zlim[1])/diff(zlim)
+        col.at <- cmin$z + clen$z * (col.at - zlim[1])/diff(zlim)
 
-        taxes <- rot.mat %*% axes
         x.at <- cmin$x + clen$x * (x.at-xlim[1])/diff(xlim)
         y.at <- cmin$y + clen$y * (y.at-ylim[1])/diff(ylim)
         z.at <- cmin$z + clen$z * (z.at-zlim[1])/diff(zlim)
@@ -227,74 +475,42 @@ panel.cloud <-
         y.labs <- y.at + 2 * scales.3d$y.scales$tck * .05 * labs[,2]
         z.labs <- z.at + 2 * scales.3d$z.scales$tck * .05 * labs[,3]
 
-        x.at <- rot.mat %*% x.at
-        x.labs <- rot.mat %*% x.labs
-        x.at.end <- rot.mat %*% x.at.end
-        y.at <- rot.mat %*% y.at
-        y.labs <- rot.mat %*% y.labs
-        y.at.end <- rot.mat %*% y.at.end
-        z.at <- rot.mat %*% z.at
-        z.labs <- rot.mat %*% z.labs
-        z.at.end <- rot.mat %*% z.at.end
-        
-        tdata <- rot.mat %*% tdata
-        corners <- rot.mat %*% t(as.matrix(corners))
-        tlabs <- rot.mat %*% labs
-
-
+        ## Things necessary for perspective
+        corners <- ltransform3dto3d(t(as.matrix(corners)), rot.mat)
         zback <- min(corners[3,])
         zfront <- max(corners[3,])
         za <- (zfront * (1-distance) - zback) / (zfront - zback)
         zb <- distance / (zfront - zback)
-
-        tdata[1,] <- (za + zb * tdata[3,]) * tdata[1,]
-        tdata[2,] <- (za + zb * tdata[3,]) * tdata[2,]
-
         corners[1,] <- (za + zb * corners[3,]) * corners[1,]
         corners[2,] <- (za + zb * corners[3,]) * corners[2,]
 
-        taxes[1,] <- (za + zb * taxes[3,]) * taxes[1,]
-        taxes[2,] <- (za + zb * taxes[3,]) * taxes[2,]
-        
-        x.at[1,] <- (za + zb * x.at[3,]) * x.at[1,]
-        x.at[2,] <- (za + zb * x.at[3,]) * x.at[2,]
-        x.labs[1,] <- (za + zb * x.labs[3,]) * x.labs[1,]
-        x.labs[2,] <- (za + zb * x.labs[3,]) * x.labs[2,]
-        x.at.end[1,] <- (za + zb * x.at.end[3,]) * x.at.end[1,]
-        x.at.end[2,] <- (za + zb * x.at.end[3,]) * x.at.end[2,]
 
-        y.at[1,] <- (za + zb * y.at[3,]) * y.at[1,]
-        y.at[2,] <- (za + zb * y.at[3,]) * y.at[2,]
-        y.labs[1,] <- (za + zb * y.labs[3,]) * y.labs[1,]
-        y.labs[2,] <- (za + zb * y.labs[3,]) * y.labs[2,]
-        y.at.end[1,] <- (za + zb * y.at.end[3,]) * y.at.end[1,]
-        y.at.end[2,] <- (za + zb * y.at.end[3,]) * y.at.end[2,]
+        taxes <- ltransform3dto3d(axes, rot.mat, za, zb)
+        x.at <- ltransform3dto3d(x.at, rot.mat, za, zb)
+        x.labs <- ltransform3dto3d(x.labs, rot.mat, za, zb)
+        x.at.end <- ltransform3dto3d(x.at.end, rot.mat, za, zb)
 
-        z.at[1,] <- (za + zb * z.at[3,]) * z.at[1,]
-        z.at[2,] <- (za + zb * z.at[3,]) * z.at[2,]
-        z.labs[1,] <- (za + zb * z.labs[3,]) * z.labs[1,]
-        z.labs[2,] <- (za + zb * z.labs[3,]) * z.labs[2,]
-        z.at.end[1,] <- (za + zb * z.at.end[3,]) * z.at.end[1,]
-        z.at.end[2,] <- (za + zb * z.at.end[3,]) * z.at.end[2,]
+        y.at <- ltransform3dto3d(y.at, rot.mat, za, zb)
+        y.labs <- ltransform3dto3d(y.labs, rot.mat, za, zb)
+        y.at.end <- ltransform3dto3d(y.at.end, rot.mat, za, zb)
+
+        z.at <- ltransform3dto3d(z.at, rot.mat, za, zb)
+        z.labs <- ltransform3dto3d(z.labs, rot.mat, za, zb)
+        z.at.end <- ltransform3dto3d(z.at.end, rot.mat, za, zb)
+
+        tlabs <- ltransform3dto3d(labs, rot.mat, za, zb)
+
 
         
-        tlabs[1,] <- (za + zb * tlabs[3,]) * tlabs[1,]
-        tlabs[2,] <- (za + zb * tlabs[3,]) * tlabs[2,]
-
-
-        farthest <- 1
-        farval <- corners[3,1]
-
-        for (i in 2:8)
-            if (corners[3,i] < farval) {
-                farthest <- i
-                farval <- corners[3,i]
-            }
-
         mark <- rep(TRUE, 12)
         for (j in 1:12)
             if (pre[j]==farthest || nxt[j]==farthest)
                 mark[j] <- FALSE
+
+        ## This draws the 'back' of the box, i.e., the portion that
+        ## should be hidden by the data. This doesn't work properly in
+        ## the case where the whole 'back rectangle' is 'contained'
+        ## within the 'front rectangle'.
 
         lsegments(corners[1, pre[!mark]],
                   corners[2, pre[!mark]],
@@ -304,46 +520,88 @@ panel.cloud <-
                   lwd = par.box.final$lwd,
                   lty = 2)
 
+
+
+
+
+        ## The following portion of code is responsible for drawing
+        ## the part of the plot driven by the data. The modus operandi
+        ## will be different for cloud and wireframe, since they have
+        ## essentially different purpose. For cloud, the data is
+        ## unstructured, and x, y and z are all passed to the
+        ## panel.3d.cloud function. For wireframe, on the other hand,
+        ## x and y must form a regular grid, which sort(unique(<x|y>))
+        ## is enough to describe (o.w., very real memory problems
+        ## possible). z would then have to be supplied in a very
+        ## particular order. All this is fine, but a problem arises if
+        ## we want to allow groups -- multiple surfaces. One option is
+        ## to supply a matrix (nx * ny by no.of.groups) for z. This is
+        ## OK, but it precludes the posibility of supplying x and y as
+        ## only their unique values from the very beginning. Let's do
+        ## it this way for now.
+
+
         
         if (wireframe) {
-            ## This is where the wireframe is actually drawn
-            if (TRUE) {
-                xx <- tdata[1,]
-                yy <- tdata[2,]
-                zz <- tdata[3,]
-                ord <- order(zz[id0])
-                zcol <- zcol[id0][ord]
-                px <- cbind(xx[id0][ord], xx[id1][ord], xx[id2][ord], xx[id3][ord])
-                py <- cbind(yy[id0][ord], yy[id1][ord], yy[id2][ord], yy[id3][ord])
-                for (i in seq(along = ord))
-                    grid.polygon(x = px[i,], y = py[i,], default.units = "native",
-                                 gp = gpar(fill = col.regions[zcol[i]], col = "black"))
+            panel.3d.wireframe <- 
+                if (is.character(panel.3d.wireframe)) get(panel.3d.wireframe)
+                else eval(panel.3d.wireframe)
+
+            if (is.null(groups)) {
+                ord <- order(x, y)
+                tmp <- z[ord]
+
+                nx <- length(unique(x))
+                ny <- length(unique(y))
+                len <- length(z)
+                if (nx * ny != len) stop("Incorrect arguments")
             }
-#             else {
-#                 xx <- tdata[1,]
-#                 yy <- tdata[2,]
-#                 zz <- tdata[3,]
-#                 ord <- order(zz[id0])
+            else {
+                vals <- sort(unique(groups))
+                nvals <- length(vals)
+                tmp <- numeric(0)
 
-#                 dumx <- unit(c(0,.5,.5,0 ), "native")
-#                 dumy <- unit(c(0,0,.5,.5), "native")
+                for (i in seq(along=vals)) {
+                    id <- (groups[subscripts] == vals[i])
+                    if (any(id)) {
+                        ord <- order(x[id], y[id])
+                        tmp <- cbind(tmp, z[id][ord])
+                    }
+                }
 
-#                 grid.Call.graphics("D_quadrilateral",
-#                                    xx[id0][ord],
-#                                    xx[id1][ord],
-#                                    xx[id2][ord],
-#                                    xx[id3][ord],
-#                                    yy[id0][ord],
-#                                    yy[id1][ord],
-#                                    yy[id2][ord],
-#                                    yy[id3][ord],
-#                                    dumx, dumy,
-#                                    col.regions[zcol[id0][ord]],
-#                                    PACKAGE="grid")
-#             }
+            }
+            x <- sort(unique(x))
+            y <- sort(unique(y))
+            z <- NULL ## hopefully becomes garbage, collected if necessary
+
+
+            panel.3d.wireframe(x = x, y = y, z = tmp,
+                               rot.mat = rot.mat,
+                               za = za, zb = zb,
+                               minz = cmin$z,
+                               maxz = cmax$z,
+                               col.at = col.at,
+                               col.regions = col.regions,
+                               ...)
         }
-        else subpanel(x=tdata[1,], y=tdata[2,], subscripts = subscripts, ...)
-            
+        else {
+            panel.3d.cloud <- 
+                if (is.character(panel.3d.cloud)) get(panel.3d.cloud)
+                else eval(panel.3d.cloud)
+            panel.3d.cloud(x = x, y = y, z = z,
+                           rot.mat = rot.mat,
+                           za=za, zb=zb,
+                           subscripts = subscripts,
+                           groups = groups,
+                           ...)
+        }
+
+
+
+
+
+        ## This draws the front of the bounding box
+
         lsegments(corners[1, pre[mark]],
                   corners[2, pre[mark]],
                   corners[1, nxt[mark]],
@@ -451,13 +709,13 @@ wireframe <-
              groups = NULL,
              cuts = 70,
              pretty = FALSE,
-             col.regions = trellis.par.get("regions")$col,
              drape = FALSE,
-             colorkey = any(drape),
              ...,
+             col.regions = trellis.par.get("regions")$col,
+             colorkey = any(drape),
              subset = TRUE)
 {
-    warning("wireframe can be EXTREMELY slow")
+    ##warning("wireframe can be EXTREMELY slow")
     ## m <- match.call(expand.dots = FALSE)
     dots <- list(...)
     groups <- eval(substitute(groups), data, parent.frame())
@@ -511,7 +769,6 @@ cloud <-
              aspect = c(1,1),
              layout = NULL,
              panel = "panel.cloud",
-             subpanel = "panel.xyplot",
              prepanel = NULL,
              scales = NULL,
              strip = TRUE,
@@ -527,13 +784,13 @@ cloud <-
              perspective = TRUE,
              R.mat = diag(4),
              screen = list(z = 40, x = -60),
-             zoom = .9,
+             zoom = .8,
              at,
              pretty = FALSE,
              drape = FALSE,
+             ...,
              colorkey = any(drape),
              col.regions, cuts = 1,
-             ...,
              subscripts = TRUE,
              subset = TRUE)
 {
@@ -594,11 +851,11 @@ cloud <-
     if (missing(ylab)) ylab <- form$right.y.name
     if (missing(zlab)) zlab <- form$left.name
 
-    if(!(is.numeric(x) && is.numeric(y) && is.numeric(z)))
-        warning("x, y and z should be numeric")
-    x <- as.numeric(x)
-    y <- as.numeric(y)
-    z <- as.numeric(z)
+    ##if(!(is.numeric(x) && is.numeric(y) && is.numeric(z)))
+    ##    warning("x, y and z should be numeric")
+    ##x <- as.numeric(x)
+    ##y <- as.numeric(y)
+    ##z <- as.numeric(z)
 
     zrng <- extend.limits(range(z[!is.na(z)]))
     if (missing(at))
@@ -647,19 +904,16 @@ cloud <-
 
 
 
-    
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
     foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(xlab) && !is.character(xlab$label))
+    if (is.list(xlab) && !is.characterOrExpression(xlab$label))
         xlab$label <- form$right.x.name
-    if (is.list(ylab) && !is.character(ylab$label))
+    if (is.list(ylab) && !is.characterOrExpression(ylab$label))
         ylab$label <- form$right.y.name
-    if (is.list(zlab) && !is.character(zlab$label))
+    if (is.list(zlab) && !is.characterOrExpression(zlab$label))
         zlab$label <- form$left.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)
@@ -737,26 +991,33 @@ cloud <-
 
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
-    ## FIXME: R.mat ignored
+
+
+
+
     ## calculate rotation matrix:
-    rot.mat <- diag(3)
-    screen.names <- names(screen)
-    screen <- lapply(screen, "*", pi/180)
 
-    for(i in seq(along=screen.names)) {
-        th <- screen[[i]]
-        cth <- cos(th)
-        sth <- sin(th)
-        tmp.mat <- 
-            (if (screen.names[i]=="x")
-             matrix(c(1, 0, 0, 0, cth, sth, 0, -sth, cth), 3, 3)
-            else if (screen.names[i]=="y")
-             matrix(c(cth, 0, -sth, 0, 1, 0, sth, 0, cth), 3, 3)
-            else if (screen.names[i]=="z")
-             matrix(c(cth, sth, 0, -sth, cth, 0, 0, 0, 1), 3, 3))
-        rot.mat <- tmp.mat %*% rot.mat
-    }
 
+#     rot.mat <- diag(3)
+#     screen.names <- names(screen)
+#     screen <- lapply(screen, "*", pi/180)
+
+#     for(i in seq(along=screen.names)) {
+#         th <- screen[[i]]
+#         cth <- cos(th)
+#         sth <- sin(th)
+#         tmp.mat <- 
+#             (if (screen.names[i]=="x")
+#              matrix(c(1, 0, 0, 0, cth, sth, 0, -sth, cth), 3, 3)
+#             else if (screen.names[i]=="y")
+#              matrix(c(cth, 0, -sth, 0, 1, 0, sth, 0, cth), 3, 3)
+#             else if (screen.names[i]=="z")
+#              matrix(c(cth, sth, 0, -sth, cth, 0, 0, 0, 1), 3, 3))
+#         rot.mat <- tmp.mat %*% rot.mat
+#     }
+
+
+    rot.mat <- ltransform3dMatrix(screen = screen, R.mat = R.mat)
 
     if (drape) {
         ## region
@@ -778,13 +1039,9 @@ cloud <-
             if (is.null(foo$colorkey$col)) foo$colorkey$col <- col.regions
             if (is.null(foo$colorkey$at)) foo$colorkey$at <- at
         }
-        zcol <- numeric(length(z))
-        for (i in seq(along=col.regions))
-            zcol[!id.na & z>=at[i] & z<at[i+1]] <- i
     }
     else {
         col.regions <- trellis.par.get("background")$col
-        zcol <- 1
     }
 
 
@@ -798,13 +1055,12 @@ cloud <-
     ## maybe *lim = NULL with relation = "free" ? 
     foo$panel.args.common <-
         c(list(x=x, y=y, z=z, rot.mat = rot.mat, zoom = zoom,
-               subpanel = subpanel,
                xlim = xlim, ylim = ylim, zlim = zlim,
                xlab = xlab, ylab = ylab, zlab = zlab,
                aspect = aspect,
-               distance = distance,
+               distance = if (perspective) distance else 0,
                scales.3d = scales.3d,
-               zcol = zcol, col.regions = col.regions),
+               col.at = at, col.regions = col.regions),
           dots)
 
     if (!is.null(groups)) foo$panel.args.common$groups <- groups

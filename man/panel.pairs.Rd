@@ -8,7 +8,6 @@
 panel.pairs(z, panel = panel.splom,
             groups = NULL, panel.subscripts, 
             subscripts,
-            fontsize.small = 8,
             pscales = 5, ...)
 }
 \arguments{

@@ -26,16 +26,21 @@ prepanel.default.bwplot <-
              horizontal = TRUE,
              levels.fos = length(unique(y)), ...)
 {
-    if (any(x)) {
+    if (length(x) && length(x)) {
+        
+
+        if (!is.numeric(x)) x <- as.numeric(x)
+        if (!is.numeric(y)) y <- as.numeric(y)
+
         temp <- .5  #* box.ratio/(box.ratio+1)
         if (horizontal)
-            list(xlim = range(x[is.finite(x)]),
+            list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else  levels(x),
                  ylim = c(1-temp, levels.fos + temp),
                  dx = 1,
                  dy = 1)
         else 
             list(xlim = c(1-temp, levels.fos + temp),
-                 ylim = range(y[is.finite(y)]),
+                 ylim = if (is.numeric(y)) range(y[is.finite(y)]) else  levels(y),
                  dx = 1,
                  dy = 1)
     }
@@ -51,6 +56,9 @@ prepanel.default.bwplot <-
 panel.barchart <-
     function(x, y, box.ratio=1, horizontal = TRUE, col=bar.fill$col, ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     bar.fill <- trellis.par.get("bar.fill")
     if (horizontal) {
         xmin <- current.viewport()$xscale[1]
@@ -96,6 +104,9 @@ panel.dotplot <-
              col.line = dot.line$col,
              levels.fos = NULL, ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     dot.line <- trellis.par.get("dot.line")
     dot.symbol <- trellis.par.get("dot.symbol")
     if (horizontal) {
@@ -122,6 +133,8 @@ panel.stripplot <-
     function(x, y, jitter.data = FALSE, factor = 0.5, horizontal = TRUE,
              pch=plot.symbol$pch, col=plot.symbol$col, ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
 
     plot.symbol <- trellis.par.get("plot.symbol")
     y.jitter  <-
@@ -144,6 +157,9 @@ panel.bwplot <-
              levels.fos = NULL, ...)
 {
     
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     box.dot <- trellis.par.get("box.dot")
     box.rectangle <- trellis.par.get("box.rectangle")
     box.umbrella <- trellis.par.get("box.umbrella")
@@ -379,7 +395,9 @@ barchart <-
 stripplot <-
     function(formula,
              data = parent.frame(),
-             panel = "panel.stripplot",
+             panel = if (is.null(groups)) "panel.stripplot"
+             else "panel.superpose",
+             panel.groups = "panel.stripplot",
              prepanel = NULL,
              strip = TRUE,
              jitter = FALSE,
@@ -406,8 +424,11 @@ stripplot <-
     formname <- deparse(substitute(formula))
     form <- eval(substitute(formula), data, parent.frame())
 
-    call.list <- c(list(groups = groups, subset = subset, horizontal = horizontal,
-                        panel = panel, prepanel = prepanel, strip = strip,
+    call.list <- c(list(groups = groups, subset = subset,
+                        horizontal = horizontal,
+                        panel = panel,
+                        panel.groups = panel.groups,
+                        prepanel = prepanel, strip = strip,
                         jitter = jitter, factor = factor,
                         box.ratio = 0),
                    dots)
@@ -513,7 +534,7 @@ bwplot <-
 
     if (horizontal) {
         if (!(is.numeric(x))) {
-            x <- as.numeric(x)
+            ## x <- as.numeric(x)
             warning("x should be numeric")
         }
         y <- as.factorOrShingle(y)
@@ -525,7 +546,7 @@ bwplot <-
     }
     else {
         if (!(is.numeric(y))) {
-            y <- as.numeric(y)
+        ##    y <- as.numeric(y)
             warning("y should be numeric")
         }
         x <- as.factorOrShingle(x)
@@ -553,9 +574,9 @@ bwplot <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab$label <- form$left.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)
@@ -689,7 +710,8 @@ bwplot <-
                         if (is.f.y) 
                             foo$panel.args[[panel.number]] <-
                                 list(x = x[id],
-                                     y = as.numeric(y[id]))
+                                     ##y = as.numeric(y[id]))
+                                     y = y[id])
                             
                         else {  # shingle
                             panel.x <- numeric(0)
@@ -707,7 +729,8 @@ bwplot <-
                     else {
                         if (is.f.x)
                             foo$panel.args[[panel.number]] <-
-                                list(x = as.numeric(x[id]),
+                                ##list(x = as.numeric(x[id]),
+                                list(x = x[id],
                                      y = y[id])
                             
                         else {  # shingle

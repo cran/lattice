@@ -25,7 +25,10 @@
 prepanel.default.levelplot <-
     function(x, y, wx, wy, subscripts, ...)
 {
-    if (!any(x)) return(list(c(NA, NA), c(NA, NA), 1, 1))
+    ## not allowing POSIXt objects here
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     xlim <- range(x[subscripts] + wx[subscripts]/2,
                   x[subscripts] - wx[subscripts]/2)
     ylim <- range(y[subscripts] + wy[subscripts]/2,
@@ -59,6 +62,10 @@ panel.levelplot <-
              lwd = add.line$lwd,
              ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+    z <- as.numeric(z)
+
     ## z not really needed here, but probably would be for contourplot
     if (any(subscripts)) {
         if (region) {
@@ -238,11 +245,11 @@ levelplot <-
     if (missing(xlab)) xlab <- form$right.x.name
     if (missing(ylab)) ylab <- form$right.y.name
 
-    if(!(is.numeric(x) && is.numeric(y) && is.numeric(z)))
-        warning("x, y and z should be numeric")
-    x <- as.numeric(x)
-    y <- as.numeric(y)
-    z <- as.numeric(z)
+    #if(!(is.numeric(x) && is.numeric(y) && is.numeric(z)))
+    #    warning("x, y and z should be numeric")
+    #x <- as.numeric(x)
+    #y <- as.numeric(y)
+    #z <- as.numeric(z)
 
     zrng <- extend.limits(range(z[!is.na(z)]))
     if (missing(at))
@@ -266,13 +273,13 @@ levelplot <-
     if (is.logical(labels) && !labels) labels <- NULL
     else {
         if (is.logical(labels)) labels <- format(at)
-        text <- trellis.par.get("par.xlab.text") # something better ?
+        text <- trellis.par.get("add.text") # something better ?
         if (is.null(text)) text <- list(cex = 1, col = "black", font = 1, rot = 0)
         labels <- list(label = if (is.list(labels)) labels[[1]] else labels,
                        col = text$col, rot = text$rot,
                        cex = text$cex, font = text$font)
         if (is.list(labels)) labels[names(labels)] <- labels
-        if (!is.character(labels$label))
+        if (!is.characterOrExpression(labels$label))
             labels$label <- format(at)
     }
 
@@ -284,15 +291,15 @@ levelplot <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab$label <- form$left.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
     ## scales <- eval(substitute(scales), data, parent.frame())
-    if (is.character(scales)) scales <- list(relation = scales)
+    if (is.character (scales)) scales <- list(relation = scales)
     foo <- c(foo,
              do.call("construct.scales", scales))
 
@@ -373,6 +380,9 @@ levelplot <-
         if (is.null(foo$colorkey$at)) foo$colorkey$at <- at
     }
 
+    ## Current algo unnecessarily memory intensive ?
+
+    
     
     ## I'm going to create vectors parallel to x y etc which would
     ## give the widths and heights of the rectangles for each point.

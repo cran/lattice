@@ -36,6 +36,7 @@ panel.parallel <- function(z, subscripts,
                            lwd=superpose.line$lwd,
                            lty=superpose.line$lty, ...)
 {
+
     superpose.line <- trellis.par.get("superpose.line")
     reference.line <- trellis.par.get("reference.line")
 
@@ -55,8 +56,8 @@ panel.parallel <- function(z, subscripts,
                        gp = gpar(col = reference.line$col,
                        lwd = reference.line$lwd,
                        lty = reference.line$lty))
-            llim[i] <- range(z[,i])[1]
-            ulim[i] <- range(z[,i])[2]
+            llim[i] <- range(as.numeric(z[,i]))[1]
+            ulim[i] <- range(as.numeric(z[,i]))[2]
             dif[i] <- ulim[i] - llim[i]
         }
    
@@ -153,9 +154,9 @@ parallel <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
-        foo$xlab$label <- "Scatter Plot Matrix"
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
+        foo$xlab$label <- "Parallel Coordinate Plot"
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab <- NULL
 
     ## Step 2: Compute scales.common (leaving out limits for now)

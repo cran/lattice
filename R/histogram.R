@@ -33,11 +33,13 @@ prepanel.default.histogram <-
              type = "density",
              ...)
 {
+    if (!is.numeric(x)) x <- as.numeric(x)
+
     if (length(x)<1)
         list(xlim = NA,
              ylim = NA,
-             dx = 1,
-             dy = 1)
+             dx = NA,
+             dy = NA)
     else
     {
         if (is.null(breaks)) {
@@ -77,6 +79,8 @@ panel.histogram <- function(x,
                             col = bar.fill$col,
                             ...)
 {
+    x <- as.numeric(x)
+
     grid.lines(x = c(0.05, 0.95),
                y = unit(c(0,0),"native"),
                default.units = "npc")
@@ -202,9 +206,9 @@ histogram <-
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- TRUE
 
-    if(!(is.numeric(x) || is.factor(x)))
-        warning("x should be numeric")
-    x <- as.numeric(x)
+    ##if(!(is.numeric(x) || is.factor(x)))
+    ##    warning("x should be numeric")
+    ##x <- as.numeric(x)
     ## create a skeleton trellis object with the
     ## less complicated components:
 
@@ -223,7 +227,7 @@ histogram <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- form$right.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)

@@ -81,10 +81,41 @@ xyplot(Petal.Length~Petal.Width, data = iris, groups=Species,
        key = list(title = "Iris Data", x = .15, y=.85, corner = c(0,1),
            border = TRUE, 
            points = list(col=trellis.par.get("strip.shingle")$col[1:3],
-           pch = trellis.par.get("superpose.symbol")$pch,
-           cex = trellis.par.get("superpose.symbol")$cex
+           pch = trellis.par.get("superpose.symbol")$pch[1:3],
+           cex = trellis.par.get("superpose.symbol")$cex[1:3]
            ),
            text = list(levels(iris$Species))))
+
+## Demo of expressions
+
+x <- rnorm(400)
+y <- rnorm(400)
+a <- gl(4, 100)
+
+xyplot(y~x | a, aspect = "fill",
+       strip = function(factor.levels, strip.names, var.name, ...) {
+           strip.default(factor.levels = expression(alpha, beta, gamma, delta),
+                         strip.names = TRUE,
+                         var.name = expression(frac(epsilon, 2)),
+                         ...) },
+       par.strip.text = list(lines = 2),
+       xlab=list(expression(sigma[i]), cex = 2),
+       ylab=expression(gamma^2),
+       main=expression(pi*sum(x, i=0, n)),
+       scales=
+       list(relation = "free", 
+            x=list(at=c(-2, 0, 2), labels=expression(frac(-pi, 2), 0, frac(pi, 2))),
+            y=list(at=c(-2, 0, 2), labels=expression(alpha, beta, gamma))),
+       key = list(space="right", transparent = TRUE,
+       title = expression(e[i[1]]^{alpha + 2 ^ beta}),
+       cex.title = 2,
+       points=list(pch=1:2),
+       text = list(c('small', 'BIG'), cex = c(.8, 3)),
+       lines = list(lty = 1:2),
+       text=list(expression(theta, zeta))
+       ),
+       sub=expression(frac(demonstrating, expressions)))
+
 
 par(ask = FALSE)
 

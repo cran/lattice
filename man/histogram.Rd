@@ -12,7 +12,8 @@ densityplot(formula, data = parent.frame(), aspect = "fill", layout = NULL,
     strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, bw = NULL, 
     adjust = NULL, kernel = NULL, window = NULL, width = NULL, 
     give.Rkern = FALSE, n = 50, from = NULL, to = NULL, cut = NULL, 
-    na.rm = NULL, ..., subscripts = !is.null(groups), subset = TRUE)
+    na.rm = NULL, ..., panel.groups = "panel.densityplot",
+    subscripts = !is.null(groups), subset = TRUE)
 }
 \usage{
 histogram(formula,

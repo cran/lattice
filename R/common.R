@@ -1,6 +1,6 @@
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2002  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
 ### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
@@ -79,6 +79,7 @@ latticeParseFormula <-
 
     if (length(model) == 3) {
         ans$left <- eval(model[[2]], data)
+        if (inherits(ans$left, "POSIXt")) ans$left <- as.POSIXct(ans$left)
         ans$left.name <- deparse(model[[2]])
     }
     model <- model[[length(model)]]
@@ -86,18 +87,24 @@ latticeParseFormula <-
         model.vars <- parseCond(model[[3]])
         ans$condition <- vector("list", length(model.vars))
         names(ans$condition) <- sapply(model.vars, deparse)
-        for (i in seq(along = model.vars))
+        for (i in seq(along = model.vars)) {
             ans$condition[[i]] <- eval(model.vars[[i]], data)
+            if (inherits(ans$condition[[i]], "POSIXt"))
+                ans$condition[[i]] <- as.POSIXct(ans$condition[[i]])
+        }
         model <- model[[2]]
     }
     if (dimension == 2) {
         ans$right <- eval(model, data)
+        if (inherits(ans$right, "POSIXt")) ans$right <- as.POSIXct(ans$right)
         ans$right.name <- deparse(model)
     }
     else if (dimension == 3 && length(model) == 3 &&
              (model[[1]] == "*" || model[[1]] == "+")) {
         ans$right.x <- eval(model[[2]], data)
+        if (inherits(ans$right.x, "POSIXt")) ans$right.x <- as.POSIXct(ans$right.x)
         ans$right.y <- eval(model[[3]], data)
+        if (inherits(ans$right.y, "POSIXt")) ans$right.y <- as.POSIXct(ans$right.y)
         ans$right.x.name <- deparse(model[[2]])
         ans$right.y.name <- deparse(model[[3]])
     }
@@ -132,26 +139,183 @@ banking <- function(dx, dy)
 
 
 
-extend.limits <-
-    function(lim, length=1, prop = 0.07) {
-        if (!is.numeric(lim)) NA
-        else if(length(lim)==2) {
-            if (lim[1]>lim[2]) stop("Improper value of limit")
-            if(!missing(length) && !missing(prop))
-                stop("length and prop cannot both be specified")
-            if(length <= 0) stop("length must be positive")
-            if(!missing(length)) prop <- (length-diff(lim))/(2*diff(lim))
-            if(lim[1]==lim[2]) lim + 0.5*c(-length,length)
-            else {
-                d <- diff(lim)
-                lim + prop*d*c(-1,1)
-            }
+
+## modified from axis.POSIXct. This aims to be a general function
+## which given a general 'range' x and optional at, generates the
+## locations of tick marks and corresponding labels. Ultimately will
+## be a replacement for lpretty
+
+calculateAxisComponents <-
+    function (x, at = FALSE, labels = FALSE, logpaste = "",
+              abbreviate = NULL, minlength = 4,
+              format, ...) 
+{
+
+    ## x is guaranteed to be given, though it might not be always
+    ## necessary. Four cases, corresponding to factors
+    ## (is.character(x)), shingle (inherits(x, "shingleLevel")),
+    ## POSIXt (inherits(x, "POSIXt") and usual numeric. The last case
+    ## will be default, and will be changed later if necessary.
+
+    ## The code for shingles will never really be used. Shingles can
+    ## also be thought of as numeric, and that's more appropriate for
+    ## functions like xyplot, and limits will be just range. In
+    ## functions like bwplot, things will be adjusted elsewhere when
+    ## one of the variables is a shingle.
+
+    ## Note that at and labels will never be TRUE (it's set up that
+    ## way), so it's enough to check if they are is.logical(), which
+    ## means they are not explicitly specified.
+
+    if (is.character(x)) { ## factor
+        ans <- list(at = if (is.logical(at)) seq(along = x) else at,
+                    labels = if (is.logical(labels)) x else labels,
+                    check.overlap = FALSE)
+        ans$num.limit <- c(0, length(ans$at) + 1)
+    }
+    else if (inherits(x, "shingleLevel")) { ## shingle
+        ans <- list(at = if (is.logical(at)) seq(along = x) else at,
+                    labels = if (is.logical(labels))
+                    as.character(seq(along = x)) else labels,
+                    check.overlap = FALSE)
+        ans$num.limit <- c(0, length(ans$at) + 1)
+    }
+    else if (is.numeric(x) && inherits(x, "POSIXt")) { ## POSIX time
+                    
+        num.lim <- as.numeric(range(x))
+        mat <- is.logical(at)
+        mlab <- is.logical(labels)
+
+        if (!mat)
+            x <- as.POSIXct(at)
+        else x <- as.POSIXct(x)
+        range <- as.numeric(range(x))
+        d <- range[2] - range[1]
+        z <- c(range, x[is.finite(x)])
+        if (d < 1.1 * 60) {
+            sc <- 1
+            if (missing(format)) 
+                format <- "%S"
+        }
+        else if (d < 1.1 * 60 * 60) {
+            sc <- 60
+            if (missing(format)) 
+                format <- "%M:%S"
+        }
+        else if (d < 1.1 * 60 * 60 * 24) {
+            sc <- 60 * 24
+            if (missing(format)) 
+                format <- "%H:%M"
+        }
+        else if (d < 2 * 60 * 60 * 24) {
+            sc <- 60 * 24
+            if (missing(format)) 
+                format <- "%a %H:%M"
+        }
+        else if (d < 7 * 60 * 60 * 24) {
+            sc <- 60 * 60 * 24
+            if (missing(format)) 
+                format <- "%a"
         }
         else {
-            print(lim)
-            stop("improper length of lim in extend.limits")
+            sc <- 60 * 60 * 24
+        }
+        if (d < 60 * 60 * 24 * 50) {
+            zz <- lpretty(z/sc, ...)
+            z <- zz * sc
+            class(z) <- c("POSIXt", "POSIXct")
+            if (missing(format)) 
+                format <- "%b %d"
+        }
+        else if (d < 1.1 * 60 * 60 * 24 * 365) {
+            class(z) <- c("POSIXt", "POSIXct")
+            zz <- as.POSIXlt(z)
+            zz$mday <- 1
+            zz$isdst <- zz$hour <- zz$min <- zz$sec <- 0
+            zz$mon <- lpretty(zz$mon, ...)
+            m <- length(zz$mon)
+            m <- rep(zz$year[1], m)
+            zz$year <- c(m, m + 1)
+            z <- as.POSIXct(zz)
+            if (missing(format)) 
+                format <- "%b"
+        }
+        else {
+            class(z) <- c("POSIXt", "POSIXct")
+            zz <- as.POSIXlt(z)
+            zz$mday <- 1
+            zz$isdst <- zz$mon <- zz$hour <- zz$min <- zz$sec <- 0
+            zz$year <- lpretty(zz$year, ...)
+            z <- as.POSIXct(zz)
+            if (missing(format)) 
+                format <- "%Y"
+        }
+        if (!mat) 
+            z <- x[is.finite(x)]
+        z <- z[z >= range[1] & z <= range[2]]
+        labels <- format(z, format = format)
+        ans <- list(at = as.numeric(z), labels = labels,
+                    check.overlap = FALSE,
+                    num.limit = num.lim)
+    }
+    else { ## plain numeric
+
+        ## will check for overlap only when neither at nor labels is specified
+
+        check.overlap <-
+            if (is.logical(at) && is.logical(labels)) TRUE
+            else FALSE
+        
+        if (is.logical(at)) { # at not explicitly specified
+            eps <- 1e-10
+            at <- pretty(x[is.finite(x)], ...)
+            
+            ## Need to do this because pretty sometimes returns things
+            ## like 2.3e-17 instead of 0
+            at <- ifelse(abs(at - round(at, 3)) < eps,
+                         round(at, 3), 
+                         at)
+        }
+        ans <- list(at = at,
+                    labels = if (is.logical(labels)) paste(logpaste,
+                    as.character(at), sep = "") else labels,
+                    check.overlap = check.overlap,
+                    num.limit = range(x))
+    }
+    if (is.logical(abbreviate) && abbreviate)
+        ans$labels <- abbreviate(ans$labels, minlength)
+    ans
+}
+
+
+
+
+
+
+
+
+extend.limits <-
+    function(lim, length=1, prop = 0.07)
+{
+    if (!is.numeric(lim)) NA
+    else if(length(lim)==2) {
+        if (lim[1]>lim[2]) stop("Improper value of limit")
+        if (!missing(length) && !missing(prop))
+            stop("length and prop cannot both be specified")
+        if (length <= 0) stop("length must be positive")
+        if (!missing(length))
+            prop <- (as.numeric(length) - as.numeric(diff(lim))) / (2 * as.numeric(diff(lim)))
+        if (lim[1]==lim[2]) lim + 0.5*c(-length,length)
+        else {
+            d <- as.numeric(diff(lim))
+            lim + prop * d * c(-1,1)
         }
     }
+    else {
+        print(lim)
+        stop("improper length of lim in extend.limits")
+    }
+}
 
 
 
@@ -171,9 +335,11 @@ construct.scales <-
              font = FALSE,
              alternating = TRUE,
              relation = "same",
+             abbreviate = FALSE,
+             minlength = 4,
              x = NULL,
              y = NULL,
-             ...)
+             ...)   ## FIXME: how to handle ...
 {
     xfoo <- list(draw = draw, tck = tck,
                  tick.number = tick.number,
@@ -181,7 +347,9 @@ construct.scales <-
                  at = at, labels = labels,
                  col = col, log = log,
                  alternating = alternating,
-                 relation = relation)
+                 relation = relation,
+                 abbreviate = abbreviate,
+                 minlength = minlength)
     yfoo <- xfoo
     if (!is.null(x)) {
         if (is.character(x)) x <- list(relation = x)
@@ -271,10 +439,9 @@ limits.and.aspect <-
 {
 
     if (nplots<1) stop("need at least one panel")
-    x.limits <- as.list(1:nplots)
-    y.limits <- as.list(1:nplots)
-    dxdy <- as.list(1:nplots)
-
+    x.limits <- vector("list", nplots)
+    y.limits <- vector("list", nplots)
+    dxdy <- vector("list", nplots)
 
     for (count in 1:nplots)
     {
@@ -301,28 +468,71 @@ limits.and.aspect <-
 
     }
 
+
+    ## Some explanation might be helpful here. The for loop above
+    ## creates a list of xlims/ylims. Each of these might be either
+    ## numeric (when x/y is numeric, shigle or POSIXt), or levels of a
+    ## factor (that's how prepanel.default.functions are set
+    ## up). However, at this point, all x.limits[[i]] must be of the
+    ## same type. Returned limits must be in accordance with this
+    ## type.
+
+
+
     if (x.relation == "same")
-        x.limits <-
-            if (have.xlim) xlim
-            else extend.limits(range(unlist(x.limits), na.rm = TRUE))
+        if (have.xlim) {
+            x.limits <- xlim
+            x.slicelen <- if (is.numeric(xlim)) diff(range(xlim)) else length(xlim) + 2
+        }
+        else if (is.numeric(x.limits[[1]])) {
+            x.limits <- extend.limits(range(do.call("c", x.limits), na.rm = TRUE))
+            x.slicelen <- if (is.numeric(x.limits)) diff(range(x.limits))
+        }
+        else {
+            x.limits <- x.limits[[1]]
+            x.slicelen <- length(x.limits) + 2
+        }
     else if (x.relation == "sliced") {
-        x.slicelen <- 1.14 * max(unlist(lapply(x.limits, diff)), na.rm = TRUE)
-        x.limits <- lapply(x.limits, extend.limits, length = x.slicelen)
+        if (is.numeric(x.limits[[1]])) {
+            x.slicelen <- 1.14 * max(unlist(lapply(x.limits, diff)), na.rm = TRUE)
+            x.limits <- lapply(x.limits, extend.limits, length = x.slicelen)
+        }
+        x.slicelen <- length(x.limits[[1]]) + 2
     }
     else if (x.relation == "free")
-        x.limits <- lapply(x.limits, extend.limits)
+        if (is.numeric(x.limits[[1]]))
+            x.limits <- lapply(x.limits, extend.limits)
 
-    if (y.relation == "same") {
-        y.limits <-
-            if (have.ylim) ylim
-            else extend.limits(range(unlist(y.limits), na.rm = TRUE))
-    }
+
+
+
+
+    if (y.relation == "same")
+        if (have.ylim) {
+            y.limits <- ylim
+            y.slicelen <- if (is.numeric(ylim)) diff(range(ylim)) else length(ylim) + 2
+        }
+        else if (is.numeric(y.limits[[1]])) {
+            y.limits <- extend.limits(range(do.call("c", y.limits), na.rm = TRUE))
+            y.slicelen <- if (is.numeric(y.limits)) diff(range(y.limits))
+        }
+        else {
+            y.limits <- y.limits[[1]]
+            y.slicelen <- length(y.limits) + 2
+        }
     else if (y.relation == "sliced") {
-        y.slicelen <- 1.14 * max(unlist(lapply(y.limits, diff)), na.rm = TRUE)
-        y.limits <- lapply(y.limits, extend.limits, length = y.slicelen)
+        if (is.numeric(y.limits[[1]])) {
+            y.slicelen <- 1.14 * max(unlist(lapply(y.limits, diff)), na.rm = TRUE)
+            y.limits <- lapply(y.limits, extend.limits, length = y.slicelen)
+        }
+        y.slicelen <- length(y.limits[[1]]) + 2
     }
     else if (y.relation == "free")
-        y.limits <- lapply(y.limits, extend.limits)
+        if (is.numeric(y.limits[[1]]))
+            y.limits <- lapply(y.limits, extend.limits)
+
+
+
 
     if (is.character(aspect))
         if (aspect == "xy") {
@@ -385,29 +595,33 @@ trellis.skeleton <-
 
     if (!is.null(main)) {
         text <- trellis.par.get("par.main.text")
-        if (is.null(text)) text <- list(cex = 1.2, col = "black", font = 2)
-        foo$main <- list(label = main[[1]], col = text$col, cex = text$cex, font = text$font)
+        if (is.null(text)) text <- list(cex = 1.2, col = "black", font = 2) # shouldn't happen
+        foo$main <- list(label = if (is.list(main)) main[[1]] else main,
+                         col = text$col, cex = text$cex, font = text$font)
         if (is.list(main)) foo$main[names(main)] <- main
     }
     if (!is.null(sub)) {
         text <- trellis.par.get("par.sub.text")
         if (is.null(text)) text <- list(cex = 1, col = "black", font = 2)
-        foo$sub <- list(label = sub[[1]], col = text$col, cex = text$cex, font = text$font)
+        foo$sub <- list(label = if (is.list(sub)) sub[[1]] else sub,
+                        col = text$col, cex = text$cex, font = text$font)
         if (is.list(sub)) foo$sub[names(sub)] <- sub
     }
     if (!is.null(xlab)) {
         text <- trellis.par.get("par.xlab.text")
         if (is.null(text)) text <- list(cex = 1, col = "black", font = 1)
-        foo$xlab <- list(label = xlab[[1]], col = text$col, cex = text$cex, font = text$font)
+        foo$xlab <- list(label = if (is.list(xlab)) xlab[[1]] else xlab,
+                         col = text$col, cex = text$cex, font = text$font)
         if (is.list(xlab)) foo$xlab[names(xlab)] <- xlab
     }
     if (!is.null(ylab)) {
         text <- trellis.par.get("par.ylab.text")
         if (is.null(text)) text <- list(cex = 1.2, col = "black", font = 2)
-        foo$ylab <- list(label = ylab[[1]], col = text$col, cex = text$cex, font = text$font)
+        foo$ylab <- list(label = if (is.list(ylab)) ylab[[1]] else ylab,
+                         col = text$col, cex = text$cex, font = text$font)
         if (is.list(ylab)) foo$ylab[names(ylab)] <- ylab
     }
-list(foo = foo, dots = list(...))
+    list(foo = foo, dots = list(...))
 }
 
 

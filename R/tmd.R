@@ -92,9 +92,9 @@ tmd <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab$label <- form$left.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)

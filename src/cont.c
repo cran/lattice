@@ -42,8 +42,6 @@ do { \
 
 
 
-
-
 SEXP cont(SEXP mArg, SEXP uxArg, SEXP uyArg, SEXP atArg, SEXP nxArg, SEXP nyArg)
 {
      double *m;
@@ -55,9 +53,12 @@ SEXP cont(SEXP mArg, SEXP uxArg, SEXP uyArg, SEXP atArg, SEXP nxArg, SEXP nyArg)
      double *listy1, *listy2;
      double *finalx1, *finalx2;
      double *finaly1, *finaly2;
-     int nx, ny, n, nMax, i, j, k, l, next, last, start, value;
+     int nx, ny, n, nMax, i, j;
+     /*
+     int k, l, next, last, start, value;
      int index = 0;
-     double x1, y1, x2, y2;
+     */
+     double x1 = 0, y1 = 0, x2 = 0, y2 = 0;
      int isx1, isx2, isy1, isy2, istotal;
 
      m = REAL(mArg);

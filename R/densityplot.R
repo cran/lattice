@@ -29,19 +29,43 @@
 prepanel.default.densityplot <-
     function(x,
              darg,
+             groups = NULL,
+             subscripts = TRUE,
              ...)
 {
+    if (!is.numeric(x)) x <- as.numeric(x)
+
     if (length(x)<1)
         list(xlim = NA,
              ylim = NA,
-             dx = 1,
-             dy = 1)
-    else
+             dx = NA,
+             dy = NA)
+    else if (is.null(groups))
     {
         h <- do.call("density", c(list(x=x), darg))
         list(xlim = range(h$x),
              ylim = range(h$y),
              dx = diff(h$x), dy = diff(h$y))
+    }
+    else
+    {
+        vals <- sort(unique(groups))
+        nvals <- length(vals)
+        xl <- numeric(0)
+        yl <- numeric(0)
+        dxl <- numeric(0) # bad names !!
+        dyl <- numeric(0) 
+        for (i in seq(along=vals)) {
+            id <- (groups[subscripts] == vals[i])
+            if (any(id)) {
+                h <- do.call("density", c(list(x=x[id]), darg))
+                xl <- c(xl, range(h$x))
+                yl <- c(yl, range(h$y))
+                dxl <- c(dxl, diff(h$x))
+                dyl <- c(dyl, diff(h$y))
+            }
+        }
+        list(xlim = xl, ylim = yl, dx = dxl, dy = dyl)
     }
 }
 
@@ -58,6 +82,8 @@ panel.densityplot <-
              col.line,
              ...)
 {
+    x <- as.numeric(x)
+
     if (ref) {
         reference.line <- trellis.par.get("reference.line")
         panel.abline(h=0,
@@ -85,7 +111,7 @@ densityplot <-
              data = parent.frame(),
              aspect = "fill",
              layout = NULL,
-             panel = "panel.densityplot",
+             panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -106,6 +132,7 @@ densityplot <-
              cut = NULL,
              na.rm = NULL,
              ...,
+             panel.groups = "panel.densityplot",
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -178,9 +205,9 @@ densityplot <-
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- "Density"
 
-    if (!is.numeric(x))
-        warning("x should be numeric")
-    x <- as.numeric(x)
+    ##if (!is.numeric(x))
+    ##    warning("x should be numeric")
+    ##x <- as.numeric(x)
 
     ## create a skeleton trellis object with the
     ## less complicated components:
@@ -198,9 +225,9 @@ densityplot <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab$label <- "Density"
 
     ## Step 2: Compute scales.common (leaving out limits for now)
@@ -261,7 +288,10 @@ densityplot <-
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
     foo$panel.args.common <- c(dots, list(darg = darg))
-    if (subscripts) foo$panel.args.common$groups <- groups
+    if (subscripts) {
+        foo$panel.args.common$groups <- groups
+        foo$panel.args.common$panel.groups <- panel.groups
+    }
 
     layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
     plots.per.page <- max(layout[1] * layout[2], layout[2])

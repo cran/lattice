@@ -24,12 +24,14 @@
 prepanel.default.xyplot <-
     function(x, y, type, ...)
 {
-    ord <- order(x)
-    if (any(x))
-        list(xlim = range(x),
-             ylim = range(y),
-             dx = diff(x[ord]),
-             dy = diff(y[ord]))
+    ## Note: shingles satisfy is.numeric()
+    if (length(x) && length(x)) {
+        ord <- order(x)
+        list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else  levels(x),
+             ylim = if (is.numeric(y)) range(y[is.finite(y)]) else levels(y),
+             dx = as.numeric(diff(x[ord])),
+             dy = as.numeric(diff(y[ord])))
+    }
     else list(c(NA, NA),
               c(NA, NA),
               1, 1)
@@ -48,12 +50,11 @@ panel.xyplot <-
              cex = plot.symbol$cex,
              lwd = plot.line$lwd, ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
     if (length(x)>0) {
 
-        notok <- is.na(x) | is.na(y)
-        x <- x[!notok]
-        y <- y[!notok]
-        
+
         if (!missing(col)) {
             if (missing(col.line)) col.line <- col
             if (missing(col.symbol)) col.symbol <- col
@@ -123,7 +124,8 @@ xyplot <-
              data = parent.frame(),
              aspect = "fill",
              layout = NULL,
-             panel = "panel.xyplot",
+             panel = if (is.null(groups)) "panel.xyplot"
+             else "panel.superpose",
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -133,6 +135,7 @@ xyplot <-
              ylab,
              ylim,
              ...,
+             panel.groups = "panel.xyplot",
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -140,6 +143,7 @@ xyplot <-
     ##dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
+    groups <- eval(substitute(groups), data, parent.frame())
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
 
@@ -162,7 +166,6 @@ xyplot <-
         number.of.cond <- 1
     }
 
-    groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
     if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
     if(subscripts) subscr <- seq(along=x)
@@ -173,10 +176,15 @@ xyplot <-
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- form$left.name
 
+
+    ## Convert both x and y to numeric: WHY ? (take c/o POSIXct)
     if(!(is.numeric(x) && is.numeric(y)))
         warning("Both x and y should be numeric")
-    x <- as.numeric(x)
-    y <- as.numeric(y)
+    ##if (!(is.numeric(x))) x <- as.numeric(x)
+    ##if (!(is.numeric(y))) y <- as.numeric(y)
+
+
+
     ## create a skeleton trellis object with the
     ## less complicated components:
 
@@ -186,7 +194,6 @@ xyplot <-
                           panel = panel,
                           xlab = xlab,
                           ylab = ylab), dots))
-                          
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
@@ -195,9 +202,9 @@ xyplot <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab$label <- form$left.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)

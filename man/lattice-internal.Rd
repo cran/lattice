@@ -2,6 +2,7 @@
 \alias{Rows}
 \alias{extend.limits}
 \alias{lpretty}
+\alias{calculateAxisComponents}
 \alias{cupdate}
 \alias{.lattice.print.more}
 \alias{do.breaks}
@@ -26,6 +27,8 @@
 \alias{ldrop.levels.factor}
 \alias{ldrop.levels.shingle}
 \alias{ldrop.levels.default}
+\alias{is.characterOrExpression}
+\alias{rearrangeUnit}
 \title{Miscellaneous Functions used within Lattice}
 \description{
   These functions are used by various Lattice routines.
@@ -39,7 +42,8 @@ construct.3d.scales(draw = TRUE, tck = 1, lty = 1, lwd = 1, distance = c(1,
 construct.scales(draw = TRUE, tck = 1, tick.number = 5, cex = 1,
     rot = FALSE, at = FALSE, labels = FALSE, col = FALSE, 
     log = FALSE, font = FALSE, alternating = TRUE, 
-    relation = "same", x = NULL, y = NULL, ...)  
+    relation = "same", abbreviate, minlength,
+    x = NULL, y = NULL, ...)  
 compute.layout(layout, cond.max.level, skip = FALSE)  
 limits.and.aspect(prepanel.default.function, prepanel = NULL, have.xlim = FALSE, 
     xlim = NULL, have.ylim = FALSE, ylim = NULL, x.relation, 
@@ -54,6 +58,9 @@ trellis.skeleton(as.table = FALSE, aspect = "fill", between = list(x = 0,
 Rows(x, which)
 extend.limits(lim, length = 1, prop = 0.07) 
 lpretty(lim)
+calculateAxisComponents(x, at = FALSE, labels = FALSE, logpaste = "",
+              abbreviate = NULL, minlength = 4,
+              format, ...) 
 .lattice.print.more
 cupdate(index, maxim)
 do.breaks(endpoints, nint)
@@ -77,6 +84,8 @@ prepanel.default.qqmath(...)
 prepanel.default.splom(...)
 prepanel.default.tmd(...)
 prepanel.default.xyplot(x, y, type, ...)
+is.characterOrExpression(x)
+rearrangeUnit(x, pos, u) 
 }
 \arguments{
   \item{length}{ desired length of the resulting interval, with center
@@ -84,7 +93,9 @@ prepanel.default.xyplot(x, y, type, ...)
   }
   \item{prop}{ Proportion by which to extend limits. 
   }
-  \item{x,y}{ numeric, factor or shingle.
+  \item{x,y}{ numeric, factor or shingle. \code{x} in
+    \code{is.characterOrExpression} can be an arbitrary S object, in
+    \code{rearrangeUnit}, a grid 'unit' vector.
   }
   \item{subset}{ indices to keep.
   }
@@ -98,6 +109,10 @@ prepanel.default.xyplot(x, y, type, ...)
   \item{distance, xlim, ylim, zlim}{see panel.cloud}
   \item{wx, wy, subscripts}{see panel.levelplot}
   \item{type}{ type argument as in \code{panel.xyplot}}
+  \item{pos}{integer}
+  \item{u}{grid unit object of length 1}
+  \item{at, labels, logpaste, abbreviate, minlength, format}{arguments
+    used in \code{calculateAxisComponents}}
   \item{\dots}{other arguments}
 }
 \details{
@@ -113,6 +128,13 @@ prepanel.default.xyplot(x, y, type, ...)
 
   \code{.lattice.print.more} is a global logical to handle the
   \code{more} argument in print.trellis.
+
+  \code{rearrangeUnit} is a hack that emulates \code{x[pos] <- u}
+
+  \code{calculateAxisComponents} is modified from axis.POSIXct. This
+  aims to be a general function which given a general 'range' x and
+  optional at, generates the locations of tick marks and corresponding
+  labels. Ultimately will be a replacement for lpretty.
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{Lattice}}}

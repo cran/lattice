@@ -18,8 +18,7 @@ bwplot(zz ~ xx | aa, df.test)
 bwplot(aa ~ xx | zz, df.test, 
        scales =
        list(x = list(log = "e", tck = 5, rot = 90,  cex = 2),
-            y = list(col = "red", tck = 3, alternating = TRUE,
-            cex = 5,  rot = 0),
+            y = list(col = "red", tck = 3, alternating = TRUE, cex = 5,  rot = 0),
             tick.number = 20),
        main = list("main", cex = 5),
        sub = list("sub", cex = 5),

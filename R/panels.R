@@ -75,6 +75,8 @@ panel.abline <-
         }
     }
     
+    h <- as.numeric(h)
+    v <- as.numeric(v)
     
     for(i in seq(along=h))
         grid.lines(y=rep(h[i],2), default.units="native", gp = gpar(col=col,lty=lty,lwd=lwd))
@@ -155,13 +157,20 @@ panel.grid <-
 
 
 panel.lmline <-
-    function(x, y, ...) if (length(x)>0) panel.abline(lm(y ~ x), ...) 
-
+    function(x, y, ...)
+{
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+    if (length(x)>0) panel.abline(lm(y ~ x), ...) 
+}
 
 
 prepanel.lmline <-
     function(x, y, ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     if (length(x)>0) {
         coeff <- coef(lm(y~x))
         tem <- coeff[1] + coeff[2] * range(x)
@@ -179,6 +188,9 @@ panel.loess <-
              lwd = add.line$lwd, lty = add.line$lty,
              col = add.line$col, ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     if (length(x)>0) {
         add.line <- trellis.par.get("add.line")
         
@@ -197,6 +209,9 @@ prepanel.loess <-
              lwd = add.line$lwd, lty = add.line$lty,
              col = add.line$col, ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     if (length(x)>0) {
         add.line <- trellis.par.get("add.line")
         
@@ -241,17 +256,10 @@ panel.superpose <-
              lwd = superpose.line$lwd,
              ...)
 {
+    x <- as.numeric(x)
+    if (!is.null(y)) y <- as.numeric(y)
+
     if (length(x)>0) {
-
-        notok <- is.na(x) | is.na(subscripts) | is.na(groups[subscripts])
-        if (!is.null(y)) 
-            notok <- notok | is.na(y)
-
-        x <- x[!notok]
-        if (length(x) == 0) return(0)
-        subscripts <- subscripts[!notok]
-        if (!is.null(y)) 
-            y <- y[!notok]
 
         if (!missing(col)) {
             if (missing(col.line)) col.line <- col
@@ -260,9 +268,6 @@ panel.superpose <-
 
         superpose.symbol <- trellis.par.get("superpose.symbol")
         superpose.line <- trellis.par.get("superpose.line")
-
-        x <- as.numeric(x)
-        if (!is.null(y)) y <- as.numeric(y)
 
         vals <- sort(unique(groups))
         nvals <- length(vals)
@@ -321,18 +326,10 @@ panel.superpose.2 <-
     ##   plot style of each subsequently-overlayed plot.
     ##                        ---  Neil Klepeis, 26-Dec-2001
     
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     if (length(x) > 0) {
-
-        notok <- is.na(x) | is.na(subscripts) | is.na(groups[subscripts])
-        if (!is.null(y)) 
-            notok <- notok | is.na(y)
-
-        x <- x[!notok]
-        if (length(x) == 0) return(0)
-        subscripts <- subscripts[!notok]
-        if (!is.null(y)) 
-            y <- y[!notok]
-
         if (!missing(col)) {
             if (missing(col.line))
                 col.line <- col
@@ -377,6 +374,9 @@ panel.linejoin <-
              col.line,
              ...)
 {
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+
     reference.line = trellis.par.get("reference.line")
     if (missing(col.line)) col.line <- col
     if (horizontal) {
@@ -414,4 +414,3 @@ panel.mathdensity <-
     panel.xyplot(x = x, y = y, type = "l", col = col, lwd = lwd, ...)
     
 }
-

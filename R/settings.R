@@ -87,7 +87,8 @@ canonical.theme <- function(name = "null device", color = TRUE)
 
     ## color settings, modified later if postscript or color = FALSE
     ans <-
-        list(background = list(col = can.col[17]), 
+        list(fontsize = list(default = 10),
+             background = list(col = can.col[17]), 
              add.line = list(col = can.col[1], lty = 1, lwd = 1),
              add.text = list(cex = 1, col = can.col[1], font = 1),
              bar.fill = list(col = can.col[2]),
@@ -112,8 +113,8 @@ canonical.theme <- function(name = "null device", color = TRUE)
              superpose.symbol = list(cex = c(0.8, 0.8, 0.8, 0.8, 0.8,
              0.8, 0.8), col = can.col[2:8], font = c(1, 1, 1, 1, 1, 1,
              1), pch = c("o", "o", "o", "o", "o", "o", "o")),
-             axis.line = list(line = 0, col = can.col[1], lty = 1, lwd
-             = 1),
+             axis.line = list(col = can.col[1], lty = 1, lwd = 1),
+             axis.text = list(cex = .8, col = can.col[1], font = 1),
              box.3d = list(col = can.col[1], lty = 1, lwd = 1),
              par.xlab.text = list(cex = 1, col = can.col[1], font =
              1),
@@ -291,7 +292,7 @@ show.settings <- function(x = NULL)
         .lattice.print.more <<- FALSE
         grid.rect(gp = gpar(fill = theme$background$col,
                   col = "transparent"))
-        push.viewport(viewport(layout = page.layout))
+        push.viewport(viewport(layout = page.layout, gp = gpar(fontsize = theme$fontsize$default)))
         superpose.symbol <- theme$superpose.symbol
         len <- length(superpose.symbol$col)
         push.viewport(viewport(layout.pos.row = 2,
@@ -307,7 +308,7 @@ show.settings <- function(x = NULL)
         }
         pop.viewport()
         grid.text(lab = "superpose.symbol",
-                  gp = gpar(fontsize = 8),
+                  ##gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 3, layout.pos.col = 2))
         superpose.line <- theme$superpose.line
         len <- length(superpose.line$col)
@@ -323,7 +324,7 @@ show.settings <- function(x = NULL)
         }
         pop.viewport()
         grid.text(lab = "superpose.line",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 3, layout.pos.col = 4))
         strip.background <- theme$strip.background
         len <- length(strip.background$col)
@@ -337,7 +338,7 @@ show.settings <- function(x = NULL)
         }
         pop.viewport()
         grid.text(lab = "strip.background",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 3, layout.pos.col = 6))
         strip.shingle <- theme$strip.shingle
         len <- length(strip.shingle$col)
@@ -351,7 +352,7 @@ show.settings <- function(x = NULL)
         }
         pop.viewport()
         grid.text(lab = "strip.shingle",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 3, layout.pos.col = 8))
         push.viewport(viewport(layout.pos.row = 5,
                                layout.pos.col = 2,
@@ -366,7 +367,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "dot.[symbol, line]",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 6, layout.pos.col = 2))
         box.rectangle <- theme$box.rectangle
         box.dot <- theme$box.dot
@@ -407,7 +408,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "box.[dot, rectangle, umbrella]",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 6, layout.pos.col = 4))
         add.text <- theme$add.text
         add.line <- theme$add.line
@@ -419,13 +420,15 @@ show.settings <- function(x = NULL)
         y <- .9 * sin(.1+11*x)
         llines(x = x, y = y, type = "l", col = add.line$col,
                lty = add.line$lty, lwd = add.line$lwd)
-        ltext(lab = c("Hello", "World"),
-              x = c(.25, .75), y = c(-.5, .5),
-              col = add.text$col, cex = add.text$cex, font = add.text$font)
+        grid.text(lab = c("Hello", "World"),
+                  x = c(.25, .75), y = c(-.5, .5), default.units = "native",
+                  gp = gpar(col = add.text$col,
+                  fontsize = add.text$cex * trellis.par.get("fontsize")$default,
+                  font = add.text$font))
         grid.rect()
         pop.viewport()
         grid.text(lab = "add.[line, text]",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 6, layout.pos.col = 6))
         reference.line <- theme$reference.line
         push.viewport(viewport(layout.pos.row = 5,
@@ -438,7 +441,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "reference.line",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 6, layout.pos.col = 8))
         plot.symbol <- theme$plot.symbol
         plot.line <- theme$plot.line
@@ -460,7 +463,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "plot.[symbol, line]",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 9, layout.pos.col = 2))
         bar.fill <- theme$bar.fill
         push.viewport(viewport(layout.pos.row = 8,
@@ -474,7 +477,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "plot.shingle[bar.fill]",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 9, layout.pos.col = 4))
         push.viewport(viewport(layout.pos.row = 8,
                                layout.pos.col = 6,
@@ -487,7 +490,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "histogram[bar.fill]",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 9, layout.pos.col = 6))
         push.viewport(viewport(layout.pos.row = 8,
                                layout.pos.col = 8,
@@ -500,7 +503,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "barchart[bar.fill]",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 9, layout.pos.col = 8))
         regions <- theme$regions
         len <- length(regions$col)
@@ -513,7 +516,7 @@ show.settings <- function(x = NULL)
         grid.rect()
         pop.viewport()
         grid.text(lab = "regions",
-                  gp = gpar(fontsize = 8),
+                  ## gp = gpar(fontsize = 8),
                   vp = viewport(layout.pos.row = 12, layout.pos.col = 2))
     }    
     invisible()

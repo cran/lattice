@@ -1,10 +1,12 @@
 \name{xyplot}
 \title{Common Bivariate Trellis Plots}
 \synopsis{
-xyplot(formula, data = parent.frame(), aspect = "fill", layout = NULL,
-    panel = panel.xyplot, prepanel = NULL, scales = list(), strip = TRUE,
-    groups = NULL, xlab, xlim, ylab, ylim, ..., subscripts = !is.null(groups), 
-    subset = TRUE)
+xyplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
+    panel = if (is.null(groups)) "panel.xyplot" else "panel.superpose", 
+    prepanel = NULL, scales = list(), 
+    strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, ..., 
+    panel.groups = "panel.xyplot", 
+    subscripts = !is.null(groups), subset = TRUE)
 barchart(formula, data = parent.frame(), panel = "panel.barchart", 
     prepanel = NULL, strip = TRUE, box.ratio = 2, groups = NULL, horizontal,
     ..., subset = TRUE)  
@@ -15,15 +17,16 @@ bwplot(formula, data = parent.frame(), aspect = "fill", layout = NULL,
 dotplot(formula, data = parent.frame(), panel = "panel.dotplot", 
     prepanel = NULL, strip = TRUE, groups = NULL, horizontal, ...,
     subset = TRUE)   
-stripplot(formula, data = parent.frame(), panel = "panel.stripplot", 
-    prepanel = NULL, strip = TRUE, jitter = FALSE, factor = 0.5, 
-    box.ratio = if (jitter) 1 else 0, groups = NULL, horizontal, ...,
-    subset = TRUE)   
+stripplot(formula, data = parent.frame(),
+    panel = if (is.null(groups)) "panel.stripplot" else "panel.superpose", 
+    panel.groups = "panel.stripplot", prepanel = NULL, strip = TRUE, 
+    jitter = FALSE, factor = 0.5, box.ratio = if (jitter) 1 else 0, 
+    groups = NULL, horizontal = NULL, ..., subset = TRUE) 
 }
 \usage{
 xyplot(formula,
        data = parent.frame(),
-       panel = "panel.xyplot",
+       panel = if (is.null(groups)) "panel.xyplot" else "panel.superpose", 
        aspect = "fill",
        as.table = FALSE,
        between,
@@ -43,6 +46,7 @@ xyplot(formula,
        ylab,
        ylim,
        \dots,
+       panel.groups = "panel.xyplot",
        subscripts,
        subset)
 barchart(formula, data, panel = "panel.barchart", box.ratio = 2,
@@ -201,6 +205,10 @@ stripplot(formula, data, panel = "panel.stripplot",
     \code{horizontal} to account for the cases when \code{x} is the
     factor or shingle.
   }
+  \item{panel.groups}{ relevant for \code{xyplot} and \code{densityplot}
+    only, applies when \code{panel} is \code{panel.superpose} (which
+    happens by default in these cases if \code{groups} is non-null)
+    }
   \item{aspect}{ controls physical aspect ratio of the panels (same for
     all the panels). It can be specified as a ratio (vertical
     size/horizontal size) or as a character string. Legitimate 
@@ -214,7 +222,7 @@ stripplot(formula, data, panel = "panel.stripplot",
     \code{xyplot}. If a \code{prepanel} function is specified, the
     results are used to compute the aspect, otherwise some internal
     computations are done inside each function. While this is allowed
-    for all functions, it's behaviour is not defined for any function
+    for all functions, its behaviour is not defined for any function
     other than \code{xyplot} (usually an aspect ratio of 1 results in
     such cases).
 
@@ -292,7 +300,7 @@ stripplot(formula, data, panel = "panel.stripplot",
 
     \code{background}: defaults to default background
 
-    \code{border}:color of border, black if TRUE, defaluts to FALSE (no
+    \code{border}: color of border, black if TRUE, defaults to FALSE (no
     border drawn)
 
     \code{transparent=FALSE}: logical, whether key area should be cleared

@@ -22,7 +22,7 @@
 
 lpretty <- function(x, ...) { 
     eps <- 1e-10
-    at <- pretty(x, ...)
+    at <- pretty(x[is.finite(x)], ...)
     at <- ifelse(abs(at-round(at, 3))<eps, round(at, 3), at)
 }
 
@@ -65,6 +65,12 @@ do.breaks  <- function(endpoints, nint)
     if (length(endpoints)!=2) stop("error")
     endpoints[1] + diff(endpoints) * 0:nint / nint
 }
+
+
+is.characterOrExpression <- function(x)
+    is.character(x) || is.expression(x)
+
+
 
 
 ## This converts character to factor, numeric to shingle, and
@@ -207,6 +213,7 @@ strip.default <-
              fg = trellis.par.get("strip.shingle")$col[which.given],
              par.strip.text = trellis.par.get("add.text"))
 {
+    default.fontsize <- trellis.par.get("fontsize")$default
     name <- var.name[which.given]
     level <- which.panel[which.given]
     strip.names <- rep(strip.names, length = 2)
@@ -217,14 +224,14 @@ strip.default <-
         grid.rect(gp = gpar(fill=bg))
         t <- range(shingle.intervals)
         r <- (range(shingle.intervals[level,])-t[1])/diff(t)
-        grid.rect(x = unit(r%*%c(.5,.5),"npc"), width = unit(diff(r),"npc"),
+        grid.rect(x = unit(r%*%c(.5,.5),"npc"), width = max(unit( c(diff(r), 1), c("npc", "mm"))),
                   gp = gpar(col=fg, fill=fg))
-        if (strip.names) grid.text(label = name,
-                                   gp = gpar(col = par.strip.text$col,
-                                   font = par.strip.text$font,
-                                   fontsize = par.strip.text$cex *
-                                   current.viewport()$gp$fontsize))
-        
+        if (strip.names)
+            grid.text(label = name,
+                      gp = gpar(col = par.strip.text$col,
+                      font = par.strip.text$font,
+                      fontsize = par.strip.text$cex *
+                      default.fontsize))
         grid.rect()
     }
     else if (is.null(shingle.intervals)) { # factor
@@ -233,12 +240,33 @@ strip.default <-
         num <- length(x)
         if (style == 1) {
             grid.rect(gp = gpar(fill=bg))
-            grid.text(label = paste(if(strip.names)
-                      paste(name,": ") else "", x[level], sep = ""),
-                      gp = gpar(col = par.strip.text$col,
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      current.viewport()$gp$fontsize))
+            if (strip.names) {
+                grid.text(name,
+                          x=unit(0.5, "npc") - unit(1, "mm"),
+                          gp = gpar(col = par.strip.text$col,
+                          font = par.strip.text$font,
+                          fontsize = par.strip.text$cex *
+                          default.fontsize),
+                          just="right")
+                grid.text(":",
+                          x=unit(0.5, "npc"),
+                          gp = gpar(col = par.strip.text$col,
+                          font = par.strip.text$font,
+                          fontsize = par.strip.text$cex *
+                          default.fontsize))
+                grid.text(x[level],
+                          x=unit(0.5, "npc") + unit(1, "mm"),
+                          gp = gpar(col = par.strip.text$col,
+                          font = par.strip.text$font,
+                          fontsize = par.strip.text$cex *
+                          default.fontsize),
+                          just="left")
+            }
+            else grid.text(label = x[level],
+                           gp = gpar(col = par.strip.text$col,
+                           font = par.strip.text$font,
+                           fontsize = par.strip.text$cex *
+                           default.fontsize))
             grid.rect()
         }
         else if (style == 2) {
@@ -250,7 +278,7 @@ strip.default <-
                       gp = gpar(col = par.strip.text$col,
                       font = par.strip.text$font,
                       fontsize = par.strip.text$cex *
-                      current.viewport()$gp$fontsize))
+                      default.fontsize))
             grid.rect()
         }
         else if (style == 3){
@@ -258,12 +286,13 @@ strip.default <-
             grid.rect(x = unit((2*level-1)/(2*num), "npc"),
                       width = unit(1/num, "npc"),
                       gp = gpar(fill=fg, col = NULL))
-            grid.text(label = paste(if(strip.names)
-                      paste(name,": ") else "", x[level], sep = ""),
+            grid.text(label =
+                      if (strip.names) paste(name, x[level], sep = ": ")
+                      else x[level],
                       gp = gpar(col = par.strip.text$col, 
                       font = par.strip.text$font,
                       fontsize = par.strip.text$cex *
-                      current.viewport()$gp$fontsize))
+                      default.fontsize))
             grid.rect()
         }
         else if(style == 4){
@@ -276,7 +305,7 @@ strip.default <-
                       gp = gpar(col = par.strip.text$col, 
                       font = par.strip.text$font,
                       fontsize = par.strip.text$cex *
-                      current.viewport()$gp$fontsize))
+                      default.fontsize))
             grid.rect()
         }
         else if(style >= 5){
@@ -286,7 +315,7 @@ strip.default <-
                       gp = gpar(col = par.strip.text$col, 
                       font = par.strip.text$font,
                       fontsize = par.strip.text$cex *
-                      current.viewport()$gp$fontsize))
+                      default.fontsize))
             grid.rect()
         }
     }
@@ -361,11 +390,11 @@ ltext <-
 {
     add.text <- trellis.par.get("add.text")
     xy <- xy.coords(x, y)
-    grid.text(label = as.character(labels), x = xy$x, y = xy$y,
+    grid.text(label = labels, x = xy$x, y = xy$y,
               gp = gpar(col = col, font = font,
-              fontsize = cex * 10),
+              fontsize = cex * trellis.par.get("fontsize")$default),
               just = c(if (adj == 0) "left"
-              else if (adj == 1) "right" else "centre", "centre"),
+              else if (adj == 1) c("right", "centre") else "centre", "centre"),
               rot = srt,
               default.units = "native")
 }

@@ -26,6 +26,8 @@
 panel.qqmathline <-
     function(y, distribution, ...)
 {
+    y <- as.numeric(y)
+
     if (length(y) > 0) {
         yy <- quantile(y, c(0.25, 0.75))
         xx <- distribution(c(0.25, 0.75))
@@ -38,6 +40,8 @@ panel.qqmathline <-
 prepanel.qqmathline <-
     function(y, distribution, f.value = ppoints, ...)
 {
+    if (!is.numeric(y)) y <- as.numeric(y)
+
     yy <- quantile(y, c(0.25, 0.75))
     xx <- distribution(c(0.25, 0.75))
     n <- length(y)
@@ -116,7 +120,7 @@ qqmath <-
     if(missing(ylab)) ylab <- form$right.name
     if(missing(xlab)) xlab <- distribution.name
     if (is.shingle(x)) stop("x cannot be a shingle")
-    x <- as.numeric(x)
+    ##x <- as.numeric(x)
 
     ## create a skeleton trellis object with the
     ## less complicated components:
@@ -135,9 +139,9 @@ qqmath <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <- deparse(substitute(distribution))
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab$label <- form$right.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)

@@ -63,7 +63,7 @@ update.trellis <-
 
     
     if(!missing(main)){
-        if (is.character(main))
+        if (is.characterOrExpression(main))
             if (is.null(object$main)) object$main <-
                 list(label = main, col = "black", cex = 1, font = 1)
             else object$main$label <- main
@@ -75,7 +75,7 @@ update.trellis <-
     }
     
     if(!missing(sub)){
-        if (is.character(sub))
+        if (is.characterOrExpression(sub))
             if (is.null(object$sub)) object$sub <-
                 list(label = sub, col = "black", cex = 1, font = 1)
             else object$sub$label <- sub
@@ -87,7 +87,7 @@ update.trellis <-
     }
     
     if(!missing(xlab)){
-        if (is.character(xlab))
+        if (is.characterOrExpression(xlab))
             if (is.null(object$xlab)) object$xlab <-
                 list(label = xlab, col = "black", cex = 1, font = 1)
             else object$xlab$label <- xlab
@@ -99,7 +99,7 @@ update.trellis <-
     }
     
     if(!missing(ylab)){
-        if (is.character(ylab))
+        if (is.characterOrExpression(ylab))
             if (is.null(object$ylab)) object$ylab <-
                 list(label = ylab, col = "black", cex = 1, font = 1)
             else object$ylab$label <- ylab

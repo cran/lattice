@@ -24,7 +24,9 @@
 prepanel.default.qq <-
     function(x, y, ...)
 {
-    if (!any(x)) return(list(c(NA, NA), c(NA, NA), 1, 1)) else
+    if (!is.numeric(x)) x <- as.numeric(x)
+    if (!is.numeric(y)) y <- as.numeric(y)
+
     list(xlim = range(x, y),
          ylim = range(x, y),
          dx = 1,
@@ -38,7 +40,7 @@ panel.qq <-
     function(...)
 {
     reference.line <- trellis.par.get("reference.line")
-    panel.abline(0, 1,
+    panel.abline(0,1,
                  col = reference.line$col,
                  lty = reference.line$lty,
                  lwd = reference.line$lwd)
@@ -101,7 +103,7 @@ qq <-
     y <- y[subset, drop = TRUE]
     if (subscripts) subscr <- subscr[subset, drop = TRUE]
     
-    x <- as.numeric(x)
+    ##x <- as.numeric(x)
     y <- as.factorOrShingle(y)
     is.f.y <- is.factor(y)
     num.l.y <- nlevels(y)
@@ -133,13 +135,13 @@ qq <-
     foo$fontsize.small <- 8
 
     ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
         foo$xlab$label <-
             if (is.f.y) unique(levels(y))[1]
             else paste("y:", as.character(unique(levels(y)[[1]])))
-    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
         foo$ylab$label <-
-            if (is.f.y) unique(levels(y))[2]
+            if (is.f.y) unique(levels(y))[y]
             else paste("y:", as.character(unique(levels(y)[[2]])))
 
     ## Step 2: Compute scales.common (leaving out limits for now)
