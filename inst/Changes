@@ -1,4 +1,27 @@
 
+
+Changes in lattice 0.8
+======================
+
+Major change is the addition of a NAMESPACE. grid is now not
+'require()-d', but imported only. To use grid functions directly in
+lattice calls (which is a very reasonable thing to do), one needs to
+explicitly call library(grid).
+
+
+contourplot() has improved when data has NA's. Still doesn't work when
+the NA rows are completely omitted (in other words, the full "matrix"
+has to be specified, even the entries with NA).
+
+Clipping can now be turned off in panels and strips via the
+trellis.par.get("clip") setting.
+
+See the Changelog for other minor changes. 
+
+
+
+
+
 Changes in lattice 0.7
 ======================
 

@@ -1,4 +1,17 @@
+2003-10-17  Deepayan Sarkar <deepayan@stat.wisc.edu>
 
+	* R/common.R : added trim = TRUE in format() when calculating axis
+	tick labels. Without this, labels often had leading spaces,
+	causing a visible 'right shift' (reported by Patrick Connolly).
+
+	
+2003-10-09  Deepayan Sarkar <deepayan@stat.wisc.edu>
+
+	* R/levelplot.R: Fixed panel.levelplot bug where nothing was drawn
+	if a panel contained only one unique value of x/y (reported by
+	Wolfram Fischer).
+
+	
 2003-09-28  Deepayan Sarkar <deepayan@stat.wisc.edu>
 
 	* : started restructuring axis calculations, but too late for
