@@ -20,347 +20,40 @@
 
 
 
-splom <-
-    function(formula,
-             aspect = 1,
-             as.table = FALSE,
-             between = list(x=0.5,y=0.5),
-             data,
-             groups = NULL,
-             key = NULL,
-             layout,
-             main = NULL,
-             page = NULL,
-             panel = panel.splom,
-             superpanel = panel.pairs,
-             par.strip.text, 
-             prepanel,
-             scales,
-             skip = FALSE,
-             strip = strip.default,
-             sub = NULL,
-             subscripts = !missing(groups),
-             subset,
-             xlab = NULL,
-             xlim,
-             ylab = NULL,
-             ylim,
-             ...)
+
+
+prepanel.default.splom <-
+    function(x, y, type, ...)
 {
-
-
-    if(all(skip)) stop("can't skip all panels !")
-
-    if (is.logical(strip) && strip) strip <- strip.default
-
-    if(missing(data)) data <- sys.frame(sys.parent())
-    form <- latticeParseFormula(formula, data)
-    cond <- form$condition
-    number.of.cond <- length(cond)
-    x <- form$right
-
-    ## Need to change factors into numerics
-    for(i in 1:ncol(x)) if (is.factor(x[,i])) x[,i] <- as.numeric(x[,i])
-
-    
-    if(!missing(groups)) {
-        groups <- eval(substitute(groups), data)
-    }
-
-    if("subscripts" %in% names(formals(panel))) subscripts <- TRUE
-    subscr <- seq(along=x[,1])
-
-    if(!missing(subset)) {
-        subset <- eval(substitute(subset), data)
-        x <- x[subset,,drop=F]
-        subscr <- subscr[subset]
-    }
-
-    if(!missing(between)) {
-        if (!("x" %in% names(between))) between <- list(x=0, y=between$y)
-        if (!("y" %in% names(between))) between <- list(y=0, x=between$x)
-    }
-
-    id.na <- F
-
-    foo <- list(formula=formula,
-                fname = "splom",
-                aspect.fill = (aspect=="fill"),
-                aspect.ratio = 1,
-                as.table = as.table,
-                cond = NULL,
-                key = key,
-                layout=c(1,1,1),
-                page = page,
-                panel = superpanel,
-                panel.args = NULL,
-                panel.args.common = NULL,
-                par.strip.text = trellis.par.get("add.text"),
-                skip = skip,
-                strip = strip,
-                main = NULL,
-                sub = NULL,
-                xlab = NULL,
-                ylab = NULL,
-                x.draw = FALSE,
-                y.draw = FALSE,
-                x.scales = NULL,
-                y.scales = NULL,
-                x.between = between$x,
-                y.between = between$y,
-                x.relation.same = TRUE,  # Note: needed even when
-                y.relation.same = TRUE,  # number.of.cond == 0
-                x.alternating = c(1,2),
-                y.alternating = c(1,2),
-                fontsize.normal = 10,
-                fontsize.small = 8)
-
-
-    if(!missing(par.strip.text))
-        foo$par.strip.text[names(par.strip.text)] <- par.strip.text
-
-    if (!missing(main)) {
-        foo$main <- list(label = main[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(main)) foo$main[names(main)] <- main
-    }
-
-    if (!missing(sub)) {
-        foo$sub <- list(label = sub[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(sub)) foo$sub[names(sub)] <- sub
-    }
-
-    if(!is.null(xlab)) {
-        foo$xlab <- list(label = xlab[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(xlab)) foo$xlab[names(xlab)] <- xlab
-        if (!is.character(foo$xlab$label)) foo$xlab$label <- "Scatter Plot Matrix"
-    }
-    
-    if(!is.null(ylab)) {
-        foo$ylab <- list(label = ylab[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(ylab)) foo$ylab[names(ylab)] <- ylab
-        if (!is.character(foo$ylab$label)) foo$ylab$label <- NULL
-    }
-
-
-    if(number.of.cond>0)
-    {
-
-        cond.current.level <- rep(1,number.of.cond)
-        cond.max.level <- integer(number.of.cond)
-                                        # creating the vector now,
-                                        # exact values assigned later.
-        for(i in 1:number.of.cond) {
-
-            ## Processing the conditioning variables
-            ## There are some issues involving the subset argument here.
-            
-            if (is.character(cond[[i]])) cond[[i]] <- factor(cond[[i]])
-            else if (!is.factor(cond[[i]])) cond[[i]] <- as.shingle(cond[[i]])
-
-            if(!missing(subset)) cond[[i]] <- ldrop.levels(cond[[i]], subset)
-
-            id.na <- id.na | is.na(
-                                   if (is.shingle(cond[[i]])) cond[[i]]$x
-                                   else cond[[i]]
-                                   )
-            cond.max.level[i] <-
-                if (is.shingle(cond[[i]])) nrow(cond[[i]]$intervals)
-                else length(levels(cond[[i]]))
-        }
-
-        foo$cond <- cond
-
-
-        nplots <- 1
-        for(i in 1:number.of.cond) nplots <- nplots * cond.max.level[i]
-
-        ## ignoring scales because it doesn't make much sense
-        ## (may it makes some sense, but I'll ignore it anyway for now)
-        ## (keeping the foll for future work)
-        
-        scales.common <- list(draw = TRUE,
-                              tck = 1, # factor affecting length of ticks 
-                              cex = 1,
-                              tick.number = 4,
-                              rot = c(0,0),
-                              at = F,
-                              labels = F, col = F, log = F)
-
-        if(!missing(scales)) {
-            scales.common[names(scales)] <- scales
-            if ("x" %in% names(scales)) warning("x in scales ?")
-            if ("y" %in% names(scales)) warning("y in scales ?")
-        }
-
-
-        foo$x.relation.same <- T
-        foo$y.relation.same <- T
-
-        foo$x.scales <- list(limits = c(0,1))
-        foo$y.scales <- list(limits = c(0,1))
-
-        ## aspect.fill <- if (aspect=="fill") TRUE else FALSE (done above)
-        foo$aspect.ratio <-
-            if (aspect == "fill") 1
-            else if (aspect == "xy") 1 # nonsense
-            else aspect[1]
-        
-        if(missing(layout)) {
-            layout <- c(0,1,1)
-            if (number.of.cond==1) layout[2] <- nplots
-            else {
-                layout[1] <- cond.max.level[1]
-                layout[2] <- cond.max.level[2]
-            }
-            skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
-            plots.per.page <- length(skip) - length(skip[skip])
-            layout[3] <- 1 + ceiling(nplots/plots.per.page)
-        }
-        else if (length(layout)==1)
-            stop("layout must have at least 2 elements")
-        else if (length(layout)==2)
-        {
-            if(all(layout<1))
-                stop("at least one element of layout must be positive")
-            else if (layout[2]==0) stop("inadmissible value of layout")
-
-            skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
-            plots.per.page <- length(skip) - length(skip[skip])
-            layout[3] <- 1 + ceiling(nplots/plots.per.page)
-        }
-        else if (length(layout)==3) {
-            if(layout[1]<0||layout[2]<1||layout[3]<1)
-                stop("invalid value for layout")
-            
-            skip <- rep(skip, length = layout[1] * layout[2])
-        }
-
-        plots.per.page <- max(layout[1] * layout[2], layout[2])
-        number.of.pages <- layout[3]
-        
-        foo$layout[1] <- layout[1]
-        foo$layout[2] <- layout[2]
-        foo$layout[3] <- layout[3]
-
-    }
-    else
-    {
-        ##aspect.fill <- if (aspect=="fill") TRUE else FALSE
-        foo$aspect.ratio <-
-            if (aspect == "fill") 1
-            else if (aspect == "xy") 1 
-            else aspect[1]
-        
-
-        id <- !id.na
-
-        scales.common <- list(draw = TRUE,
-                              tck = 1, # factor affecting length of ticks 
-                              cex = 1,
-                              rot = 0,
-                              tick.number = 5,
-                              at = F,
-                              labels = F, col = F, log = F)
-
-        if(!missing(scales)) {
-            scales.common[names(scales)] <- scales
-            if ("x" %in% names(scales)) warning("x in scales ?")
-            if ("y" %in% names(scales)) warning("y in scales ?")
-        }
-
-
-        foo$x.scales <- list(limits = c(0,1))
-        foo$y.scales <- list(limits = c(0,1))
-
-    }
-
-    ## Now, to construct the argument list for each panel
-
-    foo$panel.args.common <-
-        list(z = x, groups = groups, panel=panel, panel.subscripts = subscripts,
-             scales = scales.common, ...)
-    
-    if(number.of.cond<1) 
-        foo$panel.args <- 
-            list(subscripts=subscr[id])
-
-    
-    else {
-
-        npanels <- plots.per.page * layout[3]
-                                        # upper bound for number of panels
-        foo$panel.args <- list(1:nplots)
-        cond.current.level <- rep(1,number.of.cond)
-
-        if (!foo$x.relation.same)           # this means that axes will be different for EACH panel
-            foo$x.scales <- list(1:nplots)  # and consequently, foo$x.scales must be 
-        if (!foo$y.relation.same)           # a list parallel to foo$panel.args.
-            foo$y.scales <- list(1:nplots)
-        
-        panel.number <- 1 # this is a counter for panel number
-        
-        for(page.number in 1:number.of.pages)
-            if(!any(cond.max.level-cond.current.level<0)) {
-                for(plot in 1:plots.per.page) {
-
-                    
-                    if(skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                    else if(!any(cond.max.level-cond.current.level<0)) {
-                        
-                        id <- !id.na
-                        for(i in 1:length(cond)) {
-                            id <- id &
-                            if (is.shingle(cond[[i]]))
-                                ((cond[[i]]$x >=
-                                  cond[[i]]$intervals[cond.current.level[i], 1])
-                                 & (cond[[i]]$x <=
-                                    cond[[i]]$intervals[cond.current.level[i], 2]))
-                            else (as.numeric(cond[[i]]) == cond.current.level[i])
-                        }
-
-                        foo$panel.args[[panel.number]] <- 
-                            list(subscripts=subscr[id])
-
-                        cond.current.level <- cupdate(cond.current.level,
-                                                      cond.max.level)
-                    
-                        
-                    }
-                    
-                    panel.number <- panel.number + 1
-                    
-                }
-            }
-    }
-    
-    class(foo) <- "trellis"
-    foo
+    list(xlim = c(0,1),
+         ylim = c(0,1),
+         dx = 1,
+         dy = 1)
 }
 
 
 
 
-
-
-
-
-
-
-
-
+panel.splom <-
+    function(...)
+    panel.xyplot(...)
 
 
 
 
 
 panel.pairs <-
-    function(z, panel = panel.splom, groups = NULL,
+    function(z, panel = "panel.splom", groups = NULL,
              panel.subscripts,
              subscripts,
              fontsize.small = 8,
-             scales,
+             pscales = 5,
              ...)
 {
+    panel <- 
+        if (is.function(panel)) panel 
+        else if (is.character(panel)) get(panel)
+        else eval(panel)
 
     axis.line <- trellis.par.get("axis.line")
     n.var <- ncol(z)
@@ -368,20 +61,22 @@ panel.pairs <-
     if(n.var>0) {
         ## there must be a better way to do the foll:
         lim <- list(1:n.var)
-        for(i in 1:n.var)
-            lim[[i]] <- extend.limits(range(z[,i]))
+        for(i in 1:n.var) {
+            lim[[i]] <- extend.limits(range(as.numeric(z[,i])))
+        }
         ## should be further complicated by allowing for customization by
         ## prepanel functions --- prepanel(z[i], z[j]) etc
     }
     ## maybe (ideally) this should be affected by scales
-    
-    
+
+    draw <- is.numeric(pscales) && pscales!=0 # whether axes to be drawn
+
     splom.layout <- grid.layout(nrow=n.var, ncol=n.var)
-    
+
     if(n.var > 0 && any(subscripts)) {
-        
+
         push.viewport(viewport(layout=splom.layout))
-        
+
         for(i in 1:n.var)
             for(j in 1:n.var)
             {
@@ -390,102 +85,385 @@ panel.pairs <-
                                        gp = gpar(fontsize = fontsize.small),
                                        xscale = lim[[j]],
                                        yscale = lim[[i]]))
-                
+
                 if(i == j)
                 {
-                    
-                    if (!is.null(colnames(z))) grid.text(colnames(z)[i])
-                        
-                    if (scales$draw) {
+                    if (!is.null(colnames(z)))
+                        grid.text(colnames(z)[i],
+                                  gp = gpar(fontsize = 10))
+                    if (draw) {
                         ## plot axes
-                        
-                        axls <-
-                            if (is.logical(scales$at))
-                                lpretty(lim[[i]], n = scales$tick.number)
-                            else scales$at
-                        if (!is.logical(scales$labels)) warning("labels in scales not supported yet")
-                        axls <- axls[axls>lim[[i]][1] & axls <lim[[i]][2]]
-                        nal <- length(axls)/2+.5
-                        
-                        for(tt in seq(along=axls)) {
-                            if(tt <= nal) {
-                                
-                                grid.lines(y = unit(rep(axls[tt],2), "native"),
-                                           x = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
-                                           gp = gpar(col = axis.line$col))
-                                
-                                grid.text(label = as.character(axls[tt]),
-                                          x = unit(1,"npc") - unit(.5, "lines"),
-                                          y = unit(axls[tt], "native"),
-                                          just = c("right", "centre"))
-                                
-                                grid.lines(x = unit(rep(axls[tt],2), "native"),
-                                           y = unit(c(0,.25), "lines"),
-                                           gp = gpar(col = axis.line$col))
-                                
-                                grid.text(label = as.character(axls[tt]),
-                                          y = unit(0.5, "lines"),
-                                          x = unit(axls[tt], "native"),
-                                          just = c("centre", "left"))
-                                
-                            }
-                            if(tt >=nal) {
-                                
-                                grid.lines(y = unit(rep(axls[tt],2), "native"),
-                                           x = unit(c(0,0.25), "lines"),
-                                           gp = gpar(col = axis.line$col))
-                                
-                                grid.text(label = as.character(axls[tt]),
-                                          x = unit(0.5, "lines"),
-                                          y = unit(axls[tt], "native"),
-                                          just = c("left", "centre"))
-                                
-                                grid.lines(x = unit(rep(axls[tt],2), "native"),
-                                           y = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
-                                           gp = gpar(col = axis.line$col))
-                                
-                                grid.text(label = as.character(axls[tt]),
-                                          y = unit(1,"npc") - unit(.5, "lines"),
-                                          x = unit(axls[tt], "native"),
-                                          just = c("centre", "right"))
+
+                        if (is.factor(z[,i])) {
+                            axls <- 1:nlevels(z[,i])
+                            nal <- length(axls)/2+.5
+
+                            for(tt in seq(along=axls)) {
+                                if(tt <= nal) {
+                                    
+                                    grid.lines(y = unit(rep(axls[tt],2), "native"),
+                                               x = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = levels(z[,i])[tt],
+                                              x = unit(1,"npc") - unit(.5, "lines"),
+                                              y = unit(axls[tt], "native"),
+                                              just = c("right", "centre"))
+                                    
+                                    grid.lines(x = unit(rep(axls[tt],2), "native"),
+                                               y = unit(c(0,.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = levels(z[,i])[tt],
+                                              rot = 90,
+                                              y = unit(0.5, "lines"),
+                                              x = unit(axls[tt], "native"),
+                                              just = c("bottom", "centre"))
+                                    
+                                }
+                                if(tt >=nal) {
+                                    
+                                    grid.lines(y = unit(rep(axls[tt],2), "native"),
+                                               x = unit(c(0,0.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = levels(z[,i])[tt],
+                                              x = unit(0.5, "lines"),
+                                              y = unit(axls[tt], "native"),
+                                              just = c("left", "centre"))
+                                    
+                                    grid.lines(x = unit(rep(axls[tt],2), "native"),
+                                               y = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = levels(z[,i])[tt], rot = 90,
+                                              y = unit(1,"npc") - unit(.5, "lines"),
+                                              x = unit(axls[tt], "native"),
+                                              just = c("top", "centre"))
+                                    
+                                }
                                 
                             }
                             
                         }
+                        else {
                         
+                            axls <-
+                                if (is.list(pscales) && !is.null(pscales[[i]]$at))
+                                    pscales[[i]]$at
+                                else
+                                    lpretty(lim[[i]], n = pscales)
+
+                            labels <-
+                                if (is.list(pscales) && !is.null(pscales[[i]]$lab))
+                                    pscales[[i]]$lab
+                            ## should be rendered like factors ?
+                                else
+                                    as.character(axls)
+
+                            axid <- axls>lim[[i]][1] & axls <lim[[i]][2]
+                            axls <- axls[axid]
+                            labels <- labels[axid]
+                            nal <- length(axls)/2+.5
+
+                            for(tt in seq(along=axls)) {
+                                if(tt <= nal) {
+                                    
+                                    grid.lines(y = unit(rep(axls[tt],2), "native"),
+                                               x = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = as.character(axls[tt]),
+                                              x = unit(1,"npc") - unit(.5, "lines"),
+                                              y = unit(axls[tt], "native"),
+                                              just = c("right", "centre"))
+                                    
+                                    grid.lines(x = unit(rep(axls[tt],2), "native"),
+                                               y = unit(c(0,.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = as.character(axls[tt]),
+                                              y = unit(0.5, "lines"),
+                                              x = unit(axls[tt], "native"),
+                                              just = c("centre", "left"))
+                                    
+                                }
+                                if(tt >=nal) {
+                                    
+                                    grid.lines(y = unit(rep(axls[tt],2), "native"),
+                                               x = unit(c(0,0.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = as.character(axls[tt]),
+                                              x = unit(0.5, "lines"),
+                                              y = unit(axls[tt], "native"),
+                                              just = c("left", "centre"))
+                                    
+                                    grid.lines(x = unit(rep(axls[tt],2), "native"),
+                                               y = unit(c(1,1),"npc") - unit(c(0,.25), "lines"),
+                                               gp = gpar(col = axis.line$col))
+                                    
+                                    grid.text(label = as.character(axls[tt]),
+                                              y = unit(1,"npc") - unit(.5, "lines"),
+                                              x = unit(axls[tt], "native"),
+                                              just = c("centre", "right"))
+                                    
+                                }
+                                
+                            }
+                        }    
                     }
-                    
+
                     grid.rect()
-                    
+
                 }
                 else
                 {
                     if(!panel.subscripts)
-                        panel(x=z[subscripts, j, drop=T],
-                              y=z[subscripts, i, drop=T], ...)
-                    
-                    else panel(x=z[subscripts, j, drop=T],
-                               y=z[subscripts, i, drop=T],
+                        panel(x=as.numeric(z[subscripts, j]),
+                              y=as.numeric(z[subscripts, i]), ...)
+
+                    else panel(x=as.numeric(z[subscripts, j]),
+                               y=as.numeric(z[subscripts, i]),
                                groups = groups,
                                subscripts = subscripts, ...)
-                    
+
                     grid.rect()
                 }
-                
-                pop.viewport(current.viewport())
+                pop.viewport()
             }
-        
-        pop.viewport(current.viewport())
-        
+        pop.viewport()
     }
-
-    
 }
 
 
 
 
+splom <-
+    function(formula,
+             data = parent.frame(),
+             aspect = 1,
+             between = list(x = 0.5, y = 0.5),
+             layout = NULL,
+             panel = "panel.splom",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab = "Scatter Plot Matrix",
+             xlim,
+             ylab = NULL,
+             ylim,
+             superpanel = "panel.pairs",
+             pscales = 5,
+             varnames,
+             ...,
+             subscripts = !is.null(groups),
+             subset = TRUE)
+{
+
+    ## dots <- eval(substitute(list(...)), data, parent.frame())
+    dots <- list(...)
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    ## Step 1: Evaluate x, y, etc. and do some preprocessing
+    
+    form <- latticeParseFormula(formula, data)
+    cond <- form$condition
+    number.of.cond <- length(cond)
+    x <- as.data.frame(form$right)
+    if (number.of.cond == 0) {
+        strip <- FALSE
+        cond <- list(as.factor(rep(1, nrow(x))))
+        layout <- c(1,1,1)
+        number.of.cond <- 1
+    }
+    if (!missing(varnames)) colnames(x) <-
+        eval(substitute(varnames), data, parent.frame())
+    
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
+    subscr <- seq(along=x[,1])
+    x <- x[subset,, drop = TRUE]
+    subscr <- subscr[subset, drop = TRUE]
+    
+    ##if(!(is.numeric(x) && is.numeric(y)))
+    ##    warning("Both x and y should be numeric")    WHAT ?
 
 
+    ## create a skeleton trellis object with the
+    ## less complicated components:
 
+    foo <- do.call("trellis.skeleton",
+                   c(list(aspect = aspect,
+                          between = between,
+                          panel = superpanel,
+                          strip = strip,
+                          xlab = xlab,
+                          ylab = ylab), dots))
+
+    dots <- foo$dots # arguments not processed by trellis.skeleton
+    foo <- foo$foo
+    foo$call <- match.call()
+    foo$fontsize.normal <- 10
+    foo$fontsize.small <- 8
+
+    ## This is for cases like xlab/ylab = list(cex=2)
+    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+        foo$xlab$label <- "Scatter Plot Matrix"
+    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+        foo$ylab <- NULL
+
+    ## Step 2: Compute scales.common (leaving out limits for now)
+
+    ## It is not very clear exactly what effect scales is supposed
+    ## to have. Not much in Trellis (probably), but there are certain
+    ## components which are definitely relevant, and certail others
+    ## (like log) which can be used in innovative ways. However, I'm
+    ## postponing all that to later, if at all,and for now TOTALLY
+    ## ignoring scales
+    
+    ##scales <- eval(substitute(scales), data, parent.frame())
+    ##if (is.character(scales)) scales <- list(relation = scales)
+    scales <- list(relation = "same", draw = FALSE)
+    foo <- c(foo, 
+             do.call("construct.scales", scales))
+
+
+    ## Step 3: Decide if limits were specified in call:
+
+    have.xlim <- !missing(xlim)
+    if (!is.null(foo$x.scales$limit)) {
+        have.xlim <- TRUE
+        xlim <- foo$x.scales$limit
+    }
+    have.ylim <- !missing(ylim)
+    if (!is.null(foo$y.scales$limit)) {
+        have.ylim <- TRUE
+        ylim <- foo$x.scales$limit
+    }
+    if (have.xlim || have.ylim) {
+        warning("Limits cannot be explicitly specified")
+    }
+    have.xlim <- TRUE
+    have.ylim <- TRUE
+    xlim <- c(0,1)
+    ylim <- c(0,1)
+    
+    ## Step 4: Decide if log scales are being used:
+
+    have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
+    have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
+#    if (have.xlog) {
+#        xlog <- foo$x.scales$log
+#        xbase <-
+#            if (is.logical(xlog)) 10
+#            else if (is.numeric(xlog)) xlog
+#            else if (xlog == "e") exp(1)
+#
+#        x <- log(x, xbase)
+#        if (have.xlim) xlim <- log(xlim, xbase)
+#    }
+#    if (have.ylog) {
+#        ylog <- foo$y.scales$log
+#        ybase <-
+#            if (is.logical(ylog)) 10
+#            else if (is.numeric(ylog)) ylog
+#            else if (ylog == "e") exp(1)
+#
+#        y <- log(y, ybase)
+#        if (have.ylim) ylim <- log(ylim, ybase)
+#    }
+    
+    ## Step 5: Process cond
+
+    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
+    cond.max.level <- unlist(lapply(cond, numlevels))
+
+
+    id.na <- F
+    for (j in 1:ncol(x))
+        id.na <- id.na | is.na(x[,j])
+    for (var in cond)
+        id.na <- id.na | is.na(var)
+    if (!any(!id.na)) stop("nothing to draw")
+    ## Nothing simpler ?
+
+    foo$condlevels <- lapply(cond, levels)
+
+    ## Step 6: Evaluate layout, panel.args.common and panel.args
+
+
+    foo$panel.args.common <-
+        c(list(z = x,
+               panel = panel,
+               panel.subscripts = subscripts,
+               groups = groups, # xscales = foo$x.scales, yscales = foo$y.scales,
+               pscales = pscales),
+          dots)
+
+    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
+    plots.per.page <- max(layout[1] * layout[2], layout[2])
+    number.of.pages <- layout[3]
+    foo$skip <- rep(foo$skip, length = plots.per.page)
+    foo$layout <- layout
+    nplots <- plots.per.page * number.of.pages
+
+    foo$panel.args <- as.list(1:nplots)
+    cond.current.level <- rep(1,number.of.cond)
+    panel.number <- 1 # this is a counter for panel number
+    for (page.number in 1:number.of.pages)
+        if (!any(cond.max.level-cond.current.level<0))
+            for (plot in 1:plots.per.page) {
+
+                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
+                else if(!any(cond.max.level-cond.current.level<0)) {
+
+                    id <- !id.na
+                    for(i in 1:number.of.cond)
+                    {
+                        var <- cond[[i]]
+                        id <- id &
+                        if (is.shingle(var))
+                            ((var$x >=
+                              var$int[cond.current.level[i], 1])
+                             & (var$x <=
+                                var$int[cond.current.level[i], 2]))
+                        else (as.numeric(var) == cond.current.level[i])
+                    }
+
+                    foo$panel.args[[panel.number]] <-
+                        list(subscripts = subscr[id])
+
+                    cond.current.level <-
+                        cupdate(cond.current.level,
+                                cond.max.level)
+                }
+
+                panel.number <- panel.number + 1
+            }
+
+    foo <- c(foo,
+             limits.and.aspect(prepanel.default.splom,
+                               prepanel = prepanel, 
+                               have.xlim = have.xlim, xlim = xlim, 
+                               have.ylim = have.ylim, ylim = ylim, 
+                               x.relation = foo$x.scales$relation,
+                               y.relation = foo$y.scales$relation,
+                               panel.args.common = foo$panel.args.common,
+                               panel.args = foo$panel.args,
+                               aspect = aspect,
+                               nplots = nplots))
+
+    class(foo) <- "trellis"
+    foo
+}
 

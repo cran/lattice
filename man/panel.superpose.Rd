@@ -6,11 +6,16 @@
   variable, plotting the \code{x} and \code{y} variables with different
   graphical properties for each distinct value of the grouping variable.
 }
-\synopsisi{
-panel.superpose(x, y, subscripts, groups, type = "p",
-                col = superpose.symbol$col,  
+\synopsis{
+panel.superpose(x, y, subscripts, groups,
+                col,
+                col.line = superpose.line$col,
+                col.symbol = superpose.symbol$col,
                 pch = superpose.symbol$pch,
-                lty = superpose.line$lty, ...)
+                cex = superpose.symbol$cex, 
+                lty = superpose.line$lty,
+                lwd = superpose.line$lwd,
+                ...)
 }
 \usage{
 panel.superpose(x, y, subscripts, groups, type="p", ...)
@@ -22,24 +27,18 @@ panel.superpose(x, y, subscripts, groups, type="p", ...)
     will be used for each distinct value of \code{groups}. The default
     graphical parameters are obtained from \code{superpose.symbol} and
     \code{superpose.line} using \code{\link{trellis.par.get}} }
-  \item{type}{ if "p" points are plotted, if "l", the points are joined
-    by lines, if "b", both are done.}
+  \item{type}{
+    character vector specifying what should be drawn for each group. See
+    \code{\link{panel.xyplot}} for details. See \code{xyplot}
+    documentation for an example.
+  }
+  \item{\dots}{other arguments (mostly graphical parameters, replicated
+    to be as long as the number of groups), ultimately passed down to
+    \code{panel.xyplot}. In particular, colour can be specified using 3
+    arguments (\code{col, col.line, col.symbol}), as in
+    \code{panel.xyplot}.
+  }
 }
+\seealso{\code{\link{panel.xyplot}}}
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \keyword{dplot}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

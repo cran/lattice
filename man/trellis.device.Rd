@@ -11,7 +11,7 @@ trellis.device(device, color = T, bg, new = T, ...)
 }
 \arguments{
   \item{device}{ device to initialize (possibly as a character string).
-    Admissible values are "x11" and "postscript". 
+    Admissible values are "x11", "windows", "mac" and "postscript". 
     }
   \item{color}{ whether the display should be color or black and white.
     }
@@ -36,7 +36,7 @@ trellis.device(device, color = T, bg, new = T, ...)
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{
-  \code{\link{trellis.par.set}}, \code{\link{Grid}},
+  \code{\link{trellis.par.set}}, \code{\link[grid]{Grid}},
   \code{\link{postscript}},\code{\link{x11}}, \code{\link{Lattice}}
 }
 \keyword{dplot}

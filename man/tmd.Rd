@@ -6,7 +6,13 @@
   \code{xyplot} (and perhaps \code{qq} as well in future)
 }
 \synopsis{
-tmd(object, aspect="fill", as.table=object$as.table, between=list(x = object$x.between, y = object$y.between), key=object$key, layout=object$layout, main=object$main, page=object$page, panel=panel.tmd, par.strip.text, prepanel, scales, strip=object$strip, sub=object$sub, xlab="mean", xlim, ylab="fifference", ylim, ...)
+tmd(object, aspect = "fill", as.table = object$as.table, 
+    between = list(x = object$x.between, y = object$y.between), 
+    key = object$key, layout = object$layout, main = object$main, 
+    page = object$page, panel = panel.tmd, par.strip.text = object$par.strip.text, 
+    prepanel = NULL, scales = list(), strip = object$strip, sub = object$sub, 
+    xlab = "mean", xlim = NULL, ylab = "difference", ylim = NULL, 
+    ..., subscripts = !is.null(groups), subset = TRUE)
 }
 \usage{
 tmd(object, xlab = "mean", ylab = "difference", ...)
@@ -31,16 +37,13 @@ tmd(object, xlab = "mean", ylab = "difference", ...)
   An object of class ``trellis''.
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
-\note{ Cannot be used with the results of \code{qq} right now. This is
-  due to limitations in \code{qq}, which should be corrected in the near
-  future.
-}
 \seealso{ \code{\link{panel.tmd}}, \code{\link{trellis.args}},
   \code{\link{Lattice}}
 }
 \examples{
 data(singer)
-tmd(qqmath(~height|voice.part, data = singer)
-)
+tmd(qqmath(~height|voice.part, data = singer))
+tmd(qq(voice.part ~ height, aspect = 1, data = singer,
+   subset = (voice.part == "Bass 2" | voice.part == "Tenor 1")))
 }
 \keyword{dplot}

@@ -12,8 +12,10 @@
 }
 \synopsis{
 panel.abline(a, b = NULL, h = numeric(0), v = numeric(0),
-    col = add.line$col, 
-    lty = add.line$lty, ...) 
+    col = add.line$col,
+    lty = add.line$lty,
+    lwd = add.line$lwd, 
+    ...) 
 }
 \usage{
 panel.abline(a, b, ...)
@@ -27,6 +29,7 @@ panel.loess(x, y, span=2/3, iter=3, ...)
 panel.mathdensity(dmath = dnorm, args = list(mean=0, sd=1))
 }
 \arguments{
+  \item{x, y}{ numeric variates}
   \item{a, b}{ Coefficients of the line to be added}
   \item{coef}{ Coefficients of the line to be added as a length 2 vector}
   \item{reg}{ A regression object. The corresponding fitted line will
@@ -37,6 +40,7 @@ panel.mathdensity(dmath = dnorm, args = list(mean=0, sd=1))
     reference lines to be added to the plot; h=-1 and v=-1 make the
     grids aligned with the axis labels (this doesn't always work).
   }
+  \item{col}{color}
   \item{span, iter}{ arguments to the R function
     lowess. \code{panel.loess} is essentially a wrapper on
     \code{lowess} 

@@ -1,12 +1,19 @@
 \name{parallel}
 \title{Parallel Coordinate Plots}
+\alias{parallel}
+\synopsis{
+parallel(formula, data = parent.frame(), aspect = "fill", between = list(x = 0.5, 
+    y = 0.5), layout = NULL, panel = panel.parallel, prepanel = NULL, 
+    scales = list(), strip = TRUE, groups = NULL, xlab = NULL, 
+    xlim, ylab = NULL, ylim, varnames, ..., subscripts = !is.null(groups), 
+    subset = TRUE)
+}
 \usage{
-parallel(formula, ...)
+parallel(formula, data, between, varnames, ...)
 }
 \description{
   Draw scatter plot matrices
 }
-\alias{parallel}
 \arguments{
   \item{formula}{a formula describing the form of the plot.  A
     formula of the form \code{~ x | g1 * g2 * ...}, where \code{x} is a
@@ -15,6 +22,10 @@ parallel(formula, ...)
     
     Each of \code{g1,g2,...} must be either factors or shingles.
   }
+  \item{data}{data frame where variables in the call are evaluated}
+  \item{between}{defaults to .5 on both x and y}
+  \item{varnames}{Optional column names for \code{x}}
+  \item{\dots}{other arguments}
 }
 \details{
   see the documentation for \code{trellis.args}

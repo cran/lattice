@@ -1,38 +1,23 @@
 \name{histogram}
 \title{Histograms}
 \synopsis{
-histogram(formula,
-          type = c("percent", "count", "density"),
-          nint = if (is.factor(x)) length(levels(x))
-                 else round(log2(length(x)) + 1),
-          endpoints = range(x[!is.na(x)]),
-          breaks = if (is.factor(x))
-                       seq(0.5, length = length(levels(x)) + 1)
-                   else do.breaks(endpoints, nint),
-          aspect = "fill",
-          as.table = FALSE, between = list(x = 0, y = 0),
-          data,
-          groups = NULL,
-          key = NULL,
-          layout,
-          main = NULL, 
-          page = NULL,
-          panel = panel.histogram,
-          par.strip.text,
-          prepanel, 
-          scales,
-          skip = FALSE, strip = strip.default, sub = NULL, 
-          subscripts = !missing(groups), subset, xlab, xlim, ylab, 
-          ylim, ...)
+histogram(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
+    panel = panel.histogram, prepanel = NULL, scales = list(), 
+    strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, type = c("percent", 
+    "count", "density"), nint, endpoints = range(x[!is.na(x)]), breaks,
+    equal.widths = TRUE, ..., subscripts = !is.null(groups), 
+    subset = TRUE)
 }
 \usage{
 histogram(formula,
+          data, 
           type = c("percent", "count", "density"),
           nint = if(is.factor(x)) length(levels(x))
                  else round(log2(length(x))+1),
           endpoints = range(x[!na.x]),
           breaks = if(is.factor(x)) seq(0.5, length = length(levels(x))
           + 1) else do.breaks(endpoints, nint),
+          equal.widths = FALSE, 
           \dots)
 }
 \description{
@@ -47,6 +32,7 @@ histogram(formula,
     \code{x} can be numeric or factor, and each of \code{g1,g2,\ldots}
     must be either factors or shingles.
   }
+  \item{data}{data frame in which variables are to be evaluated}
   \item{type}{ Character string indicating type of histogram to be
     drawn. "percent" and "count" give relative frequency and frequency
     histograms, and can be misleading when breakpoints are not equally
@@ -54,7 +40,9 @@ histogram(formula,
     example below.) (This option appears to be missing in S-Plus.)
     
     \code{type} defaults to "percent", except when the breakpoints
-    are unequally spaced or \code{breaks = NULL}.
+    are unequally spaced or \code{breaks = NULL}. (The specified value of
+    \code{type} is often overridden (e.g., when \code{log=T}), sometimes
+    unnecessarily. )
   }
   \item{nint}{ Number of bins. Applies only when \code{breaks} is
     unspecified in the call.
@@ -72,10 +60,13 @@ histogram(formula,
     specifying \code{breaks = NULL}. This has the effect of letting each
     panel choose its own breakpoints. The choice of these breakpoints
     are made as follows: The number of bins is calculated by the formula
-    for \code{nint} above, and then breakpoints are chosen to make
-    approximately the same number of observations fall into each bin.
-    (This means that the breakpoints will \bold{not} be equally
-    spaced.)
+    for \code{nint} above, and then breakpoints are chosen according to
+    the value of \code{equal.widths}.
+  }
+  \item{equal.widths}{ logical, relevant only when \code{breaks=NULL}.
+    If \code{TRUE}, equally spaced bins will be selected, otherwise, 
+    approximately equal area bins will be selected (this would mean that
+    the breakpoints will \bold{not} be equally spaced).
   }
   \item{\dots}{ other arguments}
 }
@@ -114,9 +105,3 @@ histogram( ~ height | voice.part, data = singer,
           } )
 }
 \keyword{hplot}
-
-
-
-
-
-

@@ -1,13 +1,11 @@
-% $Id: xyplot.Rd,v 1.4 2001/05/15 16:57:14 deepayan Exp $
+% $Id: xyplot.Rd,v 1.11 2001/09/17 03:11:47 deepayan Exp $
 \name{xyplot}
 \title{Conditioning Plots}
 \synopsis{
-xyplot(formula, aspect = "fill", as.table = FALSE, between = list(x = 0, 
-    y = 0), data, groups = NULL, key = NULL, layout, main = NULL, 
-    page = NULL, panel = panel.xyplot, par.strip.text, prepanel, 
-    scales, skip = FALSE, strip = strip.default, sub = NULL, 
-    subscripts = !missing(groups), subset, xlab, xlim, ylab, 
-    ylim, ...) 
+xyplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
+    panel = panel.xyplot, prepanel = NULL, scales = list(), strip = TRUE, 
+    groups = NULL, xlab, xlim, ylab, ylim, ..., subscripts = !is.null(groups), 
+    subset = TRUE)
 }
 \usage{
 xyplot(formula, ...)
@@ -39,9 +37,18 @@ xyplot(formula, ...)
 data(quakes)
 xyplot(long ~ lat , data = quakes)
 Depth <- equal.count(quakes$depth, number=8, overlap=.1)
-## panel.superpose. doesn't work very well as there are too many
-## values of the grouping variable. See splom example.
-xyplot(long ~ lat | Depth, groups = mag, panel = panel.superpose, data=quakes)
+## Example with panel.superpose. 
+data(iris)
+xyplot(Petal.Length~Petal.Width, data = iris, groups=Species, 
+       panel = panel.superpose,
+       type = c("p", "smooth"), span=.75,
+       col.line = trellis.par.get("strip.background")$col,
+       col.symbol = trellis.par.get("strip.shingle")$col,
+       key = list(title = "Iris Data", x = .15, y=.85, corner = c(0,1),
+           border = TRUE, 
+           points = list(col=trellis.par.get("strip.shingle")$col[1:3],
+                         pch = 1),
+           text = list(levels(iris$Species))))
 ## Examples with data from `Visualizing Data' (Cleveland)
 ## (obtained from Bill Cleveland's Homepage :
 ## http://cm.bell-labs.com/cm/ms/departments/sia/wsc/, also
@@ -60,15 +67,17 @@ xyplot(NOx ~ C | EE, data = ethanol,
            panel.loess(x,y, span=1)
        },
        aspect = "xy")
-xyplot(NOx ~ C | EE, data = ethanol, subset = C>8) # subset
+xyplot(NOx ~ C | EE, data = ethanol, subset = C>8,
+       main = "Example using subset")  # subset
 data(melanoma)
 ## banking
 xyplot(incidence ~ year, data = melanoma, aspect="xy",
-       xlab = "Year", ylab = "Incidence", ylim = c(0,5))
+       xlab = "Year", ylab = "Incidence", sub = "log scales",
+       scales = list(y = list(log="e")))
 data(sunspot)
 xyplot(sunspot ~ 1:37 ,type = "l", aspect="xy")
 data(state)
-## user defined panel functions (needs knowledge of G2)
+## user defined panel functions (needs knowledge of the grid package)
 states <- data.frame(state.x77, 
                      state.name = dimnames(state.x77)[[1]], 
                      state.region = state.region) 
@@ -80,6 +89,3 @@ xyplot(Murder ~ Population | state.region, data = states,
                  default.units = "native"))
 }
 \keyword{hplot}
-
-
-

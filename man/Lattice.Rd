@@ -6,21 +6,34 @@
 }
 \details{
   Lattice is an implementation of Trellis Graphics (see the references
-  in the Reference section for details). It is intended to emulate the
+  for details). It is intended to emulate the
   implementation of Trellis in S, and perhaps to add some functionality
-  of its own. As of now, this implementation is very much incomplete;
+  of its own. Existing Trellis code written for S-Plus should
+  \emph{ideally} work unchanged in Lattice, one unavoidable
+  exception being custom panel functions (see the entry for \code{panel}
+  in \code{help(trellis.args)}, and also \code{llines} for a collection
+    of functions meant to ease the conversion).  
+
+  As of now, this implementation is very much incomplete;
   however, what has been implemented should be useful. (Note that there
-  are no plans of implementing the 3D display functions in the immediate
+  are no plans to implement the 3D display functions in the immediate
   future). 
 
   This implementation depends heavily on a new Graphics engine (Grid) for
   R being developed by Paul Murrell. Knowledge of Grid is not necessary
-  for using Lattice (except when writing new panel functions), but for
-  one important aspect: Grid (and hence Lattice) graphics \bold{do not}
-  mix with conventional R Graphics. The way to use both is to enclose
-  any Grid graphics commands by calls to \code{grid.start} and
-  \code{grid.stop}. Note that \code{library(lattice)} automatically calls
-  \code{grid.start}. 
+  for using Lattice, except when trying to use both Lattice and
+  traditional R graphics concurrently. Grid graphics calls do not
+  usually mix with usual R graphics, and need to be enclosed within
+  calls to \code{grid.start()} and \code{grid.stop()}. To make the
+  switch transparent to the end-user, \code{print.trellis},  which
+  ultimately draws all the Lattice plots, now tries to preserve the
+  state of the graphics device it prints to. \code{library(lattice)}
+  automatically loads Grid, leaving the device in grid mode. The user
+  can revert to non-grid mode by calling grid.stop(). Subsequently,
+  Lattice calls can be used concurrently with usual R graphics
+  calls (but not Grid graphics calls). New devices opened by
+  \code{trellis.device} (in particular when a Lattice print is attempted
+  with no devices active) open the device in non grid mode.
 
   Type \code{library(help = lattice)} to see a list of (public)
   Lattice graphics functions.
@@ -78,6 +91,10 @@
   
   \code{\link{xyplot}} scatter plot (and possibly a lot more)
 
+  \bold{Trivariate:}
+
+  \code{\link{levelplot}} level plots (image plots in R)
+  
   \bold{Hypervariate:}
   
   \code{\link{splom}} scatterplot matrix
@@ -88,6 +105,9 @@
 
   \code{\link{rfs}} residual and fitted value plot (also see
   \code{\link{oneway}})
+
+  See \code{\link{llines}} if you need to write/port nontrivial panel
+  functions.
 }
 \references{
   Bell Lab's Trellis Page:
@@ -101,9 +121,3 @@
 }
 \author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \keyword{dplot}
-
-
-
-
-
-

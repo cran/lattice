@@ -20,12 +20,12 @@ trellis.function(
            strip = strip.default,
            sub,
            subscripts,
-           subset,
            xlab,
            xlim,
            ylab,
            ylim,
-           ...)
+           ...,
+           subset)
 }
 \description{
   These arguments are common to (almost?) all trellis functions.
@@ -47,6 +47,10 @@ trellis.function(
     formula can involve expressions, e.g. \code{sqrt(),\log()}. 
     All points with at least one of its coordinates missing (NA) are
     omitted from the plot.
+  }
+  \item{data}{a data frame containing values for any variables in the
+    formula. By default the environment where the function 
+    was called from is used.
   }
   \item{aspect}{ controls physical aspect ratio of the panels (same for
     all the planets). It can be specified as a number
@@ -80,18 +84,76 @@ trellis.function(
     multipage display. (In other words, it is not possible to use
     different \code{between} values for different pages).
   }
-  \item{data}{a data frame containing values for any variables in the
-    formula. By default the environment where the function 
-    was called from is used.
-  }
   \item{groups}{ used typically with \code{panel=panel.superpose}
     to allow display controls (color, lty etc) to vary according
     to a grouping variable. Formally, if groups is specified, then
     \code{groups} along with \code{subscripts} is passed
     to the panel function, which is expected to handle these arguments.
   }
-  \item{key}{ supposedly a list of arguments to be passed to the key
-    function for drawing legends. Currently ignored.
+  \item{key}{
+    A list of arguments that define a legend to be drawn on the plot.
+
+    The position of the legend can be controlled in either of two
+    possible  ways. If a component called \code{space} is present, the
+    key is positioned outside the plot region, in one of the four sides, 
+    determined by the value of \code{space}, which can be one of
+    ``top'', ``bootom'', ``left'' and  ``right''. Alternately, the key
+    can be positioned inside the plot region by specifying components
+    \code{x,y} and \code{corner}. \code{x} and \code{y} determine the
+    location of the corner of the key given by \code{corner}, which can
+    be one of \code{c(0,0), c(1,0), c(1,1),c(0,1)}, which denote the
+    corners of the unit square. \code{x} and \code{y} must be numbers
+    between 0 and 1, giving coordinates with respect to the plotting
+    area OR the whole display area, according as whether the plot is a
+    single panel or multipanel plot.
+
+    The key essentially consists of a number of columns, possibly
+    divided into blocks, each containing some rows. The contents of the
+    key are determined by (possibly repeated) components named
+    ``rectangles'', ``lines'', ``points'' or ``text''. Each of these
+    must be lists with relevant graphical parameters (see later)
+    controlling their appearance. Components not given in the list take
+    values defined outside in the list, default values of which are
+    given below. The length (number of rows) of each such column is
+    taken to be the largest of the lengths of the graphical components,
+    including the ones specified outside. The ``text'' component has to
+    have a character vector as its first component, and the length of
+    this vector determines the number of rows.
+
+    The graphical components that can be included in \code{key} (and
+    also in the components named ``text'', ``lines'', ``points'' and
+    ``rectangles'' when appropriate) are \code{cex=1, col="black",
+      lty=1, lwd=1, font=1, pch=8, adj=0, type="l", size=5, angle=0,
+      density=-1}. \code{adj, font, angle, density} are
+    unimplemented. \code{size} determines the width of columns of
+    rectangles and lines in character widths. \code{type} is relevant
+    for lines; `"l"' denotes a line, `"p"' denotes a point, and `"b"'
+    and `"o"' both denote both together.
+
+    Other possible components of \code{key} are:
+
+    \code{between}: numeric vector giving the amount of space (character
+    widths) surrounding each column (split equally on both sides),
+
+    \code{title}: character, title of the key,
+
+    \code{cex.title}
+
+    \code{background}: defaults to default background
+
+    \code{border}:color of border, black if TRUE, defaluts to FALSE (no
+    border drawn)
+
+    \code{transparent=FALSE}: logical, whether key area should be cleared
+
+    \code{columns}: the number of columns column-blocks the key is to be
+    divided into, which are drawn side by side.
+
+    \code{betwen.columns}: Space between column blocks, in addition to
+    \code{between}.
+
+    \code{divide} Number of point symbols to divide each line when
+    \code{type} is `"b"' or `"o"' in \code{lines}.
   }
   \item{layout}{ numeric vector giving the number of columns, rows and
     pages in a multipanel display. By default, the number of columns is
@@ -116,10 +178,7 @@ trellis.function(
     after drawing each page.
   }
   \item{panel}{The function called for each panel. Should default to
-    \code{panel.trellis.function}. See also
-    \code{\ldots, subscripts}. Note that unlike S, the name of the
-    function cannot be passed as a character string. (However, this in
-    not difficult to implement.)
+    \code{panel.trellis.function}. See also \code{\ldots, subscripts}.
   }
   \item{par.strip.text}{ list of graphical parameters to control the
     strip text, possible components are \code{col, cex}.
@@ -156,9 +215,6 @@ trellis.function(
     of \code{xlim} etc, even if specified explicitly, are ignored if
     relation is different from "same".
 
-    (Note that unlike S, there is no other way to specify the
-    \code{relation} component.)  
-
     tick.number: Suggested number of ticks. This is currently ignored
     (because of an unrelated  bug in \code{pretty}), but would probably
     be fixed in future.
@@ -186,11 +242,14 @@ trellis.function(
 
     rot: Angle by which the axis labels are to be rotated.
 
-    log: Use a log scale. This is \bold{not} supported, and there isn't
-    much hope of the situation changing in the near futere.
+    log: Use a log scale. This is supported in most (but not all)
+    Lattice functions, and should work perfectly.
+    Defaults to \code{FALSE}, other possible values are any
+    number that works as a base for taking logarithm, \code{TRUE},
+    equivalent to 10, and \code{"e"} (for natural logarithm).
 
-    Note: the "axs" component is ignored. The value of scales is treated
-    differently from S in \code{splom}.
+    Note: the "axs" component is ignored. Much of the function of
+    \code{scales} is accomplished by \code{pscales} in \code{splom}.
   }
   \item{skip}{logical vector (default \code{FALSE}), replicated to be as
     long as the number of panels in each page. If \code{TRUE}, nothing
@@ -240,12 +299,12 @@ trellis.function(
   \item The following is a brief description of the functionality of
   S+ trellis graphics that has \bold{not} been implemented yet: 
 
-  \item The \code{key} argument is totally unimplemented.
-  \item Most fine tuning control of scales via \code{scales} is
-  unimplemeted, most notably the `log' scales. The `relation' tag cannot
-  be omitted in \code{scales}.
+  \item Fine tuning control of scales via \code{scales} is not
+  reliable.
+
   \item \code{page} functions are technically implemented, but writing
-  page functions would require knowledge of \code{lattice}.
+  page functions would require knowledge of \code{Grid}. See
+  \code{examples(splom)} for an example.
   
 }
 \seealso{

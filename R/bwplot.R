@@ -19,765 +19,542 @@
 ### MA 02111-1307, USA
 
 
+
+
+prepanel.default.bwplot <-
+    function(x, y, box.ratio, num.l.y = length(unique(y)), ...)
+{
+    temp <- .5*box.ratio/(box.ratio+1)
+    list(xlim = range(x[is.finite(x)]),
+         ylim = c(1-temp, num.l.y + temp),
+         dx = 1,
+         dy = 1)
+}
+
+
+
+
+
+panel.barchart <-
+    function(x, y, box.ratio=1, col=bar.fill$col, ...)
+{
+
+    bar.fill <- trellis.par.get("bar.fill")
+
+    ## I'll be working on the premise that EACH INTEGER in the y-RANGE
+    ## is a potential location of a boxplot. This should work for the default
+    ## case, and other cases (ylim non-default) are not well defined anyway.
+    
+    xmin <- current.viewport()$xscale[1]
+    yscale <- current.viewport()$yscale
+    levels.y <- floor(yscale[2])-ceiling(yscale[1])+1
+    height <- box.ratio/(1+box.ratio)
+    
+    for (i in seq(along=x)) {
+        grid.rect(gp = gpar(fill = col),
+                  y = y[i],
+                  x = unit(0,"npc"),
+                  height = height,
+                  width = x[i]-xmin,
+                  just = c("left", "centre"),
+                  default.units = "native")
+    }
+    
+}
+
+
+
+
+
+
+panel.dotplot <-
+    function(x, y, pch = dot.symbol$pch, col = dot.symbol$col, ...)
+{
+
+    dot.line <- trellis.par.get("dot.line")
+    dot.symbol <- trellis.par.get("dot.symbol")
+
+    ## as in panel.bwplot I'll be working on the premise that
+    ## EACH INTEGER in the y-RANGE
+    ## is a potential location of a dot-line. This should work for the default
+    ## case, and other cases (ylim non-default) are not well defined anyway.
+    
+    yscale <- current.viewport()$yscale
+    levels.y <- floor(yscale[2])-ceiling(yscale[1])+1
+
+    panel.abline(h=1:levels.y, col=dot.line$col,
+                 lty=dot.line$lty, lwd=dot.line$lwd)
+
+    panel.xyplot(x = x, y = y, col = col, pch = pch, ...)
+
+}
+
+
+
+
+
+panel.stripplot <-
+    function(x, y, jitter.data = FALSE, factor = 0.5,
+             pch=plot.symbol$pch, col=plot.symbol$col, ...)
+{
+
+    plot.symbol <- trellis.par.get("plot.symbol")
+    y.jitter  <-
+        if (jitter.data) jitter(y, factor = factor)
+        else y
+    panel.xyplot(x = x, y = y.jitter, pch = pch, col = col, ...)
+    
+}
+
+
+
+
+
+panel.bwplot <-
+    function(x, y, box.ratio=1, pch=box.dot$pch,
+             col=box.dot$col, cex = box.dot$cex, ...)
+{
+    
+    box.dot <- trellis.par.get("box.dot")
+    box.rectangle <- trellis.par.get("box.rectangle")
+    box.umbrella <- trellis.par.get("box.umbrella")
+    plot.symbol <- trellis.par.get("plot.symbol")
+    
+    ## OK. I'll be working on the premise that EACH INTEGER in the y-RANGE
+    ## is a potential location of a boxplot. This should work for the default
+    ## case, and other cases (ylim non-default) are not well defined anyway.
+    
+    yscale <- current.viewport()$yscale
+    levels.y <- floor(yscale[2])-ceiling(yscale[1])+1
+    lower <- ceiling(yscale[1])
+    height <- box.ratio/(1+box.ratio)
+    
+    xscale <- current.viewport()$xscale
+    
+    if (levels.y > 0)
+        for (i in 1:levels.y) {
+            
+            yval  <- lower+i-1
+            stats <- boxplot.stats(x[y==yval])
+            
+            if (stats$n>0)
+            {
+                push.viewport(viewport(y=unit(yval, "native"),
+                                            height = unit(height, "native"),
+                                            xscale = xscale))
+                
+                r.x <- (stats$stats[2]+stats$stats[4])/2
+                r.w <- stats$stats[4]-stats$stats[2]
+                grid.rect(x = unit(r.x, "native"), width = unit(r.w, "native"),
+                          gp = gpar(lwd = box.rectangle$lwd,
+                          lty = box.rectangle$lty,
+                          col = box.rectangle$col))
+                
+                grid.lines(x = unit(stats$stats[1:2],"native"),
+                           y=unit(c(.5,.5), "npc"),
+                           gp = gpar(col = box.umbrella$col,
+                           lwd = box.umbrella$lwd,
+                           lty = box.umbrella$lty))
+                
+                grid.lines(x = unit(stats$stats[4:5],"native"),
+                           y=unit(c(.5,.5), "npc"),
+                           gp = gpar(col = box.umbrella$col,
+                           lwd = box.umbrella$lwd,
+                           lty = box.umbrella$lty))
+                
+                grid.lines(x = unit(rep(stats$stats[1],2),"native"),
+                           y=unit(c(0,1), "npc"),
+                           gp = gpar(col = box.umbrella$col,
+                           lwd = box.umbrella$lwd,
+                           lty = box.umbrella$lty))
+                
+                grid.lines(x = unit(rep(stats$stats[5],2),"native"),
+                           y=unit(c(0,1), "npc"),
+                           gp = gpar(col = box.umbrella$col,
+                           lwd = box.umbrella$lwd,
+                           lty = box.umbrella$lty))
+                
+                grid.points(x=stats$stats[3], y=.5, pch=pch, 
+                            size = unit(cex * 2.5, "mm"),
+                            gp = gpar(col = col, cex = cex))
+                
+                if ((l<-length(stats$out))>0)
+                    grid.points(x = stats$out, y = rep(.5,l),
+                                size = unit(plot.symbol$cex * 2.5, "mm"),
+                                pch = plot.symbol$pch,
+                                gp = gpar(col = plot.symbol$col,
+                                cex = plot.symbol$cex))
+                
+                pop.viewport()
+                
+            }
+        }
+    
+}
+
+
+
 dotplot <-
     function(formula,
-             panel = panel.dotplot,
-             data = sys.frame(sys.parent()),
-             ...)
-    bwplot(formula, data=data, panel=panel, box.ratio=1, ...)
+             data = parent.frame(),
+             panel = "panel.dotplot",
+             prepanel = NULL,
+             strip = TRUE,
+             groups = NULL,
+             ...,
+             subset = TRUE)
+{
+    ## m <- match.call(expand.dots = FALSE)
+    dots <- list(...)
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    do.call("bwplot",
+            c(list(formula = formula, data = data,
+                   groups = groups, subset = subset,
+                   panel = panel, prepanel = prepanel, strip = strip,
+                   box.ratio = 0),
+              dots))
+    ## lapply(dots, eval, data, parent.frame())))
+}
+
 
 
 barchart <-
     function(formula,
-             panel = panel.barchart,
-             data = sys.frame(sys.parent()),
+             data = parent.frame(),
+             panel = "panel.barchart",
+             prepanel = NULL,
+             strip = TRUE,
              box.ratio = 2,
-             ...)
-    bwplot(formula, data=data, panel=panel, box.ratio = box.ratio, ...)
+             groups = NULL,
+             ...,
+             subset = TRUE)
+{
+    ## m <- match.call(expand.dots = FALSE)
+    dots <- list(...)
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
 
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
 
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    do.call("bwplot",
+            c(list(formula = formula, data = data,
+                   groups = groups, subset = subset,
+                   panel = panel, prepanel = prepanel, strip = strip,
+                   box.ratio = box.ratio),
+              dots))
+    ## lapply(dots, eval, data, parent.frame())))
+}
 
 
 stripplot <-
     function(formula,
-             panel = panel.stripplot,
-             data = sys.frame(sys.parent()),
-             jitter = T,
+             data = parent.frame(),
+             panel = "panel.stripplot",
+             prepanel = NULL,
+             strip = TRUE,
+             jitter = FALSE,
              factor = .5,
-             box.ratio = 1,
-             ...)
-    bwplot(formula, data=data,
-           panel=panel, box.ratio = 1,
-           jitter.data = jitter, factor = factor,
-           ...)
+             box.ratio = if (jitter) 1 else 0,
+             groups = NULL,
+             ...,
+             subset = TRUE)
+{
+    ## m <- match.call(expand.dots = FALSE)
+    dots <- list(...)
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    do.call("bwplot",
+            c(list(formula = formula, data = data,
+                   groups = groups, subset = subset,
+                   panel = panel, prepanel = prepanel, strip = strip,
+                   jitter = jitter, factor = factor, 
+                   box.ratio = box.ratio),
+              dots))
+    ## lapply(dots, eval, data, parent.frame())))
+}
 
 
 bwplot <-
     function(formula,
+             data = parent.frame(),
              aspect = "fill",
-             as.table = FALSE,
-             between = list(x=0,y=0),
-             box.ratio = 1,
-             data,
+             layout = NULL,
+             panel = "panel.bwplot",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
              groups = NULL,
-             key = NULL,
-             layout,
-             main = NULL,
-             page = NULL,
-             panel = panel.bwplot,
-             par.strip.text,
-             prepanel,
-             scales,
-             skip = FALSE,
-             strip = strip.default,
-             sub = NULL,
-             subscripts = !missing(groups),
-             subset,
              xlab,
              xlim,
              ylab,
              ylim,
-             ...)
+             box.ratio = 1,
+             ...,
+             subscripts = !is.null(groups),
+             subset = TRUE)
 {
 
+    ##m <- match.call(expand.dots = FALSE)
+    ##dots <- m$...
+    ##dots <- lapply(dots, eval, data, parent.frame())
 
-    if(all(skip)) stop("can't skip all panels !")
+    dots <- list(...)
 
-    if (is.logical(strip) && strip) strip <- strip.default
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
 
-    if(missing(data)) data <- sys.frame(sys.parent())
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    ## Step 1: Evaluate x, y, etc. and do some preprocessing
+    
     form <- latticeParseFormula(formula, data)
     cond <- form$condition
     number.of.cond <- length(cond)
     y <- form$left
     x <- form$right
-
-    if(!missing(groups)) {
-        groups <- eval(substitute(groups), data)
+    if (number.of.cond == 0) {
+        strip <- FALSE
+        cond <- list(as.factor(rep(1, length(x))))
+        layout <- c(1,1,1)
+        number.of.cond <- 1
     }
 
-    if("subscripts" %in% names(formals(panel))) subscripts <- TRUE
-    if(subscripts) subscr <- seq(along=x)
 
-    if(!missing(subset)) {   
-        subset <- eval(substitute(subset), data)
-        x <- x[subset]
-        y <- ldrop.levels(y, subset)  # Note: y can be factor, char, num, shingle
-        if (subscripts) subscr <- subscr[subset]
+    groups <- eval(groups, data, parent.frame())
+    subset <- eval(subset, data, parent.frame())
+    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
+    if (subscripts) subscr <- seq(along=x)
+    x <- x[subset, drop = TRUE]
+    y <- y[subset, drop = TRUE]
+    if (subscripts) subscr <- subscr[subset, drop = TRUE]
+    
+
+    if(!(is.numeric(x))) {
+        x <- as.numeric(x)
+        warning("x should be numeric")
     }
-
-    if(!(is.numeric(x))) stop("x must be numeric")
-    if (! (is.shingle(y) || is.factor(y)) )
-    {
-        if (is.numeric(y)) y <- shingle(y)
-        else if(is.character(y)) y <- factor(y, levels = unique(y))
-        else stop("y must be factor, shingle, character or numeric")
-    }
-
+    y <- as.factorOrShingle(y)
     is.f.y <- is.factor(y)  # used throughout the rest of the code
+    num.l.y <- numlevels(y)
 
-    if(missing(xlab)) xlab <- form$right.name
-    if(missing(ylab)) ylab <-
-        if (is.f.y) NULL
-        else form$left.name
+    if (missing(xlab)) xlab <- form$right.name
+    if (missing(ylab)) ylab <- if (is.f.y) NULL else form$left.name
 
-    if(!missing(between)) {
-        if (!("x" %in% names(between))) between <- list(x=0, y=between$y)
-        if (!("y" %in% names(between))) between <- list(y=0, x=between$x)
+    ## create a skeleton trellis object with the
+    ## less complicated components:
+
+    foo <- do.call("trellis.skeleton",
+                   c(list(aspect = aspect,
+                          strip = strip,
+                          panel = panel,
+                          xlab = xlab,
+                          ylab = ylab), dots))
+
+    dots <- foo$dots # arguments not processed by trellis.skeleton
+    foo <- foo$foo
+    foo$call <- match.call()
+    foo$fontsize.normal <- 10
+    foo$fontsize.small <- 8
+
+    ## This is for cases like xlab/ylab = list(cex=2)
+    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+        foo$xlab$label <- form$right.name
+    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+        foo$ylab$label <- form$left.name
+
+    ## Step 2: Compute scales.common (leaving out limits for now)
+
+    ##scales <- 
+    ##if (missing(scales)) scales 
+    ##else eval(m$scales, data, parent.frame())
+
+    if (is.character(scales)) scales <- list(relation = scales)
+    if (is.null(scales$alternating)) {
+        if (is.null(scales$y)) scales$y <- list(alternating = FALSE)
+        else if (is.null(scales$y$alternating)) scales$y$alternating <- FALSE
+        ## bug if y="free" but who cares
+    }
+    foo <- c(foo, 
+             do.call("construct.scales", scales))
+    if (is.logical(foo$y.scales$at)) foo$y.scales$at <- 1:num.l.y
+    if (is.f.y && is.logical(foo$y.scales$labels))
+        foo$y.scales$labels <- levels(y)
+
+
+    ## Step 3: Decide if limits were specified in call:
+
+    have.xlim <- !missing(xlim)
+    if (!is.null(foo$x.scales$limit)) {
+        have.xlim <- TRUE
+        xlim <- foo$x.scales$limit
+    }
+    have.ylim <- !missing(ylim)
+    if (!is.null(foo$y.scales$limit)) {
+        have.ylim <- TRUE
+        ylim <- foo$x.scales$limit
     }
 
-    id.na <- (is.na(x)|
-              if (is.f.y) is.na(y) else is.na(y$x))
+    ## Step 4: Decide if log scales are being used:
 
+    have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
+    have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
+    if (have.xlog) {
+        xlog <- foo$x.scales$log
+        xbase <-
+            if (is.logical(xlog)) 10
+            else if (is.numeric(xlog)) xlog
+            else if (xlog == "e") exp(1)
 
-    foo <- list(formula=formula,
-                fname = "bwplot-dtplot-barchart-stripplot",
-                aspect.fill = (aspect=="fill"),
-                aspect.ratio = 1,
-                as.table = as.table,
-                cond = NULL,
-                key = key,
-                layout=c(1,1,1),
-                page = page,
-                panel = panel,
-                panel.args = NULL,
-                panel.args.common = NULL,
-                par.strip.text = trellis.par.get("add.text"),
-                skip = skip,
-                strip = strip,
-                main = NULL,
-                sub = NULL,
-                xlab = NULL,
-                ylab = NULL,
-                x.draw = TRUE,
-                y.draw = TRUE,
-                x.scales = NULL,
-                y.scales = NULL,
-                x.between = between$x,
-                y.between = between$y,
-                x.relation.same = TRUE,  # Note: needed even when
-                y.relation.same = TRUE,  # number.of.cond == 0
-                x.alternating = c(1,2),
-                y.alternating = c(1,2),
-                fontsize.normal = 10,
-                fontsize.small = 8)
-
-
-    if(!missing(par.strip.text))
-        foo$par.strip.text[names(par.strip.text)] <- par.strip.text
-
-    if (!missing(main)) {
-        foo$main <- list(label = main[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(main)) foo$main[names(main)] <- main
+        x <- log(x, xbase)
+        if (have.xlim) xlim <- log(xlim, xbase)
     }
+    if (have.ylog) {
+        warning("Are you sure you want log scale for y ?")
+        ylog <- foo$y.scales$log
+        ybase <-
+            if (is.logical(ylog)) 10
+            else if (is.numeric(ylog)) ylog
+            else if (ylog == "e") exp(1)
 
-    if (!missing(sub)) {
-        foo$sub <- list(label = sub[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(sub)) foo$sub[names(sub)] <- sub
+        y <- log(y, ybase)
+        if (have.ylim) ylim <- log(ylim, ybase)
     }
+    
+    ## Step 5: Process cond
 
-    if(!is.null(xlab)) {
-        foo$xlab <- list(label = xlab[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(xlab)) foo$xlab[names(xlab)] <- xlab
-        if (!is.character(foo$xlab$label)) foo$xlab$label <- form$right.name
-    }
-
-
-    if(!is.null(ylab)) {
-        foo$ylab <- list(label = ylab[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(ylab)) foo$ylab[names(ylab)] <- ylab
-        if (!is.character(foo$ylab$label)) foo$ylab$label <- form$left.name
-    }
+    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
+    cond.max.level <- unlist(lapply(cond, numlevels))
 
 
-    if(number.of.cond>0)
-    {
+    id.na <- is.na(x)|is.na(y)
+    for (var in cond)
+        id.na <- id.na | is.na(var)
+    if (!any(!id.na)) stop("nothing to draw")
+    ## Nothing simpler ?
 
-        cond.current.level <- rep(1,number.of.cond)
-        cond.max.level <- integer(number.of.cond)
-                                        # creating the vector now,
-                                        # exact values assigned later.
-        for(i in 1:number.of.cond) {
+    foo$condlevels <- lapply(cond, levels)
 
-            ## Processing the conditioning variables
-            ## There are some subtle issues involving the subset argument here.
-            
-            if (is.character(cond[[i]])) cond[[i]] <- factor(cond[[i]])
-            else if (!is.factor(cond[[i]])) cond[[i]] <- as.shingle(cond[[i]])
-
-            if(!missing(subset)) cond[[i]] <- ldrop.levels(cond[[i]], subset)
-
-            id.na <- id.na | is.na(
-                                   if (is.shingle(cond[[i]])) cond[[i]]$x
-                                   else cond[[i]]
-                                   )
-            cond.max.level[i] <-
-                if (is.shingle(cond[[i]])) nrow(cond[[i]]$intervals)
-                else length(levels(cond[[i]]))
-        }
-
-        foo$cond <- cond
+    ## Step 6: Evaluate layout, panel.args.common and panel.args
 
 
-        nplots <- 1
-        for(i in 1:number.of.cond) nplots <- nplots * cond.max.level[i]
+    foo$panel.args.common <- dots
+    foo$panel.args.common$box.ratio <- box.ratio
+    if (subscripts) foo$panel.args.common$groups <- groups
 
+    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
+    plots.per.page <- max(layout[1] * layout[2], layout[2])
+    number.of.pages <- layout[3]
+    foo$skip <- rep(foo$skip, length = plots.per.page)
+    foo$layout <- layout
+    nplots <- plots.per.page * number.of.pages
 
-        ## the foll strange logical essentially says whether xlim and ylim
-        ## were specified somehow in the call. Needed later.
+    foo$panel.args <- as.list(1:nplots)
+    cond.current.level <- rep(1,number.of.cond)
+    panel.number <- 1 # this is a counter for panel number
+    for (page.number in 1:number.of.pages)
+        if (!any(cond.max.level-cond.current.level<0))
+            for (plot in 1:plots.per.page) {
 
-        xlim.specified <-
-            (!missing(xlim) ||
-             ( !missing(scales) &&
-              ("limits" %in% names(scales) ||
-               ("x" %in% names(scales) && "limits" %in% names(scales$x)))))
+                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
+                else if(!any(cond.max.level-cond.current.level<0)) {
 
-
-        ylim.specified <-
-            (!missing(ylim) ||
-             ( !missing(scales) &&
-              ("limits" %in% names(scales) ||
-               ("y" %in% names(scales) && "limits" %in% names(scales$y)))))
-
-        if (ylim.specified) warning("explicitly specifying y limits is not advisable")
-
-        if (missing(xlim)) xlim <- range(x[is.finite(x[!id.na])])
-        temp <- .5*(box.ratio+2)/(box.ratio+1)
-        num.l.y <-
-            if (is.f.y) length(levels(y))
-            else nrow(y$intervals)
-        if (missing(ylim)) ylim <- c(1-temp, num.l.y + temp)
-
-        ## will add 7% by extend.limits() after updating this
-        ## if necessary using the prepanel function
-
-
-        scales.x <- list(relation = "same",
-                         draw = TRUE,
-                         alternating = c(1,2),
-                         limits = xlim,
-                         tck = 1, # factor affecting length of ticks 
-                         cex = 1,
-                         tick.number = 5,
-                         rot = F,
-                         at = F, labels = F, col = F, log = F)
-        ## S-Plus documentation does not seem to specify all possible values in
-        ## the list scales. These are all I've been able to figure out. `rot'
-        ## was added by me, though.
-        ## For y-scale, rot defaults to 0, except in the particular case when
-        ## relation != "same" AND text labels are specified (S+ behaviour)
-
-        ## I'm not sure if this is the best way to handle scales, but I
-        ## couldn't think of a better one.
-        
-        scales.y <- list(relation = "same",
-                         draw = TRUE,
-                         alternating = 1,
-                         limits = ylim,
-                         tck = 1,
-                         cex = 1,
-                         tick.number = num.l.y,
-                         rot = 0, # for these functions (bwplot, dotplot, stripplot, barchart)
-                         at = 1:num.l.y,    # y-rot should always be 0
-                         labels = if(is.f.y) levels(y) else as.character(1:num.l.y),
-                         col = F, log = F)              
-
-        if(!missing(scales)) {
-            scales.x[names(scales)] <- scales
-            scales.y[names(scales)] <- scales
-            if ("x" %in% names(scales)) scales.x[names(scales$x)] <- scales$x
-            if ("y" %in% names(scales)) scales.y[names(scales$y)] <- scales$y
-        }
-
-
-        ## Need to go through the panels before the actual plotting if
-        ## (1) !missing(prepanel) OR
-        ## (2) relation="sliced" OR
-        ## (3) aspect="xy"  :
-
-        
-        xlim.l <- xlim[1]
-        xlim.u <- xlim[2]
-        ylim.l <- ylim[1]
-        ylim.u <- ylim[2]
-        x.slice.length <- 0
-        y.slice.length <- 0
-        
-
-
-        aspr <- rep(1,nplots)
-        if (!missing(prepanel) || scales.x$relation=="sliced" ||
-            scales.y$relation=="sliced" || aspect == "xy")
-        {
-            warning("are you sure you want to do this ?")
-            for(count in 1:nplots)
-                if(!any(cond.max.level-cond.current.level<0)) # should be always TRUE, safety check
-                {
-                    
                     id <- !id.na
-                    for(i in 1:length(cond)) {
+                    for(i in 1:number.of.cond)
+                    {
+                        var <- cond[[i]]
                         id <- id &
-                        if (is.shingle(cond[[i]]))
-                            ((cond[[i]]$x >=
-                              cond[[i]]$intervals[cond.current.level[i], 1])
-                             & (cond[[i]]$x <=
-                                cond[[i]]$intervals[cond.current.level[i], 2]))
-                        else (as.numeric(cond[[i]]) == cond.current.level[i])
+                        if (is.shingle(var))
+                            ((var$x >=
+                              var$int[cond.current.level[i], 1])
+                             & (var$x <=
+                                var$int[cond.current.level[i], 2]))
+                        else (as.numeric(var) == cond.current.level[i])
                     }
 
-
-                    if(any(id)) {
-
-                        if (is.f.y) {
-                            panel.x <- x[id]
-                            panel.y <- as.numeric(y[id])
+                    if (is.f.y) 
+                        foo$panel.args[[panel.number]] <-
+                            list(x = x[id],
+                                 y = as.numeric(y[id]))
+                            
+                    else {  # shingle
+                        panel.x <- numeric(0)
+                        panel.y <- numeric(0)
+                        for (k in 1:num.l.y) {
+                            tid <- id & (y$x >= y$int[k,1]) & (y$x <= y$int[k,2])
+                            panel.x <- c(panel.x, x[tid])
+                            panel.y <- c(panel.y, rep(k,length(tid[tid])))
                         }
-                        else {  # shingle
-                            panel.x <- numeric(0)
-                            panel.y <- numeric(0)
-                            for (k in 1:num.l.y) {
-                                tid <- id & (y$x >= y$int[k,1]) & (y$x <= y$int[k,2])
-                                panel.x <- c(panel.x, x[tid])
-                                panel.y <- c(panel.y, rep(k,length(tid[tid])))
-                            }
-                        }
-                        
-
-                        tem <- list(xlim = range(panel.x),
-                                    ylim = range(panel.y),
-                                    dx = diff(range(panel.x)),
-                                    dy = diff(range(panel.y)))
-                        
-                        if(!missing(prepanel)) {
-                            tem1 <- prepanel(x=x[id],y=y[id])
-                            tem[names(tem1)] <- tem1
-                        }
-                        
-                        xlim.l <- min(xlim.l, tem$xlim[1])
-                        xlim.u <- max(xlim.u, tem$xlim[2])
-                        ## ylim.l <- min(ylim.l, tem$ylim[1])
-                        ## ylim.u <- max(ylim.u, tem$ylim[2])
-                        x.slice.length <- max(x.slice.length, diff(tem$xlim))
-                        ## y.slice.length <- max(y.slice.length, diff(tem$ylim))
-                        
-                        aspr[count] <- banking(tem$dx, tem$dy)
+                        foo$panel.args[[panel.number]] <-
+                            list(x = panel.x,
+                                 y = panel.y)
                     }
-                    
-                    
-                    cond.current.level <- cupdate(cond.current.level,
-                                                  cond.max.level)
-                    
+                    if (subscripts)
+                        foo$panel.args[[panel.number]]$subscripts <-
+                            subscr[id]
+
+                    cond.current.level <-
+                        cupdate(cond.current.level,
+                                cond.max.level)
                 }
-            
-            
-        }
-        
 
-        ## check whether xlim / scales$limits was specified, don't change in that case,
-        ## unless, of course,  relation="sliced" or "free"  (see xlim.specified etc above)
-        if (scales.x$relation == "same" && !xlim.specified)
-            scales.x$limits <- extend.limits(c(xlim.l,xlim.u))
-        else x.slice.length <- x.slice.length * 1.14
-        ## this is actually irrelevant for relation="free"
-        ## All this doesn't make sense for ylim, so...
-        scales.y$limits <- ylim
-        
-
-        foo$x.relation.same <- (scales.x$relation == "same")
-        foo$y.relation.same <- (scales.y$relation == "same")
-
-        if(foo$x.relation.same)
-            foo$x.scales <- list(limits = scales.x$limits,
-                                 at = scales.x$at,
-                                 labels = scales.x$labels,
-                                 tck = scales.x$tck,
-                                 col = scales.x$col,
-                                 cex = scales.x$cex,
-                                 rot = scales.x$rot,
-                                 tick.number = scales.x$tick.number)
-
-        if(foo$y.relation.same)
-            foo$y.scales <- list(limits = scales.y$limits,
-                                 at = scales.y$at,
-                                 labels = scales.y$labels,
-                                 tck = scales.y$tck,
-                                 col = scales.y$col,
-                                 cex = scales.y$cex,
-                                 rot = scales.y$rot,
-                                 tick.number = scales.y$tick.number)
-
-        ## aspect.fill <- if (aspect=="fill") TRUE else FALSE (done above)
-        foo$aspect.ratio <-
-            if (aspect == "fill") 1
-            else if (aspect == "xy") {
-                warning("behaviour for aspect=xy undefined")
-                median(aspr)
-            }                           # not banking, just fooling around
-            else aspect[1]
-        
-        if(missing(layout)) {
-            layout <- c(0,1,1)
-            if (number.of.cond==1) layout[2] <- nplots
-            else {
-                layout[1] <- cond.max.level[1]
-                layout[2] <- cond.max.level[2]
+                panel.number <- panel.number + 1
             }
-            skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
-            plots.per.page <- length(skip) - length(skip[skip])
-            layout[3] <- 1 + ceiling(nplots/plots.per.page)
-        }
-        else if (length(layout)==1)
-            stop("layout must have at least 2 elements")
-        else if (length(layout)==2)
-        {
-            if(all(layout<1))
-                stop("at least one element of layout must be positive")
-            else if (layout[2]==0) stop("inadmissible value of layout")
 
-            skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
-            plots.per.page <- length(skip) - length(skip[skip])
-            layout[3] <- 1 + ceiling(nplots/plots.per.page)
-        }
-        else if (length(layout)==3) {
-            if(layout[1]<0||layout[2]<1||layout[3]<1)
-                stop("invalid value for layout")
-            
-            skip <- rep(skip, length = layout[1] * layout[2])
-        }
+    foo <- c(foo,
+             limits.and.aspect(prepanel.default.bwplot,
+                               prepanel = prepanel, 
+                               have.xlim = have.xlim, xlim = xlim, 
+                               have.ylim = have.ylim, ylim = ylim, 
+                               x.relation = foo$x.scales$relation,
+                               y.relation = foo$y.scales$relation,
+                               panel.args.common = foo$panel.args.common,
+                               panel.args = foo$panel.args,
+                               aspect = aspect,
+                               nplots = nplots,
+                               num.l.y = num.l.y))
 
-        plots.per.page <- max(layout[1] * layout[2], layout[2])
-        number.of.pages <- layout[3]
-        
-        foo$layout[1] <- layout[1]
-        foo$layout[2] <- layout[2]
-        foo$layout[3] <- layout[3]
-        foo$x.alternating <- scales.x$alternating
-        foo$y.alternating <- scales.y$alternating
-
-    }
-    else
-    {
-        ##aspect.fill <- if (aspect=="fill") TRUE else FALSE
-        if (aspect=="xy") warning("behaviour for aspect=xy undefined")
-        
-        id <- !id.na
-        if(missing(xlim)) xlim <- extend.limits(range(x[is.finite(x[id])]))
-        if(missing(ylim)) {
-            temp <- .5*(box.ratio+2)/(box.ratio+1)
-            num.l.y <- if (is.f.y) length(levels(y)) else nrow(y$intervals)
-            ylim <- c(1-temp, num.l.y + temp)
-        }
-        
-
-        scales.x <- list(draw = TRUE,
-                         alternating = 1,
-                         limits = xlim,
-                         tck = 1, # factor affecting length of ticks 
-                         cex = 1,
-                         rot = F,
-                         tick.number = 5,
-                         at = F, labels = F, col = F, log = F)
-
-
-
-        scales.y <- list(draw = TRUE,
-                         alternating = 1,
-                         limits = ylim,
-                         tck = 1, # factor affecting length of ticks 
-                         cex = 1,
-                         rot = 0,
-                         tick.number = 5,
-                         at = 1:num.l.y,
-                         labels = if (is.f.y) levels(y) else as.character(1:num.l.y),
-                         col = F, log = F)
-        
-        if(!missing(scales)) {
-            scales.x[names(scales)] <- scales
-            scales.y[names(scales)] <- scales
-            if ("x" %in% names(scales)) scales.x[names(scales$x)] <- scales$x
-            if ("y" %in% names(scales)) scales.y[names(scales$y)] <- scales$y
-        }
-        
-
-        if (!missing(prepanel) || aspect == "xy")
-        {
-            warning("are you sure you want to do this ?")
-
-            id <- !id.na
-            if(any(id)) {
-                if (is.f.y) {
-                    panel.x <- x[id]
-                    panel.y <- as.numeric(y[id])
-                }
-                else {  # shingle
-                    panel.x <- numeric(0)
-                    panel.y <- numeric(0)
-                    for (k in 1:num.l.y) {
-                        tid <- id & (y$x >= y$int[k,1]) & (y$x <= y$int[k,2])
-                        panel.x <- c(panel.x, x[tid])
-                        panel.y <- c(panel.y, rep(k,length(tid[tid])))
-                    }
-                }
-
-
-                
-                tem <- list(xlim = range(panel.x),
-                            ylim = range(panel.y),
-                            dx = diff(range(panel.x)),
-                            dy = diff(range(panel.y)))
-                
-                if(!missing(prepanel)) {
-                    tem1 <- prepanel(x=x[id],y=y[id])
-                    tem[names(tem1)] <- tem1
-                }
-                    
-                ## banking computations should be put here ?
-                
-                scales.x$limits <- range(scales.x$limits, tem$xlim)
-                ##  scales.y$limits <- range(scales.y$limits, tem$ylim)
-                ## doesn't make sense for bwplot etc.
-                aspr <- banking(tem$dx, tem$dy)
-
-            }
-            
-        }
-
-        foo$aspect.ratio <-
-            if (aspect == "fill") 1
-            else if (aspect == "xy") aspr * diff(scales.y$limits) / diff(scales.x$limits)
-            else aspect[1]
-
-
-
-        foo$x.scales <- list(limits = scales.x$limits,
-                             at = scales.x$at,
-                             labels = scales.x$labels,
-                             tck = scales.x$tck,
-                             col = scales.x$col,
-                             cex = scales.x$cex,
-                             rot = scales.x$rot,
-                             tick.number = scales.x$tick.number)
-
-        foo$y.scales <- list(limits = scales.y$limits,
-                             at = scales.y$at,
-                             labels = scales.y$labels,
-                             tck = scales.y$tck,
-                             col = scales.y$col,
-                             cex = scales.y$cex,
-                             rot = scales.y$rot,
-                             tick.number = scales.y$tick.number)
-        
-    }
-    
-
-    if (is.logical(scales.x$alternating))
-        scales.x$alternating <- if (scales.x$alternating) c(1,2) else 1
-
-    if (is.logical(scales.y$alternating))
-        scales.y$alternating <- if (scales.y$alternating) c(1,2) else 1
-    
-    foo$x.alternating <- scales.x$alternating
-    foo$y.alternating <- scales.y$alternating
-    foo$x.draw <- scales.x$draw
-    foo$y.draw <- scales.y$draw
-
-    
-    ## Now, to construct the argument list for each panel
-
-    
-    foo$panel.args.common <-
-        if(subscripts) list(groups = groups, box.ratio = box.ratio, ...)
-        else list(box.ratio = box.ratio, ...)
-    
-    if(number.of.cond<1)
-        if (any(id)) {
-
-            if (is.f.y) {
-                panel.x <- x[id]
-                panel.y <- as.numeric(y[id])
-                if (subscripts) panel.subscr <- subscr[id]
-            }
-            else {
-                panel.x <- numeric(0)
-                panel.y <- numeric(0)
-                if (subscripts) panel.subscr <- numeric(0)
-                for (k in 1:num.l.y) {
-                    tid <- id & (y$x >= y$int[k,1]) & (y$x <= y$int[k,2])
-                    panel.x <- c(panel.x, x[tid])
-                    panel.y <- c(panel.y, rep(k,length(tid[tid])))
-                    if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
-                }
-            }
-            
-            foo$panel.args <-
-                if(subscripts) list(x=panel.x, y=panel.y, 
-                                    subscripts=panel.subscr)
-                else list(x = panel.x, y = panel.y)
-            
-
-        }
-        else foo$panel.args <- 
-            if(subscripts) list(x=numeric(0),y=numeric(0), subscripts=numeric(0))
-            else list(x=numeric(0),y=numeric(0)) 
-    
-    
-    else {
-
-        npanels <- plots.per.page * layout[3]
-                                        # upper bound for number of panels
-        foo$panel.args <- list(1:nplots)
-        cond.current.level <- rep(1,number.of.cond)
-
-        if (!foo$x.relation.same)           # this means that axes will be different 
-            foo$x.scales <- list(1:nplots)  # for EACH panel and consequently,
-        if (!foo$y.relation.same)           # foo$x.scales must be a list parallel to
-            foo$y.scales <- list(1:nplots)  # foo$panel.args.
-        
-        panel.number <- 1 # this is a counter for panel number
-        
-        for(page.number in 1:number.of.pages)
-            if(!any(cond.max.level-cond.current.level<0)) {
-                for(plot in 1:plots.per.page) {
-                    
-                    
-                    if(skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                    else if(!any(cond.max.level-cond.current.level<0)) {
-                        
-                        id <- !id.na
-                        for(i in 1:length(cond)) {
-                            id <- id &
-                            if (is.shingle(cond[[i]]))
-                                ((cond[[i]]$x >=
-                                  cond[[i]]$intervals[cond.current.level[i], 1])
-                                 & (cond[[i]]$x <=
-                                    cond[[i]]$intervals[cond.current.level[i], 2]))
-                            else (as.numeric(cond[[i]]) == cond.current.level[i])
-                        }
-
-
-
-                        xscale <- 
-                            if(scales.x$relation == "same") scales.x$limits
-                            else if (scales.x$relation == "sliced")
-                            {
-                                if(!missing(prepanel))
-                                    extend.limits(
-                                                  if (any(id)) prepanel(x=x[id],y=y[id])$xlim
-                                                  else scales.x$limits,
-                                                  length=x.slice.length)
-                                
-                                else extend.limits(
-                                                   if (any(id)) range(x[id])
-                                                   else scales.x$limits,
-                                                   length=x.slice.length)
-                                
-                            }
-                            else #if relation=free
-                            { 
-                                if(!missing(prepanel))
-                                    extend.limits(
-                                                  if (any(id)) prepanel(x=x[id],y=y[id])$xlim
-                                                  else scales.x$limits)
-                                
-                                else extend.limits(
-                                                   if (any(id)) range(x[id])
-                                                   else scales.x$limits)
-                                
-                            }
-                        
-                        if(!foo$x.relation.same) 
-                            foo$x.scales[[panel.number]] <-
-                                list(limits = xscale,
-                                     at = scales.x$at,
-                                     labels = scales.x$labels,
-                                     tck = scales.x$tck,
-                                     col = scales.x$col,
-                                     cex = scales.x$cex,
-                                     rot = scales.x$rot,
-                                     tick.number = scales.x$tick.number)
-
-                        
-                        if (is.f.y) {
-                            panel.x <- x[id]
-                            panel.y <- as.numeric(y[id])
-                            if (subscripts) panel.subscr <- subscr[id]
-                        }
-                        else {  # shingle
-                            panel.x <- numeric(0)
-                            panel.y <- numeric(0)
-                            if (subscripts) panel.subscr <- numeric(0)
-                            for (k in 1:num.l.y) {
-                                tid <- id & (y$x >= y$int[k,1]) & (y$x <= y$int[k,2])
-                                panel.x <- c(panel.x, x[tid])
-                                panel.y <- c(panel.y, rep(k,length(tid[tid])))
-                                if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
-                            }
-                        }
-                        
-                        
-                        
-                        yscale <- 
-                            if(scales.y$relation == "same") scales.y$limits
-                            else if (scales.y$relation == "sliced") {
-                                if(!missing(prepanel))
-                                    extend.limits(
-                                                  if (any(id)) prepanel(x=panel.x,
-                                                                        y=panel.y)$ylim
-                                                  else scales.y$limits,
-                                                  length=y.slice.length)
-                                
-                                else extend.limits(
-                                                   if (any(id)) range(panel.y)
-                                                   else scales.y$limits,
-                                                   length=y.slice.length)
-                            }
-                            else  #if relation=free
-                            {
-                                if(!missing(prepanel))
-                                    extend.limits(
-                                                  if (any(id)) prepanel(x=panel.x,
-                                                                        y=panel.y)$ylim
-                                                  else scales.y$limits)
-                                                  
-                                else extend.limits(
-                                                   if (any(id)) range(panel.y)
-                                                   else scales.y$limits)
-
-                            }
-
-                        if(!foo$y.relation.same) 
-                            foo$y.scales[[panel.number]] <-
-                                list(limits = yscale,
-                                     at = scales.y$at,
-                                     labels = scales.y$labels,
-                                     tck = scales.y$tck,
-                                     col = scales.y$col,
-                                     cex = scales.y$cex,
-                                     rot = scales.y$rot,
-                                     tick.number = scales.y$tick.number)
-                        
-
-                        id <- ((panel.x>=xscale[1]) & (panel.x<=xscale[2]) &
-                               (panel.y>=yscale[1]) & (panel.y<=yscale[2]))
-                        ## This is a new id, the old one is not needed any more
-
-                        foo$panel.args[[panel.number]] <-                             
-                            if(subscripts) list(x=panel.x[id], y=panel.y[id],
-                                                subscripts=panel.subscr[id])
-                            else list(x = panel.x[id], y = panel.y[id])
-                        
-                        cond.current.level <- cupdate(cond.current.level,
-                                                      cond.max.level)
-                        
-                        
-                    }
-                    
-                    panel.number <- panel.number + 1
-                    
-                }
-            }
-    }
-    
     class(foo) <- "trellis"
     foo
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

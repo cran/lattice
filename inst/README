@@ -1,0 +1,93 @@
+  
+
+Changes in lattice 0.3
+======================
+
+
+The overall internal structure of the lattice library has changed
+considerably in verion 0.3, in particular making it far more readable
+and debuggable. However, this also means that some code which had
+worked with the earlier version might now fail. (This is just a
+discalimer, there are no known instances.)
+
+New Features:
+============
+
+ o (Almost) full support for the `key' argument for drawing legends
+
+ o Support for log scales
+
+ o levelplot (but no contourplot. In particular, the contour = T option
+   in levelplot does not work)
+
+ o tmd now works on the output from qq 
+
+ o panel function names can now be quoted strings
+
+ o scales and its x and y components can now be just a character
+   string like "free" or "sliced", i.e., the relation tag can be
+   omitted. 
+
+ o extension to the `type' argument in panel.xyplot and
+   panel.superpose to allow stair-like and histogram-like plots
+   (type="s" and "h" in plot), as well as loess smooths (using
+   the loess.smooth function in the modreg library). Also, more
+   than one of these options can now be used concurrently. This
+   allows, for example, a grouped plot where a grouping variable
+   can be used to fit separate loess curves along with the scatter
+   for each group. See example(xyplot)
+
+ o wrappers around grid functions with API-s of traditional graphics
+   functions to help port existing S-Plus Trellis code. See below for
+   details.
+
+ o changes in print.trellis to allow mixing of Lattice and usual R 
+   graphics. See below for details.
+
+
+Porting S-Plus Trellis code to Lattice
+======================================
+
+One of the basic problems in porting existing Trellis code to R is the
+unusability of the base R functions like lines and points inside panel
+functions. To help make the changes more transparently, lattice now
+includes several wrappers around grid functions that provide an API
+similar to the corresponding base R functions. The list currently
+includes lpoints, llines, ltext and lsegments.
+
+Using Lattice and base R graphics concurrently
+==============================================
+
+Grid graphics normally do not mix with usual R graphics. However,
+end-users typically might want to use lattice functions concurrently
+with traditional R graphics. To allow this without intermittent calls
+to grid.stop() and grid.start(), print.trellis (which ultimately does
+all the plotting in lattice) now tries to preserve the state of the
+device on which it plots. By default, library(lattice) opens a device
+in grid enabled mode. It can be reverted to non grid mode by
+grid.stop(). Subsequently, both Lattice functions and traditional
+graphics functions can be used. Devices opened by trellis.device()
+start in non-grid mode, unless grid.start() is called.
+
+
+
+Still Missing
+=============
+
+ o contourplot, wireframe, cloud (partially implemented) and of course,
+   piechart
+
+ o Some components of scale (I haven't found a full list, so
+   can't say exactly which are missing)
+
+ o Fonts 
+
+ o axis labels badly implemented, no checking for overlaps.
+
+
+
+
+
+
+
+

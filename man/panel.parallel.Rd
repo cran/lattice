@@ -5,13 +5,13 @@
   This is the default panel function for \code{parallel}.
 }
 \usage{
-panel.parallel(z, subscripts, col, lty, ...)
+panel.parallel(z, subscripts, col, lwd, lty, ...)
 }
 \arguments{
   \item{z}{ The data frame used for the plot.}
   \item{subscripts}{ The indices of the rows of \code{z} that are to be
     displyed in this panel.}
-  \item{col, lty}{graphical parameters (chosen by default as the settings
+  \item{col, lwd, lty}{graphical parameters (chosen by default as the settings
     for \code{superpose.line}).}
   \item{\dots}{other arguments}
 }

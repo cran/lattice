@@ -3,8 +3,17 @@
 rfs <-
     function(model, layout = c(2,1), xlab = "f-value", ylab = NULL,
              panel = function(...) {panel.grid(); panel.qqmath(...)},
-             ...)
+             prepanel = NULL, strip = TRUE, ...)
 {
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
     fitval <- fitted.values(model) - mean(fitted.values(model))
     resids <- residuals(model)
     
@@ -16,5 +25,6 @@ rfs <-
                  rep("Residuals", nr)))
 
     qqmath(~y|f, data = data, layout = layout, xlab = xlab, ylab = ylab,
-           distribution = qunif, panel = panel, ...)
+           distribution = qunif, panel = panel,
+           prepanel = prepanel, strip = strip, ...)
 }

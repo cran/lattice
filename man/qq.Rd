@@ -5,7 +5,10 @@
   Quantile-Quantile plots for comparing two Distributions
 }
 \synopsis{
-qq(formula, aspect="fill", as.table=FALSE, between=list(x = 0, y = 0), data, groups=NULL, key=NULL, layout, main=NULL, page=NULL, panel=panel.qq, par.strip.text, prepanel, scales, skip=FALSE, strip=strip.default, sub=NULL, subscripts=!missing(groups), subset, xlab, xlim, ylab, ylim, ...)
+qq(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
+    panel = panel.qq, prepanel = NULL, scales = list(), strip = TRUE, 
+    groups = NULL, xlab, xlim, ylab, ylim, f.value = ppoints, 
+    ..., subscripts = !is.null(groups), subset = TRUE)
 }
 \usage{
 qq(formula, f.value = ppoints, ...)

@@ -19,17 +19,18 @@
 ### MA 02111-1307, USA
 
 
+
+## not quite what it should be
 plot.shingle <-
-    function(x, col = bar.fill$col)
+    function(x, col = bar.fill$col, aspect = "fill", ...)
 {
 
     bar.fill <- trellis.par.get("bar.fill")
-    foo <- list(formula = NULL, 
-                fname = "plot.shingle",
-                aspect.fill = T,
-                aspect.ratio = 1,
-                as.table = F,
-                cond = NULL,
+    foo <- list(call = match.call(),
+                aspect.fill = aspect == "fill",
+                aspect.ratio = if (is.numeric(aspect)) aspect else 1,
+                as.table = FALSE,
+                condlevels = "1",
                 key = NULL,
                 layout=c(1,1,1),
                 page = NULL,
@@ -44,53 +45,59 @@ plot.shingle <-
                                   default.units = "native",
                                   gp = gpar(fill=col)) 
                 },
-                panel.args = list(),
+                panel.args = list(list()),
                 panel.args.common = list(x=x$int, col = col),
                 par.strip.text = trellis.par.get("add.text"),
-                skip = F,
-                strip = strip.default,
+                skip = FALSE,
+                strip = FALSE,
                 main = NULL,
                 sub = NULL,
                 xlab = list(label = "Range", col = "black", cex = 1, font =1),
                 ylab = list(label = "Panel", col = "black", cex = 1, font =1),
-                x.draw = TRUE,
-                y.draw = TRUE,
-                x.scales = NULL,
-                y.scales = NULL,
+                x.scales = 1,
+                y.scales = 1,
                 x.between = 0,
                 y.between = 0,
-                x.relation.same = TRUE,
-                y.relation.same = TRUE,
                 x.alternating = 1,
                 y.alternating = 1,
                 fontsize.normal = 10,
                 fontsize.small = 8)
     
     num.l.y <- nrow(x$int)
+    foo$x.limits <- extend.limits(range(x$x, x$int))
+    foo$y.limits <- extend.limits(c(1,num.l.y),
+                                  length = .5+num.l.y)
 
-    foo$x.scales <- list(limits = extend.limits(range(x$x, x$int)),
-                         at = F,
-                         labels = F,
+
+    foo$x.scales <- list(relation = "same",
+                         draw = TRUE,
+                         alternating = 1,
+                         at = FALSE,
+                         labels = FALSE,
                          tck = 1,
-                         col = F,
+                         col = FALSE,
+                         log = FALSE,
                          cex = 1,
-                         rot = F,
+                         rot = FALSE,
                          tick.number = 5)
     
-    foo$y.scales <- list(limits =
-                         extend.limits(c(1,num.l.y),
-                                       length = .5+num.l.y),
+    foo$y.scales <- list(relation = "same",
+                         draw = TRUE,
+                         alternating = 1,
                          at = 1:num.l.y,
-                         labels = F,
+                         labels = FALSE,
                          tck = 1,
-                         col = F,
+                         col = FALSE,
+                         log = FALSE,
                          cex = 1,
-                         rot = F,
+                         rot = FALSE,
                          tick.number = num.l.y)
     
     class(foo) <- "trellis"
     foo
     
 }
+
+
 
 

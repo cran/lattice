@@ -1,11 +1,17 @@
 \name{stripplot}
 \title{Strip Plots}
 \synopsis{
-stripplot(formula, panel, data, jitter = F, factor = .5,
-          box.ratio, ...)
+stripplot(formula, data = parent.frame(), panel = "panel.stripplot", 
+    prepanel = NULL, strip = TRUE, jitter = FALSE, factor = 0.5, 
+    box.ratio = if (jitter) 1 else 0, groups = NULL, ..., subset = TRUE)  
 }
 \usage{
-stripplot(formula, jitter = F, factor = .5, ...)
+stripplot(formula,
+          data = parent.frame(),
+          jitter = FALSE,
+          factor = .5,
+          box.ratio = if (jitter) 1 else 0,
+          ...)
 }
 \description{
   Draw Strip plots (One dimensional scatter plots)
@@ -21,9 +27,12 @@ stripplot(formula, jitter = F, factor = .5, ...)
     be either factors or shingles. \code{y} can be a factor or a
     shingle. If \code{y} is a character vector, it will be coerced into
     a factor; if it is numeric, it will be coerced to a shingle.}
+  \item{data}{ optional data frame in which the elements in the formula
+    and some other arguments are to be evaluated}
   \item{jitter}{ logical specifying whether the values should be jittered
     by adding a random noise.}
   \item{factor}{ numeric controlling amount of jitter.}
+  \item{box.ratio}{ as in \code{bwplot}}
   \item{\dots}{other arguments}
 }
 \details{

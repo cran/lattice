@@ -6,7 +6,7 @@
   some of its components.
 }
 \usage{
-\method{update}{trellis}(foo,
+\method{update}{trellis}(object,
        aspect,
        as.table,
        between,
@@ -23,10 +23,11 @@
        xlab,
        xlim,
        ylab,
-       ylim)
+       ylim,
+       ...)
 }
 \arguments{
-  \item{foo}{ The object to be updated, of class \code{trellis}. }
+  \item{object}{ The object to be updated, of class \code{trellis}. }
 
   The following arguments are described in \code{trellis.args}. Not all
   arguments accepted by a Lattice function are processed by
@@ -49,6 +50,7 @@
   \item{xlim}{ As described in \code{trellis.args} }
   \item{ylab}{ As described in \code{trellis.args} }
   \item{ylim}{ As described in \code{trellis.args} }
+  \item{\dots}{ extra arguments, ignored}
 }
 \value{
   An object of class \code{trellis}, by default plotted by

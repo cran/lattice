@@ -5,11 +5,12 @@
   This is the default panel function for \code{histogram}.
 }
 \usage{
-panel.histogram(x, breaks, type, col, ...)
+panel.histogram(x, breaks, equal.widths, type, col, ...)
 }
 \arguments{
   \item{x}{ The data points for which the histogram is to be drawn} 
   \item{breaks}{ The breakpoints for the histogram}
+  \item{equal.widths}{ logical used when \code{breaks==NULL} }
   \item{type}{ Type of histogram, possible values being ``percent'',
     ``density'' and ``count''}
   \item{col}{ Color of bars (NULL for empty), by default

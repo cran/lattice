@@ -2,21 +2,27 @@ Lattice                  Lattice Graphics
 banking                  Banking
 barchart                 Bar Graphs
 bwplot                   Box and Whisker Plots
+cloud                    3d Scatter Plot --- not functional yet
 densityplot              Kernel Probability Density Plots
 dotplot                  Dot Plots
+draw.colorkey            Produce a Colorkey for levelplot
+draw.key                 Produce a Legend or Key
 histogram                Histograms
 lattice-Internal         Miscellaneous Functions used within Lattice
 latticeParseFormula      Parse Trellis formula
+levelplot                Level Plots
+llines                   Lattice Replacements of base graphics functions
 oneway                   Fit One-way Model
 panel.barchart           Default Panel Functions for barchart
 panel.bwplot             Default Panel Function for bwplot
+panel.cloud              Default Panel Function for cloud
 panel.densityplot        Default Panel Function for densityplot
 panel.dotplot            Default Panel Functions for dotplot
 panel.functions          Useful Panel Functions
 panel.histogram          Default Panel Function for histogram
+panel.levelplot          Default Panel Function for levelplot
 panel.pairs              Default Superpanel Function for splom
 panel.parallel           Default Panel Function for parallel
-panel.qq                 Panel function for qq
 panel.qqmathline         Useful panel function with qqmath
 panel.stripplot          Default Panel Function for stripplot
 panel.superpose          Panel Function for Display Marked by groups
@@ -33,6 +39,7 @@ splom                    Scatter Plot Matrices
 strip.default            Default Trellis strip function
 stripplot                Strip Plots
 tmd                      Tukey Mean-Difference Plot
+trellis.3d.args          Arguments to 3d Trellis Functions
 trellis.args             Trellis Arguments
 trellis.datasets         Data Sets in the Lattice library
 trellis.device           Initializing Trellis Displays

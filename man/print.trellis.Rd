@@ -1,14 +1,14 @@
 \name{print.trellis}
 \title{Print Trellis Objects}
 \usage{
-\method{print}{trellis}(foo, position, split, more = F)
+\method{print}{trellis}(x, position, split, more = F, ...)
 }
 \description{
   Print (plot) a trellis object.
 }
 \alias{print.trellis}
 \arguments{
-  \item{foo}{ The object to be plotted, of class ``trellis''}
+  \item{x}{ The object to be plotted, of class ``trellis''}
   \item{position}{ a vector of 4 numbers, typically c(xmin, ymin, xmax,
     ymax) that give the lower-left and upper-right corners of a
     rectangle in which the Trellis plot of x is to be positioned. The
@@ -22,6 +22,7 @@
   \item{more}{ A logical specifying whether more plots will follow on
     this page.
   }
+  \item{\dots}{extra arguments, ignored}
 }
 \details{
   This is the default print method for objects of type trellis, produced
@@ -33,7 +34,7 @@
 \note{ Trying to position multipage displays will mess things up.
   }
 \seealso{
-  \code{\link{grid.newpage}}, \code{\link{Lattice}}
+  \code{\link[grid]{grid.newpage}}, \code{\link{Lattice}}
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{

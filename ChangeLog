@@ -1,4 +1,31 @@
-2001-05-06  Deepayan Sarkar  <deepayan@franz.stat.wisc.edu>
+2001-08-08  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/levelplot.R: Implemented preliminary levelplot (no contourplot
+	though). Also a version of cloud, though no support yet for nice
+	axes/arrows and stuff (does allow panel.superpose though). Again, 
+	no plans of implementing wireframe in the near future.
+
+2001-08-08  Saikat DebRoy  <saikat@stat.wisc.edu>
+
+	* R/common.R:
+	Added support for 3d formulae in latticeParseFormula
+
+2001-07-26  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/Lattice.Rd: Included llines, lpoints etc for easy adaptation
+	of existing Trellis code. qq() changed to as it should be, should
+	now work with tmd().
+
+2001-07-12  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/Lattice.Rd: Major redesigning of existing functions. Mainly 
+	by collecting common code into a few functions and hence 
+	making individual functions easier to handle. Code should now
+	be fairly readable. Also, more or less good support for log scales
+	and key (I hope). Not much checking done yet, there may be bugs.
+	Documentation might be out of step at places.
+
+2001-05-06  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* R/tmd.R: Name changed from trellis to Lattice. Prelilminary
 	changes to account for change of Lattice to Grid made. New
@@ -14,7 +41,7 @@
 	remain that way), qqmath, qq, timeplot(?), contourplot,
 	levelplot, wireframe and cloud). Cleanup, documentation etc.
 
-2001-03-22  Deepayan Sarkar  <deepayan@franz.stat.wisc.edu>
+2001-03-22  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* R/trellis.R: added splom and some brief documentation for splom
 

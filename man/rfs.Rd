@@ -6,7 +6,8 @@
   any object that has methods for fitted values and residuals. 
 }
 \synopsis{
-rfs(model, layout=c(2, 1), xlab="f-value", ylab=NULL, panel, ...)
+rfs(model, layout=c(2, 1), xlab="f-value", ylab=NULL, panel,
+    prepanel, strip, ...)
 }
 \usage{
 rfs(model, layout=c(2, 1), xlab="f-value", ...)

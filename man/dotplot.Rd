@@ -1,9 +1,13 @@
 \name{dotplot}
 \title{Dot Plots}
+\synopsis{
+dotplot(formula, data = parent.frame(), panel = "panel.dotplot", 
+    prepanel = NULL, strip = TRUE, groups = NULL, ..., subset = TRUE)  
+}
 \usage{
 dotplot(formula,
-        panel = panel.dtplot,
-        data = sys.frame(sys.parent()), 
+        data = parent.frame(), 
+        panel = panel.dotplot,
         \dots)
 }
 \description{
@@ -56,8 +60,13 @@ dotplot(variety ~ yield | site, data = barley, groups = year,
                          lty = dot.line$lty)
             panel.superpose(x, y, subscripts, ...)
         },
+        key = list(space="right", transparent = T,
+                   points=list(pch=trellis.par.get("superpose.symbol")$pch[1:2],
+                               col=trellis.par.get("superpose.symbol")$col[1:2]),
+                   text=list(c("1932", "1931"))),
         xlab = "Barley Yield (bushels/acre) ",
         aspect=0.5, layout = c(1,6), ylab=NULL)
 }
 \keyword{hplot}
+
 

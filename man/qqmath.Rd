@@ -5,12 +5,11 @@
   Quantile-Quantile plot of a sample and a theoretical distribution
 }
 \synopsis{
-qqmath(formula, f.value = ppoints, distribution = qnorm, aspect = "fill", 
-    as.table = FALSE, between = list(x = 0, y = 0), data, groups = NULL, 
-    key = NULL, layout, main = NULL, page = NULL, panel = panel.xyplot, 
-    par.strip.text, prepanel, scales, skip = FALSE, strip = strip.default, 
-    sub = NULL, subscripts = !missing(groups), subset, xlab, 
-    xlim, ylab, ylim, ...) 
+qqmath(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
+    panel = panel.qqmath, prepanel = NULL, scales = list(), strip = TRUE, 
+    groups = NULL, xlab, xlim, ylab, ylim, f.value = ppoints, 
+    distribution = qnorm, ..., subscripts = !is.null(groups), 
+    subset = TRUE)
 }
 \usage{
 qqmath(formula, distribution = qnorm, f.value = ppoints,...)

@@ -5,15 +5,15 @@
   Draw Kernel Density plots
 }
 \synopsis{
-densityplot(formula, aspect = "fill", as.table = FALSE, between = list(x = 0, 
-    y = 0), data, groups = NULL, key = NULL, layout, main = NULL, 
-    page = NULL, panel = panel.densityplot, par.strip.text, prepanel, 
-    scales, skip = FALSE, strip = strip.default, sub = NULL, 
-    subscripts = !missing(groups), subset, xlab, xlim, ylab, 
-    ylim, n = 50, \dots) 
+densityplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
+    panel = panel.densityplot, prepanel = NULL, scales = list(), 
+    strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, bw = NULL, 
+    adjust = NULL, kernel = NULL, window = NULL, width = NULL, 
+    give.Rkern = FALSE, n = 50, from = NULL, to = NULL, cut = NULL, 
+    na.rm = NULL, ..., subscripts = !is.null(groups), subset = TRUE)
 }
 \usage{
-densityplot(formula, n = 50, \dots)
+densityplot(formula, data, n = 50, plot.points = TRUE, ref = FALSE, \dots)
 }
 \arguments{
   \item{formula}{ A  formula of the form \code{ ~ x | g1 * g2 * \ldots}
@@ -23,6 +23,13 @@ densityplot(formula, n = 50, \dots)
     \code{x} must be numeric, and each of \code{g1,g2, \ldots} must
     be either factors or shingles.
   }
+  \item{data}{ data frame in which variables are to be evaluated.}
+  \item{n}{number of points at which density is to be evaluated}
+  \item{plot.points}{ logical specifying whether the \code{x} values
+    should be plotted.
+  }
+  \item{ref}{logical specifying whether a reference x-axis should be
+    drawn.} 
   \item{\dots}{ arguments to be passed down to the panel function, in
     turn to be passed to \code{density} (if the default panel function
     is used). 

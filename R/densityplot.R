@@ -19,628 +19,281 @@
 ### MA 02111-1307, USA
 
 
-densityplot <-
-    function(formula,
-             aspect = "fill",
-             as.table = FALSE,
-             between = list(x=0,y=0),
-             data,
-             groups = NULL,
-             key = NULL,
-             layout,
-             main = NULL,
-             page = NULL,
-             panel = panel.densityplot,
-             par.strip.text,
-             prepanel,
-             scales,
-             skip = FALSE,
-             strip = strip.default,
-             sub = NULL,
-             subscripts = !missing(groups),
-             subset,
-             xlab,
-             xlim,
-             ylab,
-             ylim,
-             n = 50,
+
+
+
+
+
+
+
+prepanel.default.densityplot <-
+    function(x,
+             darg,
              ...)
 {
-
-
-    if(all(skip)) stop("can't skip all panels !")
-
-    if (is.logical(strip) && strip) strip <- strip.default
-
-    if(missing(data)) data <- sys.frame(sys.parent())
-    form <- latticeParseFormula(formula, data)
-    cond <- form$condition
-    number.of.cond <- length(cond)
-    x <- form$right
-    
-    if(!missing(groups)) {
-        groups <- eval(substitute(groups), data)
-    }
-    
-    if("subscripts" %in% names(formals(panel))) subscripts <- TRUE
-    if(subscripts) subscr <- seq(along=x)
-
-    if(!missing(subset)) {                          # not tested yet
-        subset <- eval(substitute(subset), data)
-        x <- x[subset]
-        y <- y[subset]
-        if (subscripts) subscr <- subscr[subset]
-    }
-    if(missing(xlab)) xlab <- form$right.name
-    if(missing(ylab)) ylab <- "Density"
-    if (is.shingle(x)) stop("x cannot be a shingle")
-
-    if(!missing(between)) {
-        if (!("x" %in% names(between))) between <- list(x=0, y=between$y)
-        if (!("y" %in% names(between))) between <- list(y=0, x=between$x)
-    }
-
-    id.na <- is.na(x)
-    if (!any(!id.na)) stop("nothing to draw")
-
-    foo <- list(formula=formula,
-                fname = "densityplot",
-                aspect.fill = (aspect == "fill"),
-                aspect.ratio = 1,
-                as.table = as.table,
-                cond = NULL,
-                key = key,
-                layout=c(1,1,1),
-                page = page,
-                panel = panel,
-                panel.args = NULL,
-                panel.args.common = NULL,
-                par.strip.text = trellis.par.get("add.text"),
-                skip = skip,
-                strip = strip,
-                main = NULL,
-                sub = NULL,
-                xlab = NULL,
-                ylab = NULL,
-                x.draw = TRUE,
-                y.draw = TRUE,
-                x.scales = NULL,
-                y.scales = NULL,
-                x.between = between$x,
-                y.between = between$y,
-                x.relation.same = TRUE,  # Note: needed even when
-                y.relation.same = TRUE,  # number.of.cond == 0
-                x.alternating = c(1,2),
-                y.alternating = c(1,2),
-                fontsize.normal = 10,
-                fontsize.small = 8)
-    
-
-    if(!missing(par.strip.text))
-        foo$par.strip.text[names(par.strip.text)] <- par.strip.text
-    
-    if (!missing(main)) {
-        foo$main <- list(label = main[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(main)) foo$main[names(main)] <- main
-    }
-    
-    if (!missing(sub)) {
-        foo$sub <- list(label = sub[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(sub)) foo$sub[names(sub)] <- sub
-    }
-    
-    if(!is.null(xlab)) {
-        foo$xlab <- list(label = xlab[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(xlab)) foo$xlab[names(xlab)] <- xlab
-        if (!is.character(foo$xlab$label)) foo$xlab$label <- form$right.name
-    }
-    
-    if(!is.null(ylab)) {
-        foo$ylab <- list(label = ylab[[1]], col = "black", cex = 1, font = "unimplemented")
-        if (is.list(ylab)) foo$ylab[names(ylab)] <- ylab
-        if (!is.character(foo$ylab$label)) foo$ylab$label <- form$left.name
-    }
-    
-
-    if(number.of.cond>0)
-    {
-        
-        cond.current.level <- rep(1,number.of.cond)
-        cond.max.level <- integer(number.of.cond)
-                                        # creating the vector now,
-                                        # exact values assigned later.
-        for(i in 1:number.of.cond) {
-            
-            ## Processing the conditioning variables
-            ## There are some subtle issues involving the subset argument here.
-            
-            if (is.character(cond[[i]])) cond[[i]] <- factor(cond[[i]])
-            else if (!is.factor(cond[[i]])) cond[[i]] <- as.shingle(cond[[i]])
-
-            if(!missing(subset)) cond[[i]] <- ldrop.levels(cond[[i]], subset)
-            
-            id.na <- id.na | is.na(
-                                   if (is.shingle(cond[[i]])) cond[[i]]$x
-                                   else cond[[i]]
-                                   )
-            cond.max.level[i] <-
-                if (is.shingle(cond[[i]])) nrow(cond[[i]]$intervals)
-                else length(levels(cond[[i]]))
-        }
-
-        foo$cond <- cond
-
-
-        nplots <- 1
-        for(i in 1:number.of.cond) nplots <- nplots * cond.max.level[i]
-
-
-        ## the foll strange logical essentially says whether xlim and ylim
-        ## were specified somehow in the call. Needed later.
-
-        xlim.specified <-
-            (!missing(xlim) ||
-             ( !missing(scales) &&
-              ("limits" %in% names(scales) ||
-               ("x" %in% names(scales) && "limits" %in% names(scales$x)))))
-
-
-        ylim.specified <-
-            (!missing(ylim) ||
-             ( !missing(scales) &&
-              ("limits" %in% names(scales) ||
-               ("y" %in% names(scales) && "limits" %in% names(scales$y)))))
-
-        
-        if(missing(xlim)) xlim <- range(x[is.finite(x[!id.na])])
-        if(missing(ylim)) ylim <- c(0,0)
-
-        ## will add 7% by extend.limits() after updating this
-        ## if necessary using the prepanel function
-
-
-        xlim.l <- xlim[1]
-        xlim.u <- xlim[2]
-        ##ylim.l <- ylim[1]
-        ##ylim.u <- ylim[2]
-        x.slice.length <- 0
-        
-        aspr <- rep(1,nplots)
-        for(count in 1:nplots)
-            if(!any(cond.max.level-cond.current.level<0)) # should be always TRUE, safety check
-            {
-                
-                id <- !id.na
-                for(i in 1:length(cond)) {
-                    id <- id &
-                    if (is.shingle(cond[[i]]))
-                        ((cond[[i]]$x >=
-                          cond[[i]]$intervals[cond.current.level[i], 1])
-                         & (cond[[i]]$x <=
-                            cond[[i]]$intervals[cond.current.level[i], 2]))
-                    else (as.numeric(cond[[i]]) == cond.current.level[i])
-                }
-                
-                
-                if(any(id)) {
-
-                    h <- density(x[id], n=n, ...)
-
-                    if(!missing(prepanel))
-                        tem <- prepanel(x=x[id])
-                    else tem <- list(xlim = range(h$x),
-                                     ylim = range(h$y),
-                                     dx = 1, dy = 1)
-                        
-                    xlim.l <- min(xlim.l, tem$xlim[1])
-                    xlim.u <- max(xlim.u, tem$xlim[2])
-
-                    x.slice.length <- max(x.slice.length, diff(tem$xlim))
-
-                    if (!ylim.specified) 
-                        ylim[2] <- max(ylim[2], h$y)
-
-                    if (!xlim.specified) 
-                        xlim <- range(xlim, h$x)
-                    
-                    ##    aspr[count] <- banking(tem$dx, tem$dy)
-                }
-                
-                
-                cond.current.level <- cupdate(cond.current.level,
-                                              cond.max.level)
-                
-            }
-        
-        if (!ylim.specified) ylim  <- extend.limits(ylim)
-        if (!xlim.specified) xlim  <- extend.limits(xlim)
-        
-        scales.x <- list(relation = "same",
-                         draw = TRUE,
-                         alternating = c(1,2),
-                         limits = xlim,
-                         tck = 1, # factor affecting length of ticks 
-                         cex = 1,
-                         tick.number = 5,
-                         rot = F,
-                         at = F, labels = F, col = F, log = F)
-        
-        
-        scales.y <- list(relation = "same",
-                         draw = TRUE,
-                         alternating = c(1,2),
-                         limits = ylim,
-                         tck = 1,
-                         cex = 1,
-                         tick.number = 5,
-                         rot = F,  
-                         at = F, labels = F, col = F, log = F) 
-        
-        if(!missing(scales)) {
-            scales.x[names(scales)] <- scales
-            scales.y[names(scales)] <- scales
-            if ("x" %in% names(scales)) scales.x[names(scales$x)] <- scales$x
-            if ("y" %in% names(scales)) scales.y[names(scales$y)] <- scales$y
-        }
-
-        if (scales.y$relation == "sliced") scales.y$relation  <-  "free"
-
-
-        ## Need to go through the panels before the actual plotting if
-        ## (1) !missing(prepanel) OR
-        ## (2) relation="sliced" OR
-        ## (3) aspect="xy"  :
-
-
-        
-    
-
-        ## check whether xlim / scales$limits was specified, don't change in that case,
-        ## unless, of course,  relation="sliced" or "free"  (see xlim.specified etc above)
-        if (scales.x$relation == "same" && !xlim.specified)
-            scales.x$limits <- extend.limits(c(xlim.l,xlim.u))
-        else x.slice.length <- x.slice.length * 1.14
-        ## this is actually irrelevant for relation="free" 
-        ##if (scales.y$relation == "same" && !ylim.specified)
-        ##    scales.y$limits <- extend.limits(c(ylim.l,ylim.u))
-        ##else y.slice.length <- y.slice.length * 1.14
-   
-
-        foo$x.relation.same <- (scales.x$relation == "same")
-        foo$y.relation.same <- (scales.y$relation == "same")
-
-        if(foo$x.relation.same)
-            foo$x.scales <- list(limits = scales.x$limits,
-                                 at = scales.x$at,
-                                 labels = scales.x$labels,
-                                 tck = scales.x$tck,
-                                 col = scales.x$col,
-                                 cex = scales.x$cex,
-                                 rot = scales.x$rot,
-                                 tick.number = scales.x$tick.number)
-
-        if(foo$y.relation.same)
-            foo$y.scales <- list(limits = scales.y$limits,
-                                 at = scales.y$at,
-                                 labels = scales.y$labels,
-                                 tck = scales.y$tck,
-                                 col = scales.y$col,
-                                 cex = scales.y$cex,
-                                 rot = scales.y$rot,
-                                 tick.number = scales.y$tick.number)
-
-        ## aspect.fill <- if (aspect=="fill") TRUE else FALSE (done above)
-        foo$aspect.ratio <-
-            if (aspect == "fill") 1
-            else if (aspect == "xy") median(aspr) * 
-                (if (scales.y$relation == "sliced") slice.y.length else diff(scales.y$limits)) / 
-                (if (scales.x$relation == "sliced") slice.x.length else diff(scales.x$limits)) 
-            else aspect[1]
-        
-        if(missing(layout)) {
-            layout <- c(0,1,1)
-            if (number.of.cond==1) layout[2] <- nplots
-            else {
-                layout[1] <- cond.max.level[1]
-                layout[2] <- cond.max.level[2]
-            }
-            skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
-            plots.per.page <- length(skip) - length(skip[skip])
-            layout[3] <- 1 + ceiling(nplots/plots.per.page)
-        }
-        else if (length(layout)==1)
-            stop("layout must have at least 2 elements")
-        else if (length(layout)==2)
-        {
-            if(all(layout<1))
-                stop("at least one element of layout must be positive")
-            else if (layout[2]==0) stop("inadmissible value of layout")
-
-            skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
-            plots.per.page <- length(skip) - length(skip[skip])
-            layout[3] <- 1 + ceiling(nplots/plots.per.page)
-        }
-        else if (length(layout)==3) {
-            if(layout[1]<0||layout[2]<1||layout[3]<1)
-                stop("invalid value for layout")
-            
-            skip <- rep(skip, length = layout[1] * layout[2])
-        }
-
-        plots.per.page <- max(layout[1] * layout[2], layout[2])
-        number.of.pages <- layout[3]
-        
-        foo$layout[1] <- layout[1]
-        foo$layout[2] <- layout[2]
-        foo$layout[3] <- layout[3]
-        foo$x.alternating <- scales.x$alternating
-        foo$y.alternating <- scales.y$alternating
-
-    }
+    if (length(x)<1)
+        list(xlim = NA,
+             ylim = NA,
+             dx = NA,
+             dy = NA)
     else
     {
-        ##aspect.fill <- if (aspect=="fill") TRUE else FALSE
-        id <- !id.na
-        if (any(id)) h <- density(x[id], n=n, ...)
-
-        if(missing(xlim)) xlim <- extend.limits(range(h$x, x[is.finite(x[id])]))
-        if(missing(ylim)) ylim <- extend.limits(c(0, max(h$y)))
-        
-        scales.x <- list(draw = TRUE,
-                         alternating = 1,
-                         limits = xlim,
-                         tck = 1, # factor affecting length of ticks 
-                         cex = 1,
-                         rot = F,
-                         tick.number = 5,
-                         at = F, labels = F, col = F, log = F)
-        
-        scales.y <- list(draw = TRUE,
-                         alternating = 1,
-                         limits = ylim,
-                         tck = 1, # factor affecting length of ticks 
-                         cex = 1,
-                         rot = F,
-                         tick.number = 5,
-                         at = F, labels = F, col = F, log = F)
-        
-        if(!missing(scales)) {
-            scales.x[names(scales)] <- scales
-            scales.y[names(scales)] <- scales
-            if ("x" %in% names(scales)) scales.x[names(scales$x)] <- scales$x
-            if ("y" %in% names(scales)) scales.y[names(scales$y)] <- scales$y
-        }
-
-
-        if (!missing(prepanel) || aspect == "xy")
-        {
-            
-            id <- !id.na
-            
-            if(any(id)) {
-                if(!missing(prepanel))
-                    tem <- prepanel(x=x[id],y=y[id])
-                else { # banking
-                    tem <- list(xlim = range(x[id]),
-                                c(0,0),
-                                dx = 1,
-                                dy = 1)
-                }
-                
-                scales.x$limits <- range(scales.x$limits, tem$xlim)
-                scales.y$limits <- range(scales.y$limits, tem$ylim)
-                
-                aspr <- banking(tem$dx, tem$dy)
-                
-            }
-            
-        }
-        
-
-        foo$aspect.ratio <-
-            if (aspect == "fill") 1
-            else if (aspect == "xy") aspr * diff(scales.y$limits) / diff(scales.x$limits)
-            else aspect[1]
-        
-        foo$x.scales <- list(limits = scales.x$limits,
-                             at = scales.x$at,
-                             labels = scales.x$labels,
-                             tck = scales.x$tck,
-                             col = scales.x$col,
-                             cex = scales.x$cex,
-                             rot = scales.x$rot,
-                             tick.number = scales.x$tick.number)
-
-        foo$y.scales <- list(limits = scales.y$limits,
-                             at = scales.y$at,
-                             labels = scales.y$labels,
-                             tck = scales.y$tck,
-                             col = scales.y$col,
-                             cex = scales.y$cex,
-                             rot = scales.y$rot,
-                             tick.number = scales.y$tick.number)
-
+        h <- do.call("density", c(list(x=x), darg))
+        list(xlim = range(h$x),
+             ylim = range(h$y),
+             dx = diff(h$x), dy = diff(h$y))
     }
+}
 
 
-    if (is.logical(scales.x$alternating))
-        scales.x$alternating <- if (scales.x$alternating) c(1,2) else 1
-    
-    if (is.logical(scales.y$alternating))
-        scales.y$alternating <- if (scales.y$alternating) c(1,2) else 1
-    
-    foo$x.alternating <- scales.x$alternating
-    foo$y.alternating <- scales.y$alternating
-    foo$x.draw <- scales.x$draw
-    foo$y.draw <- scales.y$draw
-    
-    
-    ## Now, to construct the argument list for each panel
 
-    
-    foo$panel.args.common <-
-        if(subscripts) list(groups = groups, n=n, ...)
-        else list(n=n, ...)
-    
-    if(number.of.cond<1) {
 
-        foo$panel.args <- 
-            if(subscripts) list(x = x[id],
-                                subscripts=subscr[id])
-            else list(x = x[id])
-
+panel.densityplot <-
+    function(x,
+             darg,
+             plot.points = TRUE,
+             ref = FALSE,
+             ...)
+{
+    if (ref) {
+        reference.line <- trellis.par.get("reference.line")
+        panel.abline(h=0,
+                     col = reference.line$col,
+                     lty = reference.line$lty,
+                     lwd = reference.line$lwd)
     }
-    
-    else {
-
-        npanels <- plots.per.page * layout[3]
-                                        # upper bound for number of panels
-        foo$panel.args <- list(1:nplots)
-        cond.current.level <- rep(1,number.of.cond)
-
-        if (!foo$x.relation.same)           # this means that axes will be different for EACH panel
-            foo$x.scales <- list(1:nplots)  # and consequently, foo$x.scales must be a list parallel to
-        if (!foo$y.relation.same)           # foo$panel.args.
-            foo$y.scales <- list(1:nplots)
-        
-        panel.number <- 1 # this is a counter for panel number
-        
-        for(page.number in 1:number.of.pages)
-            if(!any(cond.max.level-cond.current.level<0)) {
-                for(plot in 1:plots.per.page) {
-
-                    
-                    if(skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                    else if(!any(cond.max.level-cond.current.level<0)) {
-                        
-                        id <- !id.na
-                        for(i in 1:length(cond)) {
-                            id <- id &
-                            if (is.shingle(cond[[i]]))
-                                ((cond[[i]]$x >=
-                                  cond[[i]]$intervals[cond.current.level[i], 1])
-                                 & (cond[[i]]$x <=
-                                    cond[[i]]$intervals[cond.current.level[i], 2]))
-                            else (as.numeric(cond[[i]]) == cond.current.level[i])
-                        }
-
-
-
-
-                        h <- density(x[id], n=n, ...)
-
-                        xscale <- 
-                            if(scales.x$relation == "same") scales.x$limits
-                            else if (scales.x$relation == "sliced")
-                            {
-                                if(!missing(prepanel))
-                                    extend.limits(
-                                                  if (any(id)) prepanel(x=x[id],y=y[id])$xlim
-                                                  else scales.x$limits,
-                                                  length=x.slice.length)
-                                
-                                else extend.limits(
-                                                   if (any(id)) range(h$x)
-                                                   else scales.x$limits,
-                                                   length=x.slice.length)
-                                
-                            }
-                            else #if relation=free
-                            { 
-                                if(!missing(prepanel))
-                                    extend.limits(
-                                                  if (any(id)) prepanel(x=x[id],y=y[id])$xlim
-                                                  else scales.x$limits)
-                                
-                                else extend.limits(
-                                                   if (any(id)) range(h$x)
-                                                   else scales.x$limits)
-                                
-                            }
-                        
-                        if(!foo$x.relation.same) 
-                            foo$x.scales[[panel.number]] <-
-                                list(limits = xscale,
-                                     at = scales.x$at,
-                                     labels = scales.x$labels,
-                                     tck = scales.x$tck,
-                                     col = scales.x$col,
-                                     cex = scales.x$cex,
-                                     rot = scales.x$rot,
-                                     tick.number = scales.x$tick.number)
-                        
-                        
-                        yscale <- 
-                            if(scales.y$relation == "same") scales.y$limits
-                            else if (scales.y$relation == "sliced") { # doesn't happen
-                                if(!missing(prepanel))
-                                    extend.limits(
-                                                  if (any(id)) prepanel(x=x[id],y=y[id])$ylim
-                                                  else scales.y$limits,
-                                                  length=y.slice.length)
-                                
-                                else extend.limits(
-                                                   if (any(id)) range(y[id])
-                                                   else scales.y$limits,
-                                                   length=y.slice.length)
-                            }
-                            else  #if relation=free
-                            {
-                                
-                                
-                                if(!missing(prepanel))
-                                    extend.limits(if (any(id)) prepanel(x=x[id],y=y[id])$ylim
-                                    else scales.y$limits)
-                                
-                                else if (!any(id)) extend.limits(scales.y$limits)
-                                
-                                else extend.limits(c(0, max(h$y)))
-                            }
-                                  
-                                
-                        if(!foo$y.relation.same) 
-                            foo$y.scales[[panel.number]] <-
-                                list(limits = yscale,
-                                     at = scales.y$at,
-                                     labels = scales.y$labels,
-                                     tck = scales.y$tck,
-                                     col = scales.y$col,
-                                     cex = scales.y$cex,
-                                     rot = scales.y$rot,
-                                     tick.number = scales.y$tick.number)
-
-                        
-                        ## id <- id & (x>=xscale[1]) & (x<=xscale[2]) & (y>=yscale[1]) & (y<=yscale[2])
-                        
-                        foo$panel.args[[panel.number]] <- 
-                            if(subscripts) list(x = x[id],
-                                                subscripts=subscr[id])
-                            else list(x = x[id])
-                        
-                        cond.current.level <- cupdate(cond.current.level,
-                                                      cond.max.level)
-                        
-                    
-                    }
-                    
-                    panel.number <- panel.number + 1
-                    
-                }
-            }
+    if (length(x)>1) {
+        h <- do.call("density", c(list(x=x), darg))
+        lim <- current.viewport()$xscale
+        id <- (h$x>=lim[1] & h$x<=lim[2])
+        panel.xyplot(x = h$x[id], y = h$y[id], type = "l", ...)
+        if (plot.points) panel.xyplot(x=x, y=rep(0, length(x)), cex=.5, ...) 
     }
-    
-    class(foo) <- "trellis"
-    foo
 }
 
 
 
 
 
+densityplot <-
+    function(formula,
+             data = parent.frame(),
+             aspect = "fill",
+             layout = NULL,
+             panel = "panel.densityplot",
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
+             xlab,
+             xlim,
+             ylab,
+             ylim,
+             bw = NULL,
+             adjust = NULL,
+             kernel = NULL,
+             window = NULL,
+             width = NULL,
+             give.Rkern = FALSE,
+             n = 50,
+             from = NULL,
+             to = NULL,
+             cut = NULL,
+             na.rm = NULL,
+             ...,
+             subscripts = !is.null(groups),
+             subset = TRUE)
+{
+
+    ## dots <- eval(substitute(list(...)), data, parent.frame())
+    dots <- list(...)
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    ## darg is a list that gives arguments to density()
+    darg <- list()
+    darg$bw <- bw
+    darg$adjust <- adjust
+    darg$kernel <- kernel
+    darg$window <- window
+    darg$width <- width
+    darg$give.Rkern <- give.Rkern
+    darg$n <- n
+    darg$from <- from
+    darg$to <- to
+    darg$cut <- cut
+    darg$na.rm <- na.rm
+    
+    ## Step 1: Evaluate x, y, etc. and do some preprocessing
+    
+    form <- latticeParseFormula(formula, data)
+    cond <- form$condition
+    number.of.cond <- length(cond)
+    x <- form$right
+    if (number.of.cond == 0) {
+        strip <- FALSE
+        cond <- list(as.factor(rep(1, length(x))))
+        layout <- c(1,1,1)
+        number.of.cond <- 1
+    }
+
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
+    if(subscripts) subscr <- seq(along=x)
+    x <- x[subset, drop = TRUE]
+    if (subscripts) subscr <- subscr[subset, drop = TRUE]
+    
+    if (missing(xlab)) xlab <- form$right.name
+    if (missing(ylab)) ylab <- "Density"
+
+    if (!is.numeric(x))
+        warning("x should be numeric")
+    x <- as.numeric(x)
+
+    ## create a skeleton trellis object with the
+    ## less complicated components:
+    foo <- do.call("trellis.skeleton",
+                   c(list(aspect = aspect,
+                          strip = strip,
+                          panel = panel,
+                          xlab = xlab,
+                          ylab = ylab), dots))
+
+    dots <- foo$dots # arguments not processed by trellis.skeleton
+    foo <- foo$foo
+    foo$call <- match.call()
+    foo$fontsize.normal <- 10
+    foo$fontsize.small <- 8
+
+    ## This is for cases like xlab/ylab = list(cex=2)
+    if (is.list(foo$xlab) && !is.character(foo$xlab$label))
+        foo$xlab$label <- form$right.name
+    if (is.list(foo$ylab) && !is.character(foo$ylab$label))
+        foo$ylab$label <- "Density"
+
+    ## Step 2: Compute scales.common (leaving out limits for now)
+
+    ## scales <- eval(substitute(scales), data, parent.frame())
+    if (is.character(scales)) scales <- list(relation = scales)
+    foo <- c(foo,
+             do.call("construct.scales", scales))
 
 
+    ## Step 3: Decide if limits were specified in call:
+    
+    have.xlim <- !missing(xlim)
+    if (!is.null(foo$x.scales$limit)) {
+        have.xlim <- TRUE
+        xlim <- foo$x.scales$limit
+    }
+    have.ylim <- !missing(ylim)
+    if (!is.null(foo$y.scales$limit)) {
+        have.ylim <- TRUE
+        ylim <- foo$x.scales$limit
+    }
+
+    ## Step 4: Decide if log scales are being used:
+
+    have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
+    have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
+    if (have.xlog) {
+        xlog <- foo$x.scales$log
+        xbase <-
+            if (is.logical(xlog)) 10
+            else if (is.numeric(xlog)) xlog
+            else if (xlog == "e") exp(1)
+        
+        x <- log(x, xbase)
+        if (have.xlim) xlim <- log(xlim, xbase)
+    }
+    if (have.ylog) {
+        warning("Can't have log Y-scale")
+        have.ylog <- FALSE
+        foo$y.scales$log <- FALSE
+    }
+
+    ## Step 5: Process cond
+
+    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
+    cond.max.level <- unlist(lapply(cond, numlevels))
 
 
+    id.na <- is.na(x)
+    for (var in cond)
+        id.na <- id.na | is.na(var)
+    if (!any(!id.na)) stop("nothing to draw")
+    ## Nothing simpler ?
 
+    foo$condlevels <- lapply(cond, levels)
 
+    ## Step 6: Evaluate layout, panel.args.common and panel.args
 
+    foo$panel.args.common <- c(dots, list(darg = darg))
+    if (subscripts) foo$panel.args.common$groups <- groups
+
+    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
+    plots.per.page <- max(layout[1] * layout[2], layout[2])
+    number.of.pages <- layout[3]
+    foo$skip <- rep(foo$skip, length = plots.per.page)
+    foo$layout <- layout
+    nplots <- plots.per.page * number.of.pages
+
+    foo$panel.args <- as.list(1:nplots)
+    cond.current.level <- rep(1,number.of.cond)
+    panel.number <- 1 # this is a counter for panel number
+    for (page.number in 1:number.of.pages)
+        if (!any(cond.max.level-cond.current.level<0))
+            for (plot in 1:plots.per.page) {
+
+                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
+                else if(!any(cond.max.level-cond.current.level<0)) {
+
+                    id <- !id.na
+                    for(i in 1:number.of.cond)
+                    {
+                        var <- cond[[i]]
+                        id <- id &
+                        if (is.shingle(var))
+                            ((var$x >=
+                              var$int[cond.current.level[i], 1])
+                             & (var$x <=
+                                var$int[cond.current.level[i], 2]))
+                        else (as.numeric(var) == cond.current.level[i])
+                    }
+
+                    foo$panel.args[[panel.number]] <-
+                        list(x = x[id])
+                    if (subscripts)
+                        foo$panel.args[[panel.number]]$subscripts <-
+                            subscr[id]
+
+                    cond.current.level <-
+                        cupdate(cond.current.level,
+                                cond.max.level)
+                }
+
+                panel.number <- panel.number + 1
+            }
+
+    foo <- c(foo,
+             limits.and.aspect(prepanel.default.densityplot,
+                               prepanel = prepanel, 
+                               have.xlim = have.xlim, xlim = xlim, 
+                               have.ylim = have.ylim, ylim = ylim, 
+                               x.relation = foo$x.scales$relation,
+                               y.relation = foo$y.scales$relation,
+                               panel.args.common = foo$panel.args.common,
+                               panel.args = foo$panel.args,
+                               aspect = aspect,
+                               nplots = nplots))
+
+    class(foo) <- "trellis"
+    foo
+}

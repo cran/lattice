@@ -5,13 +5,11 @@
   This is the default superpanel function for \code{splom}.
 }
 \usage{
-panel.pairs(z,
-            panel = panel.xyplot,
-            groups = NULL,
-            panel.subscripts, 
+panel.pairs(z, panel = panel.splom,
+            groups = NULL, panel.subscripts, 
             subscripts,
             fontsize.small = 8,
-            scales, \dots)
+            pscales = 5, ...)
 }
 \arguments{
   \item{z}{ The data frame used for the plot.}
@@ -22,7 +20,7 @@ panel.pairs(z,
   \item{subscripts}{ The indices of the rows of \code{z} that are to be
     displayed in this (super)panel.}
   \item{fontsize.small}{ Fontsize to be used for the axis labels inside.}
-  \item{scales}{ List to control axis annotation. Not much use right now.}
+  \item{pscales}{ Controls axis labels, passed down from \code{splom}}
   \item{\dots}{ graphical parameters may be supplied.}
 }
 \details{

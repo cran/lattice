@@ -1,12 +1,10 @@
 \name{bwplot}
 \title{Box and Whisker Plots}
 \synopsis{
-bwplot(formula, aspect = "fill", as.table = FALSE, between = list(x = 0, 
-    y = 0), box.ratio = 1, data, groups = NULL, key = NULL, layout, 
-    main = NULL, page = NULL, panel = panel.bwplot, par.strip.text, 
-    prepanel, scales, skip = FALSE, strip = strip.default, sub = NULL, 
-    subscripts = !missing(groups), subset, xlab, xlim, ylab, 
-    ylim, \dots)
+bwplot(formula, data = parent.frame(), aspect = "fill", layout = NULL, 
+    panel = panel.bwplot, prepanel = NULL, scales = list(), strip = TRUE, 
+    groups = NULL, xlab, xlim, ylab, ylim, box.ratio = 1, ..., 
+    subscripts = !missing(groups), subset = TRUE)
 }
 \usage{
 bwplot(formula, box.ratio = 1, \dots)
@@ -51,13 +49,6 @@ bwplot(formula, box.ratio = 1, \dots)
 \examples{
 data(singer)
 bwplot(voice.part ~ height, data=singer, xlab="Height (inches)")
-bwplot(voice.part ~ height, data=singer,
-       prepanel=function(x,y)
-           list(xlim=range(x,c(58,74))),
-       panel=function(...) {
-           panel.bwplot(...)
-           panel.abline(v=c(60,72)) # reference line 5 and 6 feet
-       })
 }
 \keyword{hplot}
 

@@ -5,6 +5,21 @@
 \alias{cupdate}
 \alias{.lattice.print.more}
 \alias{do.breaks}
+\alias{compute.layout}
+\alias{construct.scales}
+\alias{limits.and.aspect}
+\alias{trellis.skeleton}
+\alias{prepanel.default.bwplot}
+\alias{prepanel.default.levelplot}
+\alias{prepanel.default.cloud}
+\alias{prepanel.default.densityplot}
+\alias{prepanel.default.histogram}
+\alias{prepanel.default.parallel}
+\alias{prepanel.default.qq}
+\alias{prepanel.default.qqmath}
+\alias{prepanel.default.splom}
+\alias{prepanel.default.tmd}
+\alias{prepanel.default.xyplot}
 \alias{ldrop.levels}
 \alias{ldrop.levels.factor}
 \alias{ldrop.levels.shingle}
@@ -15,6 +30,18 @@
 }
 \synopsis{
 lpretty(x, ...)
+construct.scales(draw = TRUE, tck = 1, tick.number = 5, cex = 1, rot = FALSE, 
+    at = FALSE, labels = FALSE, col = FALSE, log = FALSE, alternating = TRUE, 
+    relation = "same", x = NULL, y = NULL, ...)  
+compute.layout(layout, cond.max.level, skip = FALSE)  
+limits.and.aspect(prepanel.default.function, prepanel = NULL, have.xlim = FALSE, 
+    xlim = NULL, have.ylim = FALSE, ylim = NULL, x.relation, 
+    y.relation, panel.args.common = list(), panel.args = list(), 
+    aspect, nplots, ...)
+trellis.skeleton(as.table = FALSE, aspect = "fill", between = list(x = 0, 
+    y = 0), key = NULL, page = NULL, main = NULL, sub = NULL, 
+    par.strip.text = list(), skip = FALSE, strip = strip.default, 
+    xlab = NULL, ylab = NULL, panel, ...)
 }
 \usage{
 Rows(x, which)
@@ -24,6 +51,23 @@ lpretty(lim)
 cupdate(index, maxim)
 do.breaks(endpoints, nint)
 ldrop.levels(x, subset)
+compute.layout(...)
+construct.scales(...)
+limits.and.aspect(...)
+trellis.skeleton(...)
+prepanel.default.bwplot(...)
+prepanel.default.levelplot(x, y, wx, wy, subscripts, ...)
+prepanel.default.cloud(distance, xlim, ylim,
+        zlim, zoom = 1, rot.mat = rot.mat, 
+        aspect = aspect,...)
+prepanel.default.densityplot(...)
+prepanel.default.histogram(...)
+prepanel.default.parallel(...)
+prepanel.default.qq(...)
+prepanel.default.qqmath(...)
+prepanel.default.splom(...)
+prepanel.default.tmd(...)
+prepanel.default.xyplot(x, y, type, ...)
 }
 \arguments{
   \item{length}{ desired length of the resulting interval, with center
@@ -31,7 +75,7 @@ ldrop.levels(x, subset)
   }
   \item{prop}{ Proportion by which to extend limits. 
   }
-  \item{x}{ numeric, factor or shingle.
+  \item{x,y}{ numeric, factor or shingle.
   }
   \item{subset}{ indices to keep.
   }
@@ -39,8 +83,12 @@ ldrop.levels(x, subset)
   \item{lim}{length 2 numeric}
   \item{index}{current values of levels}
   \item{maxim}{max values of levels}
-  \item{enpoints}{see histogram}
+  \item{endpoints}{see histogram}
   \item{nint}{see histogram}
+  \item{distance, xlim, ylim, zlim, zoom, rot.mat,aspect}{see panel.cloud}
+  \item{wx, wy, subscripts}{see panel.levelplot}
+  \item{type}{ type argument as in \code{panel.xyplot}}
+  \item{\dots}{other arguments}
 }
 \details{
   Some of these functions are indigenous, some are counterparts of

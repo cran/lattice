@@ -5,11 +5,16 @@
   This is the default panel function for \code{densityplot}.
 }
 \usage{
-panel.densityplot(x, n = 50, ...)
+panel.densityplot(x, darg, plot.points = TRUE, ref = FALSE, ...)
 }
 \arguments{
   \item{x}{ data points for which density is to be estimated}
-  \item{n}{ number of (equally spaced) points to use for plotting}
+  \item{darg}{list of arguments to be passed to the \code{density}
+    function.} 
+  \item{plot.points}{ logical, specifying whether or not the data 
+    points should be plotted along with the estimated density. The
+    default (TRUE) is S-Plus behaviour.}
+  \item{ref} {logical, whether to draw x-axis}
   \item{\dots}{ parameters to be passed to the function \code{density},
     as well as graphical parameters like \code{col}}
 }

@@ -1,9 +1,14 @@
 \name{barchart}
 \title{Bar Graphs}
+\synopsis{
+barchart(formula, data = parent.frame(), panel = "panel.barchart", 
+    prepanel = NULL, strip = TRUE, box.ratio = 2, groups = NULL, 
+    ..., subset = TRUE)  
+}
 \usage{
 barchart(formula,
+         data = parent.frame(), 
          panel = panel.barchart,
-         data = sys.frame(sys.parent()), 
          box.ratio =2,
          \dots)
 }
