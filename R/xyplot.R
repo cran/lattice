@@ -96,7 +96,7 @@ panel.xyplot <-
 
 
     if ("g" %in% type)
-        panel.grid()
+        panel.grid(h = -1, v = -1)
 
     if ("p" %in% type)
         lpoints(x = x, y = y, cex = cex, font = font,
@@ -261,7 +261,7 @@ xyplot <-
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit)) {
+    if (!is.null(foo$x.scales$limit)) { # override xlim
         have.xlim <- TRUE
         xlim <- foo$x.scales$limit
     }
