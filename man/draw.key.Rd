@@ -1,4 +1,4 @@
-\name{D_draw.key}
+\name{draw.key}
 \alias{draw.key}
 \title{Produce a Legend or Key}
 \description{
@@ -6,21 +6,23 @@
   key) that can be placed in other Grid plots.
 }
 \usage{
-draw.key(key, draw=FALSE, vp=NULL, \dots)
+draw.key(key, draw=FALSE, vp=NULL)
 }
 \arguments{
   \item{key}{ A list determining the key. See documentation for
-    \code{xyplot}, in particular the section describing the \code{key}
-    argument, for details.
+    \code{xyplot}, in particular the section describing the `key'
+    argument for details.
   }
   \item{draw}{ logical, whether the grob is to be drawn. }
   \item{vp}{ viewport }
-  \item{\dots}{ignored}
+}
+\details{
+  Maybe later :)
 }
 \value{
-  A Grid frame object (that inherits from \sQuote{grob}).
+  A Grid frame object (that inherits from ``grob'')
 }
-\author{Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
+\author{Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{xyplot}}}
 \keyword{dplot}
 

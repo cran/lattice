@@ -1,4 +1,3 @@
-
 postscript("scales.ps")
 ## Testing weird scales options
 
@@ -6,42 +5,15 @@ library(lattice)
 
 
 
-## relation = "free" for factors
+## test for POSIXt handling
 
-dat <- data.frame(a=letters[1:5], b=c("A","A","A","B","B"), y=1:5) 
-dotplot(y ~ a | b, data=dat, scales = "same") 
-dotplot(y ~ a | b, data=dat, scales = "free") 
-dotplot(y ~ a | b, data=dat, scales = "sliced") 
+y <- Sys.time() + 10000 * 1:100
+x <- rnorm(100)
+b <- gl(2,1,100)
 
-
-
-dat <-
-    data.frame(a = letters[1:10],
-               b = c("A","A","A","B","B","A","B","B", "A", "A"))
-
-dat <- dat[sample(1:10, 200, rep = TRUE), ]
-dat$y <- rnorm(200, mean = unclass(as.factor(dat$a)))
-
-bwplot(a ~ y | b, data=dat, scales = "same") 
-bwplot(a ~ y | b, data=dat, scales = "free") 
-bwplot(a ~ y | b, data=dat, scales = "sliced") 
-
-
-
-
-
-
-## text axis colors
-
-xyplot(1:10 ~ 1:10,
-       scales =
-       list(y = list(font = 2,
-            cex = 1,
-            col = "green", col.line = "cyan", tck = 5)),
-       xlab = list("one to ten",  fontfamily = "HersheySerif"),
-       par.settings =
-       list(axis.text = list(col = "red", font = 4, cex = 3),
-            axis.line = list(col = "yellow")))
+xyplot(y ~ x | b)
+xyplot(y ~ x | b, scales = list(relation = "free", rot = 0))
+xyplot(y ~ x | b, scales = "sliced")
 
 
 

@@ -6,16 +6,19 @@
 
 library(MASS)
 library(lattice)
-trellis.device(postscript, file="MASS-ch04.ps", width=8, height=6,
+trellis.device(postscript, file="ch04.ps", width=8, height=6,
                pointsize=9)
 options(echo=T, width=65, digits=5)
 
 
 # 4.2  Basic plotting functions
 
+library(modreg)
+data(topo)
 topo.loess <- loess(z ~ x * y, topo, degree = 2, span = 0.25)
 topo.mar <- list(x = seq(0, 6.5, 0.2), y=seq(0, 6.5, 0.2))
 topo.lo <- predict(topo.loess, expand.grid(topo.mar))
+topo.lo <- matrix(topo.lo, length(topo.mar$x),length(topo.mar$y))
 topo.lo1 <- cbind(expand.grid(x=topo.mar$x, y=topo.mar$y),
                   z=as.vector(topo.lo))
 contourplot(z ~ x * y, topo.lo1, aspect = 1,
@@ -28,13 +31,11 @@ contourplot(z ~ x * y, topo.lo1, aspect = 1,
 
 
 
-
-
-
-
 # 4.5  Trellis graphics
 
 
+data(hills)
+library(lqs)
 xyplot(time ~ dist, data = hills,
   panel = function(x, y, ...) {
      panel.xyplot(x, y, ...)
@@ -44,9 +45,11 @@ xyplot(time ~ dist, data = hills,
   }
 )
 
+data(michelson)
 bwplot(Expt ~ Speed, data = michelson, ylab = "Experiment No.",
        main = "Speed of Light Data")
 
+#title("Speed of Light Data")
 
 data(swiss)
 splom(~ swiss, aspect = "fill",
@@ -55,6 +58,7 @@ splom(~ swiss, aspect = "fill",
   }
 )
 
+data(stormer)
 sps <- trellis.par.get("superpose.symbol")
 sps$pch <- 1:7
 trellis.par.set("superpose.symbol", sps)
@@ -77,13 +81,14 @@ levelplot(pred ~ x * y, topo.plt, aspect = 1,
      panel.xyplot(topo$x,topo$y, cex = 0.5, col = 1)
   }
 )
-
-## if (F) {
+if (F) {
 wireframe(pred ~ x * y, topo.plt, aspect = c(1, 0.5),
   drape = T, screen = list(z = -150, x = -60),
   colorkey = list(space="right", height=0.6))
-## }
+}
 
+data(crabs)
+library(mva)
 lcrabs.pc <- predict(princomp(log(crabs[,4:8])))
 crabs.grp <- c("B", "b", "O", "o")[rep(1:4, each = 50)]
 splom(~ lcrabs.pc[, 1:3], groups = crabs.grp,
@@ -100,6 +105,7 @@ sp <- crabs$sp
 levels(sp) <- c("Blue", "Orange")
 splom(~ lcrabs.pc[, 1:3] | sp*sex, cex = 0.5, pscales = 0)
 
+data(quine)
 Quine <- quine
 levels(Quine$Eth) <- c("Aboriginal", "Non-aboriginal")
 levels(Quine$Sex) <- c("Female", "Male")
@@ -112,10 +118,10 @@ bwplot(Age ~ Days | Sex*Lrn*Eth, data = Quine, layout = c(4, 2),
       strip = function(...) strip.default(..., style = 1))
 
 stripplot(Age ~ Days | Sex*Lrn*Eth, data = Quine,
-         jitter = TRUE, layout = c(4, 2))
+         jitter = T, layout = c(4, 2))
 
 stripplot(Age ~ Days | Eth*Sex, data = Quine,
-   groups = Lrn, jitter = TRUE,
+   groups = Lrn, jitter = T,
    panel = function(x, y, subscripts, jitter.data = F, ...) {
        if(jitter.data)  y <- jitter(as.numeric(y))
        panel.superpose(x, y, subscripts, ...)
@@ -126,9 +132,10 @@ stripplot(Age ~ Days | Eth*Sex, data = Quine,
        points = Rows(trellis.par.get("superpose.symbol"), 1:2)
        ),
    strip = function(...)
-        strip.default(..., strip.names = c(TRUE, TRUE), style = 1)
+        strip.default(..., strip.names = c(T, T), style = 1)
 )
 
+data(fgl)
 fgl0 <- fgl[ ,-10] # omit type.
 fgl.df <- data.frame(type = rep(fgl$type, 9),
   y = as.vector(as.matrix(fgl0)),
@@ -141,11 +148,11 @@ if(F) { # no data supplied
 xyplot(ratio ~ scant | subject, data = A5,
       xlab = "scan interval (years)",
       ylab = "ventricle/brain volume normalized to 1 at start",
-      subscripts = TRUE, ID = A5$ID,
+      subscripts = T, ID = A5$ID,
       strip = function(factor, ...)
          strip.default(..., factor.levels = labs, style = 1),
       layout = c(8, 5, 1),
-      skip = c(rep(FALSE, 37), rep(TRUE, 1), rep(FALSE, 1)),
+      skip = c(rep(F, 37), rep(T, 1), rep(F, 1)),
       panel = function(x, y, subscripts, ID) {
           panel.xyplot(x, y, type = "b", cex = 0.5)
           which <- unique(ID[subscripts])

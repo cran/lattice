@@ -1,8 +1,8 @@
 
 
-### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
+### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
-### This file is part of the lattice package for R.
+### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -15,207 +15,198 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-### MA 02110-1301, USA
+### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+### MA 02111-1307, USA
 
 
 
-
-prepanel.tmd.default <-
-    function(x, y, ...)
-{
-    prepanel.default.xyplot(x = (as.numeric(x) + as.numeric(y)) / 2,
-                            y = (as.numeric(y) - as.numeric(x)),
-                            ...)
-}
+prepanel.default.tmd <-
+    function(...)
+    prepanel.default.xyplot(...)
 
 
 
-
-prepanel.tmd.qqmath <-
-    function(x,
-             f.value = NULL,
-             distribution = qnorm,
-             qtype = 7,
-             groups = NULL,
-             subscripts, ...)
-{
-    if (!is.numeric(x)) x <- as.numeric(x)
-    distribution <- getFunctionOrName(distribution)
-    nobs <- sum(!is.na(x))
-    getxx <- function(x, f.value = NULL,
-                      nobs = sum(!is.na(x)))
-    {
-        if (is.null(f.value))
-            distribution(ppoints(nobs))
-        else
-            distribution(f.value(nobs))
-    }
-    getyy <- function(x, f.value = NULL,
-                      nobs = sum(!is.na(x)))
-    {
-        if (is.null(f.value))
-            sort(x)
-        else
-            quantile(x, f.value(nobs),
-                     names = FALSE,
-                     type = qtype,
-                     na.rm = TRUE)
-    }
-    if (!nobs)
-        prepanel.null()
-    else if (!is.null(groups))
-    {
-        sx <- split(x, groups[subscripts])
-        xxlist <- lapply(sx, getxx, f.value = f.value)
-        yylist <- lapply(sx, getyy, f.value = f.value)
-        meanlist <- difflist <-
-            vector(mode = "list", length = length(sx))
-        for (i in seq_along(sx))
-        {
-            meanlist[[i]] <- (xxlist[[i]] + yylist[[1]]) / 2
-            difflist[[i]] <- (yylist[[i]] - xxlist[[1]])
-        }
-        list(xlim = range(unlist(meanlist), na.rm = TRUE),
-             ylim = range(unlist(difflist), na.rm = TRUE),
-             dx = unlist(lapply(meanlist, diff)),
-             dy = unlist(lapply(difflist, diff)))
-    }
-    else 
-    {
-        xx <- getxx(x, f.value, nobs)
-        yy <- getyy(x, f.value, nobs)
-        tmd.mean <- (xx + yy) / 2
-        tmd.diff <- (yy - xx)
-        list(xlim = range(tmd.mean),
-             ylim = range(tmd.diff),
-             dx = diff(tmd.mean),
-             dy = diff(tmd.diff))
-    }
-}
-
-
-
-
-
-panel.tmd.default <-
-    function(x, y, groups = NULL, ...,
-             identifier = "tmd")
-{
+panel.tmd <- function(...) {
     panel.abline(h=0)
-    if (is.null(groups))
-        panel.xyplot(x = (as.numeric(x) + as.numeric(y)) / 2,
-                     y = (as.numeric(y) - as.numeric(x)),
-                     ...,
-                     identifier = identifier)
-    else
-        panel.superpose(x = (as.numeric(x) + as.numeric(y)) / 2,
-                        y = (as.numeric(y) - as.numeric(x)),
-                        groups = groups, ...)
+    panel.xyplot(...)
 }
 
 
-panel.tmd.qqmath <-
-    function(x,
-             f.value = NULL,
-             distribution = qnorm,
-             qtype = 7,
-             groups = NULL, 
-             subscripts, ...,
-             identifier = "tmd")
-{
-    panel.abline(h=0)
-    if (!is.numeric(x)) x <- as.numeric(x)
-    distribution <- getFunctionOrName(distribution)
-    nobs <- sum(!is.na(x))
-    getxx <- function(x, f.value = NULL,
-                      nobs = sum(!is.na(x)))
-    {
-        if (is.null(f.value))
-            distribution(ppoints(nobs))
-        else
-            distribution(f.value(nobs))
-    }
-    getyy <- function(x, f.value = NULL,
-                      nobs = sum(!is.na(x)))
-    {
-        if (is.null(f.value))
-            sort(x)
-        else
-            quantile(x, f.value(nobs),
-                     names = FALSE,
-                     type = qtype,
-                     na.rm = TRUE)
-    }
-    if (!nobs)
-        NULL
-    else if (!is.null(groups))
-    {
-        sx <- split(x, groups[subscripts])
-        xxlist <- lapply(sx, getxx, f.value = f.value)
-        yylist <- lapply(sx, getyy, f.value = f.value)
-        xx <- unlist(xxlist)
-        yy <- unlist(yylist)
-        tmd.mean <- (xx + yy) / 2
-        tmd.diff <- (yy - xx)
-        tmd.groups <-
-            gl(length(xxlist),
-               sapply(xxlist, length),
-               labels = names(xxlist))
-        tmd.subscripts <- seq_along(xx)
-        panel.superpose(x = tmd.mean, y = tmd.diff,
-                        groups = tmd.groups,
-                        subscripts = tmd.subscripts,
-                        ...)
-    }
-    else 
-    {
-        xx <- getxx(x, f.value, nobs)
-        yy <- getyy(x, f.value, nobs)
-        tmd.mean <- (xx + yy) / 2
-        tmd.diff <- (yy - xx)
-        panel.xyplot(x = tmd.mean, y = tmd.diff, ...,
-                     identifier = identifier)
-    }
-}
-
-
-
-
-tmd <- function(object, ...) UseMethod("tmd")
-
-tmd.formula <- function(object, data = NULL, ...)
-{
-    ocall <- sys.call(); ocall[[1]] <- quote(tmd)
-    modifyList(tmd(xyplot(object, data = data, ...)),
-               list(call = ocall))
-}
-
-tmd.trellis <-
+## Fixme: log scales not handled
+tmd <-
     function(object,
+             aspect = "fill",
+             as.table = object$as.table,
+             between = list(x=object$x.between,y=object$y.between),
+             key = object$key,
+             layout = object$layout,
+             main = object$main,
+             page = object$page,
+             panel = "panel.tmd",
+             par.strip.text = object$par.strip.text, 
+             prepanel = NULL,
+             scales = list(),
+             strip = object$strip,
+             sub = object$sub,
              xlab = "mean",
+             xlim = NULL,
              ylab = "difference",
-             panel = if (qqmath) panel.tmd.qqmath else panel.tmd.default,
-             prepanel = if (qqmath) prepanel.tmd.qqmath else prepanel.tmd.default,
-             ...)
+             ylim = NULL,
+             ...,
+             subscripts = !is.null(groups),
+             subset = TRUE)
 {
-    ## data x, y are not always in panel.args (they may be in
-    ## panel.args.common), but they are for xyplot and qq, which are
-    ## all this is supposed to work for (also qqmath, but see below).
-    ## One special case is qqmath, which is treated differently.  May
-    ## modify this for others if there's demand.
 
-    ocall <- sys.call(); ocall[[1]] <- quote(tmd)
-    qqmath <- object$call[[1]] == quote(qqmath) ## FIXME bad hack (use class(x) = c("trellis", "qqmath") instead?)
-    object$xlab.default <- gettext("mean")
-    object$ylab.default <- gettext("difference")
-    modifyList(update(object,
-                      xlab = xlab, ylab = ylab,
-                      panel = panel,
-                      prepanel = prepanel,
-                      ...),
-               list(call = ocall))
+    dots <- list(...)
 
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
+    ## create a skeleton trellis object with the
+    ## less complicated components:
+
+    foo <- do.call("trellis.skeleton",
+                   c(list(as.table = as.table,
+                          aspect = aspect,
+                          between = between,
+                          key = key,
+                          page = page,
+                          main = main,
+                          panel = panel,
+                          sub = sub,
+                          par.strip.text = par.strip.text,
+                          strip = strip,
+                          xlab = xlab,
+                          ylab = ylab), dots))
+                          
+
+    dots <- foo$dots # arguments not processed by trellis.skeleton
+    foo <- foo$foo
+    foo$call <- match.call()
+    foo$fontsize.normal <- 10
+    foo$fontsize.small <- 8
+
+    ## This is for cases like xlab/ylab = list(cex=2)
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
+        foo$xlab$label <- form$right.name
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
+        foo$ylab$label <- form$left.name
+
+    ## Step 2: Compute scales.common (leaving out limits for now)
+
+    if (is.character(scales)) scales <- list(relation = scales)
+    foo <- c(foo, 
+             do.call("construct.scales", scales))
+
+    ## Step 3: Decide if limits were specified in call:
+
+    have.xlim <- !missing(xlim)
+    if (!is.null(foo$x.scales$limit)) {
+        have.xlim <- TRUE
+        xlim <- foo$x.scales$limit
+    }
+    have.ylim <- !missing(ylim)
+    if (!is.null(foo$y.scales$limit)) {
+        have.ylim <- TRUE
+        ylim <- foo$y.scales$limit
+    }
+
+    ## Step 4: Decide if log scales are being used:
+
+    have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
+    have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
+    if (have.xlog) { ## problem
+        xlog <- foo$x.scales$log
+        xbase <-
+            if (is.logical(xlog)) 10
+            else if (is.numeric(xlog)) xlog
+            else if (xlog == "e") exp(1)
+
+        x <- log(x, xbase)
+        if (have.xlim) xlim <- log(xlim, xbase)
+    }
+    if (have.ylog) { ## problem
+        ylog <- foo$y.scales$log
+        ybase <-
+            if (is.logical(ylog)) 10
+            else if (is.numeric(ylog)) ylog
+            else if (ylog == "e") exp(1)
+
+        y <- log(y, ybase)
+        if (have.ylim) ylim <- log(ylim, ybase)
+    }
+    
+    ## Step 5: Process cond
+
+    foo$condlevels <- object$condlevels
+
+    ## Step 6: Evaluate layout, panel.args.common and panel.args
+
+    foo$panel.args.common <- c(object$panel.args.common, dots)
+
+    if (!missing(layout)) {
+        number.of.cond <- length(foo$condlevels)
+        cond.max.level <- integer(number.of.cond)
+        for(i in 1:number.of.cond) {
+            cond.max.level[i] <-
+                if (is.character(foo$condlev[[i]])) length(foo$condlev[[i]])
+                else nrow(foo$condlev[[i]])
+        }
+        foo$skip <- !unlist(lapply(object$panel.args , is.list))
+        layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
+    }
+    plots.per.page <- max(layout[1] * layout[2], layout[2])
+    number.of.pages <- layout[3]
+    foo$skip <- rep(foo$skip, length = plots.per.page)
+    foo$layout <- layout
+    nplots <- plots.per.page * number.of.pages
+
+    foo$panel.args <- object$panel.args
+
+    if ("x" %in% names(foo$panel.args.common)) {
+        ## this would happen with subscripts. assuming that
+        ## y would also be there then
+        q < foo$panel.args.common
+        x <- (q$x+q$y)/2
+        y <- q$y-q$x       # will stop if any errors, not putting any more handlers
+        foo$panel.args.common$x <- x
+        foo$panel.args.common$y <- y
+    }
+    else {
+        count <- 1
+        for (p in foo$panel.args)
+            if (is.logical(p)) # which means skip = T for this panel
+                count <- count + 1 
+            else {
+                x <- (p$x+p$y)/2
+                y <- p$y-p$x
+
+                foo$panel.args[[count]]$x <- x
+                foo$panel.args[[count]]$y <- y
+
+                count <- count + 1
+            }
+    }    
+
+    foo <- c(foo,
+             limits.and.aspect(prepanel.default.tmd,
+                               prepanel = prepanel, 
+                               have.xlim = have.xlim, xlim = xlim, 
+                               have.ylim = have.ylim, ylim = ylim, 
+                               x.relation = foo$x.scales$relation,
+                               y.relation = foo$y.scales$relation,
+                               panel.args.common = foo$panel.args.common,
+                               panel.args = foo$panel.args,
+                               aspect = aspect,
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
+
+    class(foo) <- "trellis"
+    foo
 }
-                
-

@@ -1,4 +1,4 @@
-\name{B_11_oneway}
+\name{oneway}
 \alias{oneway}
 \title{ Fit One-way Model}
 \description{
@@ -24,16 +24,13 @@ oneway(formula, data, location=mean, spread=function(x) sqrt(var(x)))
 }
 \value{
   A list with components
-
-  \describe{
-  \item{\code{location}}{ vector of locations for each group.}
-  \item{\code{spread}}{ vector of spreads for each group.}
-  \item{\code{fitted.values}}{ vector of locations for each observation.}
-  \item{\code{residuals}}{ residuals (\code{y - fitted.values}).}
-  \item{\code{scaled.residuals}}{residuals scaled by \code{spread} for their
-    group}
-  }
+  \item{location}{ vector of locations for each group.}
+  \item{spread}{ vector of spreads for each group.}
+  \item{fitted.values}{ vector of locations for each observation.}
+  \item{residuals}{ residuals (\code{y - fitted.values}).}
+  \item{scaled.residuals}{residuals scaled by \code{spread} for their
+    group} 
 }
-\author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
+\author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{rfs}}, \code{\link{Lattice}} }
 \keyword{dplot}

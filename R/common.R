@@ -1,8 +1,7 @@
-
-### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
-### Copyright (C) 2001-2005  Saikat DebRoy <saikat@stat.wisc.edu>
+### Copyright 2001-2003  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright 2001-2003  Saikat DebRoy <saikat@stat.wisc.edu>
 ###
-### This file is part of the lattice package for R.
+### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -15,37 +14,32 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-### MA 02110-1301, USA
+### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+### MA 02111-1307, USA
 
-
-
-prepanel.null <- function() {
-    list(xlim = rep(NA_real_, 2),
-         ylim = rep(NA_real_, 2),
-         dx = NA_real_,
-         dy = NA_real_)
-}
 
 
 
 cupdate <- function(index, maxim)
 {
+    ##  This function is used to handle arbitrary number of
+    ## conditioning variables : every time it is called, it
+    ## increments the "current" level of the conditioning
+    ## variables suitably, i.e., it tries to increment the
+    ## level of the 1st conditining variable (the one which
+    ## varies fastest along panel order) and if it happens
+    ## to be at its maximum (last) value, it sets it to the
+    ## first value AND increments the "current" level of the
+    ## 2nd (next) conditioning variable recursively.
 
-    ## This unexported function is used to handle arbitrary number of
-    ## conditioning variables : every time it is called, it increments
-    ## the "current" level of the conditioning variables suitably,
-    ## i.e., it tries to increment the level of the 1st conditining
-    ## variable (the one which varies fastest along panel order) and
-    ## if it happens to be at its maximum (last) value, it sets it to
-    ## the first value AND increments the "current" level of the 2nd
-    ## (next) conditioning variable recursively.
-
+    ## This is an internal function, not to be documented
+    ## for the high level user.
+    
     if(length(index)!=length(maxim)||length(maxim)<=0)
         stop("Inappropriate arguments")
     index[1] <- index[1] + 1
-    if (index[1] > maxim[1] && length(maxim) > 1)
-        c(1, cupdate(index[-1], maxim[-1]))
+    if(index[1]>maxim[1] && length(maxim)>1)
+        c(1,cupdate(index[-1],maxim[-1]))
     else index
 }
 
@@ -53,61 +47,25 @@ cupdate <- function(index, maxim)
 
 
 
-
-## a function similar to (but with much less bells and whistles than)
-## interaction, with exactly 2 factors, and levels ordered like that
-## in f:g (the point is to have a 'sep' argument).  Solely intended
-## for use below in latticeParseFormula
-
-interaction2 <-
-    function (f, g, sep = ":")
+generateNewName <- function(names.current, new.prefix="gvar")
 {
-    ans <- f:g
-    levels(ans) <-
-        as.vector(t(outer(levels(f), levels(g),
-                          paste, sep = sep)))
-    ans
+    names.current <- as.character(names.current)
+    new.prefix <- as.character(new.prefix)
+    newnames <- c(new.prefix,
+                  paste(gvar, seq(along=names.current), sep=""))
+    newnames[!(newnames %in% names.current)][1]
 }
+
+
 
 
 
 latticeParseFormula <-
     function(model, data, dimension = 2, subset = TRUE,
              groups = NULL, multiple = FALSE, outer = FALSE,
-             subscripts = FALSE, drop = NULL)
+             subscripts = FALSE)
     ## this function mostly written by Saikat
 {
-
-    ## local function to get length 1 name from expressions (deparse
-    ## can split long expressions into several pieces), typically for
-    ## subsequent use as labels.  Could be either of the following:
-
-    expr2char <- function(x) paste(deparse(x), collapse = "")
-    ## expr2char <- function(x) deparse(x)[1]
-
-    ## by this time, groups is usually already evaluated.  To make
-    ## things slightly more convenient, we will now also allow groups
-    ## to be of the form groups = ~g, in which case g will be
-    ## evaluated now
-
-    if (inherits(groups, "formula"))
-    {
-        groupVar <- as.character(groups)[2]
-        groups <- eval(parse(text = groupVar), data, environment(groups))
-    }
-
-    if (is.null(drop)) drop <- TRUE
-    if (is.list(drop))
-    {
-        drop.unused.cond <- if (is.null(drop$cond)) TRUE else drop$cond
-        drop.unused.data <- if (is.null(drop$data)) TRUE else drop$data
-    }
-    else
-    {
-        drop.unused.cond <- drop
-        drop.unused.data <- drop
-    }
-
     parseSide <-
         function(model)
         {
@@ -122,9 +80,7 @@ latticeParseFormula <-
     parseCond <-
         function(model)
         {
-            ## WAS: model <- eval(parse(text = paste("~", deparse(model))))[[2]]
-            ## but that's not good (PR#7395)
-            model <- substitute(~m, list(m = model))[[2]]
+            model <- eval(parse(text = paste("~", deparse(model))))[[2]]
             model.vars <- list()
             while (length(model) == 3 && (model[[1]] == as.name("*")
                          || model[[1]] == as.name("+"))) {
@@ -154,15 +110,11 @@ latticeParseFormula <-
                 stop("shingles can not be concatenated")
             } else do.call("c", arglist)
         }
-
+    
     if (!inherits(model, "formula"))
         stop("model must be a formula object")
     if (multiple && !outer && !is.null(groups))
-    {
-        ## ignore multiple = TRUE
-        multiple <- FALSE
-        warning("'multiple=TRUE' ignored ('groups' non-null with 'outer=FALSE')")
-    }
+        stop("groups argument is non NULL with multiple = TRUE and outer = FALSE")
 
     ans <- if (dimension == 2) {
         list(left = NULL, right = NULL, condition = NULL,
@@ -173,9 +125,10 @@ latticeParseFormula <-
              left.name = character(0), right.x.name = character(0),
              right.y.name = character(0))
     }
-    else stop(gettextf("invalid dimension '%s'", as.character(dimension)))
+    else stop(paste("invalid dimension : ", dimension))
 
-    if (length(model) == 3) {  ## <something> ~ <something>
+    
+    if (length(model) == 3) {
         if (multiple) {
             varsLHS <- parseSide(model[[2]])
             nLHS <- length(varsLHS)
@@ -183,15 +136,13 @@ latticeParseFormula <-
             varsLHS <- list(model[[2]])
             nLHS <- 1
         }
-    } else {  ## ~ <something>
+    } else {
         nLHS <- 1
     }
     modelRHS <- model[[length(model)]]
     if (length(modelRHS) == 3 && modelRHS[[1]] == as.name("|"))
         modelRHS <- modelRHS[[2]]
-
-
-    ## Note that when dimension = 3, multiple does not apply to RHS
+        
 
     env <- environment(model)
     modelRHS <- model[[length(model)]]
@@ -206,11 +157,11 @@ latticeParseFormula <-
             nRHS <- 1
         }
         ans$condition <- vector("list", length(modelRHS.vars))
-        names(ans$condition) <- sapply(modelRHS.vars, expr2char)
-        for (i in seq_along(modelRHS.vars)) {
+        names(ans$condition) <- sapply(modelRHS.vars, deparse)
+        for (i in seq(along = modelRHS.vars)) {
             ans$condition[[i]] <-
                 lrep(as.factorOrShingle(eval(modelRHS.vars[[i]], data, env),
-                                        subset, drop = drop.unused.cond), nLHS * nRHS)
+                                        subset, drop = TRUE), nLHS*nRHS)
         }
     } else if (multiple && dimension == 2) {
         varsRHS <- parseSide(modelRHS)
@@ -220,61 +171,34 @@ latticeParseFormula <-
         nRHS <- 1
     }
 
-    if (length(model) == 3)
-    {
-
-        ## Note: special case if tmp is a matrix. This probably means
-        ## we are dealing with the parametric 3-D surface rendering
-        ## option in wireframe. subset will be ignored in that case.
-        ## allow.multiple must be effectively FALSE in that case
-
-        ans$left.name <- expr2char(model[[2]])
+    if (length(model) == 3) {
+        ans$left.name <- deparse(model[[2]])
         ans$left <-
             lrep(concat(lapply(varsLHS,
                                function(i) {
                                    tmp <- eval(i, data, env)
-                                   if (!is.matrix(tmp))
-                                       tmp <-
-                                           if (is.factor(tmp) || is.shingle(tmp))
-                                               tmp[subset, drop = drop.unused.data]
-                                           else
-                                               tmp[subset]
+                                   tmp <-
+                                       if (is.factor(tmp) || is.shingle(tmp))
+                                           tmp[subset, drop = TRUE]
+                                       else
+                                           tmp[subset]
                                    if (inherits(tmp, "POSIXt"))
                                        tmp <- as.POSIXct(tmp)
                                    tmp
                                })), nRHS)
     }
 
-    if (dimension == 2)
-    {
-
-        ## this part belongs in the first if block, but we need nobs
-        ## later in either case, so keeping it here.
-
-        tmp <- eval(varsRHS[[1]], data, env)
-        if (is.matrix(tmp)) tmp <- as.data.frame(tmp)
-
-### This was a attempted new feature that turned out not to be such a
-### good idea.  It would change '~x | a' to 'rownames(data) ~ x | a',
-### which is good for dot plot, but not good for bwplot.  So, back to
-### old behaviour...
-
-##         else if (length(model) == 2 && is.data.frame(data) &&
-##                  (is.vector(tmp, "numeric") || is.factor(tmp)) &&
-##                  is.null(names(tmp)))
-##         {
-##             names(tmp) <- rownames(data) # for dotplot(~x, data)
-##         }
-        nobs <- if (is.data.frame(tmp)) nrow(tmp) else length(tmp)
-
+    if (dimension == 2) {
         if (nLHS == 1 && nRHS == 1) {
-
+            tmp <- eval(varsRHS[[1]], data, env)
+            if (is.matrix(tmp)) tmp <- as.data.frame(tmp)
+            nobs <- if (is.data.frame(tmp)) nrow(tmp) else length(tmp)
             if (is.data.frame(tmp))
                 ans$right <- tmp[subset, ] ## doesn't do the drop=TRUE thing for factors/shingles
             else
                 ans$right <-
                     if (is.factor(tmp) || is.shingle(tmp))
-                        tmp[subset, drop = drop.unused.data]
+                        tmp[subset, drop = TRUE]
                     else tmp[subset]
         } else {
             ans$right <-
@@ -283,7 +207,7 @@ latticeParseFormula <-
                                   tmp <- eval(i, data, env)
                                   tmp <-
                                       if (is.factor(tmp) || is.shingle(tmp))
-                                          tmp[subset, drop = drop.unused.data]
+                                          tmp[subset, drop = TRUE]
                                       else
                                           tmp[subset]
                                   tmp <-
@@ -293,123 +217,69 @@ latticeParseFormula <-
                                   tmp
                               }))
         }
-        ans$right.name <- expr2char(modelRHS)
+        ans$right.name <- deparse(modelRHS)
         nRows <- length(ans$right)/(nLHS * nRHS)
     }
     else if (dimension == 3 && length(modelRHS) == 3 &&
-             (modelRHS[[1]] == "*" || modelRHS[[1]] == "+"))
-    {
-
-        ## Note that when dimension = 3, multiple does not apply to
-        ## RHS, but nLHS may be > 1
-
-        ## Note: special case if tmp is a matrix. This probably means
-        ## we are dealing with the parametric 3-D surface rendering
-        ## option in wireframe. subset will be ignored in that case
-        ## allow.multiple must be effectively FALSE in that case
-
-
+             (modelRHS[[1]] == "*" || modelRHS[[1]] == "+")) {
         tmp <- eval(modelRHS[[2]], data, env)
         nobs <- length(tmp)
-        if (!is.matrix(tmp)) ## see note above
-            tmp <-
-                if (is.factor(tmp) || is.shingle(tmp))
-                    tmp[subset, drop = drop.unused.data]
-                else tmp[subset]
+        tmp <-
+            if (is.factor(tmp) || is.shingle(tmp))
+                tmp[subset, drop = TRUE]
+            else tmp[subset]
         ans$right.x <- lrep(tmp, nLHS)
         if (inherits(ans$right.x, "POSIXt")) ans$right.x <- as.POSIXct(ans$right.x)
         tmp <- eval(modelRHS[[3]], data, env)
-        if (!is.matrix(tmp)) ## see note above
-            tmp <-
-                if (is.factor(tmp) || is.shingle(tmp))
-                    tmp[subset, drop = drop.unused.data]
-                else tmp[subset]
+        tmp <-
+            if (is.factor(tmp) || is.shingle(tmp))
+                tmp[subset, drop = TRUE]
+            else tmp[subset]
         ans$right.y <-
             lrep(tmp, nLHS)
         if (inherits(ans$right.y, "POSIXt")) ans$right.y <- as.POSIXct(ans$right.y)
-        ans$right.x.name <- expr2char(modelRHS[[2]])
-        ans$right.y.name <- expr2char(modelRHS[[3]])
+        ans$right.x.name <- deparse(modelRHS[[2]])
+        ans$right.y.name <- deparse(modelRHS[[3]])
         nRows <- length(ans$right.x)/nLHS
     }
     else stop("invalid model")
-
+    
     if (nLHS > 1)
-        LHSgroups <-
-            rep(gl(nLHS, nRows,
-                   labels = sapply(varsLHS, expr2char)),
-                nRHS)
+        LHSgroups <- rep(gl(nLHS, nRows, labels=sapply(varsLHS,
+                                         deparse)), nRHS)
     if (nRHS > 1)
-        RHSgroups <-
-            gl(nRHS, nRows*nLHS, labels = sapply(varsRHS, expr2char))
-    newFactor <-
+        RHSgroups <- gl(nRHS, nRows*nLHS, labels=sapply(varsRHS, deparse))
+    newFactor <- 
         if (nLHS > 1 && nRHS > 1) {
-            interaction2(LHSgroups, RHSgroups, sep = lattice.getOption("interaction.sep"))
-            ## WAS: factor(paste(LHSgroups, RHSgroups, sep=" * "))
+            factor(paste(LHSgroups, RHSgroups, sep=" * "))
         } else if (nLHS > 1)
             LHSgroups
         else if (nRHS > 1)
             RHSgroups
         else NULL
 
-
-
-    if (nLHS == 1 && nRHS == 1) {
-
-        ## subscripts is supposed to provide indices to rows in the
-        ## original data frame. When both nLHS and nRHS are 1, this is
-        ## simple --- it's seq(length = length of variables)[subset]
-        ## (note that groups is never subsetted, so groups[subscripts]
-        ## matches subsetted data, indeed, that's how 'groups' is used
-        ## in panel functions.
-
-        if (!is.null(groups)) ans$groups <- groups
-        if (subscripts) ans$subscr <- seq_len(nobs)[subset]
-    }
-    else if (outer) {
+    if (outer) {
         if (!is.null(groups)) ans$groups <- rep(groups, nLHS * nRHS)
         if (!is.null(newFactor)) {
-            if (is.null(ans$condition))
+            if (is.null(ans$cond))
                 ans$condition <- list(newFactor)
             else
                 ans$condition[[length(ans$condition) + 1]] <- newFactor
-            }
-        else stop("newFactor cannot be NULL; you have found a bug!")
-
-        ## note that groups[subscripts] must match rest of (subsetted)
-        ## data. This matters when groups is non-null and is repeated
-        ## nLHS * nRHS times. It doesn't matter otherwise, but doing
-        ## it this way doesn't cause any trouble either. So there.
-
-        if (subscripts)
-            ans$subscr <-
-                as.vector(matrix(seq_len(nobs * nLHS * nRHS), nrow = nobs)[subset, ])
+        }
     }
-    else {  ## that is, nLHS * nRHS > 1, outer = FALSE
-        if (is.null(groups) && !is.null(newFactor))
-            ans$groups <- newFactor
-        else stop("newFactor != NULL && groups == NULL does not hold; you have found a bug!")
-
-        ## In this case, groups is something generated artificially,
-        ## and is always exactly as long as the rest of the subsetted
-        ## variables. So subscr has to be a simple seq, as long as the
-        ## new groups.
-
-        if (subscripts) ans$subscr <- seq_len(length(newFactor))
-
-        ## check
-        if (length(newFactor) != nRows * nLHS * nRHS)
-            stop("Length check mismatch; you have found a bug!")
+    else {
+        ans$groups <-
+            if (is.null(newFactor)) groups
+            else newFactor
     }
+
+    if (subscripts)
+        ans$subscr <-
+            if (nLHS == 1 && nRHS == 1)
+                seq(length=nobs)[subset]
+            else seq(length=nRows*nLHS*nRHS)
     ans
 }
-
-
-
-
-
-
-
-
 
 
 banking <- function(dx, dy = 1)
@@ -429,44 +299,169 @@ banking <- function(dx, dy = 1)
 
 
 
-## method in Visualizing Data: needs x-range and y-range as well.  Not
-## sure what the best way to extend the API is; for now, we will just
-## define (but not export) an implementation
 
 
-weighted.banking <-
-    function(dx, dy = 1, xrange = sum(dx), yrange = sum(dy))
+
+## modified from axis.POSIXct. This aims to be a general function
+## which given a general 'range' x and optional at, generates the
+## locations of tick marks and corresponding labels. Ultimately will
+## also obviate the need for lpretty
+
+calculateAxisComponents <-
+    function (x, at = FALSE, labels = FALSE,
+              have.log = FALSE, logbase = NULL, logpaste = "",
+              abbreviate = NULL, minlength = 4,
+              format.posixt, ...) 
 {
-    if (is.list(dx)) {
-        if (is.null(names(dx))) names(dx) <- c("dx", "dy")
-        dy <- abs(dx[["dy"]])
-        dx <- abs(dx[["dx"]])
+
+    ## x is guaranteed to be given (possibly NA), though it might not
+    ## be always necessary. Four cases, corresponding to factors
+    ## (is.character(x)), shingle (inherits(x, "shingleLevel")),
+    ## POSIXt (inherits(x, "POSIXt") and usual numeric. The last case
+    ## will be default, and will be changed later if necessary.
+
+    ## The code for shingles will never really be used. Shingles can
+    ## also be thought of as numeric, and that's more appropriate for
+    ## functions like xyplot, and limits will be just range. In
+    ## functions like bwplot, things will be adjusted elsewhere when
+    ## one of the variables is a shingle.
+
+    ## Note that at and labels will never be TRUE (it's set up that
+    ## way), so it's enough to check if they are is.logical(), which
+    ## means they are not explicitly specified.
+
+    ## The variables about log scales are required for cases where at
+    ## is explicitly specified. In such cases, at will be
+    ## log(at,base=logbase), but labels would corr to at.
+
+    if (all(is.na(x))) {
+        ans <- list(at = numeric(0),
+                    labels = numeric(0),
+                    check.overlap = TRUE,
+                    num.limit = c(0,1))
     }
-    if (length(dx)!=length(dy)) stop("Non matching lengths")
-    id <- dx!=0 & dy!=0 & !is.na(dx) & !is.na(dy)
-    if (any(id))
-    {
-        ndx <- dx / xrange
-        ndy <- dy / yrange
-        obj <- function(a)
-        {
-            sum(atan(a * ndy / ndx) * sqrt(ndx^2 + a^2 * ndy^2) ) /
-                sum(sqrt(ndx^2 + a^2 * ndy^2)) -
-                    base::pi / 4
+    else if (is.characterOrExpression(x)) { ## factor
+        ans <- list(at = if (is.logical(at)) seq(along = x) else at,
+                    labels = if (is.logical(labels)) x else labels,
+                    check.overlap = FALSE)
+        ans$num.limit <- c(0, length(ans$at) + 1)
+    }
+    else if (inherits(x, "shingleLevel")) { ## shingle
+        ans <- list(at = if (is.logical(at)) seq(along = x) else at,
+                    labels = if (is.logical(labels))
+                    as.character(seq(along = x)) else labels,
+                    check.overlap = FALSE)
+        ans$num.limit <- c(0, length(ans$at) + 1)
+    }
+    else if (is.numeric(x) && inherits(x, "POSIXt")) { ## POSIX time
+                    
+        num.lim <- as.numeric(range(x))
+        mat <- is.logical(at)
+        mlab <- is.logical(labels)
+
+        if (!mat)
+            x <- as.POSIXct(at)
+        else x <- as.POSIXct(x)
+        range <- as.numeric(range(x))
+        d <- range[2] - range[1]
+        z <- c(range, x[is.finite(x)])
+        if (d < 1.1 * 60) {
+            sc <- 1
+            if (missing(format.posixt)) 
+                format.posixt <- "%S"
         }
-        ##         r  <- abs(dx[id]/dy[id])
-        ##         median(r)
-        ## transform to have arg between 0 and 1
-        objtan <- function(x) obj(tan(base::pi * x / 2))
-        u <- uniroot(f = objtan, lower = 0.01, upper = 0.99)
-        aspect.ratio <- tan(base::pi * u$root / 2)
-        aspect.ratio * xrange / yrange
+        else if (d < 1.1 * 60 * 60) {
+            sc <- 60
+            if (missing(format.posixt)) 
+                format.posixt <- "%M:%S"
+        }
+        else if (d < 1.1 * 60 * 60 * 24) {
+            sc <- 60 * 24
+            if (missing(format.posixt)) 
+                format.posixt <- "%H:%M"
+        }
+        else if (d < 2 * 60 * 60 * 24) {
+            sc <- 60 * 24
+            if (missing(format.posixt)) 
+                format.posixt <- "%a %H:%M"
+        }
+        else if (d < 7 * 60 * 60 * 24) {
+            sc <- 60 * 60 * 24
+            if (missing(format.posixt)) 
+                format.posixt <- "%a"
+        }
+        else {
+            sc <- 60 * 60 * 24
+        }
+        if (d < 60 * 60 * 24 * 50) {
+            zz <- lpretty(z/sc, ...)
+            z <- zz * sc
+            class(z) <- c("POSIXt", "POSIXct")
+            if (missing(format.posixt)) 
+                format.posixt <- "%b %d"
+        }
+        else if (d < 1.1 * 60 * 60 * 24 * 365) {
+            class(z) <- c("POSIXt", "POSIXct")
+            zz <- as.POSIXlt(z)
+            zz$mday <- 1
+            zz$isdst <- zz$hour <- zz$min <- zz$sec <- 0
+            zz$mon <- lpretty(zz$mon, ...)
+            m <- length(zz$mon)
+            m <- rep(zz$year[1], m)
+            zz$year <- c(m, m + 1)
+            z <- as.POSIXct(zz)
+            if (missing(format.posixt)) 
+                format.posixt <- "%b"
+        }
+        else {
+            class(z) <- c("POSIXt", "POSIXct")
+            zz <- as.POSIXlt(z)
+            zz$mday <- 1
+            zz$isdst <- zz$mon <- zz$hour <- zz$min <- zz$sec <- 0
+            zz$year <- lpretty(zz$year, ...)
+            z <- as.POSIXct(zz)
+            if (missing(format.posixt)) 
+                format.posixt <- "%Y"
+        }
+        if (!mat) 
+            z <- x[is.finite(x)]
+        z <- z[z >= range[1] & z <= range[2]]
+        labels <- format(z, format = format.posixt)
+        ans <- list(at = as.numeric(z), labels = labels,
+                    check.overlap = FALSE,
+                    num.limit = num.lim)
     }
-    else 1
+    else { ## plain numeric
+
+        ## will check for overlap only when neither at nor labels is specified
+
+        check.overlap <-
+            if (is.logical(at) && is.logical(labels)) TRUE
+            else FALSE
+        
+        if (is.logical(at)) { # at not explicitly specified
+            #eps <- 1e-10
+            at <- pretty(x[is.finite(x)], ...)
+            
+            ## Need to do this because pretty sometimes returns things
+            ## like 2.3e-17 instead of 0. Probably fixed now (??)
+            #at <- ifelse(abs(at - round(at, 3)) < eps,
+            #             round(at, 3), 
+            #             at)
+        }
+        else if (have.log) { ## and at specified
+            if (is.logical(labels)) labels <- as.character(at)
+            at <- log(at, base = logbase)
+        }
+        ans <- list(at = at, labels = if (is.logical(labels))
+                    paste(logpaste, format(at), sep = "") else labels,
+                    check.overlap = check.overlap, num.limit =
+                    range(x))
+    }
+    if (is.logical(abbreviate) && abbreviate)
+        ans$labels <- abbreviate(ans$labels, minlength)
+    ans
 }
-
-
-
 
 
 
@@ -474,238 +469,496 @@ weighted.banking <-
 
 
 extend.limits <-
-    function(lim, length = 1, axs = "r",
-             prop =
-             if (axs == "i") 0
-             else lattice.getOption("axis.padding")$numeric)
+    function(lim, length=1, axs = "r",
+             prop = if (axs == "i") 0 else 0.07)
 {
-    ## if (!is.numeric(lim)) NA
-    if (all(is.na(lim))) NA_real_ # or lim?
-    else if (is.character(lim) )
-    {
-        c(1, length(lim)) + c(-1, 1) * if (axs == "i") 0.5 else lattice.getOption("axis.padding")$factor
-    }
-    else if (length(lim) == 2)
-    {
-        if (lim[1] > lim[2])
-        {
-            ccall <- match.call()
-            ccall$lim <- rev(lim)
-            ans <- eval.parent(ccall)
-            return (rev(ans))
-        }
+    if (!is.numeric(lim)) NA
+    else if(length(lim)==2) {
+        if (lim[1]>lim[2]) stop("Improper value of limit")
         if (!missing(length) && !missing(prop))
-            stop("'length' and 'prop' cannot both be specified")
-        if (length <= 0) stop("'length' must be positive")
+            stop("length and prop cannot both be specified")
+        if (length <= 0) stop("length must be positive")
         if (!missing(length))
         {
             prop <- (as.numeric(length) - as.numeric(diff(lim))) / (2 * as.numeric(diff(lim)))
         }
         if (lim[1]==lim[2]) lim + 0.5 * c(-length,length)
-        else
-        {
+        else {
             d <- diff(as.numeric(lim))
             lim + prop * d * c(-1,1)
         }
     }
-    else
-    {
+    else {
         print(lim)
-        stop("improper length of 'lim'")
+        stop("improper length of lim in extend.limits")
     }
 }
 
 
 
 
-### this is a catch-common-arguments function that intercepts several
-### common arguments.  These are currently documented in ?xyplot,
-### under \dots (...).  Some arguments of trellis.skeleton are also
-### formal arguments to xyplot, and are documented as such.  These are
-### indicated below with a comment.  This is useful to keep track of
-### documented arguments, because the formal codoc system doesn't work
-### here (trellis.skeleton is not exported and hence not formally
-### documented).
 
 
-### one special exception is 'subscripts'.  A 'subscripts' argument is
-### required in the panel functions for panel.identify etc to work
-### properly.  However, not all high level functions always pass a
-### suitable 'subscripts' argument to its panel function (but some,
-### like 'splom' and 'levelplot' do).  For those that do not, a
-### 'subscripts=TRUE' argument can change the behaviour.  The others
-### don't have a 'subscripts' argument (as it is redundant), but we'll
-### capture and ignore it here to keep the interface consistent.
+construct.scales <-
+    function(draw = TRUE,
+             axs = "r",
+             tck = 1,
+             tick.number = 5,
+             cex = 1,
+             rot = FALSE,
+             at = FALSE,
+             labels = FALSE,
+             col = FALSE,
+             log = FALSE,
+             font = FALSE,
+             alternating = TRUE,
+             relation = "same",
+             abbreviate = FALSE,
+             minlength = 4,
+             limits = NULL,
+             x = NULL,
+             y = NULL,
+             ...)   ## FIXME: how to handle ...
+{
+
+    xfoo <- list(draw = draw, axs = axs, tck = tck,
+                 tick.number = tick.number,
+                 cex = cex,
+                 rot = rot,
+                 font = font,
+                 at = at, labels = labels,
+                 col = col, log = log,
+                 alternating = alternating,
+                 relation = relation,
+                 abbreviate = abbreviate,
+                 minlength = minlength,
+                 limits = limits)
+    yfoo <- xfoo
+    if (!is.null(x)) {
+        if (is.character(x)) x <- list(relation = x)
+        xfoo[names(x)] <- x
+    }
+    if (is.logical(xfoo$alternating))
+        xfoo$alternating <-
+            if (xfoo$alternating) c(1,2)
+            else 1
+    if (!is.null(y)) {
+        if (is.character(y)) y <- list(relation = y)
+        yfoo[names(y)] <- y
+    }
+    if (is.logical(yfoo$alternating))
+        yfoo$alternating <-
+            if (yfoo$alternating) c(1,2)
+            else 1
+    for (nm in c("tck", "cex", "rot")) {
+        xfoo[[nm]] <- rep(xfoo[[nm]], length = 2)
+        yfoo[[nm]] <- rep(yfoo[[nm]], length = 2)
+    }
+    if (xfoo$rel == "same" && (is.list(xfoo$at) || is.list(xfoo$lab)))
+        stop("the at and labels components of scales may not be lists when relation = same")
+    if (yfoo$rel == "same" && (is.list(yfoo$at) || is.list(yfoo$lab)))
+        stop("the at and labels components of scales may not be lists when relation = same")
+    list(x.scales = xfoo, y.scales = yfoo)
+}
+
+
+
+
+
+construct.3d.scales <-
+    function(draw = TRUE,
+             axs = "r",
+             tck = 1,
+             lty = 1, lwd = 1,
+             distance = c(1,1,1),
+             tick.number = 5,
+             cex = 1,
+             rot = FALSE,
+             at = FALSE,
+             labels = FALSE,
+             col = FALSE,
+             log = FALSE,
+             font = FALSE,
+             arrows = TRUE,
+             relation = "same",
+             x = NULL,
+             y = NULL,
+             z = NULL,
+             ...)
+{
+    xfoo <- list(draw = draw, axs = axs, tck = tck,
+                 lty = 1, lwd = 1,
+                 tick.number = tick.number,
+                 cex = cex, rot = rot, font = font,
+                 at = at, labels = labels,
+                 col = col, log = log, arrows = arrows,
+                 relation = relation)
+    yfoo <- xfoo
+    zfoo <- xfoo
+    distance <- rep(distance, length = 3)
+    xfoo$distance <- distance[1]
+    yfoo$distance <- distance[2]
+    zfoo$distance <- distance[3]
+    if (!is.null(x)) {
+        if (is.character(x)) x <- list(relation = x)
+        xfoo[names(x)] <- x
+    }
+    if (!is.null(y)) {
+        if (is.character(y)) y <- list(relation = y)
+        yfoo[names(y)] <- y
+    }
+    if (!is.null(z)) {
+        if (is.character(z)) z <- list(relation = z)
+        zfoo[names(z)] <- z
+    }
+    list(x.scales = xfoo, y.scales = yfoo, z.scales = zfoo)
+}
+
+
+
+
+limits.and.aspect <-
+    function(prepanel.default.function,
+             prepanel = NULL,
+             have.xlim = FALSE, xlim = NULL,
+             have.ylim = FALSE, ylim = NULL,
+             x.relation, y.relation,
+             panel.args.common = list(),
+             panel.args = list(),
+             aspect,
+             nplots,
+             x.axs = "r", y.axs = "r",
+             ...)  ## extra arguments for prepanel (for qqmathline)
+{
+
+    if (nplots<1) stop("need at least one panel")
+    x.limits <- vector("list", nplots)
+    y.limits <- vector("list", nplots)
+    dxdy <- vector("list", nplots)
+
+    for (count in 1:nplots)
+    {
+        if (is.list(panel.args[[count]])) {
+            pargs <- c(panel.args.common, panel.args[[count]], list(...))
+            tem <- do.call("prepanel.default.function", pargs)
+            if (is.function(prepanel)) {
+                prenames <- names(formals(prepanel))
+                if (!("..." %in% prenames)) pargs <- pargs[prenames]
+                pretem <- do.call("prepanel", pargs)
+                tem[names(pretem)] <- pretem
+            }
+            x.limits[[count]] <- tem$xlim
+            y.limits[[count]] <- tem$ylim
+            dxdy[[count]] <- list(tem$dx, tem$dy)
+
+        }
+        else {
+            x.limits[[count]] <- c(NA, NA)
+            y.limits[[count]] <- c(NA, NA)
+            dxdy[[count]] <- list(NA, NA)
+        } 
+
+    }
+
+
+    ## Some explanation might be helpful here. The for loop above
+    ## creates a list of xlims/ylims. Each of these might be either
+    ## numeric (when x/y is numeric, shigle or POSIXt), or levels of a
+    ## factor (that's how prepanel.default.functions are set
+    ## up). However, at this point, all x.limits[[i]] must be of the
+    ## same type. Returned limits must be in accordance with this
+    ## type. The only exception is when relation = "free", in which
+    ## case they may be different. This could happen if [xy]lim or
+    ## limits is supplied as a list in the high level function.
+
+    if (x.relation == "same") {
+
+        ## The problem here is that we need to figure out the overall
+        ## limit required from the limits of each panel. This could be
+        ## a problem for two reasons. First, some panels could have no
+        ## data in them, in which case the corresponding limits would
+        ## be NA. Secondly, the limits could be either numeric or
+        ## character vectors (the latter for factors). When relation =
+        ## same, the type should be same across panels. When numeric,
+        ## we just take range, leaving out NAs. But what about
+        ## factors?  Is it OK to assume that all the non-NA vectors
+        ## would be exactly the same ? They should be, since levels(x)
+        ## would not change even if not all levels are
+        ## represented. So, I'm just taking unique of all the vectors
+        ## concatenated, excluding NA's
+
+        if (have.xlim) {
+            if (is.list(xlim)) stop("limits cannot be a list when relation = same")
+            x.limits <- xlim
+            x.slicelen <- if (is.numeric(xlim)) diff(range(xlim)) else length(xlim) + 2
+        }
+        else {
+
+            ## problem here: unlist loses class, important for
+            ## POSIXct. Adding temporary hack as workaround, needs
+            ## more thorough handling
+
+            ## WAS: just -- x.limits <- unlist(x.limits)
+
+            all.na <- unlist(lapply(x.limits, function(x) all(is.na(x))))
+            class.xlim <- lapply(x.limits[!all.na], class) ## a list now, may be length 0
+            x.limits <- unlist(x.limits)
+            
+
+
+
+            if (length(x.limits) > 0) {
+                if (is.numeric(x.limits)) {
+                    x.limits <- extend.limits(range(x.limits, na.rm = TRUE), axs = x.axs)
+                    x.slicelen <- diff(range(x.limits))
+                }
+                else {
+                    x.limits <- unique(x.limits[!is.na(x.limits)])
+                    x.slicelen <- length(x.limits) + 2
+                }
+                ## put back POSIXct class (can't put back all, because 1:10 has class integer)
+                if (length(class.xlim) > 0 && all(class.xlim[[1]] == c("POSIXt", "POSIXct")))
+                    class(x.limits) <- c("POSIXt", "POSIXct")
+            }
+            else {
+                x.limits <- c(0,1)
+                x.slicelen <- 1
+            }
+        }
+    }
+
+
+    else if (x.relation == "sliced") {
+
+        if (have.xlim) {
+            if (is.list(xlim)) {
+                x.limits <- rep(xlim, length = nplots)
+            }
+            else warning("Explicitly specified x-limits ignored")
+        }
+        x.slicelen <- x.limits
+        for (i in seq(along = x.limits))
+            x.slicelen[[i]] <-
+                if (is.numeric(x.limits[[i]]))
+                    diff(range(x.limits[[i]])) # range unnecessary, but...
+                else NA
+        x.slicelen <- (if (x.axs == "i") 1 else 1.14) * max(unlist(x.slicelen), na.rm = TRUE)
+        for (i in seq(along = x.limits)) {
+            if (is.numeric(x.limits[[i]]))
+                x.limits[[i]] <-
+                    extend.limits(x.limits[[i]], length = x.slicelen)
+        }
+    }
+
+
+    else if (x.relation == "free") {
+
+        if (have.xlim) {
+            if (!is.list(xlim)) xlim <- list(xlim)
+
+            id <- logical(length(x.limits))
+            for (i in seq(along = id)) 
+                id[i] <- !any(is.na(x.limits[[i]]))
+            id <- seq(along = id)[id]
+            id <- id[!is.na(id)]
+            
+            x.limits[id] <- xlim
+        }
+
+        for (i in seq(along = x.limits)) {
+            if (is.numeric(x.limits[[i]])) 
+                x.limits[[i]] <- extend.limits(x.limits[[i]], axs = x.axs)
+            ## o.w., keep it as it is
+        }
+    }
+
+
+
+
+    if (y.relation == "same")
+        if (have.ylim) {
+            if (is.list(ylim)) stop("limits cannot be a list when relation = same")
+            y.limits <- ylim
+            y.slicelen <- if (is.numeric(ylim)) diff(range(ylim)) else length(ylim) + 2
+        }
+        else {
+
+            ## problem here: unlist loses class, important for
+            ## POSIXct. Adding temporary hack as workaround, needs
+            ## more thorough handling
+
+            ## WAS: just -- y.limits <- unlist(y.limits)
+
+            all.na <- unlist(lapply(y.limits, function(x) all(is.na(x))))
+            class.ylim <- lapply(y.limits[!all.na], class) ## a list now, may be length 0
+            y.limits <- unlist(y.limits)
+            
+
+
+            if (length(y.limits) > 0) {
+                if (is.numeric(y.limits)) {
+                    y.limits <- extend.limits(range(y.limits, na.rm = TRUE), axs = y.axs)
+                    y.slicelen <- diff(range(y.limits))
+                }
+                else {
+                    y.limits <- unique(y.limits[!is.na(y.limits)])
+                    y.slicelen <- length(y.limits) + 2
+                }
+                ## put back POSIXct class (can't put back all, because 1:10 has class integer)
+                if (length(class.ylim) > 0 && all(class.ylim[[1]] == c("POSIXt", "POSIXct")))
+                    class(y.limits) <- c("POSIXt", "POSIXct")
+            }
+            else {
+                y.limits <- c(0,1)
+                y.slicelen <- 1
+            }
+        }
+
+
+    else if (y.relation == "sliced") {
+
+        if (have.ylim) {
+            if (is.list(ylim)) {
+                y.limits <- rep(ylim, length = nplots)
+            }
+            else warning("Explicitly specified x-limits ignored")
+        }
+        y.slicelen <- y.limits
+        for (i in seq(along = y.limits))
+            y.slicelen[[i]] <-
+                if (is.numeric(y.limits[[i]]))
+                    diff(range(y.limits[[i]])) # range unnecessary, but...
+                else NA
+        y.slicelen <- (if (y.axs == "i") 1 else 1.14) * max(unlist(y.slicelen), na.rm = TRUE)
+        for (i in seq(along = y.limits)) {
+            if (is.numeric(y.limits[[i]]))
+                y.limits[[i]] <-
+                    extend.limits(y.limits[[i]], length = y.slicelen)
+        }
+    }
+    else if (y.relation == "free") {
+
+        if (have.ylim) {
+            if (!is.list(ylim)) ylim <- list(ylim)
+
+            id <- logical(length(y.limits))
+            for (i in seq(along = id)) 
+                id[i] <- !any(is.na(y.limits[[i]]))
+            id <- seq(along = id)[id]
+            id <- id[!is.na(id)]
+            
+            y.limits[id] <- ylim
+        }
+
+        for (i in seq(along = y.limits)) {
+            if (is.numeric(y.limits[[i]]))
+                y.limits[[i]] <- extend.limits(y.limits[[i]], axs = y.axs)
+            ## o.w., keep it as it is
+        }
+    }
+
+
+    if (is.character(aspect))
+        if (aspect == "xy") {
+            aspect <- median(unlist(lapply(dxdy, banking)), na.rm = TRUE)
+            if (y.relation == "free")
+                warning("aspect=xy when y-relation=free is not sensible")
+            else aspect <- aspect *
+                as.numeric(
+                           if (y.relation == "sliced") y.slicelen
+                           else { ## i.e., relation = same
+                               if (is.numeric(y.limits)) diff(y.limits)
+                               else length(y.limits) + 2
+                           }
+                           )
+            if (x.relation == "free")
+                warning("aspect=xy when x-relation=free is not sensible")
+            else aspect <- aspect /
+                as.numeric(
+                           if (x.relation == "sliced") x.slicelen
+                           else {
+                               if (is.numeric(x.limits)) diff(x.limits)
+                               else length(x.limits) + 2
+                           }
+                           )
+        }
+    else aspect <- 1
+
+    list(x.limits = x.limits,
+         y.limits = y.limits,
+         aspect.ratio = aspect)
+}
+
+
+
 
 
 
 trellis.skeleton <-
-    function(formula = NULL,
-             cond,
-             aspect = default.args$aspect, # argument in xyplot
-             as.table = default.args$as.table,
-             between = default.args$between,
+    function(as.table = FALSE,
+             aspect = "fill",
+             between = list(x=0, y=0),
              key = NULL,
-             legend = NULL,
-             page = default.args$page,
-             main = default.args$main,
-             sub = default.args$sub,
-             par.strip.text = default.args$par.strip.text,
-             layout = default.args$layout,
-             skip = default.args$skip,
-             strip = default.args$strip.default, # argument in xyplot
-             strip.left = FALSE,
-             xlab.default = NULL,
-             ylab.default = NULL,
-             xlab = NULL, # argument in xyplot
-             ylab = NULL, # argument in xyplot
-             xlab.top = NULL,
-             ylab.right = NULL,
-
-             panel,       # argument in xyplot
-
-             xscale.components = default.args$xscale.components,
-             yscale.components = default.args$yscale.components,
-             axis = default.args$axis,
-
-             subscripts = TRUE, # ignored, for reasons given above
-
-             index.cond = NULL,
-             perm.cond = NULL,
-             ...,
-             par.settings = NULL,
-             plot.args = NULL,
-             lattice.options = NULL)
-{
-    default.args <- lattice.getOption("default.args")
-    if (is.null(skip)) skip <- FALSE
-    foo <-
-        list(formula = formula,
-             as.table = as.table,
-             aspect.fill = (aspect == "fill"),
-             ## key = key,
-             legend = construct.legend(legend = legend, key = key),
+             page = NULL,
+             main = NULL,
+             sub = NULL,
+             par.strip.text = list(),
+             skip = FALSE,
+             strip = strip.default,
+             xlab = NULL,
+             ylab = NULL,
              panel = panel,
-             page = page,
-             layout = layout,
-             skip = skip,
-             strip = if (is.logical(strip) && strip) "strip.default"
-             else strip,
-             strip.left = if (is.logical(strip.left) && strip.left) strip.custom(horizontal = FALSE)
-             else strip.left,
-             xscale.components = xscale.components,
-             yscale.components = yscale.components,
-             axis = axis,
-             xlab = xlab,
-             ylab = ylab,
-             xlab.default = xlab.default,
-             ylab.default = ylab.default,
-             xlab.top = xlab.top,
-             ylab.right = ylab.right,
-             main = main,
-             sub = sub,
-             x.between = 0,
-             y.between = 0,
-             par.settings = par.settings,
-             plot.args = plot.args,
-             lattice.options = lattice.options,
-             par.strip.text = par.strip.text,
-             index.cond = index.cond,
-             perm.cond = perm.cond)
-
+             ...)
+{
+    foo <- list(as.table = as.table,
+                aspect.fill = aspect=="fill",
+                key = key,
+                panel = panel, 
+                page = page,
+                skip = skip,
+                strip = if (is.logical(strip) && strip) "strip.default"
+                else strip,
+                x.between = 0,
+                y.between = 0,
+                par.strip.text = trellis.par.get("add.text"))
+    if (is.null(foo$par.strip.text)) foo$par.strip.text = list(col = "black", cex = 1, font = 1)
+    foo$par.strip.text$lines <- 1
+    
     if (!is.null(between$x)) foo$x.between <- between$x
     if (!is.null(between$y)) foo$y.between <- between$y
 
-    foo$condlevels <- lapply(cond, levels)
+    foo$par.strip.text[names(par.strip.text)] <- par.strip.text
 
+    if (!is.null(main)) {
+        text <- trellis.par.get("par.main.text")
+        if (is.null(text)) text <- list(cex = 1.2, col = "black", font = 2) # shouldn't happen
+        foo$main <- list(label = if (is.list(main)) main[[1]] else main,
+                         col = text$col, cex = text$cex, font = text$font)
+        if (is.list(main)) foo$main[names(main)] <- main
+    }
+    if (!is.null(sub)) {
+        text <- trellis.par.get("par.sub.text")
+        if (is.null(text)) text <- list(cex = 1, col = "black", font = 2)
+        foo$sub <- list(label = if (is.list(sub)) sub[[1]] else sub,
+                        col = text$col, cex = text$cex, font = text$font)
+        if (is.list(sub)) foo$sub[names(sub)] <- sub
+    }
+    if (!is.null(xlab)) {
+        text <- trellis.par.get("par.xlab.text")
+        if (is.null(text)) text <- list(cex = 1, col = "black", font = 1)
+        foo$xlab <- list(label = if (is.list(xlab)) xlab[[1]] else xlab,
+                         col = text$col, cex = text$cex, font = text$font)
+        if (is.list(xlab)) foo$xlab[names(xlab)] <- xlab
+    }
+    if (!is.null(ylab)) {
+        text <- trellis.par.get("par.ylab.text")
+        if (is.null(text)) text <- list(cex = 1.2, col = "black", font = 2)
+        foo$ylab <- list(label = if (is.list(ylab)) ylab[[1]] else ylab,
+                         col = text$col, cex = text$cex, font = text$font)
+        if (is.list(ylab)) foo$ylab[names(ylab)] <- ylab
+    }
     list(foo = foo, dots = list(...))
 }
-
-
-
-
-
-
-
-
-cond.orders <- function(foo, ...)
-    ## function to determine order of panels within a cond. variable
-    ## foo: trellis object-to-be
-
-    ## calculate actual values for index.cond and perm.cond.
-    ## index.cond can be a function, in which case it would be used to
-    ## determing order of levels within conditioning variables
-
-    ## Question: should these be determined at run-time? Wouldn't be
-    ## impossible, but has the disadvantage that looking at the
-    ## trellis object will be totally uninformative in the default
-    ## case (when both would be NULL). In a sense, this is fine, since
-    ## having index.cond be a function is similar to having a prepanel
-    ## function. After all, the results depend only on the panel
-    ## contents, and those cannot be changed via update.
-
-{
-
-    ## the following to be used for changing order of conditioning
-    ## variables and indexing their levels. The object foo already has
-    ## components index.cond and perm.cond as whatever was passed to
-    ## the original function call. If these are NULL, suitable
-    ## defaults need to be computed. If foo$index.cond is a function,
-    ## index.cond has to be computed appropriately.
-
-    index.cond <-
-        vector(mode = "list",
-               length = length(foo$condlevels))
-
-    for (i in seq_along(foo$condlevels))
-        index.cond[[i]] <- seq_along(foo$condlevels[[i]])
-    perm.cond <- seq_len(length(foo$condlevels))
-
-    if (!is.null(foo$perm.cond))
-    {
-        if (all(sort(foo$perm.cond) == perm.cond))
-            perm.cond <- foo$perm.cond
-        else  stop("Invalid value of perm.cond")
-    }
-    if (!is.null(foo$index.cond))
-    {
-        if (is.list(foo$index.cond) && length(foo$index.cond) == length(index.cond))
-        {
-            for (i in seq_along(foo$condlevels))
-                index.cond[[i]] <- index.cond[[i]][foo$index.cond[[i]]]
-        }
-        else if (is.function(foo$index.cond))
-        {
-            FUN <- foo$index.cond
-            nplots <- length(foo$panel.args)
-            panel.order <- numeric(nplots)
-            for (count in seq_len(nplots))
-            {
-                if (is.list(foo$panel.args[[count]]))
-                {
-                    pargs <- c(foo$panel.args.common, foo$panel.args[[count]], list(...))
-                    prenames <- names(formals(FUN))
-                    if (!("..." %in% prenames)) pargs <- pargs[intersect(names(pargs), prenames)]
-                    panel.order[count] <- do.call("FUN", pargs)
-                }
-                else  ## this happens for empty panels
-                {
-                    is.na(panel.order) <- count # panel.order[count] <- NA
-                }
-            }
-            dim(panel.order) <- sapply(foo$condlevels, length)
-            for (i in seq_along(foo$condlevels))
-                index.cond[[i]] <-
-                    order(apply(panel.order, i, mean, na.rm = TRUE))
-        }
-        else stop("Invalid value of index.cond")
-    }
-    list(index.cond = index.cond, perm.cond = perm.cond)
-}
-
-
-
-
 
 
 
@@ -716,69 +969,38 @@ cond.orders <- function(foo, ...)
 compute.layout <-
     function(layout, cond.max.level, skip = FALSE)
 {
-    if (all(skip)) stop("skip cannot be all TRUE")
     number.of.cond <- length(cond.max.level)
     nplots <- prod(cond.max.level)
-    if (is.null(layout))
-    {
+    
+    if (!is.numeric(layout)) {
         layout <- c(0,1,1)
-        if (number.of.cond == 1) layout[2] <- nplots
-        else
-        {
+        if (number.of.cond==1) layout[2] <- nplots
+        else {
             layout[1] <- cond.max.level[1]
             layout[2] <- cond.max.level[2]
         }
-        skip <- rep(skip, length.out = max(layout[1] * layout[2], layout[2]))
+        skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
         plots.per.page <- length(skip) - length(skip[skip])
         layout[3] <- ceiling(nplots/plots.per.page) # + 1
     }
-    else if (length(layout) == 1)
+    else if (length(layout)==1)
         stop("layout must have at least 2 elements")
-    else if (length(layout) == 2 || length(layout) == 3)
+    else if (length(layout)==2)
     {
-        if (all(is.na(layout[1:2])) || ## stop("Row and column cannot both be NA in layout.")
-            all(layout[1:2] < 1)    || ## stop("At least one of row and column must be positive in layout.")
-            isTRUE(layout[2] < 1)) stop("Inadmissible value of layout.")
-        if (is.na(layout[1]))
-            layout[1] <- ceiling(nplots / layout[2])
-        if (is.na(layout[2]))
-            layout[2] <- ceiling(nplots / layout[1])
-        skip <- rep(skip, length.out = max(layout[1] * layout[2], layout[2]))
+        if(all(layout<1))
+            stop("at least one element of layout must be positive")
+        else if (layout[2]==0) stop("inadmissible value of layout")
+        
+        skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
         plots.per.page <- length(skip) - length(skip[skip])
-        min.page <- ceiling(nplots / plots.per.page) # + 1
-        if (length(layout) == 2)
-            layout[3] <- min.page
-        else ## length(layout) == 3
-        {
-            if (layout[3] < 1)
-                stop("invalid value for layout")
-            if (layout[3] > min.page)
-                warning("More pages in layout than seem to be necessary.")
-        }
+        layout[3] <- ceiling(nplots/plots.per.page) # + 1 
+    }
+    else if (length(layout)==3) {
+        if(layout[1]<0||layout[2]<1||layout[3]<1)
+            stop("invalid value for layout")
     }
     layout
 }
 
 
-
-
-compute.packet <-
-    function(cond, levels)
-{
-    id <- !(do.call("pmax", lapply(cond, is.na)))
-    stopifnot(any(id))
-    for (i in seq_along(cond))
-    {
-        var <- cond[[i]]
-        id <-
-            id & (
-                  if (is.shingle(var))
-                  ((var >= levels(var)[[levels[i]]][1]) &
-                   (var <= levels(var)[[levels[i]]][2]))
-                  else
-                  (as.numeric(var) == levels[i])
-                  )
-    }
-    id
-}
 

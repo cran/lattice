@@ -1,8 +1,8 @@
 
 
-### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
+### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
-### This file is part of the lattice package for R.
+### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -15,71 +15,51 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-### MA 02110-1301, USA
+### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+### MA 02111-1307, USA
 
 
 
-## from R 2.4.0 onwards, hist.default produces a warning when any
-## 'unused' arguments are supplied.  Before then, all ... arguments
-## used to be supplied to hist(), so arguments to hist() could be
-## supplied that way.  This is no longer possible, so the following
-## wrapper is being added to capture undesirable arguments.
 
 
-hist.constructor <- 
-    function(x, breaks, 
-             include.lowest = TRUE,
-             right = TRUE, ...)
-{
-    if (is.numeric(breaks) && length(breaks) > 1)
-        hist(as.numeric(x), breaks = breaks, plot = FALSE,
-             include.lowest = include.lowest,
-             right = right)
-    else
-        hist(as.numeric(x), breaks = breaks, right = right, plot = FALSE)
-}
 
-    ## if (prefer.density && type != "density" && !is.function(breaks))
-    ##     warning(gettextf("type='%s' can be misleading in this context", type))
 
 
 
 prepanel.default.histogram <-
     function(x,
-             breaks,
+             breaks = NULL,
              equal.widths = TRUE,
              type = "density",
-             nint = round(log2(length(x)) + 1),
              ...)
 {
-    if (length(x) < 1) prepanel.null()
+    if (!is.numeric(x)) x <- as.numeric(x)
+
+    if (length(x)<1)
+        list(xlim = NA,
+             ylim = NA,
+             dx = NA,
+             dy = NA)
     else
     {
-        if (is.null(breaks))
-        {
+        if (is.null(breaks)) {
+            nint <- round(log2(length(x)) + 1)
             breaks <-
-                if (is.factor(x)) seq_len(1 + nlevels(x)) - 0.5
-                else if (equal.widths) do.breaks(range(x, finite = TRUE), nint)
-                else quantile(x, 0:nint/nint, na.rm = TRUE)
+                if (equal.widths) do.breaks(range(x), nint)
+                else quantile(x, 0:nint/nint)
         }
-        h <-
-            hist.constructor(x, breaks = breaks, ...)
-        if (type != "density" && is.function(breaks))
-        {
-            ## warn if not equispaced breaks
-            if (!isTRUE(all.equal(diff(range(diff(h$breaks))), 0)))
-                warning(gettextf("type='%s' can be misleading in this context", type))
-        }
+        h <- hist(x, breaks = breaks, plot = FALSE, ...)
         y <-
-            switch(type,
-                   count = h$counts,
-                   percent = 100 * h$counts/length(x),
-                   density = h$density)
-        list(xlim =
-             if (is.factor(x)) levels(x) # same as scale_limits(x)
-             else scale_limits(c(x, h$breaks)),
-             ylim = range(0, y, finite = TRUE),
+            if (type == "count") h$counts
+            else if (type == "percent") 100 * h$counts/length(x)
+            else h$intensities
+        xlim <- range(x)
+        ##lbreak <- max(xlim[1], breaks[breaks<=xlim[1]])
+        ##ubreak <- min(xlim[2], breaks[breaks>=xlim[2]])
+        ## why ?
+        ##list(xlim = range(x, lbreak, ubreak),
+        list(xlim = range(x, breaks),
+             ylim = range(0,y),
              dx = 1,
              dy = 1)
     }
@@ -87,67 +67,57 @@ prepanel.default.histogram <-
 
 
 
-panel.histogram <-
-    function(x,
-             breaks,
-             equal.widths = TRUE,
-             type = "density",
-             nint = round(log2(length(x)) + 1),
-             alpha = plot.polygon$alpha,
-             col = plot.polygon$col,
-             border = plot.polygon$border,
-             lty = plot.polygon$lty,
-             lwd = plot.polygon$lwd,
-             ...,
-             identifier = "histogram")
-{
-    plot.polygon  <- trellis.par.get("plot.polygon")
 
-    xscale <- current.panel.limits()$xlim
-    panel.lines(x = xscale[1] + diff(xscale) * c(0.05, 0.95),
-                y = c(0,0),
-                col = border, lty = lty, lwd = lwd, alpha = alpha,
-                identifier = paste(identifier, "baseline", sep = "."))
-##     grid.lines(x = c(0.05, 0.95),
-##                y = unit(c(0,0), "native"),
-##                gp = gpar(col = border, lty = lty, lwd = lwd, alpha = alpha),
-##                default.units = "npc")
+
+
+
+
+
+panel.histogram <- function(x,
+                            breaks,
+                            equal.widths = TRUE,
+                            type = "density",
+                            col = bar.fill$col,
+                            ...)
+{
+    x <- as.numeric(x)
+
+    grid.lines(x = c(0.05, 0.95),
+               y = unit(c(0,0),"native"),
+               default.units = "npc")
         
-    if (length(x) > 0)
-    {
-        if (is.null(breaks))
-        {
+    if (length(x)>0) {
+        bar.fill  <- trellis.par.get("bar.fill")
+
+        if (is.null(breaks)) {
+
+            nint <- round(log2(length(x)) + 1)
             breaks <-
-                if (is.factor(x)) seq_len(1 + nlevels(x)) - 0.5
-                else if (equal.widths) do.breaks(range(x, finite = TRUE), nint)
-                else quantile(x, 0:nint/nint, na.rm = TRUE)
+                if (equal.widths) do.breaks(range(x), nint)
+                else quantile(x, 0:nint/nint)
+
         }
-        h <- hist.constructor(x, breaks = breaks, ...)
+
+        h <- hist(x, breaks = breaks, plot = FALSE, ...)
         y <-
-            switch(type,
-                   count = h$counts,
-                   percent = 100 * h$counts/length(x),
-                   density = h$density)
-        ## y <-
-        ##     if (type == "count") h$counts
-        ##     else if (type == "percent") 100 * h$counts/length(x)
-        ##     else h$density
-        breaks <- h$breaks
+            if (type == "count") h$counts
+            else if (type == "percent") 100 * h$counts/length(x)
+            else h$intensities
 
         nb <- length(breaks)
-        if (length(y) != nb-1) warning("problem with 'hist' computations")
+        if (nb != (length(y)+1)) warning("something is probably wrong")
 
-        if (nb > 1)
-        {
-            panel.rect(x = breaks[-nb],
-                       y = 0,
-                       height = y,
-                       width = diff(breaks),
-                       col = col, alpha = alpha,
-                       border = border, lty = lty,
-                       lwd = lwd,
-                       just = c("left", "bottom"),
-                       identifier = identifier)
+        if (nb>1) {
+            for(i in 1:(nb-1))
+                if (y[i]>0) {
+                    grid.rect(gp = gpar(fill = col),
+                              x = breaks[i],
+                              y = 0,
+                              height = y[i],
+                              width = breaks[i+1]-breaks[i],
+                              just = c("left", "bottom"),
+                              default.units = "native")
+                }
         }
     }
 }
@@ -155,37 +125,21 @@ panel.histogram <-
 
 
 
-histogram <- function(x, data, ...) UseMethod("histogram")
-
-
-histogram.factor <- histogram.numeric <-
-    function(x, data = NULL, xlab = deparse(substitute(x)), ...)
-{
-    ocall <- sys.call(); ocall[[1]] <- quote(histogram)
-    ccall <- match.call()
-    if (!is.null(ccall$data)) 
-        warning("explicit 'data' specification ignored")
-    ccall$data <- environment() # list(x = x)
-    ccall$xlab <- xlab
-    ccall$x <- ~x
-    ccall[[1]] <- quote(lattice::histogram)
-    ans <- eval.parent(ccall)
-    ans$call <- ocall
-    ans
-}
 
 
 
 
 
-histogram.formula <-
-    function(x,
-             data = NULL,
-             allow.multiple = is.null(groups) || outer,
-             outer = TRUE,
-             auto.key = lattice.getOption("default.args")$auto.key,
+
+histogram <-
+    function(formula,
+             data = parent.frame(),
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = "fill",
-             panel = lattice.getOption("panel.histogram"),
+             layout = NULL,
+             panel = "panel.histogram",
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -195,36 +149,35 @@ histogram.formula <-
              ylab,
              ylim,
              type = c("percent", "count", "density"),
-             nint = if (is.factor(x)) nlevels(x)
+             nint = if (is.factor(x)) length(levels(x))
              else round(log2(length(x)) + 1),
-             endpoints = extend.limits(range(as.numeric(x), finite = TRUE), prop = 0.04),
-             breaks,
+             endpoints = extend.limits(range(x[!is.na(x)]), prop = 0.04),
+             breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
+             else do.breaks(endpoints, nint),
              equal.widths = TRUE,
-             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
-             lattice.options = NULL,
-             default.scales = list(),
-             default.prepanel = lattice.getOption("prepanel.default.histogram"),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
-    formula <- x
+
+    ## dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
-    groups <- eval(substitute(groups), data, environment(formula))
-    subset <- eval(substitute(subset), data, environment(formula))
-    if (!is.null(lattice.options))
-    {
-        oopt <- lattice.options(lattice.options)
-        on.exit(lattice.options(oopt), add = TRUE)
-    }
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
 
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
+
+    formname <- deparse(substitute(formula))
+    formula <- eval(substitute(formula), data, parent.frame())
+
+    if (!inherits(formula, "formula"))
+        formula <- as.formula(paste("~", formname))
+    
     form <-
         latticeParseFormula(formula, data, subset = subset,
                             groups = groups, multiple = allow.multiple,
-                            outer = outer, subscripts = TRUE,
-                            drop = drop.unused.levels)
+                            outer = outer, subscripts = TRUE)
 
     groups <- form$groups
 
@@ -233,68 +186,81 @@ histogram.formula <-
 
     if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
     if (subscripts) subscr <- form$subscr
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
     cond <- form$condition
+    number.of.cond <- length(cond)
     x <- form$right
-    if (length(cond) == 0)
-    {
+    if (number.of.cond == 0) {
         strip <- FALSE
-        cond <- list(gl(1, length(x)))
+        cond <- list(as.factor(rep(1, length(x))))
+        layout <- c(1,1,1)
+        number.of.cond <- 1
     }
+
+
+
+
+
+
+    
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- TRUE
 
     ##if(!(is.numeric(x) || is.factor(x)))
     ##    warning("x should be numeric")
     ##x <- as.numeric(x)
-
     ## create a skeleton trellis object with the
     ## less complicated components:
 
-    foo <-
-        do.call("trellis.skeleton",
-                c(list(formula = formula, 
-                       cond = cond,
-                       aspect = aspect,
-                       strip = strip,
-                       panel = panel,
-                       xlab = xlab,
-                       ylab = ylab,
-                       xlab.default = form$right.name,
-                       ylab.default = "dummy",
-                       lattice.options = lattice.options), dots),
-                quote = TRUE)
+    foo <- do.call("trellis.skeleton",
+                   c(list(aspect = aspect,
+                          strip = strip,
+                          panel = panel,
+                          xlab = xlab,
+                          ylab = ylab), dots))
                           
+
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- sys.call(); foo$call[[1]] <- quote(histogram)
+    foo$call <- match.call()
+    foo$fontsize.normal <- 10
+    foo$fontsize.small <- 8
+
+    ## This is for cases like xlab/ylab = list(cex=2)
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
+        foo$xlab$label <- form$right.name
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
+    ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
-    scales <- updateList(default.scales, scales)
-    foo <- c(foo, do.call("construct.scales", scales))
+    foo <- c(foo,
+             do.call("construct.scales", scales))
+
 
     ## Step 3: Decide if limits were specified in call:
     
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limits))
-    {
+    if (!is.null(foo$x.scales$limit)) {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limits
+        xlim <- foo$x.scales$limit
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limits))
-    {
+    if (!is.null(foo$y.scales$limit)) {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limits
+        ylim <- foo$y.scales$limit
     }
 
     ## Step 4: Decide if log scales are being used:
 
     have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
     have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
-    if (have.xlog)
-    {
+    if (have.xlog) {
         xlog <- foo$x.scales$log
         xbase <-
             if (is.logical(xlog)) 10
@@ -302,128 +268,116 @@ histogram.formula <-
             else if (xlog == "e") exp(1)
         
         x <- log(x, xbase)
-        if (have.xlim) xlim <- logLimits(xlim, xbase)
+        if (have.xlim) xlim <- log(xlim, xbase)
     }
-    if (have.ylog)
-    {
+    if (have.ylog) {
         warning("Can't have log Y-scale")
         have.ylog <- FALSE
         foo$y.scales$log <- FALSE
     }
 
-    ## should type default to density?  "Yes" when a relative
-    ## frequency histogram is going to be misleading.
-
-    if (missing(breaks)) # explicit NULL, or function, or character is fine
-    {
-        breaks <- lattice.getOption("histogram.breaks")
-        if (is.null(breaks)) # nothing specified
-            breaks <- # use nint and endpoints
-                if (is.factor(x)) seq_len(1 + nlevels(x)) - 0.5
-                else do.breaks(as.numeric(endpoints), nint)
-    }
-
-    ## We would like to issue a warning if type!="density" but breaks
-    ## are not equispaced.  This is done here: BUT there is a problem
-    ## if 'breaks' is a function, because then we cannot know if the
-    ## breaks are equispaced here.  On the other hand, we can issue
-    ## the warning in the prepanel/panel function, but that could
-    ## cause unnecessary repititions.
-
-    ## The compromise is that we only issue a warning when 'breaks' is
-    ## not a function (even though we still prefer type=density in
-    ## that case because we don't want to impose a default of
-    ## equispaced breaks in that case).  Ideally, the prepanel
-    ## function should check if type!=density and warn if necessary
-    ## when breaks is a function.
-    
-    prefer.density <- 
-        (is.function(breaks) || 
-         (is.null(breaks) && !equal.widths) ||
-         (is.numeric(breaks) && (length(breaks) > 1) && !isTRUE(all.equal(diff(range(diff(breaks))), 0)))
-         )
-    if (missing(type) && prefer.density)
+    if ((have.xlog || is.null(breaks) ||
+         length(unique(round(diff(breaks)))) != 1) &&
+        missing(type))
         type <- "density"
-    type <- match.arg(type)
-    if (prefer.density && type != "density" && !is.function(breaks))
-        warning(gettextf("type='%s' can be misleading in this context", type))
+    else type <- match.arg(type)
 
-    ## this is normally done earlier (in trellis.skeleton), but in
-    ## this case we needed to wait till type is determined
-
-    foo$ylab.default <-
-        switch(type,
-               count   = gettext("Count"),
-               percent = gettext("Percent of Total"),
-               density = gettext("Density"))
+    if (is.logical(foo$ylab$label)) foo$ylab$label <- 
+        if (type == "count") "Count"
+        else if (type == "percent") "Percent of Total"
+        else "Density"
 
     ## Step 5: Process cond
 
     cond.max.level <- unlist(lapply(cond, nlevels))
 
-    ## Step 6: Determine packets
 
-    foo$panel.args.common <-
-        c(list(breaks = breaks,
-               type = type,
-               equal.widths = equal.widths,
-               nint = nint),
-          dots)
+    id.na <- is.na(x)
+    for (var in cond)
+        id.na <- id.na | is.na(var)
+    if (!any(!id.na)) stop("nothing to draw")
+    ## Nothing simpler ?
+
+    foo$condlevels <- lapply(cond, levels)
+
+    ## Step 6: Evaluate layout, panel.args.common and panel.args
+
+    ## equal.widths <- eval(equal.widths, data, parent.frame()) #keep this way ?
+    foo$panel.args.common <- c(list(breaks = breaks,
+                                    type = type,
+                                    equal.widths = equal.widths), dots)
     if (subscripts) foo$panel.args.common$groups <- groups
 
-    npackets <- prod(cond.max.level)
-    if (npackets != prod(sapply(foo$condlevels, length))) 
-        stop("mismatch in number of packets")
-    foo$panel.args <- vector(mode = "list", length = npackets)
+    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
+    plots.per.page <- max(layout[1] * layout[2], layout[2])
+    number.of.pages <- layout[3]
+    foo$skip <- rep(foo$skip, length = plots.per.page)
+    foo$layout <- layout
 
-    foo$packet.sizes <- numeric(npackets)
-    if (npackets > 1)
-    {
-        dim(foo$packet.sizes) <- sapply(foo$condlevels, length)
-        dimnames(foo$packet.sizes) <- lapply(foo$condlevels, as.character)
-    }
+    nplots <- plots.per.page * number.of.pages
+    
+    foo$panel.args <- as.list(1:nplots)
+    cond.current.level <- rep(1,number.of.cond)
+    panel.number <- 1 # this is a counter for panel number
+    for (page.number in 1:number.of.pages)
+        if (!any(cond.max.level-cond.current.level<0))
+            for (plot in 1:plots.per.page) {
 
-    cond.current.level <- rep(1, length(cond))
+                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
+                else if(!any(cond.max.level-cond.current.level<0)) {
 
-    for (packet.number in seq_len(npackets))
-    {
-        id <- compute.packet(cond, cond.current.level)
-        foo$packet.sizes[packet.number] <- sum(id)
+                    id <- !id.na
+                    for(i in 1:number.of.cond)
+                    {
+                        var <- cond[[i]]
+                        id <- id &
+                        if (is.shingle(var))
+                            ((var >=
+                              levels(var)[[cond.current.level[i]]][1])
+                             & (var <=
+                                levels(var)[[cond.current.level[i]]][2]))
+                        else (as.numeric(var) == cond.current.level[i])
+                    }
 
-        foo$panel.args[[packet.number]] <- list(x = x[id])
-        if (subscripts)
-            foo$panel.args[[packet.number]]$subscripts <-
-                subscr[id]
+                    ##if (any(id)) {
+                    foo$panel.args[[panel.number]] <-
+                        list(x = x[id])
+                    if (subscripts)
+                        foo$panel.args[[panel.number]]$subscripts <-
+                            subscr[id]
+                    ##}
+                    ##else
+                    ##    foo$panel.args[[panel.number]] <-FALSE
+                    
+                    cond.current.level <-
+                        cupdate(cond.current.level,
+                                cond.max.level)
+                }
 
-        cond.current.level <-
-            cupdate(cond.current.level,
-                    cond.max.level)
-    }
+                panel.number <- panel.number + 1
+            }
 
-    more.comp <- c(limits.and.aspect(default.prepanel,
-                                     prepanel = prepanel, 
-                                     have.xlim = have.xlim, xlim = xlim, 
-                                     have.ylim = have.ylim, ylim = ylim, 
-                                     x.relation = foo$x.scales$relation,
-                                     y.relation = foo$y.scales$relation,
-                                     panel.args.common = foo$panel.args.common,
-                                     panel.args = foo$panel.args,
-                                     aspect = aspect,
-                                     npackets = npackets,
-                                     x.axs = foo$x.scales$axs,
-                                     y.axs = foo$y.scales$axs),
-                   cond.orders(foo))
-    foo[names(more.comp)] <- more.comp
+    foo <- c(foo,
+             limits.and.aspect(prepanel.default.histogram,
+                               prepanel = prepanel, 
+                               have.xlim = have.xlim, xlim = xlim, 
+                               have.ylim = have.ylim, ylim = ylim, 
+                               x.relation = foo$x.scales$relation,
+                               y.relation = foo$y.scales$relation,
+                               panel.args.common = foo$panel.args.common,
+                               panel.args = foo$panel.args,
+                               aspect = aspect,
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
 
-    if (is.null(foo$legend) && needAutoKey(auto.key, groups))
-    {
-        foo$legend <-
-            autoKeyLegend(list(text = levels(as.factor(groups)),
-                               points = FALSE,
-                               rectangles = TRUE,
-                               lines = FALSE),
-                          auto.key)
-    }
+
+    if (is.null(foo$key) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+        foo$key <- do.call("simpleKey",
+                           c(list(levels(as.factor(groups))),
+                             if (is.list(auto.key)) auto.key else list()))
+
     class(foo) <- "trellis"
     foo
 }

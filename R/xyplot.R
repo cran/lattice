@@ -1,8 +1,8 @@
 
 
-### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
+### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
 ###
-### This file is part of the lattice package for R.
+### This file is part of the lattice library for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -15,156 +15,96 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-### MA 02110-1301, USA
+### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+### MA 02111-1307, USA
 
 
 
 
 prepanel.default.xyplot <-
-    function(x, y, type, subscripts, groups = NULL, ...)
+    function(x, y, type, subscripts, groups, ...)
 {
-    ## Note: shingles satisfy is.numeric()
-    if (any(!is.na(x)) && any(!is.na(y)))
-    {
-        ord <- order(as.numeric(x))
-        if (!is.null(groups))
-        {
-            gg <- groups[subscripts]
-            dx <- unlist(lapply(split(as.numeric(x)[ord], gg[ord]), diff))
-            dy <- unlist(lapply(split(as.numeric(y)[ord], gg[ord]), diff))
-            ## ok <- !is.na(gg)
 
-            ## One may argue that points with is.na(gg) should be
-            ## excluded from the data rectangle since they are not
-            ## plotted.  For now I'm going to take the other view,
-            ## namely that the points are there, they just happen to
-            ## be invisible because the value of the variable defining
-            ## their graphical parameters is unknown.
+    ## Note: shingles satisfy is.numeric()
+    if (any(!is.na(x)) && any(!is.na(y))) {
+
+        if (!missing(groups))
+        {
+            vals <-
+                if (is.factor(groups)) levels(groups)
+                else sort(unique(groups))
+
+            dx <- numeric(0)
+            dy <- numeric(0)
+            for (i in seq(along=vals))
+            {
+                id <- (groups[subscripts] == vals[i])
+                ord <- sort.list(x)
+                dx <- c(dx, as.numeric(diff(x[ord])))
+                dy <- c(dy, as.numeric(diff(y[ord])))
+            }
         }
         else
         {
-            dx <- diff(as.numeric(x[ord]))
-            dy <- diff(as.numeric(y[ord]))
-            ## ok <- TRUE
+            ord <- sort.list(x)
+            dx = as.numeric(diff(x[ord]))
+            dy = as.numeric(diff(y[ord]))            
         }
-        list(xlim = scale_limits(x), ylim = scale_limits(y), dx = dx, dy = dy,
-             xat = if (is.factor(x)) sort(unique(as.numeric(x))) else NULL,
-             yat = if (is.factor(y)) sort(unique(as.numeric(y))) else NULL)
+        list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else levels(x),
+             ylim = if (is.numeric(y)) range(y[is.finite(y)]) else levels(y),
+             dx = dx, dy = dy)
+
     }
-    else prepanel.null()
+    else list(xlim = c(NA, NA),
+              ylim = c(NA, NA),
+              dx = NA, dy = NA)
 }
 
 
 
 
 panel.xyplot <-
-    function(x, y, type = "p",
-             groups = NULL,
-             pch = if (is.null(groups)) plot.symbol$pch else superpose.symbol$pch,
+    function(x, y, type="p",
+             pch = plot.symbol$pch,
              col,
-             col.line = if (is.null(groups)) plot.line$col else superpose.line$col,
-             col.symbol = if (is.null(groups)) plot.symbol$col else superpose.symbol$col,
-             font = if (is.null(groups)) plot.symbol$font else superpose.symbol$font,
-             fontfamily = if (is.null(groups)) plot.symbol$fontfamily else superpose.symbol$fontfamily,
-             fontface = if (is.null(groups)) plot.symbol$fontface else superpose.symbol$fontface,
-             lty = if (is.null(groups)) plot.line$lty else superpose.line$lty,
-             cex = if (is.null(groups)) plot.symbol$cex else superpose.symbol$cex,
-             fill = if (is.null(groups)) plot.symbol$fill else superpose.symbol$fill,
-             lwd = if (is.null(groups)) plot.line$lwd else superpose.line$lwd,
-             horizontal = FALSE,
-             ...,
-             smooth = NULL,
-             grid = lattice.getOption("default.args")$grid,
-             abline = NULL,
-             jitter.x = FALSE, jitter.y = FALSE,
-             factor = 0.5, amount = NULL,
-             identifier = "xyplot")
+             col.line = plot.line$col,
+             col.symbol = plot.symbol$col,
+             lty = plot.line$lty,
+             cex = plot.symbol$cex,
+             lwd = plot.line$lwd, ...)
 {
-    plot.symbol <- trellis.par.get("plot.symbol")
-    plot.line <- trellis.par.get("plot.line")
-    superpose.symbol <- trellis.par.get("superpose.symbol")
-    superpose.line <- trellis.par.get("superpose.line")
-    if (!missing(col))
-    {
-        if (missing(col.line)) col.line <- col
-        if (missing(col.symbol)) col.symbol <- col
-    }
-    if (missing(grid) && ("g" %in% type)) grid <- TRUE ## FIXME: what if list?
-    if (!isFALSE(grid))
-    {
-        if (!is.list(grid))
-            grid <- switch(as.character(grid),
-                           "TRUE" = list(h = -1, v = -1, x = x, y = y),
-                           "h" = list(h = -1, v = 0, y = y),
-                           "v" = list(h = 0, v = -1, x = x),
-                           list(h = 0, v = 0))
-        do.call(panel.grid, grid)
-    }
-    if (!is.null(abline))
-    {
-        if (is.numeric(abline)) abline <- list(abline)
-        do.call(panel.abline, abline)
-    }
-    if (all(is.na(x) | is.na(y))) return()
-    if (!is.null(groups))
-        panel.superpose(x, y,
-                        type = type,
-                        groups = groups,
-                        pch = pch,
-                        col.line = col.line,
-                        col.symbol = col.symbol,
-                        font = font,
-                        fontfamily = fontfamily,
-                        fontface = fontface,
-                        lty = lty,
-                        cex = cex,
-                        fill = fill,
-                        lwd = lwd,
-                        horizontal = horizontal,
-                        panel.groups = panel.xyplot,
-                        jitter.x = jitter.x,
-                        jitter.y = jitter.y,
-                        factor = factor,
-                        amount = amount,
-                        grid = FALSE, ## grid=TRUE/type="g" already handled
-                        ...)
-    else
-    {
-        x <- as.numeric(x)
-        y <- as.numeric(y)
-        id <- identifier
-        if ("o" %in% type || "b" %in% type) type <- c(type, "p", "l")
-        if ("p" %in% type)
-            panel.points(x = if (jitter.x) jitter(x, factor = factor, amount = amount) else x,
-                         y = if (jitter.y) jitter(y, factor = factor, amount = amount) else y,
-                         cex = cex,
-                         fill = fill,
-                         font = font,
-                         fontfamily = fontfamily,
-                         fontface = fontface,
-                         col = col.symbol,
-                         pch = pch, ...,
-                         identifier = id)
-        if ("l" %in% type)
-            panel.lines(x = x, y = y, lty = lty, col = col.line, lwd = lwd,
-                        ..., identifier = id)
-        if ("h" %in% type)
-        {
-            if (horizontal)
-                panel.lines(x = x, y = y, type = "H",
-                            lty = lty, col = col.line, lwd = lwd,
-                            ..., identifier = id)
-            else
-                panel.lines(x = x, y = y, type = "h",
-                            lty = lty, col = col.line, lwd = lwd,
-                            ..., identifier = id)
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+    if (length(x)>0) {
+
+
+        if (!missing(col)) {
+            if (missing(col.line)) col.line <- col
+            if (missing(col.symbol)) col.symbol <- col
         }
 
-        ## FIXME: should this be delegated to llines with type='s'?
-        if ("s" %in% type)
-        {
-            ord <- if (horizontal) sort.list(y) else sort.list(x)
+        plot.symbol <- trellis.par.get("plot.symbol")
+        plot.line <- trellis.par.get("plot.line")
+
+        if ("o" %in% type || "b" %in% type)
+            type <- c(type, "p", "l")
+
+
+        if ("p" %in% type)
+            lpoints(x = x, y = y, cex = cex,
+                    col = col.symbol, pch=pch)
+
+
+        if ("l" %in% type)
+            llines(x=x, y=y, lty=lty, col=col.line, lwd=lwd)
+
+
+        if ("h" %in% type)
+            llines(x=x, y=y, type = "h", lty=lty, col=col.line, lwd=lwd)
+
+
+        if ("s" %in% type) {
+            ord <- sort.list(x)
             n <- length(x)
             xx <- numeric(2*n-1)
             yy <- numeric(2*n-1)
@@ -173,13 +113,11 @@ panel.xyplot <-
             yy[2*1:n-1] <- y[ord]
             xx[2*1:(n-1)] <- x[ord][-1]
             yy[2*1:(n-1)] <- y[ord][-n]
-            panel.lines(x = xx, y = yy,
-                        lty = lty, col = col.line, lwd = lwd, ...,
-                        identifier = id)
+            llines(x=xx, y=yy,
+                   lty=lty, col=col.line, lwd=lwd)
         }
-        if ("S" %in% type)
-        {
-            ord <- if (horizontal) sort.list(y) else sort.list(x)
+        if ("S" %in% type) {
+            ord <- sort.list(x)
             n <- length(x)
             xx <- numeric(2*n-1)
             yy <- numeric(2*n-1)
@@ -188,65 +126,32 @@ panel.xyplot <-
             yy[2*1:n-1] <- y[ord]
             xx[2*1:(n-1)] <- x[ord][-n]
             yy[2*1:(n-1)] <- y[ord][-1]
-            panel.lines(x = xx, y = yy,
-                        lty = lty, col = col.line, lwd = lwd,
-                        ..., identifier = id)
+            llines(x=xx, y=yy,
+                   lty=lty, col=col.line, lwd=lwd)
         }
-        smooth <- if (!is.null(smooth) && isTRUE(smooth)) "loess"
-                  else as.character(smooth)
-        if ("r" %in% type || "lm" %in% smooth)
+        if ("r" %in% type) {
             panel.lmline(x, y, col = col.line, lty = lty, lwd = lwd, ...)
-        if ("smooth" %in% type || "loess" %in% smooth)
-            panel.loess(x, y, horizontal = horizontal,
-                        col = col.line, lty = lty, lwd = lwd, ...)
-        if ("spline" %in% type || "spline" %in% smooth)
-            panel.spline(x, y, horizontal = horizontal,
-                        col = col.line, lty = lty, lwd = lwd, ...)
-        if ("a" %in% type || "average" %in% smooth)
-            panel.average(x, y,
-                          horizontal = horizontal,
-                          lwd = lwd,
-                          lty = lty,
-                          col.line = col.line,
-                          ...)
+        }
+        if ("smooth" %in% type) {
+            panel.loess(x, y, col = col.line, lty = lty, lwd = lwd, ...)
+        }
     }
 }
 
 
 
-xyplot <- function(x, data, ...) UseMethod("xyplot")
 
 
-
-## xyplot.default <- 
-##     function(x, data = NULL,
-##              formula = try(stats::formula(x), silent = TRUE),
-##              ...)
-## {
-##     ocall <- sys.call(); ocall[[1]] <- quote(xyplot)
-##     ccall <- match.call()
-##     if (!is.null(ccall$data)) 
-##         warning("explicit 'data' specification ignored")
-##     if (!inherits(formula, "formula")) formula = y ~ x
-##     ccall$data <- x
-##     ccall$x <- formula
-##     ccall$formula <- NULL
-##     ccall[[1]] <- quote(lattice::xyplot)
-##     ans <- eval.parent(ccall)
-##     ans$call <- ocall
-##     ans
-## }
-
-
-
-xyplot.formula <-
-    function(x,
-             data = NULL,
-             allow.multiple = is.null(groups) || outer,
-             outer = !is.null(groups),
-             auto.key = lattice.getOption("default.args")$auto.key,
+xyplot <-
+    function(formula,
+             data = parent.frame(),
+             allow.multiple = FALSE,
+             outer = FALSE,
+             auto.key = FALSE,
              aspect = "fill",
-             panel = lattice.getOption("panel.xyplot"),
+             layout = NULL,
+             panel = if (is.null(groups)) "panel.xyplot"
+             else "panel.superpose",
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -255,31 +160,24 @@ xyplot.formula <-
              xlim,
              ylab,
              ylim,
-             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
-             lattice.options = NULL,
-             default.scales = list(),
-             default.prepanel = lattice.getOption("prepanel.default.xyplot"),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
-    formula <- x 
+
+    ##dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
-    groups <- eval(substitute(groups), data, environment(x))
-    subset <- eval(substitute(subset), data, environment(x))
-    if (!is.null(lattice.options))
-    {
-        oopt <- lattice.options(lattice.options)
-        on.exit(lattice.options(oopt), add = TRUE)
-    }
+
+    groups <- eval(substitute(groups), data, parent.frame())
+    subset <- eval(substitute(subset), data, parent.frame())
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
 
     form <-
         latticeParseFormula(formula, data, subset = subset,
                             groups = groups, multiple = allow.multiple,
-                            outer = outer, subscripts = TRUE,
-                            drop = drop.unused.levels)
+                            outer = outer, subscripts = TRUE)
+
     groups <- form$groups
 
     if (!is.function(panel)) panel <- eval(panel)
@@ -287,83 +185,81 @@ xyplot.formula <-
     
     if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
     if (subscripts) subscr <- form$subscr
+
+    prepanel <-
+        if (is.function(prepanel)) prepanel 
+        else if (is.character(prepanel)) get(prepanel)
+        else eval(prepanel)
+
     cond <- form$condition
+    number.of.cond <- length(cond)
     y <- form$left
     x <- form$right
-
-    if (length(cond) == 0)
-    {
+    if (number.of.cond == 0) {
         strip <- FALSE
-        cond <- list(gl(1, length(x)))
+        cond <- list(as.factor(rep(1, length(x))))
+        layout <- c(1,1,1)
+        number.of.cond <- 1
     }
 
     if (missing(xlab)) xlab <- form$right.name
     if (missing(ylab)) ylab <- form$left.name
 
-    ## S-PLUS requires both x and y to be numeric, but we
-    ## don't. Question is, should we give a warning ? Nope.
+    ## S-Plus requires both x and y to be numeric, but we
+    ## don't. Question is, should we give a warning ?
 
-    ##if (!(is.numeric(x) && is.numeric(y)))
-    ##    warning("x and y are not both numeric")
+    if (!(is.numeric(x) && is.numeric(y)))
+        warning("x and y are not both numeric")
+
 
     ## create a skeleton trellis object with the
     ## less complicated components:
 
-    foo <-
-        do.call("trellis.skeleton",
-                c(list(formula = formula,
-                       cond = cond,
-                       aspect = aspect,
-                       strip = strip,
-                       panel = panel,
-                       xlab = xlab,
-                       ylab = ylab,
-                       xlab.default = form$right.name,
-                       ylab.default = form$left.name,
-                       lattice.options = lattice.options), dots),
-                quote = TRUE)
+    foo <- do.call("trellis.skeleton",
+                   c(list(aspect = aspect,
+                          strip = strip,
+                          panel = panel,
+                          xlab = xlab,
+                          ylab = ylab), dots))
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
+    foo$call <- match.call()
+    foo$fontsize.normal <- 10
+    foo$fontsize.small <- 8
 
-### FIXME: For a long time, lattice has used
-    ## foo$call <- sys.call(sys.parent()); foo$call[[1]] <- quote(xyplot)
-### But this doesn't work in all contexts; e.g., 
-### with(cars, xyplot(speed ~ dist))$call
+    ## This is for cases like xlab/ylab = list(cex=2)
+    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
+        foo$xlab$label <- form$right.name
+    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
+        foo$ylab$label <- form$left.name
 
-### This works better, but is NOT OK for other methods that call
-### xyplot.formula(). So EVERY METHOD must include this line of code
-### to get the correct call component
-    foo$call <- sys.call(); foo$call[[1]] <- quote(xyplot)
-
-   
     ## Step 2: Compute scales.common (leaving out limits for now)
 
+    ##scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
-    scales <- updateList(default.scales, scales)
-    foo <- c(foo, do.call("construct.scales", scales))
+    foo <- c(foo, 
+             do.call("construct.scales", scales))
+
 
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limits)) # override xlim
-    {
+    if (!is.null(foo$x.scales$limit)) {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limits
+        xlim <- foo$x.scales$limit
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limits))
-    {
+    if (!is.null(foo$y.scales$limit)) {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limits
+        ylim <- foo$y.scales$limit
     }
 
     ## Step 4: Decide if log scales are being used:
 
     have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
     have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
-    if (have.xlog)
-    {
+    if (have.xlog) {
         xlog <- foo$x.scales$log
         xbase <-
             if (is.logical(xlog)) 10
@@ -371,10 +267,9 @@ xyplot.formula <-
             else if (xlog == "e") exp(1)
 
         x <- log(x, xbase)
-        if (have.xlim) xlim <- logLimits(xlim, xbase)
+        if (have.xlim) xlim <- log(xlim, xbase)
     }
-    if (have.ylog)
-    {
+    if (have.ylog) {
         ylog <- foo$y.scales$log
         ybase <-
             if (is.logical(ylog)) 10
@@ -382,91 +277,88 @@ xyplot.formula <-
             else if (ylog == "e") exp(1)
 
         y <- log(y, ybase)
-        if (have.ylim) ylim <- logLimits(ylim, ybase)
+        if (have.ylim) ylim <- log(ylim, ybase)
     }
     
     ## Step 5: Process cond
 
     cond.max.level <- unlist(lapply(cond, nlevels))
 
-    ## Step 6: Determine packets
+    id.na <- is.na(x)|is.na(y)
+    for (var in cond)
+        id.na <- id.na | is.na(var)
+    if (!any(!id.na)) stop("nothing to draw")
+    ## Nothing simpler ?
+
+    foo$condlevels <- lapply(cond, levels)
+
+    ## Step 6: Evaluate layout, panel.args.common and panel.args
+
 
     foo$panel.args.common <- dots
     if (subscripts) foo$panel.args.common$groups <- groups
 
-    npackets <- prod(cond.max.level)
-    if (npackets != prod(sapply(foo$condlevels, length)))
-        stop("mismatch in number of packets")
-    foo$panel.args <- vector(mode = "list", length = npackets)
+    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
+    plots.per.page <- max(layout[1] * layout[2], layout[2])
+    number.of.pages <- layout[3]
+    foo$skip <- rep(foo$skip, length = plots.per.page)
+    foo$layout <- layout
+    nplots <- plots.per.page * number.of.pages
 
-    foo$packet.sizes <- numeric(npackets)
-    if (npackets > 1)
-    {
-        dim(foo$packet.sizes) <- sapply(foo$condlevels, length)
-        dimnames(foo$packet.sizes) <- lapply(foo$condlevels, as.character)
-    }
+    foo$panel.args <- as.list(1:nplots)
+    cond.current.level <- rep(1,number.of.cond)
+    panel.number <- 1 # this is a counter for panel number
+    for (page.number in 1:number.of.pages)
+        if (!any(cond.max.level-cond.current.level<0))
+            for (plot in 1:plots.per.page) {
 
-    ## 
-    cond.current.level <- rep(1, length(cond))
-    for (packet.number in seq_len(npackets))
-    {
-        id <- compute.packet(cond, cond.current.level)
-        foo$packet.sizes[packet.number] <- sum(id)
+                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
+                else if(!any(cond.max.level-cond.current.level<0)) {
 
-        foo$panel.args[[packet.number]] <-
-            list(x = x[id], y = y[id])
-        if (subscripts)
-            foo$panel.args[[packet.number]]$subscripts <-
-                subscr[id]
+                    id <- !id.na
+                    for(i in 1:number.of.cond)
+                    {
+                        var <- cond[[i]]
+                        id <- id &
+                        if (is.shingle(var))
+                            ((var >= levels(var)[[cond.current.level[i]]][1])
+                             & (var <= levels(var)[[cond.current.level[i]]][2]))
+                        else (as.numeric(var) == cond.current.level[i])
+                    }
+                    foo$panel.args[[panel.number]] <-
+                        list(x = x[id], y = y[id])
+                    if (subscripts)
+                        foo$panel.args[[panel.number]]$subscripts <-
+                            subscr[id]
 
-        cond.current.level <-
-            cupdate(cond.current.level,
-                    cond.max.level)
-    }
+                    cond.current.level <-
+                        cupdate(cond.current.level,
+                                cond.max.level)
+                }
 
-    ## FIXME: make this adjustment everywhere else
+                panel.number <- panel.number + 1
+            }
 
-    more.comp <-
-        c(limits.and.aspect(default.prepanel,
-                            prepanel = prepanel, 
-                            have.xlim = have.xlim, xlim = xlim, 
-                            have.ylim = have.ylim, ylim = ylim, 
-                            x.relation = foo$x.scales$relation,
-                            y.relation = foo$y.scales$relation,
-                            panel.args.common = foo$panel.args.common,
-                            panel.args = foo$panel.args,
-                            aspect = aspect,
-                            npackets = npackets,
-                            x.axs = foo$x.scales$axs,
-                            y.axs = foo$y.scales$axs),
-          cond.orders(foo))
-    foo[names(more.comp)] <- more.comp
+    foo <- c(foo,
+             limits.and.aspect(prepanel.default.xyplot,
+                               prepanel = prepanel, 
+                               have.xlim = have.xlim, xlim = xlim, 
+                               have.ylim = have.ylim, ylim = ylim, 
+                               x.relation = foo$x.scales$relation,
+                               y.relation = foo$y.scales$relation,
+                               panel.args.common = foo$panel.args.common,
+                               panel.args = foo$panel.args,
+                               aspect = aspect,
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
 
-    if (is.null(foo$legend) && needAutoKey(auto.key, groups))
-    {
-        # provide smart defaults for auto key based on 'type'
-        type <- dots$type
-        if (is.character(type) && length(type) > 0)
-        {
-            points <- any(type %in% "p")
-            lines <- any(type %in% c("l", "b", "o", "h", "s", "S", "a",
-                                     "smooth", "spline", "r"))
-            keytype <- if (any(type %in% c("b", "o"))) "o" else "l"
-        }
-        else
-        {
-            points <- TRUE
-            lines <- FALSE
-            keytype <- "l"
-        }
-        foo$legend <-
-            autoKeyLegend(list(text = levels(as.factor(groups)),
-                               points = points,
-                               rectangles = FALSE,
-                               lines = lines,
-                               type = keytype),
-                          auto.key)
-    }
+    if (is.null(foo$key) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+        foo$key <- do.call("simpleKey",
+                           c(list(levels(as.factor(groups))),
+                             if (is.list(auto.key)) auto.key else list()))
+
     class(foo) <- "trellis"
     foo
 }

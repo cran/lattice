@@ -1,88 +1,37 @@
-\name{F_3_prepanel.functions}
+\name{prepanel.functions}
 \alias{prepanel.lmline}
 \alias{prepanel.loess}
-\alias{prepanel.spline}
 \alias{prepanel.qqmathline}
 \title{ Useful Prepanel Function for Lattice}
 \description{
   These are predefined prepanel functions available in Lattice.
 }
-
+\synopsis{
+prepanel.loess(x, y, span, degree, family, evaluation, lwd, lty,
+               col, ...)
+}
 \usage{
-prepanel.lmline(x, y, \dots)
-prepanel.qqmathline(x, y = x, distribution = qnorm,
-                    probs = c(0.25, 0.75), qtype = 7,
-                    groups, subscripts,
-                    \dots) 
-prepanel.loess(x, y, span, degree, family, evaluation,
-               horizontal = FALSE, \dots)
-prepanel.spline(x, y, npoints = 101, 
-                horizontal = FALSE, \dots,
-                keep.data = FALSE)
-
+prepanel.lmline(x, y, ...)
+prepanel.loess(x, y, ...)
+prepanel.qqmathline(y, distribution, f.value = ppoints, ...) 
 }
 \arguments{
   \item{x, y}{x and y values, numeric or factor}
-  \item{distribution}{ quantile function for theoretical
-    distribution. This is automatically passed in when this is used as a
-    prepanel function in \code{qqmath}.
-  }
-  \item{qtype}{ type of \code{\link{quantile}}}
-  \item{probs}{
-    numeric vector of length two, representing probabilities.  If used
-    with \code{aspect="xy"}, the aspect ratio will be chosen to make the
-    line passing through the corresponding quantile pairs as close to 45
-    degrees as possible.
-  }
-  \item{span, degree, family, evaluation}{ Arguments controlling the
-    underlying \code{\link{loess}} smooth. }
-
-  \item{horizontal, npoints}{ See documentation for corresponding panel
-    function.
-  }
-
-  \item{keep.data}{ Ignored. Present to capture argument of the same
-    name in \code{\link{smooth.spline}}. }
-  
-  \item{groups, subscripts}{ See \code{\link{xyplot}}.  Whenever
-    appropriate, calculations are done separately for each group and
-    then combined.  }
-
-  \item{\dots}{ Other arguments.  These are passed on to other functions
-    if appropriate (in particular, \code{\link{smooth.spline}}), and
-    ignored otherwise. }
-
+  \item{distribution}{ quantile function for theoretical distribution}
+  \item{f.value}{ as used in \code{qqmath}}
+  \item{\dots}{other arguments}
 }
-
-\details{
-
-  All these prepanel functions compute the limits to be large enough to
-  contain all points as well as the relevant smooth.
-
-  In addition, \code{prepanel.lmline} computes the \code{dx} and
-  \code{dy} such that it reflects the slope of the linear regression
-  line; for \code{prepanel.qqmathline}, this is the slope of the line
-  passing through the quantile pairs specified by \code{probs}.  For
-  \code{prepanel.loess} and \code{prepanel.spline}, \code{dx} and
-  \code{dy} reflect the piecewise slopes of the nonlinear smooth.
-
-}
-
 \value{
-  usually a list with components \code{xlim}, \code{ylim}, \code{dx} and
-  \code{dy}, the first two being used to calculate panel axes limits,
-  the last two for banking computations.  The form of these components
-  are described under \code{\link{xyplot}}.  There are also several
-  prepanel functions that serve as the default for high level functions,
-  see \code{\link{prepanel.default.xyplot}}
+  usually a list with components \code{xlim, ylim, dx, dy}, the first
+  two being used to calculate panel axes limits, the last two for
+  banking computations. The form of these components are described under
+  \code{\link{xyplot}}. There are also several undocumented prepanel
+  functions that serve as the default for high level functions, e.g.,
+  \code{prepanel.default.xyplot} }
+\seealso{\code{\link{trellis.par.get}}, \code{\link{xyplot}},
+  \code{\link{Lattice}}. See \code{\link[modreg]{loess.smooth}} for
+  further options to \code{prepanel.loess}
 }
-
-\seealso{
-
-  \link{Lattice}, \code{\link{xyplot}}, \code{\link{banking}},
-  \code{\link{panel.loess}}, \code{\link{panel.spline}}.
-
-}
-\author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
+\author{ Deepayan Sarkar\email{deepayan@stat.wisc.edu}}
 \keyword{dplot}
 
