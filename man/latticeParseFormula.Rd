@@ -24,7 +24,7 @@ latticeParseFormula(model, data, dimension = 2)
 	right.name, condition} for 2d, and \code{left, right.x, right.y,
 	left.name, right.x.name, right.y.name, condition} for 3d.
 }
-\description { this function is used in trellis functions. Might
+\description{ this function is used in trellis functions. Might
     be useful by itself. \code{y} and \code{g_1,\dots,\g_n} may be missing.
 }
 \seealso{
