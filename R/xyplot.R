@@ -135,7 +135,6 @@ xyplot <-
              ylab,
              ylim,
              ...,
-             panel.groups = "panel.xyplot",
              subscripts = !is.null(groups),
              subset = TRUE)
 {

@@ -1,3 +1,14 @@
+
+
+
+
+2002-10-28  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R: Hmm, lots of changes made without any log entries. Should be
+	more careful ! Anyway, renamed inst/README to inst/Changes, and
+	added a brief overview of changes in lattice 0.6 . Also made some
+	documentation updates. Changed version to 0.6-6, ready to upload. 
+
 2002-01-10  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* R: Too many changes to list, mainly in print.trellis and

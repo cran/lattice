@@ -5,7 +5,6 @@ xyplot(formula, data = parent.frame(), aspect = "fill", layout = NULL,
     panel = if (is.null(groups)) "panel.xyplot" else "panel.superpose", 
     prepanel = NULL, scales = list(), 
     strip = TRUE, groups = NULL, xlab, xlim, ylab, ylim, ..., 
-    panel.groups = "panel.xyplot", 
     subscripts = !is.null(groups), subset = TRUE)
 barchart(formula, data = parent.frame(), panel = "panel.barchart", 
     prepanel = NULL, strip = TRUE, box.ratio = 2, groups = NULL, horizontal,
@@ -46,7 +45,6 @@ xyplot(formula,
        ylab,
        ylim,
        \dots,
-       panel.groups = "panel.xyplot",
        subscripts,
        subset)
 barchart(formula, data, panel = "panel.barchart", box.ratio = 2,
@@ -159,7 +157,8 @@ stripplot(formula, data, panel = "panel.stripplot",
     functions) are passed on to be plotted in each panel. The actual
     plotting is done by the function specified by the \code{panel}
     argument. Each high level function has its own default panel
-    function. 
+    function, which could depend on whether the \code{groups} argument
+    was supplied.
 
     The panel function can be a function object or a character string
     giving the name of a predefined function. (The latter is preferred
@@ -227,7 +226,7 @@ stripplot(formula, data, panel = "panel.stripplot",
     such cases).
 
     The current implementation of banking is not very sophisticated, but
-    is not totally vague either. See \code{banking} for details.
+    is not totally vague either. See \code{\link{banking}} for details.
   }
   \item{as.table}{ logical that controls the order in which panels
     should be plotted: if FALSE, panels are drawn left to right,
@@ -276,8 +275,8 @@ stripplot(formula, data, panel = "panel.stripplot",
     The length (number of rows) of each such column is taken to be the
     largest of the lengths of the graphical components, including the
     ones specified outside. The ``text'' component has to have a
-    character vector as its first component, and the length of this
-    vector determines the number of rows.
+    character or expression vector as its first component, and the
+    length of this vector determines the number of rows.
 
     The graphical components that can be included in \code{key} (and
     also in the components named ``text'', ``lines'', ``points'' and
@@ -294,7 +293,7 @@ stripplot(formula, data, panel = "panel.stripplot",
     \code{between}: numeric vector giving the amount of space (character
     widths) surrounding each column (split equally on both sides),
 
-    \code{title}: character, title of the key,
+    \code{title}: string or expression, title of the key,
 
     \code{cex.title}
 
@@ -332,10 +331,12 @@ stripplot(formula, data, panel = "panel.stripplot",
     panels. In general, giving a high value of \code{layout[3]} is not
     wasteful because blank pages are never created.
   }
-  \item{main}{character string for main title to be placed on top of
-    each page. Defaults to \code{NULL}. Can be a character string, or a
-    list with components \code{label, cex, col, font}. The \code{label}
-    tag can be omitted if it is the first element of the list.
+  \item{main}{character string or expression or list describing main
+    title to be placed on top of each page. Defaults to \code{NULL}. Can
+    be a character string or expression, or a list with components
+    \code{label, cex, col, font}. The \code{label} tag can be omitted if
+    it is the first element of the list. Expressions are treated as
+    specification of LaTeX-like markup as in \code{\link{plotmath}}
   }
   \item{page}{a function of one argument (page number) to be called
     after drawing each page. The function must be `grid-compliant', and
@@ -356,7 +357,8 @@ stripplot(formula, data, panel = "panel.stripplot",
     the panels are guaranteed to include the limits returned by the
     prepanel function. This happens globally if the \code{relation}
     component of \code{scales} is "same", and on a panel by panel basis
-    otherwise. 
+    otherwise. See \code{xlim} to see what forms of the components
+    \code{xlim, ylim} are allowed.
 
     The \code{dx} and \code{dy} components are used for banking
     computations in case \code{aspect} is specified as "xy". See
@@ -403,13 +405,16 @@ stripplot(formula, data, panel = "panel.stripplot",
 
     limits: same as xlim and ylim.
 
-    at: location of tick marks along the axis (in native coordinates).
+    at: location of tick marks along the axis (in native coordinates),
+    or a list as long as the number of panels describing tick locations
+    for each panel.
 
-    labels: Labels to go along with \code{at}
+    labels: Labels (strings or expressions) to go along with
+    \code{at}. Can be a list like \code{at} as well.
 
     cex: factor to control character sizes for axis labels.
 
-    font: font face for axis labels (integer 1-5).
+    font: font face for axis labels (integer 1-4).
     
     tck: factor to control length of tick marks.
 
@@ -441,8 +446,9 @@ stripplot(formula, data, panel = "panel.stripplot",
     function, which defaults to \code{strip.default}. See documentation
     of \code{strip.default} to see the form of a strip function.
   }
-  \item{sub}{character string for a subtitle to be placed at the bottom
-    of each page. See entry for \code{main} for finer control options.
+  \item{sub}{character string or expression for a subtitle to be placed
+    at the bottom of each page. See entry for \code{main} for finer
+    control options.
   }
   \item{subscripts}{ logical specifying whether or not a vector named
     subscripts should be passed to the panel function. Defaults to
@@ -455,20 +461,23 @@ stripplot(formula, data, panel = "panel.stripplot",
     which \code{subset=TRUE}. In case \code{subscripts} is TRUE, the
     subscripts will correspond to the original observations.
   }
-  \item{xlab}{character string giving label for the x-axis. Defaults to
-    the expression for \code{x} in \code{formula}. Specify as
-    \code{NULL} to omit the label altogether. Fine control is possible,
-    see entry for \code{sub}. 
+  \item{xlab}{character string or expression giving label for the
+    x-axis. Defaults to the expression for \code{x} in
+    \code{formula}. Specify as \code{NULL} to omit the label
+    altogether. Fine control is possible, see entry for \code{sub}.
   }
-  \item{xlim}{ numeric vector of length 2 giving minimum and maximum for
-    x-axis. 
+  \item{xlim}{ numeric vector of length 2 (possibly a DateTime object)
+    giving minimum and maximum for x-axis, or, a character vector,
+    expected to denote the levels of \code{x}. The latter form is
+    interpreted as a range containing c(1, length(xlim)), with the
+    character vector determining labels at tick positions
+    \code{1:length(xlim)}
   }
-  \item{ylab}{ character string giving label for the y-axis. Defaults to
-    the expression for \code{y} in \code{formula}. Fine control
-    possible, see entry for \code{xlab}.
+  \item{ylab}{ character string or expression giving label for the
+    y-axis. Defaults to the expression for \code{y} in
+    \code{formula}. Fine control possible, see entry for \code{xlab}.
   }
-  \item{ylim}{numeric vector of length 2 giving minimum and maximum
-    for y-axis. 
+  \item{ylim}{ same as \code{xlim}, applied to the y-axis. 
   }
   \item{\dots}{ other arguments, passed to the panel function }
 }

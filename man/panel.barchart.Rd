@@ -10,10 +10,9 @@ panel.barchart(x, y, box.ratio = 1, horizontal, col = bar.fill$col, ...)
 \usage{
 panel.barchart(x, y, horizontal, col, \dots)
 }
-%- maybe also `usage' for other objects documented here.
 \arguments{
   \item{x}{ Endpoints of Bars. Bars start at left of panel.}
-  \item{y}{ Horizontal location of bars.}
+  \item{y}{ Horizontal location of bars, possibly factor}
   \item{horizontal}{ logical. If FALSE, the plot is `transposed' in the
     sense that the behaviours of x and y are switched. x is now
     the `factor'.  Interpretation of other arguments change

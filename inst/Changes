@@ -1,6 +1,118 @@
 
 
 
+
+Changes in lattice 0.6
+======================
+
+API change: 
+
+panel functions
+---------------
+In earlier versions, panel functions and prepanel functions were
+guaranteed to be passed numeric vectors as x,y (and z) arguments. This
+is no longer true. All panel functions are now expected to handle
+other possibilities. This has been done in all the predefined panel
+functions in lattice (but not in llines, lpoints, etc.). In practice,
+the only changes required are (unless I have overlooked something) to
+add calls like
+
+x <- as.numeric(x)
+y <- as.numeric(y)
+
+at the beginning. prepanel functions can now return, as their xlim or
+ylim components, either a numeric vector of length 2 (possibly a
+DateTime object), or a character vector. The latter implies that the
+elements of this vector should be the respective axis labels,
+associated with tick marks at 1:length_of_this_vector.
+
+
+high-level functions
+--------------------
+The default panel functions of high level functions can now be
+different, depending on whether a groups argument was passed. In
+practice, this now happens for xyplot, splom and densityplot.
+(densityplot has an additional high-level argument specifically for
+this, called panel.groups, which is passed to the panel function.)
+This is a convenience feature, (and is inconsistent with S-Plus) in
+that it presumes that if the user has specified a groups argument, she
+wants it to be used, where appropriate. 
+
+scales
+------
+In anticipation of future use (in nlme, for example), the at and
+labels components of scales can now be a list. Each element
+corresponds to a panel. This is thoroughly untested and not guaranteed
+to work.
+
+
+There are also some other API changes associated with cloud and
+wireframe, discussed below.
+
+
+
+
+New Features and Fixes:
+
+
+Mathematical Annotation
+-----------------------
+Following changes in grid 0.7, lattice now supports latex-style
+labelling using expressions. These can be used in almost all sensible
+places (an exception being in colorkey axis labels in
+levelplot/contourplot, and this is not expected to change).
+
+Date-Time Labelling
+-------------------
+Axis labelling procedures did not recognize DateTime objects in
+earlier versions. This has been fixed. The routine currently used is a
+hack of axis.POSIXt (without the format option), but will hopefully
+improve in future.
+
+3-D functions
+-------------
+The 3-D functions cloud and wireframe have been greatly improved in
+terms of extensibility. The code is much cleaner, and writing new
+panel functions are much simpler. Earlier versions had a problem with
+the default placement of the labels (x/y/z-lab) and scales
+(arrows/ticks), which has been fixed. [The only major problem that
+still remains is when, in a perspective plot, the projection of the
+distant face is fully contained inside the projection of the near
+face.]
+
+Earlier wireframe code used an unnecessarily large amount of
+memory. This has been fixed, although speed is still not good (fixes
+are in the planing stage, and would involve changes in
+grid). drape=TRUE used to give wrong coloring, which is now fixed.
+
+The 'group' argument now works with wireframe, resulting in multiple
+surfaces. This is mostly satisfactory, but is not sophisticated enough
+to render intersecting surfaces properly (might be approximated by a
+fine enough grid).
+
+There are also some rudimentary lighting options, which can render the
+surface as being illuminated from a light source. No shadows. (Try
+shade=TRUE in wireframe.)
+
+Although these changes go a long way towards stabilizing
+cloud/wireframe, some further changes, especially in how the panel
+function handles the groups argument, are expected in the future.
+
+
+
+Known bugs: 
+==========
+
+Handling of NA values are often inconsistent and buggy. Some of these
+are not easily fixable (particularly one in contourplot), but some
+are, so bug reports on this are still welcome.
+
+Fonts specified in the new R font specification may not work yet.
+
+
+
+
+
 Changes in lattice 0.5
 ======================
 
@@ -29,6 +141,8 @@ Not many.
 
  o Other minor changes (doc, more arguments etc)
 
+ o Following changes in grid, calls to base R graphics and lattice
+   functions can now be mixed.
   
 
 Changes in lattice 0.4
@@ -146,9 +260,9 @@ unusability of the base R functions like lines and points inside panel
 functions. To help make the changes more transparently, lattice now
 includes several wrappers around grid functions that provide an API
 similar to the corresponding base R functions. The list currently
-includes lpoints, llines, ltext and lsegments.
+includes lpoints, llines, ltext and lsegments [update: larrows].
 
-Using Lattice and base R graphics concurrently
+Using Lattice and base R graphics concurrently [OBSOLETE]
 ==============================================
 
 Grid graphics normally do not mix with usual R graphics. However,
@@ -164,7 +278,7 @@ start in non-grid mode, unless grid.start() is called.
 
 
 
-Still Missing
+Still Missing [OBSOLETE, except for the parts about piechart and scale]
 =============
 
  o contourplot, wireframe, cloud (partially implemented) and of course,

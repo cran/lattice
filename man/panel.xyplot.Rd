@@ -22,7 +22,7 @@ panel.splom(...) <- function (...) panel.xyplot(...)
 panel.qqmath(...) <- function (...) panel.xyplot(...)
 }
 \arguments{
-  \item{x,y}{ coordinates of points to be plotted in the scatterplot}
+  \item{x,y}{ variables to be plotted in the scatterplot}
   \item{type}{ character vector consisting of one or more of the
     following: \code{"p", "l", "h", "b", "o", "s", "S", "r", "smooth"}. 
 

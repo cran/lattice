@@ -1817,7 +1817,7 @@ print.trellis <-
                                                gp = gpar(col = xaxis.col))
                                 pop.viewport()
 
-
+                                if (any(ok))
                                 grid.text(label = xlabelinfo$label[ok],
                                           x = unit(xlabelinfo$at[ok], "native"),
                                           just = c("centre", "centre"),
@@ -1856,7 +1856,7 @@ print.trellis <-
                                 pop.viewport()
 
 
-                                grid.text(label = ylabelinfo$label[ok],
+                                if (any(ok)) grid.text(label = ylabelinfo$label[ok],
                                           y = unit(ylabelinfo$at[ok], "native"),
                                           just = c("centre", "centre"),
                                           ## just = if (xaxis.rot == 0) c("centre", "top")
@@ -1892,7 +1892,7 @@ print.trellis <-
                                     pop.viewport()
 
                                     if (y.alternating[actual.row]==1 || y.alternating[actual.row]==3) {
-                                        grid.text(label = ylabelinfo$label[ok],
+                                        if (any(ok)) grid.text(label = ylabelinfo$label[ok],
                                                   x = if (abs(yaxis.rot) != 90) 1 else .5,
                                                   y = unit(ylabelinfo$at[ok], "native"),
                                                   just = if (yaxis.rot != 90) c("right", "centre")
@@ -1925,7 +1925,7 @@ print.trellis <-
                                     pop.viewport()
 
                                     if (y.alternating[actual.row]==2 || y.alternating[actual.row]==3) {
-                                        grid.text(label = ylabelinfo$label[ok],
+                                        if (any(ok)) grid.text(label = ylabelinfo$label[ok],
                                                   x = if (abs(yaxis.rot) != 90) 0 else .5,
                                                   y = unit(ylabelinfo$at[ok], "native"),
                                                   just = if (yaxis.rot != 90) c("left", "centre")
@@ -1965,7 +1965,7 @@ print.trellis <-
                                     pop.viewport()
 
                                     if (x.alternating[column]==1 || x.alternating[column]==3) {
-                                        grid.text(label = xlabelinfo$label[ok],
+                                        if (any(ok)) grid.text(label = xlabelinfo$label[ok],
                                                   y = if (xaxis.rot != 0) 1 else .5,
                                                   x = unit(xlabelinfo$at[ok], "native"),
                                                   just = if (xaxis.rot != 0) c("right", "centre")
@@ -2032,7 +2032,7 @@ print.trellis <-
                                     pop.viewport()
 
                                     if (x.alternating[column]==2 || x.alternating[column]==3)
-                                        grid.text(label = xlabelinfo$label[ok],
+                                        if (any(ok)) grid.text(label = xlabelinfo$label[ok],
                                                   y = if (xaxis.rot != 0) 0 else .5,
                                                   x = unit(xlabelinfo$at[ok], "native"),
                                                   just = if (xaxis.rot != 0) c("left", "centre")

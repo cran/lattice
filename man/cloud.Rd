@@ -141,8 +141,8 @@ wireframe(formula, data,
   \code{cloud} draws a 3d Scatter Plot, while \code{wireframe} draws a
   wireframe 3d surface evaluated on a grid. Multiple surfaces can be
   drawn by \code{wireframe} using the \code{groups} argument. Specifying
-  \code{groups} with \code{cloud} results in \code{panel.cloud} using
-  \code{panel.superpose} as its \code{subpanel} function.
+  \code{groups} with \code{cloud} results in a
+  \code{panel.superpose}-like effect (via \code{\link{panel.3dscatter}}).
 
   Wireframe can optionally render the surface as being illuminated by a
   light source (no shadows though). Details can be found in the help
@@ -175,25 +175,34 @@ x <- seq(-pi, pi, len = 20)
 y <- seq(-pi, pi, len = 20)
 g <- expand.grid(x = x, y = y)
 g$z <- sin(sqrt(g$x^2 + g$y^2))
-wireframe(z ~ x * y, g, drape = TRUE, col.regions = "white",
+wireframe(z ~ x * y, g, drape = TRUE,
           aspect = c(3,1), colorkey = FALSE)
+g <- expand.grid(x = 1:10, y = 5:15, gr = 1:2)
+g$z <- log((g$x^g$g + g$y^2) * g$gr)
+wireframe(z ~ x * y, data = g, groups = gr,
+          scales = list(arrows = FALSE),
+          shade = TRUE,
+          shade.colors = function(cosangle, height)
+          palette.shade(cosangle, height = .15, saturation = .05),
+          light.source = c(0, 0, 1),
+          screen = list(z = 30, x = -60))
 data(iris)
 cloud(Sepal.Length ~ Petal.Length * Petal.Width, data = iris,
       groups = Species, screen = list(z = 20, x = -70),
-      subpanel = panel.superpose,
+      perspective = FALSE,
       key = list(title = "Iris Data", x = .15, y=.85, corner = c(0,1),
                  border = TRUE, 
                  points = Rows(trellis.par.get("superpose.symbol"), 1:3),
                  text = list(levels(iris$Species))))
 print(cloud(Sepal.Length ~ Petal.Length * Petal.Width, 
-            data = iris, cex = .8, perspective = FALSE,
+            data = iris, cex = .8, 
             groups = Species, 
             subpanel = panel.superpose,
             main = "Stereo",
             screen = list(z = 20, x = -70, y = 3)),
       split = c(1,1,2,1), more = TRUE)
 print(cloud(Sepal.Length ~ Petal.Length * Petal.Width,
-            data = iris, cex = .8, perspective = FALSE,
+            data = iris, cex = .8, 
             groups = Species,
             subpanel = panel.superpose,
             main = "Stereo",

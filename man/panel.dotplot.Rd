@@ -13,7 +13,8 @@ panel.dotplot(x, y, horizontal = TRUE, pch = dot.symbol$pch, col = dot.symbol$co
 panel.dotplot(x, y, horizontal, ...)
 }
 \arguments{
-  \item{x,y}{ coordinates of points to plot}
+  \item{x,y}{ variables to be plotted in the panel. Typically y is the
+    'factor' }
   \item{horizontal}{ logical. If FALSE, the plot is `transposed' in the
     sense that the behaviours of x and y are switched. x is now
     the `factor'.  Interpretation of other arguments change

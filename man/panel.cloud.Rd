@@ -39,7 +39,9 @@ panel.3dwire(x, y, z, rot.mat = diag(4), za, zb,
 palette.shade(cosangle, height, saturation = .3, ...)
 }
 \arguments{
-  \item{x, y, z}{numeric vectors, or a numeric matrix with 3 rows for
+  \item{x, y, z}{ numeric vectors (or possibly factors etc for
+    \code{panel.cloud}), not necessarily of the same
+    length. \code{x} can be a numeric matrix with 3 rows for
     \code{ltransform3dto3d}}
   \item{subscripts}{which points to draw}
   \item{distance, par.box}{described in \code{\link{cloud}}}

@@ -39,7 +39,7 @@ panel.abline <-
         if (length(coeff)==1) coeff <- c(0, coeff)
         
         if (coeff[2]==0) h <- c(h, coeff[1])
-        else {
+        else if (!any(is.null(coeff))) {
             xx <- current.viewport()$xscale
             yy <- current.viewport()$yscale
             
@@ -385,7 +385,7 @@ panel.linejoin <-
         xx <- numeric(length(yy))
         for (i in yy)
             xx[i] <- fun(x[y == vals[i]])
-        llines(xx, yy, col = col.line, lty = lty, lwd = lwd, ...)
+        llines(xx, vals[yy], col = col.line, lty = lty, lwd = lwd, ...)
     }
     else {
         vals <- unique(sort(x))
@@ -393,7 +393,7 @@ panel.linejoin <-
         yy <- numeric(length(xx))
         for (i in xx)
             yy[i] <- fun(y[x == vals[i]])
-        llines(xx, yy, col = col.line, lty = lty, lwd = lwd, ...)
+        llines(vals[xx], yy, col = col.line, lty = lty, lwd = lwd, ...)
      }
 }
 

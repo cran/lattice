@@ -28,19 +28,18 @@ prepanel.default.bwplot <-
 {
     if (length(x) && length(x)) {
         
-
         if (!is.numeric(x)) x <- as.numeric(x)
         if (!is.numeric(y)) y <- as.numeric(y)
 
         temp <- .5  #* box.ratio/(box.ratio+1)
         if (horizontal)
-            list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else  levels(x),
+            list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else levels(x),
                  ylim = c(1-temp, levels.fos + temp),
                  dx = 1,
                  dy = 1)
         else 
             list(xlim = c(1-temp, levels.fos + temp),
-                 ylim = if (is.numeric(y)) range(y[is.finite(y)]) else  levels(y),
+                 ylim = if (is.numeric(y)) range(y[is.finite(y)]) else levels(y),
                  dx = 1,
                  dy = 1)
     }
@@ -153,7 +152,8 @@ panel.stripplot <-
 
 panel.bwplot <-
     function(x, y, box.ratio=1, horizontal = TRUE, pch=box.dot$pch,
-             col=box.dot$col, cex = box.dot$cex,
+             col = box.dot$col, cex = box.dot$cex,
+             fill = box.rectangle$fill,
              levels.fos = NULL, ...)
 {
     
@@ -193,6 +193,7 @@ panel.bwplot <-
                     grid.rect(x = unit(r.x, "native"), width = unit(r.w, "native"),
                               gp = gpar(lwd = box.rectangle$lwd,
                               lty = box.rectangle$lty,
+                              fill = fill,
                               col = box.rectangle$col))
                 
                     grid.lines(x = unit(stats$stats[1:2],"native"),
@@ -258,6 +259,7 @@ panel.bwplot <-
                     grid.rect(y = unit(r.x, "native"), height = unit(r.w, "native"),
                               gp = gpar(lwd = box.rectangle$lwd,
                               lty = box.rectangle$lty,
+                              fill = fill,
                               col = box.rectangle$col))
                 
                     grid.lines(y = unit(stats$stats[1:2],"native"),

@@ -1,4 +1,4 @@
-% $Id: strip.default.Rd,v 1.6 2002/01/11 04:04:30 deepayan Exp $
+% $Id: strip.default.Rd,v 1.7 2002/10/29 09:43:42 deepayan Exp $
 \name{strip.default}
 \title{Default Trellis strip function}
 \usage{
@@ -25,15 +25,14 @@ strip.default(which.given,
     current levels of each of the conditioning variables (thus, this
     would be unique for each distinct panel).
   }
-  \item{var.name}{ vector of character strings as long as the number of
-    conditioning variables. The contents are the names of the
-    conditioning variables, to be used if the appropriate entry in
+  \item{var.name}{ vector of character strings or ecpressions as long as
+    the number of conditioning variables. The contents are the names of
+    the conditioning variables, to be used if the appropriate entry in
     \code{strip.names} (see below) is true.
   }
   \item{factor.levels}{ if the current strip corresponds to a factor,
-    this should be a character vector giving the levels of the factor
-    (of the form that would be produced by \code{levels(factor)}). 
-    Otherwise, it should be \code{NULL}
+    this should be a character or expression vector giving the levels of
+    the factor.  Otherwise, it should be \code{NULL}
   }
   \item{shingle.intervals}{if the current strip corresponds to a shingle,
     this should be a 2-column matrix giving the levels of the shingle.

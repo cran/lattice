@@ -10,7 +10,7 @@ panel.levelplot(x, y, z, wx, wy, zcol, col.regions, subscripts, at,
                 ...)
 }
 \arguments{
-  \item{x, y, z}{numeric vectors}
+  \item{x, y, z}{ variables defining the plot}
   \item{subscripts}{which points to draw}
   \item{wx, wy}{vectors of widths and heights for the rectangles}
   \item{zcol}{color numbers for each x,y combination}

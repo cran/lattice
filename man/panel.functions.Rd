@@ -36,7 +36,7 @@ panel.linejoin(x, y, fun = mean, horizontal = TRUE, ...)
 panel.mathdensity(dmath = dnorm, args = list(mean=0, sd=1))
 }
 \arguments{
-  \item{x, y}{ numeric variates}
+  \item{x, y}{ variables defining the contents of the panel}
   \item{a, b}{ Coefficients of the line to be added}
   \item{coef}{ Coefficients of the line to be added as a length 2 vector}
   \item{reg}{ A regression object. The corresponding fitted line will

@@ -246,7 +246,7 @@ splom <-
              aspect = 1,
              between = list(x = 0.5, y = 0.5),
              layout = NULL,
-             panel = "panel.splom",
+             panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -266,6 +266,7 @@ splom <-
     ## dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
+    groups <- eval(substitute(groups), data, parent.frame())
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
 
@@ -307,8 +308,7 @@ splom <-
     }
     if (!missing(varnames)) colnames(x) <-
         eval(substitute(varnames), data, parent.frame())
-    
-    groups <- eval(substitute(groups), data, parent.frame())
+
     subset <- eval(substitute(subset), data, parent.frame())
     if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
     subscr <- seq(along=x[,1])

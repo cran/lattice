@@ -94,7 +94,8 @@ canonical.theme <- function(name = "null device", color = TRUE)
              bar.fill = list(col = can.col[2]),
              box.dot = list(col = can.col[1], cex = 1, font = 1, pch =
              16),
-             box.rectangle = list(col = can.col[2], lty = 1, lwd = 1),
+             box.rectangle = list(col = can.col[2],
+             fill = "transparent", lty = 1, lwd = 1),
              box.umbrella = list(col = can.col[2], lty = 2, lwd = 1),
              dot.line = list(col = can.col[16], lty = 1, lwd = 1),
              dot.symbol = list(cex = 0.8, col = can.col[2], font = 1,
@@ -379,7 +380,9 @@ show.settings <- function(x = NULL)
         push.viewport(viewport(height = unit(.1, "npc")))
         grid.rect(width = 1/3, 
                   gp = gpar(lwd = box.rectangle$lwd, 
-                  lty = box.rectangle$lty, col = box.rectangle$col))
+                  lty = box.rectangle$lty,
+                  fill = box.rectangle$fill,
+                  col = box.rectangle$col))
         grid.lines(x = unit(c(1/6, 1/3), "npc"), 
                    y = unit(c(0.5, 0.5), "npc"),
                    gp = gpar(col = box.umbrella$col,
