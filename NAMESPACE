@@ -4,8 +4,10 @@
 
 import(grid)
 
-importFrom(graphics, plot, co.intervals, 
-	dev.list, cm.colors, gray, heat.colors)
+
+importFrom(grDevices, dev.list, cm.colors, gray, heat.colors)
+importFrom(graphics, plot, co.intervals)
+
 
 importFrom(stats, as.formula, density, fitted.values, loess.smooth, 
            median, ppoints, qnorm, residuals, update)

@@ -1,6 +1,6 @@
 Package: lattice
-Version: 0.10-3
-Date: 2004/08/12
+Version: 0.10-4
+Date: 2004/08/17
 Priority: recommended
 Title: Lattice Graphics
 Author: Deepayan Sarkar <deepayan@stat.wisc.edu>
@@ -8,7 +8,7 @@ Maintainer: Deepayan Sarkar <deepayan@stat.wisc.edu>
 Description: Implementation of Trellis Graphics. See ?Lattice for a
    brief introduction
 Depends: R (>= 2.0.0)
-Suggests: grid
+Imports: grid, grDevices, graphics, stats
 LazyLoad: yes
 License: GPL version 2 or later
-Packaged: Thu Aug 12 10:53:48 2004; deepayan
+Packaged: Tue Aug 17 17:08:56 2004; deepayan
