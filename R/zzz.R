@@ -21,9 +21,6 @@
 
 .onLoad <- function(lib, pkg) {
     library.dynam(pkg, pkg, lib )
-    ## Note: grid functions will not be visible
-    ## if (!require(grid))
-    ##    stop("lattice requires grid, but grid couldn't be loaded")
 }
 
 .LatticeEnv <- new.env()
@@ -52,11 +49,11 @@ assign("lattice.theme", list(), env = .LatticeEnv)
 
 
 
-# .First.lib <- function(lib, pkg) {
-#     library.dynam(pkg, pkg, lib )
-#     if (!require(grid))
-#         stop("lattice requires grid, but grid couldn't be loaded")
-# }
+#.First.lib <- function(lib, pkg) {
+#    library.dynam(pkg, pkg, lib )
+#    if (!require(grid))
+#        stop("lattice requires grid, but grid couldn't be loaded")
+#}
 
 
 
