@@ -242,7 +242,7 @@ densityplot <-
     have.ylim <- !missing(ylim)
     if (!is.null(foo$y.scales$limit)) {
         have.ylim <- TRUE
-        ylim <- foo$x.scales$limit
+        ylim <- foo$y.scales$limit
     }
 
     ## Step 4: Decide if log scales are being used:
@@ -340,7 +340,10 @@ densityplot <-
                                panel.args.common = foo$panel.args.common,
                                panel.args = foo$panel.args,
                                aspect = aspect,
-                               nplots = nplots))
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
+
 
     if (is.null(foo$key) && !is.null(groups) &&
         (is.list(auto.key) || (is.logical(auto.key) && auto.key)))

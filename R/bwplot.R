@@ -408,7 +408,7 @@ panel.stripplot <-
 panel.bwplot <-
     function(x, y, box.ratio=1, horizontal = TRUE, pch=box.dot$pch,
              col = box.dot$col, cex = box.dot$cex,
-             fill = box.rectangle$fill,
+             fill = box.rectangle$fill, varwidth = FALSE,
              levels.fos = NULL, coef = 1.5, ...)
 {
     
@@ -425,6 +425,9 @@ panel.bwplot <-
     ## potential location of a boxplot. 
 
     if (horizontal) {
+
+        maxn <- max(by(x, y, length)) ## used if varwidth = TRUE
+
         yscale <- current.viewport()$yscale
         if (is.null(levels.fos)) levels.fos <- floor(yscale[2])-ceiling(yscale[1])+1
         lower <- ceiling(yscale[1])
@@ -440,7 +443,8 @@ panel.bwplot <-
                 if (stats$n>0)
                 {
                     push.viewport(viewport(y=unit(yval, "native"),
-                                           height = unit(height, "native"),
+                                           height = unit((if (varwidth)
+                                           sqrt(stats$n/maxn)  else 1) * height, "native"),
                                            xscale = xscale))
                     
                     r.x <- (stats$stats[2]+stats$stats[4])/2
@@ -493,6 +497,9 @@ panel.bwplot <-
     
     }
     else {
+
+        maxn <- max(by(y, x, length)) ## used if varwidth = TRUE
+
         xscale <- current.viewport()$xscale
         if (is.null(levels.fos)) levels.fos <- floor(xscale[2])-ceiling(xscale[1])+1
         lower <- ceiling(xscale[1])
@@ -506,7 +513,8 @@ panel.bwplot <-
                 if (stats$n>0)
                 {
                     push.viewport(viewport(x = unit(xval, "native"),
-                                           width = unit(width, "native"),
+                                           width = unit((if (varwidth)
+                                           sqrt(stats$n/maxn)  else 1) * width, "native"),
                                            yscale = yscale))
                     
                     r.x <- (stats$stats[2]+stats$stats[4])/2
@@ -589,6 +597,7 @@ dotplot <-
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
+    try(formula <- eval(formula), silent = TRUE)
     foo <- substitute(formula)
     if (!(is.call(foo) && foo[[1]] == "~")) {
         formula <- as.formula(paste("~", deparse(foo)))
@@ -830,7 +839,7 @@ bwplot <-
     have.ylim <- !missing(ylim)
     if (!is.null(foo$y.scales$limit)) {
         have.ylim <- TRUE
-        ylim <- foo$x.scales$limit
+        ylim <- foo$y.scales$limit
     }
 
     ## Step 4: Decide if log scales are being used:
@@ -987,7 +996,10 @@ bwplot <-
                                panel.args.common = foo$panel.args.common,
                                panel.args = foo$panel.args,
                                aspect = aspect,
-                               nplots = nplots))
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
+
 
     if (is.null(foo$key) && !is.null(groups) &&
         (is.list(auto.key) || (is.logical(auto.key) && auto.key)))

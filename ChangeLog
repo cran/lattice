@@ -1,3 +1,54 @@
+2003-05-22  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* tests/scales.R: added output file name
+
+	* tests/MASSch04.R: changes a call to title() to main=
+
+	* tests/test.R: added output file
+
+	* tests/dotplotscoping.R: added output filename
+
+2003-05-22  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* DESCRIPTION: updated DESCRIPTION
+
+	* man/panel.pairs.Rd: added doc entry for 'panel.number'
+
+	* R/common.R (limits.and.aspect): Following up on a report by
+	 Kevin Wright, I discovered that the presence of blank panels
+	 (either by skip or due to layout specifying more panels than were
+	 actually there) caused problems in calculating factor levels
+	 (adding an extra NA level). This should be fixed now. Also,
+	 handling of xlim=list(...)  improved in cases with skip (not that
+	 anyone is ever going to use it).
+
+
+2003-05-22  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* splom.R:
+	panel functions can now optionally ask for a panel.number argument,
+	which would be supplied as an argument only if the panel function has
+	such an argument. Unfortunately, this was not working as intended in
+	splom, because of the unusual nature of the panel/superpanel
+	arguments. This has been fixed.
+
+2003-05-19  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* man: fixed minor doc problems to pass R CMD check
+
+2003-05-18  Deepayan Sarkar  <deepayan@24-196-68-115.mad.wi.charter.com>
+
+	* R: Almost all files updated to fix bugs related to the scales
+	argument --- limits inside scales had a bad bug which is now
+	fixed, also added and improved support for multiple (as lists)
+	limits, at, labels. axs = "i" should also work.
+
+	* tests: new tests added
+
+	* R/miscellaneous.R: modified lsegments to accept x0, x1 as well
+	as x1, x2 (a la S-PLUS).
+
+
 2003-04-10  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 
 	* man: Documentation updates

@@ -481,6 +481,7 @@ extend.limits <-
 
 construct.scales <-
     function(draw = TRUE,
+             axs = "r",
              tck = 1,
              tick.number = 5,
              cex = 1,
@@ -494,12 +495,13 @@ construct.scales <-
              relation = "same",
              abbreviate = FALSE,
              minlength = 4,
+             limits = NULL,
              x = NULL,
              y = NULL,
              ...)   ## FIXME: how to handle ...
 {
 
-    xfoo <- list(draw = draw, tck = tck,
+    xfoo <- list(draw = draw, axs = axs, tck = tck,
                  tick.number = tick.number,
                  cex = cex,
                  rot = rot,
@@ -509,7 +511,8 @@ construct.scales <-
                  alternating = alternating,
                  relation = relation,
                  abbreviate = abbreviate,
-                 minlength = minlength)
+                 minlength = minlength,
+                 limits = limits)
     yfoo <- xfoo
     if (!is.null(x)) {
         if (is.character(x)) x <- list(relation = x)
@@ -531,6 +534,10 @@ construct.scales <-
         xfoo[[nm]] <- rep(xfoo[[nm]], length = 2)
         yfoo[[nm]] <- rep(yfoo[[nm]], length = 2)
     }
+    if (xfoo$rel == "same" && (is.list(xfoo$at) || is.list(xfoo$lab)))
+        stop("the at and labels components of scales may not be lists when relation = same")
+    if (yfoo$rel == "same" && (is.list(yfoo$at) || is.list(yfoo$lab)))
+        stop("the at and labels components of scales may not be lists when relation = same")
     list(x.scales = xfoo, y.scales = yfoo)
 }
 
@@ -540,6 +547,7 @@ construct.scales <-
 
 construct.3d.scales <-
     function(draw = TRUE,
+             axs = "r",
              tck = 1,
              lty = 1, lwd = 1,
              distance = c(1,1,1),
@@ -558,7 +566,7 @@ construct.3d.scales <-
              z = NULL,
              ...)
 {
-    xfoo <- list(draw = draw, tck = tck,
+    xfoo <- list(draw = draw, axs = axs, tck = tck,
                  lty = 1, lwd = 1,
                  tick.number = tick.number,
                  cex = cex, rot = rot, font = font,
@@ -599,8 +607,10 @@ limits.and.aspect <-
              panel.args = list(),
              aspect,
              nplots,
+             x.axs = "r", y.axs = "r",
              ...)  ## extra arguments for prepanel (for qqmathline)
 {
+
     if (nplots<1) stop("need at least one panel")
     x.limits <- vector("list", nplots)
     y.limits <- vector("list", nplots)
@@ -637,7 +647,9 @@ limits.and.aspect <-
     ## factor (that's how prepanel.default.functions are set
     ## up). However, at this point, all x.limits[[i]] must be of the
     ## same type. Returned limits must be in accordance with this
-    ## type.
+    ## type. The only exception is when relation = "free", in which
+    ## case they may be different. This could happen if [xy]lim or
+    ## limits is supplied as a list in the high level function.
 
     if (x.relation == "same") {
 
@@ -656,6 +668,7 @@ limits.and.aspect <-
         ## concatenated, excluding NA's
 
         if (have.xlim) {
+            if (is.list(xlim)) stop("limits cannot be a list when relation = same")
             x.limits <- xlim
             x.slicelen <- if (is.numeric(xlim)) diff(range(xlim)) else length(xlim) + 2
         }
@@ -663,11 +676,11 @@ limits.and.aspect <-
             x.limits <- unlist(x.limits)
             if (length(x.limits) > 0) {
                 if (is.numeric(x.limits)) {
-                    x.limits <- extend.limits(range(x.limits, na.rm = TRUE))
+                    x.limits <- extend.limits(range(x.limits, na.rm = TRUE), axs = x.axs)
                     x.slicelen <- diff(range(x.limits))
                 }
                 else {
-                    x.limits <- unique(x.limits)
+                    x.limits <- unique(x.limits[!is.na(x.limits)])
                     x.slicelen <- length(x.limits) + 2
                 }
             }
@@ -675,46 +688,52 @@ limits.and.aspect <-
                 x.limits <- c(0,1)
                 x.slicelen <- 1
             }
-
-            ## OLD CODE
-            #if (any(unlist(lapply(x.limits, is.numeric)))) {
-            #    x.limits <- extend.limits(range(do.call("c", x.limits), na.rm = TRUE))
-            #    x.slicelen <- if (is.numeric(x.limits)) diff(range(x.limits))
-            #}
-            #else {
-            #    levnames <- unlist(x.limits)
-            #    x.limits <- x.limits[[1]]
-            #    x.slicelen <- length(x.limits) + 2
-            #}
         }
     }
+
+
     else if (x.relation == "sliced") {
+
+        if (have.xlim) {
+            if (is.list(xlim)) {
+                x.limits <- rep(xlim, length = nplots)
+            }
+            else warning("Explicitly specified x-limits ignored")
+        }
         x.slicelen <- x.limits
         for (i in seq(along = x.limits))
             x.slicelen[[i]] <-
                 if (is.numeric(x.limits[[i]]))
                     diff(range(x.limits[[i]])) # range unnecessary, but...
                 else NA
-        x.slicelen <- 1.14 * max(unlist(x.slicelen), na.rm = TRUE)
+        x.slicelen <- (if (x.axs == "i") 1 else 1.14) * max(unlist(x.slicelen), na.rm = TRUE)
         for (i in seq(along = x.limits)) {
-            x.limits[[i]] <-
-                if (is.numeric(x.limits[[i]]))
+            if (is.numeric(x.limits[[i]]))
+                x.limits[[i]] <-
                     extend.limits(x.limits[[i]], length = x.slicelen)
         }
-        #if (is.numeric(x.limits[[1]])) {
-        #    x.slicelen <- 1.14 * max(unlist(lapply(x.limits, diff)), na.rm = TRUE)
-        #    x.limits <- lapply(x.limits, extend.limits, length = x.slicelen)
-        #}
-        #x.slicelen <- length(x.limits[[1]]) + 2
     }
+
+
     else if (x.relation == "free") {
-        for (i in seq(along = x.limits)) {
-            if (is.numeric(x.limits[[i]])) 
-                x.limits[[i]] <- extend.limits(x.limits[[i]])
-            ## o.w., keep it as it is
+
+        if (have.xlim) {
+            if (!is.list(xlim)) xlim <- list(xlim)
+
+            id <- logical(length(x.limits))
+            for (i in seq(along = id)) 
+                id[i] <- !any(is.na(x.limits[[i]]))
+            id <- seq(along = id)[id]
+            id <- id[!is.na(id)]
+            
+            x.limits[id] <- xlim
         }
 
-
+        for (i in seq(along = x.limits)) {
+            if (is.numeric(x.limits[[i]])) 
+                x.limits[[i]] <- extend.limits(x.limits[[i]], axs = x.axs)
+            ## o.w., keep it as it is
+        }
     }
 
 
@@ -722,6 +741,7 @@ limits.and.aspect <-
 
     if (y.relation == "same")
         if (have.ylim) {
+            if (is.list(ylim)) stop("limits cannot be a list when relation = same")
             y.limits <- ylim
             y.slicelen <- if (is.numeric(ylim)) diff(range(ylim)) else length(ylim) + 2
         }
@@ -729,11 +749,11 @@ limits.and.aspect <-
             y.limits <- unlist(y.limits)
             if (length(y.limits) > 0) {
                 if (is.numeric(y.limits)) {
-                    y.limits <- extend.limits(range(y.limits, na.rm = TRUE))
+                    y.limits <- extend.limits(range(y.limits, na.rm = TRUE), axs = y.axs)
                     y.slicelen <- diff(range(y.limits))
                 }
                 else {
-                    y.limits <- unique(y.limits)
+                    y.limits <- unique(y.limits[!is.na(y.limits)])
                     y.slicelen <- length(y.limits) + 2
                 }
             }
@@ -742,24 +762,46 @@ limits.and.aspect <-
                 y.slicelen <- 1
             }
         }
+
+
     else if (y.relation == "sliced") {
+
+        if (have.ylim) {
+            if (is.list(ylim)) {
+                y.limits <- rep(ylim, length = nplots)
+            }
+            else warning("Explicitly specified x-limits ignored")
+        }
         y.slicelen <- y.limits
         for (i in seq(along = y.limits))
             y.slicelen[[i]] <-
                 if (is.numeric(y.limits[[i]]))
                     diff(range(y.limits[[i]])) # range unnecessary, but...
                 else NA
-        y.slicelen <- 1.14 * max(unlist(y.slicelen), na.rm = TRUE)
+        y.slicelen <- (if (y.axs == "i") 1 else 1.14) * max(unlist(y.slicelen), na.rm = TRUE)
         for (i in seq(along = y.limits)) {
-            y.limits[[i]] <-
-                if (is.numeric(y.limits[[i]]))
+            if (is.numeric(y.limits[[i]]))
+                y.limits[[i]] <-
                     extend.limits(y.limits[[i]], length = y.slicelen)
         }
     }
     else if (y.relation == "free") {
+
+        if (have.ylim) {
+            if (!is.list(ylim)) ylim <- list(ylim)
+
+            id <- logical(length(y.limits))
+            for (i in seq(along = id)) 
+                id[i] <- !any(is.na(y.limits[[i]]))
+            id <- seq(along = id)[id]
+            id <- id[!is.na(id)]
+            
+            y.limits[id] <- ylim
+        }
+
         for (i in seq(along = y.limits)) {
             if (is.numeric(y.limits[[i]]))
-                y.limits[[i]] <- extend.limits(y.limits[[i]])
+                y.limits[[i]] <- extend.limits(y.limits[[i]], axs = y.axs)
             ## o.w., keep it as it is
         }
     }

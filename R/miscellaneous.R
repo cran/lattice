@@ -331,11 +331,13 @@ strip.default <-
 
 
 lsegments <-
-    function(x0, y0, x1, y1, 
+    function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
              col = add.line$col,
              lty = add.line$lty,
              lwd = add.line$lwd, ...)
 {
+    if (missing(x0)) x0 <- x2
+    if (missing(y0)) y0 <- y2
     add.line <- trellis.par.get("add.line")
     ml <- max(length(x0), length(x1), length(y0), length(y1))
     x0 <- rep(x0, length = ml)
@@ -352,10 +354,14 @@ lsegments <-
 
 
 larrows <-
-    function(x0, y0, x1, y1, angle = 30, code = 2, length = NULL, proportion = .05, ...) 
+    function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
+             angle = 30, code = 2, length = NULL, proportion = .05, ...) 
 {
+
+    if (missing(x0)) {x0 <- x1; x1 <- x2}
+    if (missing(y0)) {y0 <- y1; y1 <- y2}
     if (!is.null(length)) warning("length not implemented in larrows, use proportion instead")
-    ##warning("larrows not corectly implemented yet")
+
     angle <- angle / 180 * pi
     start <- rbind(x0, y0)
     end <- rbind(x1, y1)

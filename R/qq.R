@@ -162,7 +162,7 @@ qq <-
     have.ylim <- !missing(ylim)
     if (!is.null(foo$y.scales$limit)) {
         have.ylim <- TRUE
-        ylim <- foo$x.scales$limit
+        ylim <- foo$y.scales$limit
     }
 
     ## Step 4: Decide if log scales are being used: completed later
@@ -288,7 +288,9 @@ qq <-
                                panel.args.common = foo$panel.args.common,
                                panel.args = foo$panel.args,
                                aspect = aspect,
-                               nplots = nplots))
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
 
     class(foo) <- "trellis"
     foo

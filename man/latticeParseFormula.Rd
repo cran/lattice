@@ -25,7 +25,7 @@ latticeParseFormula(model, data, dimension = 2)
     left.name, right.x.name, right.y.name, condition} for 3d.
 }
 \description{ this function is used in trellis functions. Might
-  be useful by itself. \code{y} and \code{g_1,\dots,\g_n} may be missing.
+  be useful by itself. \code{y} and \code{g_1,\dots,g_n} may be missing.
 }
 \seealso{
   \code{\link{xyplot}}, \code{\link{Lattice}}

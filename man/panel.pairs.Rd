@@ -8,7 +8,8 @@
 panel.pairs(z, panel = panel.splom,
             groups = NULL, panel.subscripts, 
             subscripts,
-            pscales = 5, ...)
+            pscales = 5,
+            panel.number, ...)
 }
 \arguments{
   \item{z}{ The data frame used for the plot.}
@@ -20,6 +21,10 @@ panel.pairs(z, panel = panel.splom,
     displayed in this (super)panel.}
   \item{fontsize.small}{ Fontsize to be used for the axis labels inside.}
   \item{pscales}{ Controls axis labels, passed down from \code{splom}}
+  \item{panel.number}{ the sequential index of the panel in the Lattice
+    plot which this function will draw. Passed to the `panel' function
+    if it accepts such an argument.
+  }
   \item{\dots}{ graphical parameters may be supplied.}
 }
 \details{

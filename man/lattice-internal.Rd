@@ -38,20 +38,20 @@
 \synopsis{
 generateNewName(names.current, new.prefix)
 lpretty(x, ...)
-construct.3d.scales(draw = TRUE, tck = 1, lty = 1, lwd = 1, distance = c(1, 
+construct.3d.scales(draw = TRUE, axs = "r", tck = 1, lty = 1, lwd = 1, distance = c(1, 
     1, 1), tick.number = 5, cex = 1, rot = FALSE, at = FALSE, 
     labels = FALSE, col = FALSE, log = FALSE, font = FALSE, arrows = TRUE, 
     relation = "same", x = NULL, y = NULL, z = NULL, ...) 
-construct.scales(draw = TRUE, tck = 1, tick.number = 5, cex = 1,
+construct.scales(draw = TRUE, axs = "r", tck = 1, tick.number = 5, cex = 1,
     rot = FALSE, at = FALSE, labels = FALSE, col = FALSE, 
     log = FALSE, font = FALSE, alternating = TRUE, 
-    relation = "same", abbreviate, minlength,
+    relation = "same", abbreviate, minlength, limits,
     x = NULL, y = NULL, ...)  
 compute.layout(layout, cond.max.level, skip = FALSE)  
 limits.and.aspect(prepanel.default.function, prepanel = NULL, have.xlim = FALSE, 
     xlim = NULL, have.ylim = FALSE, ylim = NULL, x.relation, 
     y.relation, panel.args.common = list(), panel.args = list(), 
-    aspect, nplots, ...)
+    aspect, nplots, x.axs, y.axs, ...)
 trellis.skeleton(as.table = FALSE, aspect = "fill", between = list(x = 0, 
     y = 0), key = NULL, page = NULL, main = NULL, sub = NULL, 
     par.strip.text = list(), skip = FALSE, strip = strip.default, 

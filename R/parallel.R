@@ -49,7 +49,7 @@ panel.parallel <- function(z, subscripts,
     llim <- numeric(n.r)
     ulim <- numeric(n.r)
     dif <- numeric(n.r)
-    if(n.r>0)
+    if (n.r > 0)
         for(i in 1:n.r) {
             grid.lines(x = c(0,1), y = c(i,i),
                        default.units = "native",
@@ -190,7 +190,7 @@ parallel <-
     have.ylim <- TRUE
     if (!is.null(foo$y.scales$limit)) {
         have.ylim <- TRUE
-        ylim <- foo$x.scales$limit
+        ylim <- foo$y.scales$limit
     }
     
     ## Step 4: Decide if log scales are being used:
@@ -288,7 +288,9 @@ parallel <-
                                panel.args.common = foo$panel.args.common,
                                panel.args = foo$panel.args,
                                aspect = aspect,
-                               nplots = nplots))
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
 
     class(foo) <- "trellis"
     foo

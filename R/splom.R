@@ -47,6 +47,7 @@ panel.pairs <-
              panel.subscripts,
              subscripts,
              pscales = 5,
+             panel.number = 0,  ## should always be supplied
              ...)
 {
     panel <- 
@@ -220,14 +221,23 @@ panel.pairs <-
                 }
                 else
                 {
-                    if(!panel.subscripts)
-                        panel(x=as.numeric(z[subscripts, j]),
-                              y=as.numeric(z[subscripts, i]), ...)
+                    pargs <-
+                        if (!panel.subscripts)
+                            c(list(x = as.numeric(z[subscripts, j]),
+                                   y = as.numeric(z[subscripts, i]),
+                                   panel.number = panel.number),
+                              list(...))
+                        else
+                            c(list(x = as.numeric(z[subscripts, j]),
+                                   y = as.numeric(z[subscripts, i]),
+                                   groups = groups,
+                                   subscripts = subscripts,
+                                   panel.number = panel.number),
+                              list(...))
 
-                    else panel(x=as.numeric(z[subscripts, j]),
-                               y=as.numeric(z[subscripts, i]),
-                               groups = groups,
-                               subscripts = subscripts, ...)
+                    if (!("..." %in% names(formals(panel))))
+                        pargs <- pargs[names(formals(panel))]
+                    do.call("panel", pargs)
 
                     grid.rect()
                 }
@@ -365,7 +375,7 @@ splom <-
     have.ylim <- !missing(ylim)
     if (!is.null(foo$y.scales$limit)) {
         have.ylim <- TRUE
-        ylim <- foo$x.scales$limit
+        ylim <- foo$y.scales$limit
     }
     if (have.xlim || have.ylim) {
         warning("Limits cannot be explicitly specified")
@@ -480,7 +490,9 @@ splom <-
                                panel.args.common = foo$panel.args.common,
                                panel.args = foo$panel.args,
                                aspect = aspect,
-                               nplots = nplots))
+                               nplots = nplots,
+                               x.axs = foo$x.scales$axs,
+                               y.axs = foo$y.scales$axs))
 
     class(foo) <- "trellis"
     foo

@@ -1232,6 +1232,7 @@ print.trellis <-
 
     heights.insertlist.position <- 0
     heights.insertlist.unit <- unit(1, "null")
+
     ## both these dummies, since there is no unit(numeric(0)). These
     ## are necessary for calculating space for axis
     ## labels. Unfortunately this makes the code complicated
@@ -1252,6 +1253,8 @@ print.trellis <-
                                         minlength = x$x.scales$minl,
                                         n = x$x.scales$tick.number)$lab
 
+
+            
             if (is.character(lab)) 
                 strbar <- as.list(lab)
             else if (is.expression(lab)) {
@@ -1459,6 +1462,7 @@ print.trellis <-
                                         minlength = x$y.scales$minl,
                                         n = x$y.scales$tick.number)$lab
 
+
             if (is.character(lab)) 
                 strbar <- as.list(lab)
             else if (is.expression(lab)) {
@@ -1466,7 +1470,9 @@ print.trellis <-
                 for (ss in seq(along = lab))
                     strbar <- c(strbar, list(lab[ss]))
             }
-            else stop("Invalid value for labels")
+            else {
+                stop("Invalid value for labels")
+            }
 
             widths.x[5] <- 0.5 + max(0.001, x$y.scales$tck[1]) * 0.3
             ## tck = 2 is .5 lines + .6 lines

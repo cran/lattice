@@ -1,4 +1,4 @@
-
+postscript("misctests.ps")
 library(lattice)
 x <- rnorm(200)
 y <- rnorm(200)
@@ -57,17 +57,5 @@ x = sample(1:3, 100, replace=TRUE)
 histogram( ~ x, breaks=c(0,1.5,2.5,3.5), type='count')
 
 
-
-fubar <- function() {
-    k <- 2
-    kkk <- 1:10
-    names(kkk) <- 1:10
-    data = list(x=kkk)
-    dotplot(x^k + rnorm(10), data, allow = T)
-}
-
-fubar()
-
-
 demo("lattice")
-
+dev.off()

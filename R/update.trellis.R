@@ -1,5 +1,24 @@
 
 
+
+# "[.trellis" <-
+#     function(x, i, layout = NULL, ...)
+# {
+#     x$panel.args <- x$panel.args[i]
+#     if (is.list(x$x.scales$at))
+#         x$x.scales$at <- x$x.scales$at[i]
+#     if (is.list(x$x.scales$labels))
+#         x$x.scales$labels <- x$x.scales$labels[i]
+#     if (missing(layout)) layout <- c(0, length(x$panel.args), 1)
+#     x$layout <- layout
+#     x
+# }
+
+ 
+
+
+
+
 update.trellis <-
     function(object,
              aspect,

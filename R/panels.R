@@ -292,7 +292,9 @@ panel.superpose <-
         superpose.symbol <- trellis.par.get("superpose.symbol")
         superpose.line <- trellis.par.get("superpose.line")
 
-        vals <- sort(unique(groups))
+        vals <-
+            if (is.factor(groups)) levels(groups)
+            else sort(unique(groups))
         nvals <- length(vals)
         col.line <- rep(col.line, length=nvals)
         col.symbol <- rep(col.symbol, length=nvals)
@@ -307,6 +309,7 @@ panel.superpose <-
             else eval(panel.groups)
 
         for (i in seq(along=vals)) {
+
             id <- (groups[subscripts] == vals[i])
             if (any(id)) {
                 args <- list(x=x[id],
@@ -365,7 +368,9 @@ panel.superpose.2 <-
         superpose.line <- trellis.par.get("superpose.line")
         x <- as.numeric(x)
         y <- as.numeric(y)
-        vals <- sort(unique(groups))
+        vals <-
+            if (is.factor(groups)) levels(groups)
+            else sort(unique(groups))
         nvals <- length(vals)
         col.line <- rep(col.line, length = nvals)
         col.symbol <- rep(col.symbol, length = nvals)
