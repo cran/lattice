@@ -17,7 +17,10 @@ prepanel.qqmathline(y, distribution, f.value = ppoints, ...)
 }
 \arguments{
   \item{x, y}{x and y values, numeric or factor}
-  \item{distribution}{ quantile function for theoretical distribution}
+  \item{distribution}{ quantile function for theoretical
+    distribution. This is automatically passed in when this is used as a
+    prepanel function in \code{qqmath}.
+  }
   \item{f.value}{ as used in \code{qqmath}}
   \item{\dots}{other arguments}
 }

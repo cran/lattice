@@ -4,6 +4,7 @@
 \alias{panel.3dscatter.old}
 \alias{panel.3dscatter}
 \alias{panel.3dwire}
+\alias{panel.3dwire.slow}
 \alias{palette.shade}
 \alias{ltransform3dMatrix}
 \alias{ltransform3dto3d}
@@ -42,6 +43,16 @@ panel.3dscatter(x, y, z, rot.mat = diag(4), za, zb,
              type = 'p',
              col, col.point, col.line, lty, lwd, cex, pch, ...)
 panel.3dwire(x, y, z, rot.mat = diag(4), za, zb,
+             minz = 0, maxz = 1,
+             col.at, col.regions,
+             shade = FALSE,
+             shade.colors = palette.shade,
+             light.source = c(1, 0, 0),
+             col = "black",
+             col.groups = superpose.line$col,
+             polynum = 100,
+             ...)
+panel.3dwire.slow(x, y, z, rot.mat = diag(4), za, zb,
              minz = 0, maxz = 1,
              col.at, col.regions,
              shade = FALSE,
@@ -102,6 +113,8 @@ palette.shade(cosangle, height, saturation = .3, ...)
   \item{light.source}{any vector (cartesian coordinates) in the
     direction of the light source. This is relative to the viewing point
     in the direction of (0,0,1)}
+  \item{polynum}{ number of quadrilateral faces to draw
+    simultaneously. Trade-off between speed and memory usage.}
   \item{minz, maxz, col.groups}{miscellaneous other arguments.}
   \item{col, col.point, col.line, lty, lwd, cex, pch}{graphical parameters}
   \item{\dots}{ other parameters, passed down when appropriate}
@@ -136,17 +149,22 @@ palette.shade(cosangle, height, saturation = .3, ...)
   to control type of plot. Has some nice properties, but is still in an
   experimental stage.
   
-  \code{panel.3dwire} is the default \code{panel.3d.wireframe}
-  function. If \code{shade = TRUE}, it attempts to color the surface as
-  being illuminated from a light source at infinite distance, in the
-  direction given by \code{light.source}. \code{palette.shade} is a
-  simple function that returns the apropriate colors required for
-  shading given the cosine of twice the angle of between the viewing
-  direction and the direction of the light source, and a height between
-  0 and 1. (No shadows are formed, though.)  Multiple surfaces are drawn
-  if \code{groups} is non-null in the call to \code{wireframe}, however,
-  the algorithm is not sophisticated enough to render intersecting
-  surfaces correctly.
+  \code{panel.3dwire} is the default \code{panel.3d.wireframe} function,
+  and \code{panel.3dwire.slow} is its older, slower cousin. The two
+  differ only in that the slower version draws the wireframe facets one
+  at a time, whereas the newer version waits till it has collected
+  information about \code{polynum} facets, and draws them all at
+  once. This avoids the overhead of drawing \code{grid.polygon}
+  repeatedly, speeding up the rendering considerably. If \code{shade =
+    TRUE}, these attempt to color the surface as being illuminated from
+  a light source at infinite distance, in the direction given by
+  \code{light.source}. \code{palette.shade} is a simple function that
+  returns the apropriate colors required for shading given the cosine of
+  twice the angle of between the viewing direction and the direction of
+  the light source, and a height between 0 and 1. (No shadows are
+  formed, though.)  Multiple surfaces are drawn if \code{groups} is
+  non-null in the call to \code{wireframe}, however, the algorithm is
+  not sophisticated enough to render intersecting surfaces correctly.
 
   \code{ltransform3dMatrix} and \code{ltransform3dto3d} are utility
   functions to help computation of projections. The first function takes

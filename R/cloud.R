@@ -231,7 +231,7 @@ palette.shade <- function(cosangle, height, saturation = .3, ...) {
 
 
 
-panel.3dwire <- 
+panel.3dwire.slow <- 
     function(x, y, z, rot.mat = diag(4), za, zb,
              minz = 0, maxz = 1,
              col.at, col.regions,
@@ -242,7 +242,7 @@ panel.3dwire <-
              col.groups = superpose.line$col,
              ...)
 {
-    
+
     ## x, y, z are in a special form here (compared to most other
     ## places in lattice). x and y are short ascending, describing the
     ## grid, and z is the corresponding z values in the order (x1,y1),
@@ -250,16 +250,20 @@ panel.3dwire <-
     ## might be a matrix, which indicates multiple surfaces. Above
     ## description true for each column in that case.
 
+    ## vector col meaningful only for grouped plots, but difficult to
+    ## implement, so...
+
     lenz <- maxz - minz
     ngroups <- if (is.matrix(z)) ncol(z) else 1
     superpose.line <- trellis.par.get("superpose.line")
-    col.groups <- rep(col.groups, ngroups)
+    col.groups <- rep(col.groups, length = ngroups)
+    col <- rep(col, length = ngroups)
     light.source <- light.source/sqrt(sum(light.source * light.source))
 
     shade.colors <-
         if (is.character(shade.colors)) get(shade.colors)
         else eval(shade.colors)
-    
+
     wirePolygon <-
         if (shade)
             function(xx, yy, misc) {
@@ -279,7 +283,7 @@ panel.3dwire <-
                              gp =
                              gpar(fill =
                                   col.regions[(seq(along = col.at)[col.at > misc[2]])[1] - 1 ],
-                                  col = col))
+                                  col = col[misc[3]]))
             }
         else if (ngroups == 1)
             function(xx, yy, misc) {
@@ -287,15 +291,15 @@ panel.3dwire <-
                              default.units = "native",
                              gp =
                              gpar(fill = col.regions[1],
-                                  col = col))
+                                  col = col[1]))
             }
         else
             function(xx, yy, misc) {
                 grid.polygon(x = xx, y = yy,
                              default.units = "native",
                              gp =
-                             gpar(fill = col.groups[1 + as.integer(misc[3])],
-                                  col = col))
+                             gpar(fill = col.groups[as.integer(misc[3])],
+                                  col = col[misc[3]]))
 
             }
 
@@ -319,6 +323,140 @@ panel.3dwire <-
           environment(),
           PACKAGE="lattice")
           
+}
+      
+
+
+
+
+
+panel.3dwire <- 
+    function(x, y, z, rot.mat = diag(4), za, zb,
+             minz = 0, maxz = 1,
+             col.at, col.regions,
+             shade = FALSE,
+             shade.colors = palette.shade,
+             light.source = c(1, 0, 0),
+             col = "black",
+             col.groups = superpose.line$col,
+             polynum = 100,
+             ...)
+{
+
+    ## a faster version of panel.3dwire that takes advantage of grid
+    ## in R 1.8.0-patched-'s multiple polygon drawing
+    ## capabilities. The solution is a bit hackish, it basically keeps
+    ## track of the polygons to be drawn in a 'global' variable and
+    ## draws them all at once when 'sufficiently many' have been
+    ## collected.
+
+    ## x, y, z are in a special form here (compared to most other
+    ## places in lattice). x and y are short ascending, describing the
+    ## grid, and z is the corresponding z values in the order (x1,y1),
+    ## (x1,y2), ... . length(z) == length(x) * length(y). Sometimes, z
+    ## might be a matrix, which indicates multiple surfaces. Above
+    ## description true for each column in that case.
+
+    lenz <- maxz - minz
+    ngroups <- if (is.matrix(z)) ncol(z) else 1
+    superpose.line <- trellis.par.get("superpose.line")
+    col.groups <- rep(col.groups, length = ngroups)
+    if (length(col) > 1) col <- rep(col, length = ngroups)
+    light.source <- light.source/sqrt(sum(light.source * light.source))
+
+    shade.colors <-
+        if (is.character(shade.colors)) get(shade.colors)
+        else eval(shade.colors)
+
+    pol.x <- numeric(polynum * 4)
+    pol.y <- numeric(polynum * 4)
+
+    if (shade) {
+        pol.fill <- character(polynum)
+        pol.col <- "transparent"
+    }
+    else if (length(col.regions) > 1) {
+        pol.fill <- vector(mode(col.regions), polynum)
+        pol.col <-
+            if (ngroups == 1 || length(col) == 1) col[1]
+            else vector(mode(col), polynum)
+    }
+    else if (ngroups == 1) {
+        pol.fill <- col.regions[1]
+        pol.col <- col[1]
+    }
+    else {
+        pol.fill <- vector(mode(col.groups), polynum)
+        pol.col <-
+            if (length(col) == 1) col[1]
+            else vector(mode(col), polynum)
+    }
+
+
+    count <- 0 ## counts number of polygons stacked up so far
+
+    wirePolygon <-
+
+        function(xx, yy, misc) {
+
+            pol.x[4 * count + 1:4] <<- xx
+            pol.y[4 * count + 1:4] <<- yy
+
+            count <<- count + 1
+            
+            if (shade) {
+                pol.fill[count] <<- shade.colors(misc[1], (misc[2] - minz)/lenz)
+            }
+            else if (length(col.regions) > 1) {
+                pol.fill[count] <<- col.regions[(seq(along = col.at)[col.at > misc[2]])[1] - 1 ]
+                if (ngroups > 1 && length(col) > 1) pol.col[count] <<- col[as.integer(misc[3])]
+            }
+            ## nothing to do if ngroups == 1
+            else if (ngroups > 1) {
+
+                pol.fill[count] <<- col.groups[as.integer(as.integer(misc[3]))]
+                if (length(col) > 1) pol.col[count] <<- col[as.integer(misc[3])]
+            }
+
+
+            if (count == polynum) {
+
+                grid.polygon(x = pol.x, y = pol.y, id.length = rep(4, polynum),
+                             default.units = "native",
+                             gp = gpar(fill = pol.fill, col = pol.col))
+                             
+                count <<- 0
+            }
+        }
+
+    ##print(x)
+    ##print(y)
+    ##print(z)
+
+    
+    .Call("wireframePanelCalculations",
+          as.double(x),
+          as.double(y),
+          as.double(z),
+          as.double(rot.mat),
+          as.double(za),
+          as.double(zb),
+          length(x),
+          length(y),
+          as.integer(ngroups),
+          as.double(light.source),
+          environment(),
+          PACKAGE="lattice")
+          
+
+    if (count > 0) {
+        grid.polygon(x = pol.x[1:(count * 4)], y = pol.y[1:(count * 4)],
+                     default.units = "native", id.length = rep(4, count),
+                     gp = gpar(fill = rep(pol.fill, length = count),
+                     col = rep(pol.col, length = count)))
+    }
+
+
 }
       
 

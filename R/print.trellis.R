@@ -1489,7 +1489,15 @@ print.trellis <-
 
             widths.x[5] <- 0.5 + max(0.001, x$y.scales$tck[1]) * 0.3
             ## tck = 2 is .5 lines + .6 lines
-            widths.x[n.col-3] <- max(1, x$y.scales$tck[2]) * 0.5
+
+##FIXME
+            
+            ## WAS : widths.x[n.col-3] <- max(1, x$y.scales$tck[2]) * 0.5
+            ## not sure why.
+            ## changed to:
+
+            widths.x[n.col-3] <- 0.5 + max(0.001, x$y.scales$tck[2]) * 0.3
+
 
             if (any(y.alternating==1 | y.alternating==3)) {
 

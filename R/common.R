@@ -454,7 +454,7 @@ calculateAxisComponents <-
             at <- log(at, base = logbase)
         }
         ans <- list(at = at, labels = if (is.logical(labels))
-                    paste(logpaste, format(at), sep = "") else labels,
+                    paste(logpaste, format(at, trim = TRUE), sep = "") else labels,
                     check.overlap = check.overlap, num.limit =
                     range(x))
     }

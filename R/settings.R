@@ -225,7 +225,7 @@ trellis.device <-
     ## Get device function
     if (is.character(device))
     {
-        device.call <- get(device)
+        if (new || is.null(dev.list())) device.call <- get(device)
         dev.name <- device
     }
     else {

@@ -20,6 +20,9 @@ export("[.shingle", as.factorOrShingle, as.shingle, banking, barchart,
        ltransform3dMatrix, ltransform3dto3d,
 
        oneway, palette.shade, panel.3dscatter, panel.3dscatter.old,
+
+       panel.3dwire.slow,
+
        panel.3dwire, panel.abline, panel.barchart, panel.bwplot,
        panel.cloud, panel.curve, panel.densityplot, panel.dotplot,
        panel.fill, panel.grid, panel.histogram, panel.levelplot,

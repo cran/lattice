@@ -152,10 +152,6 @@ wireframe(formula, data,
   controlling these are actually arguments for the panel function, they
   can be supplied to \code{cloud} and \code{wireframe} directly.
 
-  \code{wireframe} can be extremely slow in rendering; this should
-  improve sometime in the future. (For some reason, postscript output is
-  much faster than most other devices.)
-
   The algorithm for identifying which edges of the bounding box should
   be drawn before the points are plotted fails in some cases.
 
@@ -176,6 +172,8 @@ wireframe(formula, data,
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \examples{
+data(volcano)  ## 87 x 61 matrix
+wireframe(volcano ~ rep(1:87, 61) + rep(1:61, each = 87), drape = TRUE)
 x <- seq(-pi, pi, len = 20)
 y <- seq(-pi, pi, len = 20)
 g <- expand.grid(x = x, y = y)

@@ -110,10 +110,11 @@ as.factorOrShingle <- function(x, subset = TRUE, drop = FALSE)
 
 Rows <- function(x, which)
 {
-    for (i in seq(along = x)) x[[i]] <- x[[i]][which]
+    for (i in seq(along = x)) x[[i]] <-
+        rep(x[[i]], length = max(which, length(which)))[which]
     x
 }
-## S-Plus trellis function needed for nlme.
+
 
 
 

@@ -75,6 +75,8 @@ panel.levelplot <-
              col.regions)
 {
     label.style <- match.arg(label.style)
+    minXwid <- min(diff(sort(unique(x))))
+    minYwid <- min(diff(sort(unique(y))))
     x <- as.numeric(x[subscripts])
     y <- as.numeric(y[subscripts])
 
@@ -111,9 +113,13 @@ panel.levelplot <-
         ## sorted unique values of x 
         ux <- sort(unique(x[!is.na(x)]))
         ## actual box boundaries (x axis)
-        bx <- c(3 * ux[1] - ux[2],
-                ux[-length(ux)] + ux[-1],
-                3 * ux[length(ux)] - ux[length(ux)-1]) / 2
+        bx <-
+            if (length(ux) > 1)
+                c(3 * ux[1] - ux[2],
+                  ux[-length(ux)] + ux[-1],
+                  3 * ux[length(ux)] - ux[length(ux)-1]) / 2
+            else
+                ux + c(-.5, .5) * minXwid
         ## dimension of rectangles
         lx <- diff(bx)
         ## centers of rectangles
@@ -121,9 +127,13 @@ panel.levelplot <-
 
         ## same things for y
         uy <- sort(unique(y[!is.na(y)]))
-        by <- c(3 * uy[1] - uy[2],
-                uy[-length(uy)] + uy[-1],
-                3 * uy[length(uy)] - uy[length(uy)-1]) / 2
+        by <-
+            if (length(uy) > 1)
+                c(3 * uy[1] - uy[2],
+                  uy[-length(uy)] + uy[-1],
+                  3 * uy[length(uy)] - uy[length(uy)-1]) / 2
+            else
+                uy + c(-.5, .5) * minYwid
         ly <- diff(by)
         cy <- (by[-1] + by[-length(by)])/2
 

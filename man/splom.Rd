@@ -141,6 +141,7 @@ splom(~iris[1:3]|Species, data = iris,
                 lab = c("Three", "Varieties", "of", "Iris"),
                 cex = 2)
       })
+parallel(~iris[1:4] | Species, iris) 
 }
 \keyword{hplot}
 
