@@ -176,16 +176,18 @@ trellis.par.get <-
     ## access trellis parameters when in fact no device is open. There
     ## is of course no way of knowing at this point which device the
     ## final plot will be drawn to, so the default that would have
-    ## been created using trtellis.device() without arguments is used
+    ## been created using trellis.device() without arguments is used
 
     if (!(.Device %in% names(lattice.theme))) {
         lattice.theme[[.Device]] <<- list()
         device <-
-            if (is.null(dev.list()))
+            if (is.null(dev.list())) {
+                warning("No Active Device, using default values")
                 getOption("device")
+            }
             else .Device
         color <- !(device == "postscript")
-        lset(canonical.theme(device, color))
+        lset(canonical.theme(device, color), warn = FALSE)
     }
     if (is.null(name))
         lattice.theme[[.Device]]
@@ -195,9 +197,11 @@ trellis.par.get <-
 }
 
 trellis.par.set <-
-    function(name, value)
+    function(name, value, warn = TRUE)
 {
     ## if (name %in% names(lattice.theme[[.Device]])) NEEDED as a safeguard ?
+    if (!is.list(value)) stop("value must be a list")
+    if (warn && is.null(dev.list())) stop("No device is currently Active")
     lattice.theme[[.Device]][[name]] <<- value
 }
 
@@ -224,7 +228,7 @@ trellis.device <-
     }
     ## Start the new device if necessary.
     ## new = FALSE ignored if no devices open.
-    if (new || .Device == "null device")
+    if (new || is.null(dev.list()))
     {
         device.call(...)
         .lattice.print.more <<- FALSE
@@ -244,13 +248,13 @@ trellis.device <-
 
 
 
-lset <- function(theme = col.whitebg())
+lset <- function(theme = col.whitebg(), warn = TRUE)
 {
     for (item in names(theme)) {
         foo <- trellis.par.get(item)
         bar <- theme[[item]]
         foo[names(bar)] <- bar
-        trellis.par.set(item, foo)
+        trellis.par.set(item, foo, warn = warn)
     }
 }
 

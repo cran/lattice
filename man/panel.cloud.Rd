@@ -2,6 +2,7 @@
 \alias{panel.cloud}
 \alias{panel.wireframe}
 \alias{panel.3dscatter}
+\alias{panel.3dscatter.new}
 \alias{panel.3dwire}
 \alias{palette.shade}
 \alias{ltransform3dMatrix}
@@ -22,11 +23,19 @@ panel.cloud(x, y, z, subscripts,
     scpos = list(x = 1, y = 8, z = 12), \dots, col.at, col.regions)
 panel.wireframe(\dots)
 ltransform3dMatrix(screen, R.mat)
-ltransform3dto3d(x, R.mat, za = 1 , zb = 0)
-panel.3dscatter(x, y, z, rot.mat = diag(4), za, zb, groups = NULL,
+ltransform3dto3d(x, R.mat, za = 1 , zb = 0, zmin, zmax, dist)
+panel.3dscatter(x, y, z, rot.mat = diag(4), za, zb,
+             zback, zfront, distance,
+             groups = NULL,
              subpanel = if (is.null(groups)) "panel.xyplot"
              else "panel.superpose",
              ...)
+panel.3dscatter.new(x, y, z, rot.mat = diag(4), za, zb,
+             zback, zfront, distance,
+             zlim, zero,
+             groups = NULL, subscripts = TRUE,
+             type = 'p',
+             col, col.point, col.line, lty, lwd, cex, pch, ...)
 panel.3dwire(x, y, z, rot.mat = diag(4), za, zb,
              minz = 0, maxz = 1,
              col.at, col.regions,
@@ -70,7 +79,11 @@ palette.shade(cosangle, height, saturation = .3, ...)
   \item{screen}{list, as described in \code{\link{cloud}}}
   \item{R.mat, rot.mat}{4x4 transformation matrix in homogeneous
     coordinates}
-  \item{za, zb}{controls transformation to account for perspective viewing}
+  \item{za, zb, zmin, zmax, dist}{controls transformation to account for
+    perspective viewing}
+  \item{zback, zfront, zero}{ same as previous, not for regular use yet}
+  \item{type}{ character string, specifying type of cloud plot. Can be
+    ``p'', ``l'', ``h''}
   \item{groups}{specification of a grouping variable, passed down from
     the high level functions.}
   \item{shade}{logical, whether lighting is to be used}
@@ -84,7 +97,8 @@ palette.shade(cosangle, height, saturation = .3, ...)
   \item{light.source}{any vector (cartesian coordinates) in the
     direction of the light source. This is relative to the viewing point
     in the direction of (0,0,1)}
-  \item{minz, maxz, col, col.groups}{miscellaneous other arguments.}
+  \item{minz, maxz, col.groups}{miscellaneous other arguments.}
+  \item{col, col.point, col.line, lty, lwd, cex, pch}{graphical parameters}
   \item{\dots}{ other parameters, passed down when appropriate}
 }
 \details{
@@ -111,6 +125,11 @@ palette.shade(cosangle, height, saturation = .3, ...)
   \code{subpanel} function to draw the points in 2-D. (It's a very
   simple function, and could serve as a model for customizing the
   contents of the panels in \code{cloud}.)
+
+  \code{panel.3dscatter.new} is intended as a replacement for
+  \code{panel.3dscatter} in future versions. Has a \code{type} argument
+  to control type of plot. Has some nice properties, but is still in an
+  experimental stage.
   
   \code{panel.3dwire} is the default \code{panel.3d.wireframe}
   function. If \code{shade = TRUE}, it attempts to color the surface as

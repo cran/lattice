@@ -71,12 +71,13 @@ panel.levelplot <-
         if (region) {
             for (i in seq(along = col.regions)) {
                 ok <- (zcol[subscripts]==i)
-                grid.rect(x = x[subscripts][ok],
-                          y = y[subscripts][ok],
-                          width = wx[subscripts][ok],
-                          height = wy[subscripts][ok],
-                          default.units = "native",
-                          gp = gpar(fill=col.regions[i], col = NULL))
+                if (any(ok))
+                    grid.rect(x = x[subscripts][ok],
+                              y = y[subscripts][ok],
+                              width = wx[subscripts][ok],
+                              height = wy[subscripts][ok],
+                              default.units = "native",
+                              gp = gpar(fill=col.regions[i], col = NULL))
             }
         }
         if (contour) {

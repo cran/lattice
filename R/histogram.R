@@ -54,10 +54,11 @@ prepanel.default.histogram <-
             else if (type == "percent") 100 * h$counts/length(x)
             else h$intensities
         xlim <- range(x)
-        lbreak <- max(xlim[1], breaks[breaks<=xlim[1]])
-        ubreak <- min(xlim[2], breaks[breaks>=xlim[2]])
-
-        list(xlim = range(x, lbreak, ubreak),
+        ##lbreak <- max(xlim[1], breaks[breaks<=xlim[1]])
+        ##ubreak <- min(xlim[2], breaks[breaks>=xlim[2]])
+        ## why ?
+        ##list(xlim = range(x, lbreak, ubreak),
+        list(xlim = range(x, breaks),
              ylim = range(0,y),
              dx = 1,
              dy = 1)
@@ -272,8 +273,8 @@ histogram <-
     }
 
     if ((have.xlog || is.null(breaks) ||
-        length(unique(round(diff(breaks)))) != 1) &&
-        !missing(type))
+         length(unique(round(diff(breaks)))) != 1) &&
+        missing(type))
         type <- "density"
     else type <- match.arg(type)
 

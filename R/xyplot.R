@@ -25,16 +25,16 @@ prepanel.default.xyplot <-
     function(x, y, type, ...)
 {
     ## Note: shingles satisfy is.numeric()
-    if (length(x) && length(x)) {
+    if (any(!is.na(x)) && any(!is.na(y))) {
         ord <- order(x)
         list(xlim = if (is.numeric(x)) range(x[is.finite(x)]) else  levels(x),
              ylim = if (is.numeric(y)) range(y[is.finite(y)]) else levels(y),
              dx = as.numeric(diff(x[ord])),
              dy = as.numeric(diff(y[ord])))
     }
-    else list(c(NA, NA),
-              c(NA, NA),
-              1, 1)
+    else list(xlim = c(NA, NA),
+              ylim = c(NA, NA),
+              dx = NA, dy = NA)
 }
 
 

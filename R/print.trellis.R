@@ -66,7 +66,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                  align = TRUE,
                  title = "",
                  background = trellis.par.get("background")$col,
-                 border = NULL,
+                 border = FALSE,
                  transparent = FALSE, 
                  columns = 1,
                  divide = 3,
@@ -118,7 +118,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
     if (is.logical(key$border)) 
         key$border <-
             if (key$border) "black"
-            else NULL
+            else "transparent"
 
     components <- list()
 
@@ -170,9 +170,10 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
             pars <- list(col = key$col,
                          size = key$size,
                          lty = key$lty,
+                         cex = key$cex,
                          lwd = key$lwd,
                          type = key$type)
-                         
+
             pars[names(key[[i]])] <- key[[i]]
 
             tmplen <- max(unlist(lapply(pars,length)))
@@ -473,22 +474,13 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                                   row = yy, col = xx, draw = FALSE)
                     }
                     else if (cur$pars$type[j] == "p") {
-                        if (is.character(cur$pars$pch[j]))
-                            grid.place(key.gf,
-                                      grid.text(lab = cur$pars$pch[j], x = .5, y = .5,
-                                                gp = gpar(col = cur$pars$col[j],
-                                                fontsize = cur$pars$cex[j] * 10),
-                                                draw = FALSE),
-                                      row = yy, col = xx, draw = FALSE)
-                        else {
-                            grid.place(key.gf,
-                                      grid.points(x=.5, y=.5, 
-                                                  gp = gpar(col = cur$pars$col[j]),
-                                                  size = unit(cur$pars$cex[j] * 2.5, "mm"),
-                                                  pch = cur$pars$pch[j],
-                                                  draw = FALSE),
-                                      row = yy, col = xx, draw = FALSE)
-                        }
+                        grid.place(key.gf,
+                                   grid.points(x=.5, y=.5, 
+                                               gp = gpar(col = cur$pars$col[j]),
+                                               size = unit(cur$pars$cex[j] * 2.5, "mm"),
+                                               pch = cur$pars$pch[j],
+                                               draw = FALSE),
+                                   row = yy, col = xx, draw = FALSE)
                     }
                     else { # if (cur$pars$type[j] == "b" or "o") -- not differentiating
                         grid.place(key.gf, 
@@ -503,24 +495,14 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                                              draw = FALSE),
                                   row = yy, col = xx, draw = FALSE)
 
-                        if (is.character(cur$pars$pch[j]))
-                            grid.place(key.gf, 
-                                      grid.text(lab = cur$pars$pch[j],
-                                                x = (1:key$divide-1)/(key$divide-1),
-                                                y = rep(.5, key$divide),
-                                                gp = gpar(col = cur$pars$col[j],
-                                                fontsize = cur$pars$cex[j] * 10),
-                                                draw = FALSE),
-                                      row = yy, col = xx, draw = FALSE)
-                        else
-                            grid.place(key.gf, 
-                                      grid.points(x = (1:key$divide-1)/(key$divide-1),
-                                                  y = rep(.5, key$divide),
-                                                  gp = gpar(col = cur$pars$col[j]),
-                                                  size = unit(cur$pars$cex[j] * 2.5, "mm"),
-                                                  pch = cur$pars$pch[j],
-                                                  draw = FALSE),
-                                      row = yy, col = xx, draw = FALSE)
+                        grid.place(key.gf, 
+                                   grid.points(x = (1:key$divide-1)/(key$divide-1),
+                                               y = rep(.5, key$divide),
+                                               gp = gpar(col = cur$pars$col[j]),
+                                               size = unit(cur$pars$cex[j] * 2.5, "mm"),
+                                               pch = cur$pars$pch[j],
+                                               draw = FALSE),
+                                   row = yy, col = xx, draw = FALSE)
                     }
                 }
                 else if (cur$type == "points") {
@@ -1303,6 +1285,8 @@ print.trellis <-
                 as.list(calculateAxisComponents(x = x$x.limits,
                                                 at = x$x.scales$at,
                                                 labels = x$x.scales$labels,
+                                                have.log = have.xlog,
+                                                logbase = xlogbase,
                                                 logpaste = xlogpaste,
                                                 abbreviate = x$x.scales$abbr,
                                                 minlength = x$x.scales$minl,
@@ -1370,6 +1354,8 @@ print.trellis <-
                     calculateAxisComponents(x = x$x.limits[[i]],
                                             at = if (is.list(x$x.scales$at)) x$x.scales$at[[i]] else x$x.scales$at,
                                             labels = if (is.list(x$x.scales$lab)) x$x.scales$lab[[i]] else x$x.scales$lab,
+                                            have.log = have.xlog,
+                                            logbase = xlogbase,
                                             logpaste = xlogpaste,
                                             abbreviate = x$x.scales$abbr,
                                             minlength = x$x.scales$minl,
@@ -1493,6 +1479,8 @@ print.trellis <-
                 as.list(calculateAxisComponents(x = x$y.limits,
                                                 at = x$y.scales$at,
                                                 labels = x$y.scales$labels,
+                                                have.log = have.ylog,
+                                                logbase = ylogbase,
                                                 logpaste = ylogpaste,
                                                 abbreviate = x$y.scales$abbr,
                                                 minlength = x$y.scales$minl,
@@ -1551,6 +1539,8 @@ print.trellis <-
                     calculateAxisComponents(x = x$y.limits[[i]],
                                             at = if (is.list(x$y.scales$at)) x$y.scales$at[[i]] else x$y.scales$at,
                                             labels = if (is.list(x$y.scales$lab)) x$y.scales$lab[[i]] else x$y.scales$lab,
+                                            have.log = have.ylog,
+                                            logbase = ylogbase,
                                             logpaste = ylogpaste,
                                             abbreviate = x$y.scales$abbr,
                                             minlength = x$y.scales$minl,
@@ -1660,13 +1650,6 @@ print.trellis <-
                                heights = layout.heights,
                                respect = layout.respect)
 
-
-#     print(heights.x)
-#     print(heights.units)
-#     print(widths.x)
-#     print(widths.units)
-#     print(layout.respect)
-    ##grid.show.layout(page.layout)
         
     cond.current.level <- rep(1,number.of.cond)
     panel.number <- 1
@@ -1745,6 +1728,8 @@ print.trellis <-
                                                         labels =
                                                         if (is.list(x$x.scales$lab)) x$x.scales$lab[[panel.number]]
                                                         else x$x.scales$lab,
+                                                        have.log = have.xlog,
+                                                        logbase = xlogbase,
                                                         logpaste = xlogpaste,
                                                         abbreviate = x$x.scales$abbr,
                                                         minlength = x$x.scales$minl,
@@ -1760,6 +1745,8 @@ print.trellis <-
                                                         labels =
                                                         if (is.list(x$y.scales$lab)) x$y.scales$lab[[panel.number]]
                                                         else x$y.scales$lab,
+                                                        have.log = have.ylog,
+                                                        logbase = ylogbase,
                                                         logpaste = ylogpaste,
                                                         abbreviate = x$y.scales$abbr,
                                                         minlength = x$y.scales$minl,

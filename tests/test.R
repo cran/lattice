@@ -39,5 +39,22 @@ stripplot(aa ~ xx | zz, df.test)
 stripplot(zz , df.test)
 stripplot(xx , df.test)
 
+
+
+xa <- 1:8
+xb <- rep( c( NA, 10 ), 4 )
+
+xc <- rep( c( 'C2', 'C1' ), 4 )
+xyplot( xa ~ xb | xc)
+xyplot( xa ~ xb | xc, scales = "free")
+
+xc <- rep( c( 'C1', 'C2' ), 4 )
+xyplot( xa ~ xb | xc)
+xyplot( xa ~ xb | xc, scales = "free")
+
+x = sample(1:3, 100, replace=TRUE)
+histogram( ~ x, breaks=c(0,1.5,2.5,3.5), type='count')
+
+
 demo("lattice")
 

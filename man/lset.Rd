@@ -7,7 +7,7 @@
   \code{trellis.par.get/set}. NOT S-compatible
 }
 \usage{
-lset(theme)
+lset(theme, warn = TRUE)
 col.whitebg()
 }
 \arguments{
@@ -18,6 +18,8 @@ col.whitebg()
     have all components). Changes are made to the settings for the
     currently active device only.
   }
+  \item{warn}{ logical, whether a warning should be issued when
+    \code{trellis.par.get} is called when no graphics device is open }
 }
 \details{
   \code{lset} essentially does the same thing as \code{trellis.par.set},

@@ -171,9 +171,9 @@ print.shingleLevel <-
         invisible(x)
     }
 
-print.shingle <- function(x, ...) {
+print.shingle <- function(x, showValues = TRUE, ...) {
     cat("\nData:\n")
-    print(as.numeric(x))
+    if (showValues) print(as.numeric(x))
     l <- levels(x)
     n <- nlevels(x)
     if (n<1) cat("\nno intervals\n")
@@ -444,16 +444,10 @@ lplot.xy <-
                    default.units="native")
     
     if (type %in% c("p", "o", "b", "c"))
-        if (is.character(pch))
-            grid.text(lab = rep(pch, length = length(x)),
-                      x = x, y = y,
-                      gp = gpar(col = col, fontsize = cex * 10),
-                      default.units="native")
-        else
-            grid.points(x = x, y = y, size = unit(cex * 2.5, "mm"),
-                        gp = gpar(col = col),
-                        pch = pch, 
-                        default.units="native")
+        grid.points(x = x, y = y, size = unit(cex * 2.5, "mm"),
+                    gp = gpar(col = col),
+                    pch = pch, 
+                    default.units="native")
 
     if (type %in% c("s", "S")) {
         ord <- order(x)

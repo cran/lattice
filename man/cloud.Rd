@@ -17,7 +17,6 @@
              zlab,
              zlim = range(z),
              distance = .2,
-             par.box,
              perspective = TRUE,
              R.mat = diag(4),
              screen = list(z = 40, x = -60),
@@ -176,6 +175,7 @@ y <- seq(-pi, pi, len = 20)
 g <- expand.grid(x = x, y = y)
 g$z <- sin(sqrt(g$x^2 + g$y^2))
 wireframe(z ~ x * y, g, drape = TRUE,
+          perspective = FALSE,
           aspect = c(3,1), colorkey = FALSE)
 g <- expand.grid(x = 1:10, y = 5:15, gr = 1:2)
 g$z <- log((g$x^g$g + g$y^2) * g$gr)
@@ -188,9 +188,10 @@ wireframe(z ~ x * y, data = g, groups = gr,
           screen = list(z = 30, x = -60))
 data(iris)
 cloud(Sepal.Length ~ Petal.Length * Petal.Width, data = iris,
-      groups = Species, screen = list(z = 20, x = -70),
-      perspective = FALSE,
-      key = list(title = "Iris Data", x = .15, y=.85, corner = c(0,1),
+      groups = Species, screen = list(x = -90, y = 70),
+      aspect = c(1, 1), distance = .4, zoom = .6,
+      key = list(title = "Iris Data", x = .1, y=.9,
+                 corner = c(0,1),
                  border = TRUE, 
                  points = Rows(trellis.par.get("superpose.symbol"), 1:3),
                  text = list(levels(iris$Species))))

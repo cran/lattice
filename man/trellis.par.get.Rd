@@ -10,7 +10,7 @@
 }
 \usage{
 trellis.par.get(name = NULL)
-trellis.par.set(name, value)
+trellis.par.set(name, value, warn)
 show.settings(x = NULL)
 lattice.theme
 }
@@ -18,19 +18,21 @@ lattice.theme
   \item{name}{ character giving the name of a component. For a list of
     valid values type \code{names(trellis.par.get())}.
   }
-  \item{value}{ desired value of the component. }
-  \item{x}{ optional list of components that change the settings (any valid
-    value of \code{theme} in \code{lset}). These are used to modify the
-    current settings (obtained by \code{trellis.par.get}) before they
-    are displayed
+  \item{value}{ a list giving the desired value of the component. }
+  \item{warn}{ logical, whether a warning should be issued when
+    \code{trellis.par.get} is called when no graphics device is open }
+  \item{x}{ optional list of components that change the settings (any
+    valid value of \code{theme} in \code{lset}). These are used to
+    modify the current settings (obtained by \code{trellis.par.get})
+    before they are displayed
   }
 }
 \details{
   The various graphical parameters (color, line type, background etc)
   that control the look and feel of Trellis displays are highly
-  customizable. R can produce graphics on a number of devices, and it is
-  expected that a different set of parameters would be more suited to
-  different devices. These parameters are stored in a global variable
+  customizable. Also, R can produce graphics on a number of devices, and
+  it is expected that a different set of parameters would be more suited
+  to different devices. These parameters are stored in a global variable
   named \code{lattice.theme}, which is a list whose components define
   settings for particular devices. The components are idenified by the
   name of the device they represent (as obtained by \code{.Device}), and
@@ -71,7 +73,7 @@ lattice.theme
 
   \code{add.line$col <- "red"}
 
-  \code{add.line <- trellis.par.set("add.line", add.line)}
+  \code{trellis.par.set("add.line", add.line)}
 
   The actual list of the components in \code{trellis.settings} has not
   been finalized, so I'm not attempting to list them here. The current
@@ -87,7 +89,7 @@ lattice.theme
 }
 \value{
   \code{trellis.par.get} returns a list giving parameters for that
-  component .
+  component. If \code{name} is missing, it returns the full list.
 }
 \author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
 \seealso{\code{\link{trellis.device}}, \code{\link{lset}},

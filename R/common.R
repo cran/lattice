@@ -116,23 +116,19 @@ latticeParseFormula <-
 
 
 
-
-banking <- function(dx, dy)
+banking <- function(dx, dy = 1)
 {
-    if (is.na(dx)) NA
-    else {
-        if (is.list(dx)) {
-            dy <- dx[[2]]
-            dx <- dx[[1]]
-        }
-        if (length(dx)!=length(dy)) stop("Non matching lengths")
-        id <- dx!=0 & dy!=0
-        if (any(id)) {
-            r  <- abs(dx[id]/dy[id])
-            median(r)
-        }
-        else 1
+    if (is.list(dx)) {
+        dy <- dx[[2]]
+        dx <- dx[[1]]
     }
+    if (length(dx)!=length(dy)) stop("Non matching lengths")
+    id <- dx!=0 & dy!=0 & !is.na(dx) & !is.na(dy)
+    if (any(id)) {
+        r  <- abs(dx[id]/dy[id])
+        median(r)
+    }
+    else 1
 }
 
 
@@ -146,13 +142,14 @@ banking <- function(dx, dy)
 ## be a replacement for lpretty
 
 calculateAxisComponents <-
-    function (x, at = FALSE, labels = FALSE, logpaste = "",
+    function (x, at = FALSE, labels = FALSE,
+              have.log = FALSE, logbase = NULL, logpaste = "",
               abbreviate = NULL, minlength = 4,
               format, ...) 
 {
 
-    ## x is guaranteed to be given, though it might not be always
-    ## necessary. Four cases, corresponding to factors
+    ## x is guaranteed to be given (possibly NA), though it might not
+    ## be always necessary. Four cases, corresponding to factors
     ## (is.character(x)), shingle (inherits(x, "shingleLevel")),
     ## POSIXt (inherits(x, "POSIXt") and usual numeric. The last case
     ## will be default, and will be changed later if necessary.
@@ -167,7 +164,17 @@ calculateAxisComponents <-
     ## way), so it's enough to check if they are is.logical(), which
     ## means they are not explicitly specified.
 
-    if (is.character(x)) { ## factor
+    ## The variables about log scales are required for cases where at
+    ## is explicitly specified. In such cases, at will be
+    ## log(at,base=logbase), but labels would corr to at.
+
+    if (all(is.na(x))) {
+        ans <- list(at = numeric(0),
+                    labels = numeric(0),
+                    check.overlap = TRUE,
+                    num.limit = c(0,1))
+    }
+    else if (is.character(x)) { ## factor
         ans <- list(at = if (is.logical(at)) seq(along = x) else at,
                     labels = if (is.logical(labels)) x else labels,
                     check.overlap = FALSE)
@@ -267,14 +274,18 @@ calculateAxisComponents <-
             else FALSE
         
         if (is.logical(at)) { # at not explicitly specified
-            eps <- 1e-10
+            #eps <- 1e-10
             at <- pretty(x[is.finite(x)], ...)
             
             ## Need to do this because pretty sometimes returns things
-            ## like 2.3e-17 instead of 0
-            at <- ifelse(abs(at - round(at, 3)) < eps,
-                         round(at, 3), 
-                         at)
+            ## like 2.3e-17 instead of 0. Probably fixed now (??)
+            #at <- ifelse(abs(at - round(at, 3)) < eps,
+            #             round(at, 3), 
+            #             at)
+        }
+        else if (have.log) { ## i.e., at specified
+            if (is.logical(labels)) labels <- as.character(at)
+            at <- log(at, base = logbase)
         }
         ans <- list(at = at,
                     labels = if (is.logical(labels)) paste(logpaste,
@@ -446,7 +457,6 @@ limits.and.aspect <-
     for (count in 1:nplots)
     {
         if (is.list(panel.args[[count]])) {
-
             pargs <- c(panel.args.common, panel.args[[count]], list(...))
             tem <- do.call("prepanel.default.function", pargs)
             if (is.function(prepanel)) {
@@ -463,7 +473,7 @@ limits.and.aspect <-
         else {
             x.limits[[count]] <- c(NA, NA)
             y.limits[[count]] <- c(NA, NA)
-            dxdy[[count]] <- NA
+            dxdy[[count]] <- list(NA, NA)
         } 
 
     }
@@ -477,32 +487,84 @@ limits.and.aspect <-
     ## same type. Returned limits must be in accordance with this
     ## type.
 
+    if (x.relation == "same") {
 
+        ## The problem here is that we need to figure out the overall
+        ## limit required from the limits of each panel. This could be
+        ## a problem for two reasons. First, some panels could have no
+        ## data in them, in which case the corresponding limits would
+        ## be NA. Secondly, the limits could be either numeric or
+        ## character vectors (the latter for factors). When relation =
+        ## same, the type should be same across panels. When numeric,
+        ## we just take range, leaving out NAs. But what about
+        ## factors?  Is it OK to assume that all the non-NA vectors
+        ## would be exactly the same ? They should be, since levels(x)
+        ## would not change even if not all levels are
+        ## represented. So, I'm just taking unique of all the vectors
+        ## concatenated, excluding NA's
 
-    if (x.relation == "same")
         if (have.xlim) {
             x.limits <- xlim
             x.slicelen <- if (is.numeric(xlim)) diff(range(xlim)) else length(xlim) + 2
         }
-        else if (is.numeric(x.limits[[1]])) {
-            x.limits <- extend.limits(range(do.call("c", x.limits), na.rm = TRUE))
-            x.slicelen <- if (is.numeric(x.limits)) diff(range(x.limits))
-        }
         else {
-            x.limits <- x.limits[[1]]
-            x.slicelen <- length(x.limits) + 2
-        }
-    else if (x.relation == "sliced") {
-        if (is.numeric(x.limits[[1]])) {
-            x.slicelen <- 1.14 * max(unlist(lapply(x.limits, diff)), na.rm = TRUE)
-            x.limits <- lapply(x.limits, extend.limits, length = x.slicelen)
-        }
-        x.slicelen <- length(x.limits[[1]]) + 2
-    }
-    else if (x.relation == "free")
-        if (is.numeric(x.limits[[1]]))
-            x.limits <- lapply(x.limits, extend.limits)
+            x.limits <- unlist(x.limits)
+            x.limits <- range(x.limits, na.rm = TRUE)
+            if (length(x.limits) > 0) {
+                if (is.numeric(x.limits)) {
+                    x.limits <- extend.limits(x.limits)
+                    x.slicelen <- diff(range(x.limits))
+                }
+                else {
+                    x.limits <- unique(x.limits)
+                    x.slicelen <- length(x.limits) + 2
+                }
+            }
+            else {
+                x.limits <- c(0,1)
+                x.slicelen <- 1
+            }
 
+            ## OLD CODE
+            #if (any(unlist(lapply(x.limits, is.numeric)))) {
+            #    x.limits <- extend.limits(range(do.call("c", x.limits), na.rm = TRUE))
+            #    x.slicelen <- if (is.numeric(x.limits)) diff(range(x.limits))
+            #}
+            #else {
+            #    levnames <- unlist(x.limits)
+            #    x.limits <- x.limits[[1]]
+            #    x.slicelen <- length(x.limits) + 2
+            #}
+        }
+    }
+    else if (x.relation == "sliced") {
+        x.slicelen <- x.limits
+        for (i in seq(along = x.limits))
+            x.slicelen[[i]] <-
+                if (is.numeric(x.limits[[i]]))
+                    diff(range(x.limits[[i]])) # range unnecessary, but...
+                else NA
+        x.slicelen <- 1.14 * max(unlist(x.slicelen), na.rm = TRUE)
+        for (i in seq(along = x.limits)) {
+            x.limits[[i]] <-
+                if (is.numeric(x.limits[[i]]))
+                    extend.limits(x.limits[[i]], length = x.slicelen)
+        }
+        #if (is.numeric(x.limits[[1]])) {
+        #    x.slicelen <- 1.14 * max(unlist(lapply(x.limits, diff)), na.rm = TRUE)
+        #    x.limits <- lapply(x.limits, extend.limits, length = x.slicelen)
+        #}
+        #x.slicelen <- length(x.limits[[1]]) + 2
+    }
+    else if (x.relation == "free") {
+        for (i in seq(along = x.limits)) {
+            if (is.numeric(x.limits[[i]]))
+                x.limits[[i]] <- extend.limits(x.limits[[i]])
+            ## o.w., keep it as it is
+        }
+
+
+    }
 
 
 
@@ -512,24 +574,45 @@ limits.and.aspect <-
             y.limits <- ylim
             y.slicelen <- if (is.numeric(ylim)) diff(range(ylim)) else length(ylim) + 2
         }
-        else if (is.numeric(y.limits[[1]])) {
-            y.limits <- extend.limits(range(do.call("c", y.limits), na.rm = TRUE))
-            y.slicelen <- if (is.numeric(y.limits)) diff(range(y.limits))
-        }
         else {
-            y.limits <- y.limits[[1]]
-            y.slicelen <- length(y.limits) + 2
+            y.limits <- unlist(y.limits)
+            y.limits <- range(y.limits, na.rm = TRUE)
+            if (length(y.limits) > 0) {
+                if (is.numeric(y.limits)) {
+                    y.limits <- extend.limits(y.limits)
+                    y.slicelen <- diff(range(y.limits))
+                }
+                else {
+                    y.limits <- unique(y.limits)
+                    y.slicelen <- length(y.limits) + 2
+                }
+            }
+            else {
+                y.limits <- c(0,1)
+                y.slicelen <- 1
+            }
         }
     else if (y.relation == "sliced") {
-        if (is.numeric(y.limits[[1]])) {
-            y.slicelen <- 1.14 * max(unlist(lapply(y.limits, diff)), na.rm = TRUE)
-            y.limits <- lapply(y.limits, extend.limits, length = y.slicelen)
+        y.slicelen <- y.limits
+        for (i in seq(along = y.limits))
+            y.slicelen[[i]] <-
+                if (is.numeric(y.limits[[i]]))
+                    diff(range(y.limits[[i]])) # range unnecessary, but...
+                else NA
+        y.slicelen <- 1.14 * max(unlist(y.slicelen), na.rm = TRUE)
+        for (i in seq(along = y.limits)) {
+            y.limits[[i]] <-
+                if (is.numeric(y.limits[[i]]))
+                    extend.limits(y.limits[[i]], length = y.slicelen)
         }
-        y.slicelen <- length(y.limits[[1]]) + 2
     }
-    else if (y.relation == "free")
-        if (is.numeric(y.limits[[1]]))
-            y.limits <- lapply(y.limits, extend.limits)
+    else if (y.relation == "free") {
+        for (i in seq(along = y.limits)) {
+            if (is.numeric(y.limits[[i]]))
+                y.limits[[i]] <- extend.limits(y.limits[[i]])
+            ## o.w., keep it as it is
+        }
+    }
 
 
 

@@ -18,7 +18,7 @@ equal.count(x, \dots)
 as.shingle(x)
 is.shingle(x)
 \method{plot}{shingle}(x, col, aspect, \dots)
-\method{print}{shingle}(x, \dots)
+\method{print}{shingle}(x, showValues = TRUE, \dots)
 \method{print}{shingleLevel}(x, \dots)
 \method{summary}{shingle}(object, \dots)
 \method{as.data.frame}{shingle}(x, row.names = NULL, optional = FALSE)
@@ -33,6 +33,8 @@ as.factorOrShingle(x, subset, drop)
     \code{plot.shingle, x[]}. An object (list of intervals) of class
     "shingleLevel" in \code{print.shingleLevel}}
   \item{object}{ shingle object to be summarized}
+  \item{showValues}{ logical, whether to print the numeric part. If
+    FALSE, only the intervals are printed}
   \item{row.names}{ a character vector giving the row names for the data frame}
   \item{optional}{ logical. If `TRUE', setting row names is optional}
   \item{intervals}{ numeric vector or matrix with 2 columns}

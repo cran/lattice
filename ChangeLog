@@ -1,6 +1,37 @@
 
 
 
+2002-12-15  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/common.R: The changes in lattice 0.5-0.6 added some code that
+	gave bad results when some panels had all NA's. That hopefully
+	fixed. 
+
+	* R/miscellaneous.R: lplot.xy used to call grid.text instead of
+	grid.points when pch was a character. Fixed this.
+
+	* R/print.trellis.R: draw.key failed when lines component had
+	type='b', because of a missing pch. Fixed this.
+
+	* R/levelplot.R: Minor fix related to changes in grid.
+	
+
+2002-12-06  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/settings.R: added warnings and error messages in
+	trellis.par.get/set when no active device, and when value in
+	trellis.par.set is not a list.
+
+	* R/trellis.par.get.Rd: rewrote some things
+
+2002-11-16  Deepayan Sarkar  <deepayan@stat.wisc.edu>
+
+	* R/common.R: added arguments have.log and logbase to
+	calculateAxisComponents()
+
+	* R/print.trellis.R: made changes to use above changes
+
+
 
 2002-10-28  Deepayan Sarkar  <deepayan@stat.wisc.edu>
 

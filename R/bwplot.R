@@ -26,7 +26,7 @@ prepanel.default.bwplot <-
              horizontal = TRUE,
              levels.fos = length(unique(y)), ...)
 {
-    if (length(x) && length(x)) {
+    if (length(x) && length(y)) {
         
         if (!is.numeric(x)) x <- as.numeric(x)
         if (!is.numeric(y)) y <- as.numeric(y)

@@ -62,14 +62,30 @@ ltransform3dMatrix <- function(screen, R.mat = diag(4)) {
 
 
 
-ltransform3dto3d <- function(x, R.mat, za = 1 , zb = 0) {
+ltransform3dto3d <- function(x, R.mat, za = 1 , zb = 0, zmin, zmax, dist) {
     tdata <- R.mat %*% rbind(x, 1)
     tdata[1,] <- tdata[1,]/tdata[4,]
     tdata[2,] <- tdata[2,]/tdata[4,]
     tdata[3,] <- tdata[3,]/tdata[4,]
     if (!missing(za) && !missing(zb)) {
-        tdata[1,] <- (za + zb * tdata[3,]) * tdata[1,]
-        tdata[2,] <- (za + zb * tdata[3,]) * tdata[2,]
+        #print(zmin)
+        #print(zmax)
+        #print(dist)
+
+        tdata[4,] <- tdata[3,] ## dummy, so that changes is tdata[3,]
+        ## do not affect subsequent calculations of tdata[1:2,]
+
+        if (dist != 0)
+        {
+            perp.dist.sq <- tdata[1,]^2 + tdata[2,]^2
+            orig.v2z <- (zmax-zmin)/dist + zmin - tdata[3,]
+            new.v2z <- sqrt(perp.dist.sq + orig.v2z^2)
+            tdata[3,] <- tdata[3,] - new.v2z + orig.v2z
+        }
+
+        tdata[1,] <- (za + zb * tdata[4,]) * tdata[1,]
+        tdata[2,] <- (za + zb * tdata[4,]) * tdata[2,]
+
     }
     tdata[1:3, ]
 }
@@ -109,7 +125,8 @@ prepanel.default.cloud <-
             
 
 panel.3dscatter <-
-    function(x, y, z, rot.mat = diag(4), za, zb, groups = NULL,
+    function(x, y, z, rot.mat = diag(4), za, zb,  zback,
+             zfront, distance, groups = NULL,
              subpanel = if (is.null(groups)) "panel.xyplot"
              else "panel.superpose",
              ...)
@@ -117,8 +134,81 @@ panel.3dscatter <-
     subpanel <-
         if (is.character(subpanel)) get(subpanel)
         else eval(subpanel)
-    m <- ltransform3dto3d(rbind(x, y, z), rot.mat, za, zb)
+    m <- ltransform3dto3d(rbind(x, y, z), rot.mat, za, zb,  zback, zfront, distance)
     subpanel(x = m[1,], y = m[2,], groups = groups, ...)
+}
+
+
+
+panel.3dscatter.new <-
+    function(x, y, z, rot.mat = diag(4), za, zb,
+             zback, zfront, distance,
+             zlim, zero,
+             groups = NULL, subscripts = TRUE,
+             type = 'p',
+             col,
+             ## eventually make all these cloud.3d$col etc
+             col.point = if (is.null(groups)) plot.symbol$col else superpose.symbol$col,
+             col.line = if (is.null(groups)) plot.line$col else superpose.line$col,
+             lty = if (is.null(groups)) plot.line$lty else superpose.line$lty,
+             lwd = if (is.null(groups)) plot.line$lwd else superpose.line$lwd,
+             cex = if (is.null(groups)) plot.symbol$cex else superpose.symbol$cex,
+             pch = if (is.null(groups)) plot.symbol$pch else superpose.symbol$pch,
+             ...)
+{
+    ##cloud.3d <- list(col=1, cex=1, lty=1, lwd=1, pch=1)
+    plot.symbol <- trellis.par.get("plot.symbol")
+    plot.line <- trellis.par.get("plot.line")
+    superpose.symbol <- trellis.par.get("superpose.symbol")
+    superpose.line <- trellis.par.get("superpose.line")
+    if (!missing(col)) {
+        col.point <- col
+        col.lines <- col
+    }
+    n <- length(x)
+    if (n > 0)
+    {
+        if (is.null(groups))
+        {
+            col.point <- rep(col.point, length = n)
+            col.line <- rep(col.line, length = n)
+            lty <- rep(lty, length = n)
+            lwd <- rep(lwd, length = n)
+            cex <- rep(cex, length = n)
+            pch <- rep(pch, length = n)
+        }
+        else {
+            groups <- as.numeric(groups[subscripts])
+            nvals <- length(unique(groups))
+            col.point <- rep(col.point, length = nvals)[groups]
+            col.line <- rep(col.line, length = nvals)[groups]
+            lty <- rep(lty, length = nvals)[groups]
+            lwd <- rep(lwd, length = nvals)[groups]
+            cex <- rep(cex, length = nvals)[groups]
+            pch <- rep(pch, length = nvals)[groups]
+        }
+        m <- ltransform3dto3d(rbind(x, y, z), rot.mat, za, zb, zback, zfront, distance)
+        ord <- order(m[3,])
+        if (type == 'p')
+            lpoints(x = m[1,ord], y = m[2,ord],
+                    col = col.point[ord],
+                    pch = pch[ord],
+                    cex = cex[ord])
+        ##cex = cex[ord] * (za + zb * m[3,ord])) - doesn't seem to work
+        else if (type == 'h') {
+            zero <-
+                if (zero < zlim[1]) zlim[1]
+                else if (zero > zlim[2]) zlim[2]
+                else zero
+            ##print(zero)
+            other.end <- ltransform3dto3d(rbind(x, y, zero), rot.mat, za, zb, zback, zfront, distance)
+            lsegments(m[1,ord], m[2,ord],
+                      other.end[1,ord], other.end[2,ord],
+                      col = col.line[ord],
+                      lty = lty[ord],
+                      lwd = lwd[ord])
+        }
+    }
 }
 
 
@@ -313,9 +403,14 @@ panel.cloud <-
             data.frame(x = c(-1, 1, 1,-1,-1, 1, 1,-1) / 2,
                        y = c(-1,-1,-1,-1, 1, 1, 1, 1) / 2 * aspect[1],
                        z = c(-1,-1, 1, 1,-1,-1, 1, 1) / 2 * aspect[2])
-              
-        ## these are box boundaries
-                      
+
+        zlim.scaled <- range(corners$z) ## needed in panel.3dscatter for type = 'h'
+        ## denotes z range of bounding box 
+        
+        ## center of bounding box:
+        box.center <- matrix(unlist(lapply(corners, mean)), 3, 1)
+        
+        ## these are box boundaries:
         pre <- c(1,2,4,1,2,3,4,1,5,6,8,5)
         nxt <- c(2,3,3,4,6,7,8,5,6,7,7,8)
 
@@ -327,34 +422,57 @@ panel.cloud <-
         ## things, and are described in the diagram below.
 
 
-        ##                          
+        ## 1, 2, ..., 8 are the corners, L-1, ..., L-12 the boundaries        
         ##                          
         ##                                   L-11                  
         ##                           8------------------------7    
-        ##                         / |                       /|    
-        ##                        /  |                      / |    
-        ##                    L-7/   |L-12              L-6/  |    
-        ##                      /    |                    /   |    
-        ##                     /     |                   /    |    
-        ##                    /      |        L-3       /     |L-10 
-        ##                   4-------------------------3      |
-        ##                   |       |                 |      |
-        ##                   |       |                 |      |
-        ##                   |       |                 |      |
-        ##                   |       |    L-9          |      |
-        ##                L-4|       5-----------------|------6 
-        ##                   |      /                  |     / 
-        ##                   |     /                   |    /  
-        ##                   |    /                 L-2|   /L-5
-        ##                   |   /                     |  / 
-        ##                   |  /L-8                   | / 
-        ##                   | /                       |/
-        ##                   |/                        |
+        ##                         / |                       / |    
+        ##                        /  |                      /  |    
+        ##                    L-7/   |L-12              L-6/   |    
+        ##                      /    |                    /    |    
+        ##                     /     |                   /     |    
+        ##                    /      |        L-3       /      |L-10 
+        ##                   4-------------------------3       |
+        ##                   |       |                 |       |
+        ##                   |       |                 |       |
+        ##                   |       |                 |       |
+        ##                   |       |    L-9          |       |
+        ##                L-4|       5-----------------|-------6 
+        ##                   |      /                  |      / 
+        ##                   |     /                   |     /  
+        ##                   |    /                 L-2|    /L-5
+        ##                   |   /                     |   / 
+        ##                   |  /L-8                   |  / 
+        ##                   | /                       | /
+        ##                   |/                        |/
         ##                   1-------------------------2
         ##                (0,0,0)          L-1           
         ##                                            
-        
+        ##
+        ## Also the 6 FACES are defined in terms of corners (lines)
+        ## as follows:
+        ##
+        ## F-1 : 1,2,3,4 (1,2,3,4)
+        ## F-2 : 2,6,7,3 (5,10,6,2)
+        ## F-3 : 6,5,8,7 (9,12,11,10)
+        ## F-4 : 5,1,4,8 (8,4,7,12)
+        ## F-5 : 1,2,6,5 (1,5,9,8)
+        ## F-6 : 4,3,7,8 (3,6,11,7)
 
+        face.corners <- list(c(1,2,3,4),
+                             c(2,6,7,3),
+                             c(6,5,8,7),
+                             c(5,1,4,8),
+                             c(1,2,6,5),
+                             c(4,3,7,8))
+
+        face.lines <- list(c(1,2,3,4),
+                           c(5,10,6,2),
+                           c(9,12,11,10),
+                           c(8,4,7,12),
+                           c(1,5,9,8),
+                           c(3,6,11,7))
+        
         ## SCALES : very beta
 
         tmp <- ltransform3dto3d(t(as.matrix(corners)), rot.mat)
@@ -367,8 +485,9 @@ panel.cloud <-
                 farval <- tmp[3,i]
             }
 
+        ## not foolproof, need to revisit this later
         scale.position <-
-            if (farthest == 1) list(x = 9, y = 5, z = 2)
+            if (farthest == 1) list(x = 3, y = 7, z = 2)
             else if (farthest == 2) list(x = 9, y = 8, z = 10)
             else if (farthest == 3) list(x = 11, y = 7, z = 10)
             else if (farthest == 4) list(x = 11, y = 6, z = 2)
@@ -377,6 +496,15 @@ panel.cloud <-
             else if (farthest == 7) list(x = 3, y = 7, z = 2)
             else if (farthest == 8) list(x = 3, y = 6, z = 10)
 
+        ##original:
+            #if (farthest == 1) list(x = 9, y = 5, z = 2)
+            #else if (farthest == 2) list(x = 9, y = 8, z = 10)
+            #else if (farthest == 3) list(x = 11, y = 7, z = 10)
+            #else if (farthest == 4) list(x = 11, y = 6, z = 2)
+            #else if (farthest == 5) list(x = 1, y = 5, z = 4)
+            #else if (farthest == 6) list(x = 1, y = 8, z = 12)
+            #else if (farthest == 7) list(x = 3, y = 7, z = 2)
+            #else if (farthest == 8) list(x = 3, y = 6, z = 10)
         if (!missing(scpos))
             scale.position[names(scpos)] <- scpos
 
@@ -451,6 +579,10 @@ panel.cloud <-
         z <- cmin$z + clen$z * (z-zlim[1])/diff(zlim)
         col.at <- cmin$z + clen$z * (col.at - zlim[1])/diff(zlim)
 
+        zero.scaled <- cmin$z - clen$z * zlim[1]/diff(zlim)
+        ## needed in panel.3dscatter for type = 'h'
+
+
         x.at <- cmin$x + clen$x * (x.at-xlim[1])/diff(xlim)
         y.at <- cmin$y + clen$y * (y.at-ylim[1])/diff(ylim)
         z.at <- cmin$z + clen$z * (z.at-zlim[1])/diff(zlim)
@@ -476,36 +608,58 @@ panel.cloud <-
         z.labs <- z.at + 2 * scales.3d$z.scales$tck * .05 * labs[,3]
 
         ## Things necessary for perspective
-        corners <- ltransform3dto3d(t(as.matrix(corners)), rot.mat)
-        zback <- min(corners[3,])
-        zfront <- max(corners[3,])
+        tmp <- ltransform3dto3d(t(as.matrix(corners)), rot.mat)
+        zback <- min(tmp[3,])
+        zfront <- max(tmp[3,])
         za <- (zfront * (1-distance) - zback) / (zfront - zback)
         zb <- distance / (zfront - zback)
-        corners[1,] <- (za + zb * corners[3,]) * corners[1,]
-        corners[2,] <- (za + zb * corners[3,]) * corners[2,]
 
+        corners <- ltransform3dto3d(t(as.matrix(corners)), rot.mat, za, zb, zback, zfront, distance)
 
-        taxes <- ltransform3dto3d(axes, rot.mat, za, zb)
-        x.at <- ltransform3dto3d(x.at, rot.mat, za, zb)
-        x.labs <- ltransform3dto3d(x.labs, rot.mat, za, zb)
-        x.at.end <- ltransform3dto3d(x.at.end, rot.mat, za, zb)
+        taxes <- ltransform3dto3d(axes, rot.mat, za, zb, zback, zfront, distance)
+        x.at <- ltransform3dto3d(x.at, rot.mat, za, zb, zback, zfront, distance)
+        x.labs <- ltransform3dto3d(x.labs, rot.mat, za, zb, zback, zfront, distance)
+        x.at.end <- ltransform3dto3d(x.at.end, rot.mat, za, zb, zback, zfront, distance)
 
-        y.at <- ltransform3dto3d(y.at, rot.mat, za, zb)
-        y.labs <- ltransform3dto3d(y.labs, rot.mat, za, zb)
-        y.at.end <- ltransform3dto3d(y.at.end, rot.mat, za, zb)
+        y.at <- ltransform3dto3d(y.at, rot.mat, za, zb, zback, zfront, distance)
+        y.labs <- ltransform3dto3d(y.labs, rot.mat, za, zb, zback, zfront, distance)
+        y.at.end <- ltransform3dto3d(y.at.end, rot.mat, za, zb, zback, zfront, distance)
 
-        z.at <- ltransform3dto3d(z.at, rot.mat, za, zb)
-        z.labs <- ltransform3dto3d(z.labs, rot.mat, za, zb)
-        z.at.end <- ltransform3dto3d(z.at.end, rot.mat, za, zb)
+        z.at <- ltransform3dto3d(z.at, rot.mat, za, zb, zback, zfront, distance)
+        z.labs <- ltransform3dto3d(z.labs, rot.mat, za, zb, zback, zfront, distance)
+        z.at.end <- ltransform3dto3d(z.at.end, rot.mat, za, zb, zback, zfront, distance)
 
-        tlabs <- ltransform3dto3d(labs, rot.mat, za, zb)
+        tlabs <- ltransform3dto3d(labs, rot.mat, za, zb, zback, zfront, distance)
 
+        box.center <- ltransform3dto3d(box.center, rot.mat, za, zb, zback, zfront, distance)
 
-        
-        mark <- rep(TRUE, 12)
-        for (j in 1:12)
-            if (pre[j]==farthest || nxt[j]==farthest)
-                mark[j] <- FALSE
+        ## Shall now determine which bounding lines should be 'hidden'
+        ## (by the data, and hence need to be drawn before the data),
+        ## and which should be 'visible'. Will actually consider each
+        ## face (one at a time), determine if it is 'visible' (had the
+        ## bounding cube been opaque), and if so, mark the lines
+        ## forming that face as 'visible'
+
+        ## The logical vector 'mark' will correspond to the 12 lines
+        ## (indexing explained in the diagram above). mark = TRUE will
+        ## mean that the line will be drawn AFTER the data is
+        ## drawn. Start off with all fark = FALSE.
+
+        ## The idea is that for visible faces, the z-value of the
+        ## center of the face will be greater than the z-value of the
+        ## center of the whole box
+
+        ##print(box.center)
+        mark <- rep(FALSE, 12)
+        box.center.z <- box.center[3]
+
+        for (face in 1:6)
+            if (mean(corners[3, face.corners[[face]] ]) > box.center.z) ## i.e., face visible
+                mark[1:12 %in% face.lines[[face]] ] <- TRUE
+
+        #for (j in 1:12)
+        #    if (pre[j]==farthest || nxt[j]==farthest)
+        #        mark[j] <- FALSE
 
         ## This draws the 'back' of the box, i.e., the portion that
         ## should be hidden by the data. This doesn't work properly in
@@ -519,9 +673,6 @@ panel.cloud <-
                   col = par.box.final$col,
                   lwd = par.box.final$lwd,
                   lty = 2)
-
-
-
 
 
         ## The following portion of code is responsible for drawing
@@ -541,7 +692,6 @@ panel.cloud <-
         ## it this way for now.
 
 
-        
         if (wireframe) {
             panel.3d.wireframe <- 
                 if (is.character(panel.3d.wireframe)) get(panel.3d.wireframe)
@@ -590,7 +740,9 @@ panel.cloud <-
                 else eval(panel.3d.cloud)
             panel.3d.cloud(x = x, y = y, z = z,
                            rot.mat = rot.mat,
-                           za=za, zb=zb,
+                           za=za, zb=zb, zback, zfront, distance,
+                           zlim = zlim.scaled,
+                           zero = zero.scaled,
                            subscripts = subscripts,
                            groups = groups,
                            ...)
@@ -774,13 +926,12 @@ cloud <-
              strip = TRUE,
              groups = NULL,
              xlab,
-             xlim = range(x),
+             xlim = if (is.factor(x)) levels(x) else range(x),
              ylab,
-             ylim = range(y),
+             ylim = if (is.factor(y)) levels(y) else range(y),
              zlab,
-             zlim = range(z),
+             zlim = if (is.factor(z)) levels(z) else range(z),
              distance = .2,
-             par.box,
              perspective = TRUE,
              R.mat = diag(4),
              screen = list(z = 40, x = -60),

@@ -169,7 +169,10 @@ void wireframePanelCalculations(SEXP xArg, SEXP yArg, SEXP zArg, SEXP rotArg,
      
      /* printf("\nStarting height calculation..."); */
 
-
+     /* Height Calculation: we need to determine the order in which
+      * the quadrilaterals are to be drawn. However, It is not clear
+      * what would be a good criteria to do this. 
+     */
      for (i = 0; i < nh; i++) {
          double tx, ty, tz, th;
 	 int txi, tyi, tgi, ti;
@@ -194,7 +197,9 @@ void wireframePanelCalculations(SEXP xArg, SEXP yArg, SEXP zArg, SEXP rotArg,
 	 tz = z[tgi * nx * ny + (txi + 1) * ny + tyi];
 	 th = (rot[2] * tx + rot[6] * ty + rot[10] * tz + rot[14]) 
 		 / (rot[3] * tx + rot[7] * ty + rot[11] * tz + rot[15]);
-	 if (th > heights[i]) heights[i] = th;
+	 
+	 /*WAS: if (th > heights[i]) heights[i] = th;  similar below*/
+	 if (th < heights[i]) heights[i] = th;
 
 
 	 /* (1,1) corner */
@@ -203,7 +208,7 @@ void wireframePanelCalculations(SEXP xArg, SEXP yArg, SEXP zArg, SEXP rotArg,
 	 tz = z[tgi * nx * ny + (txi + 1) * ny + tyi + 1];
 	 th = (rot[2] * tx + rot[6] * ty + rot[10] * tz + rot[14]) 
 		 / (rot[3] * tx + rot[7] * ty + rot[11] * tz + rot[15]);
-	 if (th > heights[i]) heights[i] = th;
+	 if (th < heights[i]) heights[i] = th;
 
 
 	 /* (0,1) corner */
@@ -212,7 +217,7 @@ void wireframePanelCalculations(SEXP xArg, SEXP yArg, SEXP zArg, SEXP rotArg,
 	 tz = z[tgi * nx * ny + txi * ny + tyi + 1];
 	 th = (rot[2] * tx + rot[6] * ty + rot[10] * tz + rot[14]) 
 		 / (rot[3] * tx + rot[7] * ty + rot[11] * tz + rot[15]);
-	 if (th > heights[i]) heights[i] = th;
+	 if (th < heights[i]) heights[i] = th;
      }
 
      /* printf("\nFinished height calculation, ordering..."); */
