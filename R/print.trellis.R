@@ -102,6 +102,16 @@ evaluate.legend <- function(legend)
 
 
 
+## S3 plot method for "trellis" objects (essentially an alias to
+## print.trellis)
+
+plot.trellis <-
+    function(x, ...)
+{
+    print(x, ...)
+    invisible()
+}
+
 
 
 
