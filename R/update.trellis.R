@@ -268,7 +268,7 @@ update.trellis <-
 
     if (!missing(auto.key))
     {
-        if (!is.null(legend))
+        if (!is.null(object$legend))
             cat(paste("\nNote: auto.key ignored since key already present. \n",
                       "Use update(..., legend = NULL) to remove exisitng legend(s)\n"))
         else 
@@ -461,5 +461,19 @@ update.trellis <-
     
     object
 }
+
+
+
+## FIXME: how to do this?
+## `subsetting': shortcut to updating index.cond
+
+## "[.trellis" <- function(x, i, j = NULL, ...)
+## {
+##     index.cond <- list(i, 
+## }
+
+
+
+
 
 

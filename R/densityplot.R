@@ -40,6 +40,13 @@ prepanel.default.densityplot <-
              ylim = NA,
              dx = NA,
              dy = NA)
+    else if (length(x) == 1)
+    {
+        list(xlim = x,
+             ylim = NA,
+             dx = NA,
+             dy = NA)
+    }
     else if (is.null(groups))
     {
         if (length(x) > 1)
@@ -58,7 +65,7 @@ prepanel.default.densityplot <-
     {
         vals <- sort(unique(groups))
         nvals <- length(vals)
-        xl <- range(x)
+        xl <- range(x, finite = TRUE)
         yl <- 0
         dxl <- numeric(0) # bad names !!
         dyl <- numeric(0) 
@@ -73,7 +80,9 @@ prepanel.default.densityplot <-
                 dyl <- c(dyl, diff(h$y))
             }
         }
-        list(xlim = range(xl), ylim = range(yl), dx = dxl, dy = dyl)
+        list(xlim = range(xl, finite = TRUE),
+             ylim = range(yl, finite = TRUE),
+             dx = dxl, dy = dyl)
     }
 }
 
@@ -83,14 +92,14 @@ prepanel.default.densityplot <-
 panel.densityplot <-
     function(x,
              darg = list(n = 30),
-             plot.points = TRUE,
+             plot.points = "jitter",
              ref = FALSE,
              col = plot.line$col,
              col.line = col,
+             jitter.amount = 0.01 * diff(current.panel.limits()$ylim),
              ...)
 {
     x <- as.numeric(x)
-
     if (ref)
     {
         reference.line <- trellis.par.get("reference.line")
@@ -108,7 +117,21 @@ panel.densityplot <-
         id <- (h$x>=lim[1] & h$x<=lim[2])
         llines(x = h$x[id], y = h$y[id], col = col.line, ...)
     }
-    if (plot.points) panel.xyplot(x = x, y = rep(0, length(x)), col = col, ...) 
+    switch(as.character(plot.points),
+           "TRUE" =
+           panel.xyplot(x = x, y = rep(0, length(x)),
+                        col = col, ...),
+           "rug" =
+           panel.rug(x = x, 
+                     start = 0, end = 0,
+                     x.units = c("npc", "native"),
+                     col = col.line, ...),
+           "jitter" =
+           panel.xyplot(x = x,
+                        y =
+                        jitter(rep(0, length(x)),
+                               amount = jitter.amount),
+                        col = col, ...))
 }
 
 
@@ -119,7 +142,9 @@ densityplot <-
     function(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
-             outer = FALSE,
+             outer = !is.null(groups),
+##              allow.multiple = is.null(groups) || outer,
+##              outer = FALSE,
              auto.key = FALSE,
              aspect = "fill",
              panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
@@ -141,7 +166,7 @@ densityplot <-
              from = NULL,
              to = NULL,
              cut = NULL,
-             na.rm = NULL,
+             na.rm = TRUE,
              drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
              default.scales = list(),
@@ -215,15 +240,16 @@ densityplot <-
 
     ## create a skeleton trellis object with the
     ## less complicated components:
-    foo <- do.call("trellis.skeleton",
-                   c(list(cond = cond,
-                          aspect = aspect,
-                          strip = strip,
-                          panel = panel,
-                          xlab = xlab,
-                          ylab = ylab,
-                          xlab.default = form$right.name,
-                          ylab.default = "Density"), dots))
+    foo <-
+        do.call("trellis.skeleton",
+                c(list(cond = cond,
+                       aspect = aspect,
+                       strip = strip,
+                       panel = panel,
+                       xlab = xlab,
+                       ylab = ylab,
+                       xlab.default = form$right.name,
+                       ylab.default = "Density"), dots))
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
@@ -255,7 +281,8 @@ densityplot <-
 
     have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
     have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
-    if (have.xlog) {
+    if (have.xlog)
+    {
         xlog <- foo$x.scales$log
         xbase <-
             if (is.logical(xlog)) 10
@@ -265,7 +292,8 @@ densityplot <-
         x <- log(x, xbase)
         if (have.xlim) xlim <- log(xlim, xbase)
     }
-    if (have.ylog) {
+    if (have.ylog)
+    {
         warning("Can't have log Y-scale")
         have.ylog <- FALSE
         foo$y.scales$log <- FALSE
@@ -275,17 +303,23 @@ densityplot <-
 
     cond.max.level <- unlist(lapply(cond, nlevels))
 
+    ## old NA-handling
+    ##     id.na <- is.na(x)
+    ##     for (var in cond)
+    ##         id.na <- id.na | is.na(var)
+    ##     if (!any(!id.na)) stop("nothing to draw")
 
-    id.na <- is.na(x)
-    for (var in cond)
-        id.na <- id.na | is.na(var)
+    ## new NA-handling: will retain NA's in x
+
+    id.na <- do.call("pmax", lapply(cond, is.na))
     if (!any(!id.na)) stop("nothing to draw")
-    ## Nothing simpler ?
+
 
     ## Step 6: Evaluate layout, panel.args.common and panel.args
 
     foo$panel.args.common <- c(dots, list(darg = darg))
-    if (subscripts) {
+    if (subscripts)
+    {
         foo$panel.args.common$groups <- groups
         foo$panel.args.common$panel.groups <- panel.groups
     }
@@ -295,16 +329,12 @@ densityplot <-
     if (nplots != prod(sapply(foo$condlevels, length))) stop("mismatch")
     foo$panel.args <- vector(mode = "list", length = nplots)
 
-
     cond.current.level <- rep(1, number.of.cond)
-
 
     for (panel.number in seq(length = nplots))
     {
-
-        
         id <- !id.na
-        for(i in 1:number.of.cond)
+        for(i in seq(length = number.of.cond))
         {
             var <- cond[[i]]
             id <- id &
@@ -328,19 +358,20 @@ densityplot <-
     }
 
 
-    more.comp <- c(limits.and.aspect(prepanel.default.densityplot,
-                                     prepanel = prepanel, 
-                                     have.xlim = have.xlim, xlim = xlim, 
-                                     have.ylim = have.ylim, ylim = ylim, 
-                                     x.relation = foo$x.scales$relation,
-                                     y.relation = foo$y.scales$relation,
-                                     panel.args.common = foo$panel.args.common,
-                                     panel.args = foo$panel.args,
-                                     aspect = aspect,
-                                     nplots = nplots,
-                                     x.axs = foo$x.scales$axs,
-                                     y.axs = foo$y.scales$axs),
-                   cond.orders(foo))
+    more.comp <-
+        c(limits.and.aspect(prepanel.default.densityplot,
+                            prepanel = prepanel, 
+                            have.xlim = have.xlim, xlim = xlim, 
+                            have.ylim = have.ylim, ylim = ylim, 
+                            x.relation = foo$x.scales$relation,
+                            y.relation = foo$y.scales$relation,
+                            panel.args.common = foo$panel.args.common,
+                            panel.args = foo$panel.args,
+                            aspect = aspect,
+                            nplots = nplots,
+                            x.axs = foo$x.scales$axs,
+                            y.axs = foo$y.scales$axs),
+          cond.orders(foo))
     foo[names(more.comp)] <- more.comp
 
 

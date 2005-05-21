@@ -16,7 +16,7 @@ importFrom(stats, as.formula, density, fitted.values, loess.smooth,
 export("[.shingle", as.factorOrShingle, as.shingle, banking, barchart,
        bwplot, canonical.theme, cloud, col.whitebg, Rows,
 
-#      construct.scales,
+### construct.scales,
 
        contourplot, densityplot, dotplot, draw.colorkey, draw.key,
        equal.count, histogram, is.shingle, larrows,
@@ -33,13 +33,20 @@ export("[.shingle", as.factorOrShingle, as.shingle, banking, barchart,
        panel.grid, panel.rug, panel.histogram, panel.levelplot,
        panel.contourplot, panel.linejoin, panel.identify,
        panel.lmline, panel.loess, panel.mathdensity, panel.pairs,
-       panel.parallel, panel.qq, panel.qqmath, panel.qqmathline,
-       panel.splom, panel.stripplot, panel.superpose, panel.axis,
-       panel.superpose.2, panel.tmd, panel.wireframe, panel.xyplot,
-       parallel, prepanel.lmline, prepanel.loess, prepanel.qqmathline,
-       qq, qqmath, rfs, shingle, show.settings, simpleKey, splom,
-       strip.default, stripplot, tmd, trellis.device, trellis.par.get,
-       trellis.par.set, wireframe, xyplot,
+       panel.parallel, panel.qq, panel.qqmath,
+### prepanel.qqmath,
+       panel.qqmathline, panel.splom, panel.stripplot,
+       panel.superpose, panel.axis, panel.superpose.2,
+
+
+       prepanel.tmd.default, prepanel.tmd.qqmath, panel.tmd.default,
+       panel.tmd.qqmath,
+
+       panel.wireframe, panel.xyplot, parallel, prepanel.lmline,
+       prepanel.loess, prepanel.qqmathline, qq, qqmath, rfs, shingle,
+       show.settings, simpleKey, splom, strip.default, stripplot, tmd,
+       trellis.device, trellis.par.get, trellis.par.set, wireframe,
+       xyplot,
 
        do.breaks,
        lattice.getOption, lattice.options,
@@ -49,7 +56,9 @@ export("[.shingle", as.factorOrShingle, as.shingle, banking, barchart,
        panel.arrows, panel.segments, panel.lines, panel.points,
        panel.text, current.panel.limits,
 
-       strip.custom, trellis.last.object
+       strip.custom, trellis.last.object,
+
+       make.groups
 
        )
 

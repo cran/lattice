@@ -136,21 +136,32 @@ panel.rug <-
              regular = TRUE, 
              start = if (regular) 0 else 0.97,
              end = if (regular) 0.03 else 1,
+             x.units = rep("npc", 2),
+             y.units = rep("npc", 2),
              col = add.line$col,
+             lty = add.line$lty,
+             lwd = add.line$lwd,
+             alpha = add.line$alpha,
              ...)
 {
     add.line <- trellis.par.get("add.line")
+    x.units <- rep(x.units, length = 2)
+    y.units <- rep(y.units, length = 2)
     if (!is.null(x))
     {
         grid.segments(x0 = unit(x, "native"), x1 = unit(x, "native"),
-                      y0 = unit(start, "npc"), y1 = unit(end, "npc"),
-                      gp = gpar(col = col))
+                      y0 = unit(start, x.units[1]), y1 = unit(end, x.units[2]),
+                      gp =
+                      gpar(col = col, lty = lty,
+                           lwd = lwd, alpha = alpha))
     }
     if (!is.null(y))
     {
         grid.segments(y0 = unit(y, "native"), y1 = unit(y, "native"),
-                      x0 = unit(start, "npc"), x1 = unit(end, "npc"),
-                      gp = gpar(col = col))
+                      x0 = unit(start, y.units[1]), x1 = unit(end, y.units[2]),
+                      gp =
+                      gpar(col = col, lty = lty,
+                           lwd = lwd, alpha = alpha))
     }
 }
 
@@ -243,9 +254,11 @@ prepanel.lmline <-
 
     if (length(x)>0) {
         coeff <- coef(lm(y~x))
-        tem <- coeff[1] + coeff[2] * range(x)
-        list(xlim=range(x), ylim=range(y,tem), 
-             dx=diff(range(x)), dy=diff(tem))         
+        tem <- coeff[1] + coeff[2] * range(x, finite = TRUE)
+        list(xlim = range(x, finite = TRUE),
+             ylim = range(y, tem, finite = TRUE), 
+             dx = diff(range(x, finite = TRUE)),
+             dy = diff(tem, finite = TRUE))
     }
     else list(xlim=c(NA,NA), ylim=c(NA,NA), dx=NA, dy=NA)
 }
@@ -300,8 +313,8 @@ prepanel.loess <-
         smooth <-
             loess.smooth(x, y, span = span, family = family,
                          degree = degree, evaluation = evaluation)
-        list(xlim = range(x,smooth$x),
-             ylim = range(y,smooth$y),
+        list(xlim = range(x, smooth$x, finite = TRUE),
+             ylim = range(y, smooth$y, finite = TRUE),
              dx = diff(smooth$x),
              dy = diff(smooth$y))
     }
@@ -340,6 +353,7 @@ panel.superpose <-
              fontfamily = superpose.symbol$fontfamily, 
              lty = superpose.line$lty,
              lwd = superpose.line$lwd,
+             alpha = superpose.symbol$alpha,
              ...)
 {
     x <- as.numeric(x)
@@ -365,6 +379,7 @@ panel.superpose <-
         pch <- rep(pch, length=nvals)
         lty <- rep(lty, length=nvals)
         lwd <- rep(lwd, length=nvals)
+        alpha <- rep(alpha, length=nvals)
         cex <- rep(cex, length=nvals)
         font <- rep(font, length=nvals)
         fontface <- rep(fontface, length=nvals)
@@ -379,19 +394,20 @@ panel.superpose <-
         {
             id <- (groups[subscripts] == vals[i])
             if (any(id)) {
-                args <- list(x=x[id],
-                             groups = groups,
-                             subscripts = subscripts[id],
-                             pch = pch[i], cex = cex[i],
-                             font = font[i],
-                             fontface = fontface[i],
-                             fontfamily = fontfamily[i],
-                             col.line = col.line[i],
-                             col.symbol = col.symbol[i],
-                             lty = lty[i],
-                             lwd = lwd[i], ...)
+                args <-
+                    list(x=x[id],
+                         ## groups = groups,
+                         subscripts = subscripts[id],
+                         pch = pch[i], cex = cex[i],
+                         font = font[i],
+                         fontface = fontface[i],
+                         fontfamily = fontfamily[i],
+                         col.line = col.line[i],
+                         col.symbol = col.symbol[i],
+                         lty = lty[i],
+                         lwd = lwd[i],
+                         alpha = alpha[i], ...)
                 if (!is.null(y)) args$y <- y[id]
-
                 do.call("panel.groups", args)
             }
         }
@@ -414,12 +430,13 @@ panel.superpose.2 <-
              fontfamily = superpose.symbol$fontfamily, 
              lty = superpose.line$lty,
              lwd = superpose.line$lwd,
+             alpha = superpose.symbol$alpha,
              type = "p",
              ...)
 {
 
-    ## This is a (very) slightly different version of panel.superpose.
-    ## It has an explicit type argument which behaves like other
+    ## This is a slightly different version of panel.superpose.  It
+    ## has an explicit type argument which behaves like other
     ## graphical parameters, i.e., it is repeated to be as long as the
     ## number of groups, and one used for each group.  This is the
     ## default behaviour of panel.superpose in S-PLUS.
@@ -451,6 +468,7 @@ panel.superpose.2 <-
         pch <- rep(pch, length=nvals)
         lty <- rep(lty, length=nvals)
         lwd <- rep(lwd, length=nvals)
+        alpha <- rep(alpha, length=nvals)
         cex <- rep(cex, length=nvals)
         font <- rep(font, length=nvals)
         fontface <- rep(fontface, length=nvals)
@@ -478,6 +496,7 @@ panel.superpose.2 <-
                              col.symbol = col.symbol[i],
                              lty = lty[i],
                              lwd = lwd[i],
+                             alpha = alpha[i],
                              type = type[[i]], ...)
                 if (!is.null(y)) args$y <- y[id]
 
