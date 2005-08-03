@@ -185,7 +185,28 @@ panel.qqmath <-
 
 
 
-qqmath <-
+qqmath <- function(formula, ...)  UseMethod("qqmath")
+
+
+
+qqmath.numeric <-
+    function(formula, data = NULL, ylab = deparse(substitute(formula)), ...)
+{
+    ocall <- ccall <- match.call()
+    if (!is.null(ccall$data)) 
+        warning("explicit data specification ignored")
+    ccall$data <- list(x = formula)
+    ccall$ylab <- ylab
+    ccall$formula <- ~x
+    ccall[[1]] <- as.name("qqmath")
+    ans <- eval(ccall, parent.frame())
+    ans$call <- ocall
+    ans
+}
+
+
+
+qqmath.formula <-
     function(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
@@ -222,8 +243,8 @@ qqmath <-
     try(formula <- eval(formula), silent = TRUE)
     foo <- substitute(formula)
 
-    if (!inherits(formula, "formula"))
-        formula <- as.formula(paste("~", formname))
+##     if (!inherits(formula, "formula"))
+##         formula <- as.formula(paste("~", formname))
     
     form <-
         latticeParseFormula(formula, data, subset = subset,

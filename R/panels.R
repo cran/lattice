@@ -354,8 +354,26 @@ panel.superpose <-
              lty = superpose.line$lty,
              lwd = superpose.line$lwd,
              alpha = superpose.symbol$alpha,
+             type = 'p',
              ...)
 {
+    if (!missing(type))
+    {
+        ## this is something of a hack, needed because without this,
+        ## grouped displays with 'g' %in% type may draw a grid
+        ## (courtesy of panel.groups) for each group, overwriting
+        ## earlier ones.
+
+        have.type <- TRUE
+        type <- unique(type)
+        wg <- match('g', type, nomatch = NA)
+        if (!is.na(wg))
+        {
+            panel.grid(h = -1, v = -1)
+            type <- type[-wg]
+        }
+    }
+    else have.type <- FALSE
     x <- as.numeric(x)
     if (!is.null(y)) y <- as.numeric(y)
 
@@ -393,7 +411,8 @@ panel.superpose <-
         for (i in seq(along=vals))
         {
             id <- (groups[subscripts] == vals[i])
-            if (any(id)) {
+            if (any(id))
+            {
                 args <-
                     list(x=x[id],
                          ## groups = groups,
@@ -406,7 +425,9 @@ panel.superpose <-
                          col.symbol = col.symbol[i],
                          lty = lty[i],
                          lwd = lwd[i],
-                         alpha = alpha[i], ...)
+                         alpha = alpha[i],
+                         ...)
+                if (have.type) args$type <- type
                 if (!is.null(y)) args$y <- y[id]
                 do.call("panel.groups", args)
             }
@@ -583,10 +604,12 @@ panel.linejoin <-
     y <- as.numeric(y)
 
     reference.line = trellis.par.get("reference.line")
-    if (!missing(col)) {
+    if (!missing(col))
+    {
         if (missing(col.line)) col.line <- col
     }
-    if (horizontal) {
+    if (horizontal)
+    {
         vals <- unique(sort(y))
         yy <- seq(along = vals)
         xx <- numeric(length(yy))
@@ -594,7 +617,8 @@ panel.linejoin <-
             xx[i] <- fun(x[y == vals[i]])
         llines(xx, vals[yy], col = col.line, lty = lty, lwd = lwd, ...)
     }
-    else {
+    else
+    {
         vals <- unique(sort(x))
         xx <- seq(along = vals)
         yy <- numeric(length(xx))

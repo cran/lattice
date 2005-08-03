@@ -1313,43 +1313,9 @@ panel.cloud <-
             }
         }
 
-
-
         xlab <- getLabelList(xlab, trellis.par.get("par.xlab.text"), xlab.default)
         ylab <- getLabelList(ylab, trellis.par.get("par.ylab.text"), ylab.default)
         zlab <- getLabelList(zlab, trellis.par.get("par.zlab.text"), zlab.default)
-
-
-
-
-## OLD method - no grobs allowed
-
-#         if (!is.null(xlab))
-#             ltext(xlab$lab, x = tlabs[1, 1], y = tlabs[2, 1],
-#                   cex = xlab$cex,
-#                   srt = xlab$rot,
-#                   font = xlab$font,
-#                   fontfamily = xlab$fontfamily,
-#                   fontface = xlab$fontface,
-#                   col = xlab$col)
-
-#         if (!is.null(ylab))
-#             ltext(ylab$lab, x = tlabs[1, 2], y = tlabs[2, 2],
-#                   cex = ylab$cex,
-#                   srt = ylab$rot,
-#                   font = ylab$font,
-#                   fontfamily = ylab$fontfamily,
-#                   fontface = ylab$fontface,
-#                   col = ylab$col)
-
-#         if (!is.null(zlab))
-#             ltext(zlab$lab, x = tlabs[1, 3], y = tlabs[2, 3],
-#                   cex = zlab$cex,
-#                   srt = zlab$rot,
-#                   font = zlab$font,
-#                   fontfamily = zlab$fontfamily,
-#                   fontface = zlab$fontface,
-#                   col = zlab$col)
 
         ## slightly different frm xyplot etc, in that rot can be
         ## supplied in the *lab lists
@@ -1406,58 +1372,81 @@ panel.wireframe <- function(...)
 
 
 
-wireframe <-
-    function(formula,
-             data = parent.frame(),
-             panel = "panel.wireframe",
-             prepanel = NULL,
-             strip = TRUE,
-             groups = NULL,
-             cuts = 70,
-             pretty = FALSE,
-             drape = FALSE,
-             ...,
-             colorkey = any(drape),
-             subset = TRUE)
+## wireframe.old <-
+##     function(formula,
+##              data = parent.frame(),
+##              panel = "panel.wireframe",
+##              prepanel = NULL,
+##              strip = TRUE,
+##              groups = NULL,
+##              cuts = 70,
+##              pretty = FALSE,
+##              drape = FALSE,
+##              ...,
+##              colorkey = any(drape),
+##              subset = TRUE)
+## {
+##     ## m <- match.call(expand.dots = FALSE)
+##     dots <- list(...)
+##     groups <- eval(substitute(groups), data, parent.frame())
+##     subset <- eval(substitute(subset), data, parent.frame())
+
+##     if (!is.function(panel)) panel <- eval(panel)
+##     if (!is.function(strip)) strip <- eval(strip)
+
+##     prepanel <-
+##         if (is.function(prepanel)) prepanel
+##         else if (is.character(prepanel)) get(prepanel)
+##         else eval(prepanel)
+
+##     do.call("cloud",
+##             c(list(formula = substitute(formula), data = data,
+##                    groups = groups, subset = subset,
+##                    panel = panel, prepanel = prepanel, strip = strip,
+##                    cuts = cuts,
+##                    pretty = pretty,
+##                    drape = drape,
+##                    colorkey = colorkey,
+##                    axs.default = "i"),
+##               dots))
+## }
+
+
+
+wireframe <- function(formula, ...) UseMethod("wireframe")
+
+
+wireframe.matrix <-
+    function(formula, data = NULL,
+             zlab = deparse(substitute(formula)),
+             ...)
 {
-    ## m <- match.call(expand.dots = FALSE)
-    dots <- list(...)
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
-    do.call("cloud",
-            c(list(formula = substitute(formula), data = data,
-                   groups = groups, subset = subset,
-                   panel = panel, prepanel = prepanel, strip = strip,
-                   cuts = cuts,
-                   pretty = pretty,
-                   drape = drape,
-                   colorkey = colorkey,
-                   axs.default = "i"),
-              dots))
+    if (!is.null(data)) warning("explicit data specification ignored")
+    form <- eval(z ~ row * column)
+    data <-
+        expand.grid(row = seq(length = nrow(formula)),
+                    column = seq(length = ncol(formula)))
+    data$z <- as.vector(as.numeric(formula))
+    ## What if rownames/colnames are non-null?
+    wireframe(form, data, zlab = zlab, ...)
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+wireframe.formula <-
+    function(formula,
+             data = parent.frame(),
+             panel = "panel.wireframe",
+             ...)
+{
+    ocall <- ccall <- match.call()
+    ccall$data <- data
+    ccall$panel <- panel
+    ccall[[1]] <- as.name("cloud")
+    ans <- eval(ccall, parent.frame())
+    ans$call <- ocall
+    ans
+}
 
 
 
@@ -1465,10 +1454,26 @@ wireframe <-
 ## points/cross lines (cloud.3d),
 
 
+cloud <- function(formula, ...) UseMethod("cloud")
 
 
+cloud.matrix <-
+    function(formula, data = NULL, type = 'h',
+             zlab = deparse(substitute(formula)),
+             ...)
+{
+    if (!is.null(data)) warning("explicit data specification ignored")
+    form <- eval(z ~ row * column)
+    data <-
+        expand.grid(row = seq(length = nrow(formula)),
+                    column = seq(length = ncol(formula)))
+    data$z <- as.vector(as.numeric(formula))
+    ## What if rownames/colnames are non-null?
+    cloud(form, data, type = type, zlab = zlab, ...)
+}
 
-cloud <-
+
+cloud.formula <-
     function(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
@@ -1496,7 +1501,6 @@ cloud <-
              at,
              drape = FALSE,
 
-
              pretty = FALSE,
              drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
@@ -1511,10 +1515,7 @@ cloud <-
     ## the axs.default is to (by default) enable scale extension for
     ## cloud, but not for wireframe. Needs work to be actually
     ## implemented.
-
 {
-
-
     ##dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
@@ -1524,41 +1525,14 @@ cloud <-
     ## Step 1: Evaluate x, y, z etc. and do some preprocessing
 
     left.name <- deparse(substitute(formula))
+
     formula <- eval(substitute(formula), data, parent.frame())
     form <-
-        if (inherits(formula, "formula"))
-            latticeParseFormula(formula, data, dim = 3,
-                                subset = subset, groups = groups,
-                                multiple = allow.multiple,
-                                outer = outer, subscripts = TRUE,
-                                drop = drop.unused.levels)
-        else {
-            if (is.matrix(formula))
-            {
-                tmp <- expand.grid(1:nrow(formula), 1:ncol(formula))
-                list(left = as.vector(formula),
-                     right.x = tmp[[1]],
-                     right.y = tmp[[2]],
-                     condition = NULL,
-                     groups = groups,
-                     left.name = left.name,
-                     right.x.name = "row", right.y.name = "column",
-                     subscr = seq(length = nrow(tmp)))
-            }
-            else if (is.data.frame(formula))
-            {
-                tmp <- expand.grid(rownames(formula), colnames(formula))
-                list(left = as.vector(as.matrix(formula)),
-                     right.x = tmp[[1]],
-                     right.y = tmp[[2]],
-                     condition = NULL,
-                     groups = groups,
-                     left.name = "left.name",
-                     right.x.name = "row", right.y.name = "column",
-                     subscr = seq(length = nrow(tmp)))
-            }
-            else stop("invalid formula")
-        }
+        latticeParseFormula(formula, data, dim = 3,
+                            subset = subset, groups = groups,
+                            multiple = allow.multiple,
+                            outer = outer, subscripts = TRUE,
+                            drop = drop.unused.levels)
 
     ## We need to be careful with subscripts here. It HAS to be there,
     ## and it's to be used to index x, y, z (and not only groups,
@@ -1570,7 +1544,8 @@ cloud <-
     if (!is.null(form$groups))
         groups <-
             if (is.matrix(form$groups)) as.vector(form$groups)[form$subscr]
-            else if (is.data.frame(form$groups)) as.vector(as.matrix(form$groups))[form$subscr]
+            else if (is.data.frame(form$groups))
+                as.vector(as.matrix(form$groups))[form$subscr]
             else form$groups[form$subscr]
 
     subscr <- seq(length = length(form$left))
@@ -1590,11 +1565,8 @@ cloud <-
     x <- form$right.x
     y <- form$right.y
 
-
-
-
-    ## 2004-03-12 new experimental stuff: when x, y, z are all
-    ## matrices of the same dimension, they represent a 3-D surface
+    ## (2004-03-12) experimental stuff: when x, y, z are all matrices
+    ## of the same dimension, they represent a 3-D surface
     ## parametrized on a 2-D grid (the details of the parametrizing
     ## grid are unimportant). This is meant only for wireframe
 
@@ -1644,7 +1616,6 @@ cloud <-
     ## need to be passed to the panel function to be processed. These |
     ## xlab / ylab are dummies to satisfy the usual processing        |
     ## routines ------------------------------------------------------+
-
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo

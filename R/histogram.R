@@ -153,8 +153,30 @@ panel.histogram <-
 
 
 
+histogram <- function(formula, ...)  UseMethod("histogram")
 
-histogram <-
+
+
+histogram.factor <- histogram.numeric <-
+    function(formula, data = NULL, xlab = deparse(substitute(formula)), ...)
+{
+    ocall <- ccall <- match.call()
+    if (!is.null(ccall$data)) 
+        warning("explicit data specification ignored")
+    ccall$data <- list(x = formula)
+    ccall$xlab <- xlab
+    ccall$formula <- ~x
+    ccall[[1]] <- as.name("histogram")
+    ans <- eval(ccall, parent.frame())
+    ans$call <- ocall
+    ans
+}
+
+
+
+
+
+histogram.formula <-
     function(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
@@ -192,12 +214,6 @@ histogram <-
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
-    formname <- deparse(substitute(formula))
-    formula <- eval(substitute(formula), data, parent.frame())
-
-    if (!inherits(formula, "formula"))
-        formula <- as.formula(paste("~", formname))
-    
     form <-
         latticeParseFormula(formula, data, subset = subset,
                             groups = groups, multiple = allow.multiple,

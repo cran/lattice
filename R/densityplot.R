@@ -34,7 +34,7 @@ prepanel.default.densityplot <-
              ...)
 {
     if (!is.numeric(x)) x <- as.numeric(x)
-
+    x <- x[!is.na(x)]
     if (length(x) < 1)
         list(xlim = NA,
              ylim = NA,
@@ -52,9 +52,14 @@ prepanel.default.densityplot <-
         if (length(x) > 1)
         {
             h <- do.call("density", c(list(x=x), darg))
+            ## for banking calculations, include only middle 70% values
+            quants <-
+                quantile(x, prob = c(0.15, 0.85),
+                         names = FALSE, na.rm = TRUE)
+            ok <- h$x > quants[1] & h$x < quants[2]
             list(xlim = range(h$x),
                  ylim = range(h$y),
-                 dx = diff(h$x), dy = diff(h$y))
+                 dx = diff(h$x[ok]), dy = diff(h$y[ok]))
         }
         else
             list(xlim = range(x),
@@ -76,8 +81,13 @@ prepanel.default.densityplot <-
                 h <- do.call("density", c(list(x=x[id]), darg))
                 xl <- c(xl, h$x)
                 yl <- c(yl, h$y)
-                dxl <- c(dxl, diff(h$x))
-                dyl <- c(dyl, diff(h$y))
+                ## for banking calculations, include only middle 70% values
+                quants <-
+                    quantile(x[id], prob = c(0.15, 0.85),
+                             names = FALSE, na.rm = TRUE)
+                ok <- h$x > quants[1] & h$x < quants[2]
+                dxl <- c(dxl, diff(h$x[ok]))
+                dyl <- c(dyl, diff(h$y[ok]))
             }
         }
         list(xlim = range(xl, finite = TRUE),
@@ -100,6 +110,7 @@ panel.densityplot <-
              ...)
 {
     x <- as.numeric(x)
+    x <- x[!is.na(x)]
     if (ref)
     {
         reference.line <- trellis.par.get("reference.line")
@@ -136,9 +147,20 @@ panel.densityplot <-
 
 
 
+densityplot <- function(formula, ...) UseMethod("densityplot")
 
 
-densityplot <-
+
+densityplot.numeric <-
+    function(formula, ...)
+{
+    formula <- eval(substitute(~foo, list(foo = substitute(formula))))
+    densityplot(formula, ...)
+}
+
+
+
+densityplot.formula <-
     function(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
@@ -197,11 +219,11 @@ densityplot <-
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
 
-    formname <- deparse(substitute(formula))
-    formula <- eval(substitute(formula), data, parent.frame())
+##     formname <- deparse(substitute(formula))
+##     formula <- eval(substitute(formula), data, parent.frame())
 
-    if (!inherits(formula, "formula"))
-        formula <- as.formula(paste("~", formname))
+##     if (!inherits(formula, "formula"))
+##         formula <- as.formula(paste("~", formname))
     
     form <-
         latticeParseFormula(formula, data, subset = subset,
