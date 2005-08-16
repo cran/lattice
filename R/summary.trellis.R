@@ -41,6 +41,21 @@ summary.trellis <- function(object, ...)
 }
 
 
-## dim.trellis <- function(x)
-##     as.integer(sapply(x$condlevels, length))
+dim.trellis <- function(x)
+{
+    olevs <- lapply(sapply(x$condlevels, length), seq)
+    as.integer(sapply(mapply("[", olevs, x$index.cond,
+                             SIMPLIFY = FALSE),
+                      length))
+}
+
+
+dimnames.trellis <- function(x)
+    names(x$condlevels)
+
+
+
+
+
+
 
