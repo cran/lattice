@@ -126,31 +126,32 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
     ## if it is)
     
     process.key <-
-        function(between = 2,
-                 align = TRUE,
+        function(align = TRUE,
                  title = NULL,
                  rep = TRUE,
                  background = trellis.par.get("background")$col,
                  border = FALSE,
                  transparent = FALSE, 
-                 columns = 1,
                  divide = 3,
-                 between.columns = 3,
-                 cex = 1,
-                 cex.title = 1.5 * max(cex),
                  col = "black", 
                  lty = 1,
                  lwd = 1,
                  font = 1, 
-                 fontface = NULL, 
-                 fontfamily = NULL, 
                  pch = 8,
                  adj = 0,
                  type = "l", 
                  size = 5, 
                  angle = 0, 
                  density = -1,
-                 ...)
+                 ...,
+                 between = 2,
+                 between.columns = 3,
+                 columns = 1,
+                 cex = 1,
+                 cex.title = 1.5 * max(cex),
+                 lines.title = 2,
+                 fontface = NULL, 
+                 fontfamily = NULL)
         {
             list(between = between,
                  align = align,
@@ -164,6 +165,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                  between.columns = between.columns,
                  cex = cex,
                  cex.title = cex.title,
+                 lines.title = lines.title,
                  col = col,
                  lty = lty,
                  lwd = lwd,
@@ -350,7 +352,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
         {
             stopifnot(length(key$title) == 1,
                       is.characterOrExpression(key$title))
-            heights.x[1] <- 1.2 * key$cex.title
+            heights.x[1] <- key$lines.title * key$cex.title
             heights.units[1] <- "strheight"
             heights.data[[1]] <- key$title
         }
@@ -809,7 +811,9 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                             rectGrob(gp =
                                      gpar(col = axis.line$col,
                                           lty = axis.line$lty,
-                                          lwd = axis.line$lwd)),
+                                          lwd = axis.line$lwd,
+                                          alpha = axis.line$alpha,
+                                          fill = "transparent")),
                             row = 2, col = 1)
 
 
@@ -880,7 +884,9 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                             rectGrob(gp =
                                      gpar(col = axis.line$col,
                                           lty = axis.line$lty,
-                                          lwd = axis.line$lwd)),
+                                          lwd = axis.line$lwd,
+                                          alpha = axis.line$alpha,
+                                          fill = "transparent")),
                             row = 2, col = 3)
 
 
@@ -946,7 +952,9 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                             rectGrob(gp =
                                      gpar(col = axis.line$col,
                                           lty = axis.line$lty,
-                                          lwd = axis.line$lwd)),
+                                          lwd = axis.line$lwd,
+                                          alpha = axis.line$alpha,
+                                          fill = "transparent")),
                             row = 3, col = 2)
 
 
@@ -1013,7 +1021,9 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                             rectGrob(gp =
                                      gpar(col = axis.line$col,
                                           lty = axis.line$lty,
-                                          lwd = axis.line$lwd)),
+                                          lwd = axis.line$lwd,
+                                          alpha = axis.line$alpha,
+                                          fill = "transparent")),
                             row = 1, col = 2)
 
         key.gf <- placeGrob(frame = key.gf, 
