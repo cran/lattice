@@ -17,7 +17,7 @@
 \alias{stripplot.formula}
 \alias{stripplot.numeric}
 \synopsis{
-\method{xyplot}{formula}(x,
+\method{xyplot}{formula}(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
              outer = !is.null(groups),
@@ -34,11 +34,11 @@
              ylab,
              ylim,
              drop.unused.levels = lattice.getOption("drop.unused.levels"),
-             \dots,
+             ...,
              default.scales,
              subscripts = !is.null(groups),
              subset = TRUE)
-\method{bwplot}{formula}(x,
+\method{bwplot}{formula}(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
              outer = FALSE,
@@ -56,23 +56,23 @@
              box.ratio = 1,
              horizontal = NULL,
              drop.unused.levels = lattice.getOption("drop.unused.levels"),
-             \dots,
+             ...,
              default.scales,
              subscripts = !is.null(groups),
              subset = TRUE)
-\method{stripplot}{formula}(x,
+\method{stripplot}{formula}(formula,
           data,
           panel = "panel.stripplot",
           \dots)
 }
 \usage{
-xyplot(x, \dots)
-dotplot(x, \dots)
-barchart(x, \dots)
-stripplot(x, \dots)
-bwplot(x, \dots)
+xyplot(formula, ...)
+dotplot(formula, ...)
+barchart(formula, ...)
+stripplot(formula, ...)
+bwplot(formula, ...)
 
-\method{xyplot}{formula}(x,
+\method{xyplot}{formula}(formula,
        data = parent.frame(),
        panel = if (is.null(groups)) "panel.xyplot"
                else "panel.superpose",
@@ -108,25 +108,25 @@ bwplot(x, \dots)
        subscripts,
        subset)
 
-\method{dotplot}{formula}(x,
+\method{dotplot}{formula}(formula,
         data,
         panel = "panel.dotplot",
         \dots)
 
-\method{barchart}{formula}(x,
+\method{barchart}{formula}(formula,
          data,
          panel = "panel.barchart",
          box.ratio = 2,
          \dots)
 
-\method{stripplot}{formula}(x,
+\method{stripplot}{formula}(formula,
           data,
           panel = "panel.stripplot",
           jitter.data = FALSE,
           factor = .5,
           \dots)
 
-\method{bwplot}{formula}(x,
+\method{bwplot}{formula}(formula,
        data,
        panel = "panel.bwplot",
        box.ratio = 1,
@@ -147,10 +147,9 @@ bwplot(x, \dots)
 }
 
 \arguments{
-  \item{x}{
-    The object on which method dispatch is carried out.
+  \item{formula}{
 
-    For the \code{"formula"} methods, a formula describing the form of
+    For the \code{formula} methods, a formula describing the form of
     conditioning plot. The formula is generally of the form \code{y ~ x
       | g1 * g2 * \dots}, indicating that plots of \code{y} (on the y
     axis) versus \code{x} (on the x axis) should be produced conditional
@@ -220,13 +219,6 @@ bwplot(x, \dots)
     \code{x} is a factor or shingle, \code{TRUE} otherwise. (The
     functionality provided by \code{horizontal=FALSE} is not
     S-compatible.)
-
-    Note that this argument used to be called \code{formula} in earlier
-    versions (when the high level functions were not generic and the
-    formula method was essentially the only method).  This is still
-    allowed, with a warning, but will no longer be allowed from the next
-    major release.  It is recommended that this argument not be named in
-    any case, but rather be the first (unnamed) argument.
   
 %     All points with at least one of its values missing (NA) in any
 %     of the variates involved are omitted from the plot.
@@ -235,7 +227,7 @@ bwplot(x, \dots)
     For the \code{formula} method, a data frame containing values for
     any variables in the formula, as well as \code{groups} and
     \code{subset} if applicable.  By default the environment where the
-    function was called from is used.  
+    function was called from is used.
   }
   \item{allow.multiple, outer}{
     logical flags to control what happens with formulas like \code{y1 +
@@ -346,19 +338,18 @@ bwplot(x, \dots)
     source code of the function \code{latticeParseFormula}.
 
     A panel function can have two other optional arguments for
-    convenience, namely \code{panel.number} and \code{packet.number},
-    representing panel order and packet order respectively.  Both
-    provide a simple integer index indicating which panel is currently
-    being drawn, but differ in how the count is calculated.
-    \code{panel.number} is a simple incremental counter that starts with
-    1 and is incremented each time a panel is drawn.
-    \code{packet.number} on the other hand indexes the combination of
-    levels of the conditioning variables that is represented by that
-    panel.  The two indices coincide unless the order of conditioning
-    variables is permuted and/or the plotting order of levels within one
-    or more conditioning variables is altered (using \code{perm.cond}
-    and \code{index.cond} respectively), in which case
-    \code{packet.number} gives the index corresponding to the
+    convenience, namely \code{panel.number} and
+    \code{panel.counter}. Both provide a simple integer index indicating
+    which panel is currently being drawn, but differ in how the count is
+    calculated.  \code{panel.counter} is a simple incremental counter
+    that starts with 1 and is incremented each time a panel is
+    drawn. \code{panel.number} on the other hand depends only on the
+    combination of levels of the conditioning variables that is
+    represented by that panel.  The two indices coincide unless the
+    order of conditioning variables is permuted and/or the plotting
+    order of levels within one or more conditioning variables is altered
+    (using \code{perm.cond} and \code{index.cond} respectively), in
+    which case \code{panel.number} gives the index corresponding to the
     \sQuote{natural} ordering of that combination of levels of the
     conditioning variables.
 
@@ -537,10 +528,6 @@ bwplot(x, \dots)
       }
       \item{\code{cex.title}}{
 	cex for the title
-      }
-      \item{\code{lines.title}}{
-	how many lines the title should occupy (in multiples of
-	itself).  Defaults to 2.
       }
       \item{\code{background}}{
 	background color, defaults to default background
@@ -975,15 +962,15 @@ bwplot(x, \dots)
 }
 \details{
 
-  All the functions documented here are generic, with the \code{formula}
-  method usually doing the actual work.  The structure of the plot that
-  is produced is mostly controlled by the formula.  For each unique
-  combination of the levels of the conditioning variables \code{g1, g2,
-    \dots}, a separate panel is produced using the points \code{(x,y)}
-  for the subset of the data (also called packet) defined by that
-  combination.  The display can be though of as a 3-dimensional array of
-  panels, consisting of one 2-dimensional matrix per page.  The
-  dimensions of this array are determined by the \code{layout} argument.
+  The structure of the plot that is produced is mostly controlled by the
+  \code{formula} argument.  For each unique combination of the levels of
+  the conditioning variables \code{g1, g2, \dots}, a separate panel is
+  produced using the points \code{(x,y)} for the subset of the data
+  (also called packet) defined by that combination.  The panels can be
+  though of as a 3-dimensional array, consisting of one 2-dimensional
+  matrix per page.  The dimensions of this array are determined by the
+  \code{layout} argument.
+
   If there are no conditioning variables, the plot produced consists of
   a single panel.
 
@@ -1005,11 +992,9 @@ bwplot(x, \dots)
   The order of the panels depends on the order in which the conditioning
   variables are specified, with \code{g1} varying fastest. Within a
   conditioning variable, the order depends on the order of the levels
-  (which for factors is usually in alphabetical order).  Both of these
+  (which for factors is usually in alphabetical order). Both of these
   orders can be modified using the \code{index.cond} and
-  \code{perm.cond} arguments, possibly using the
-  \code{\link[lattice:update.trellis]{update}} (and other related)
-  method(s).
+  \code{perm.cond} arguments, possibly using the \code{update} method.
 }
 
 \note{
@@ -1126,9 +1111,7 @@ stripplot(voice.part ~ jitter(height), data = singer, aspect = 1,
 ## Interaction Plot
 
 xyplot(decrease ~ treatment, OrchardSprays, groups = rowpos,
-       type = "a",
-       auto.key =
-       list(space = "right", points = FALSE, lines = TRUE))
+       type = "a", auto.key = list(points = FALSE, lines = TRUE))
 
 ## longer version with no x-ticks
 

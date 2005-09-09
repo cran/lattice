@@ -519,14 +519,14 @@ panel.bwplot <-
 
         ## box
 
-        lrect(xleft = blist.stats[, 2],
-              xright = blist.stats[, 4],
-              y = levels.fos, 
-              height = blist.height,
-              lwd = box.rectangle$lwd,
-              lty = box.rectangle$lty,
-              col = fill,
-              border = box.rectangle$col)
+        panel.rect(xleft = blist.stats[, 2],
+                   xright = blist.stats[, 4],
+                   y = levels.fos, 
+                   height = blist.height,
+                   lwd = box.rectangle$lwd,
+                   lty = box.rectangle$lty,
+                   fill = fill,
+                   col = box.rectangle$col)
 
         ## whiskers
 
@@ -598,14 +598,14 @@ panel.bwplot <-
 
         ## box
 
-        lrect(ybottom = blist.stats[, 2],
-              ytop = blist.stats[, 4],
-              x = levels.fos, 
-              width = blist.height,
-              lwd = box.rectangle$lwd,
-              lty = box.rectangle$lty,
-              col = fill,
-              border = box.rectangle$col)
+        panel.rect(ybottom = blist.stats[, 2],
+                   ytop = blist.stats[, 4],
+                   x = levels.fos, 
+                   width = blist.height,
+                   lwd = box.rectangle$lwd,
+                   lty = box.rectangle$lty,
+                   fill = fill,
+                   col = box.rectangle$col)
 
         ## whiskers
 
@@ -1098,21 +1098,7 @@ panel.violin <-
 ### dotplot, barchart and stripplot: essentially wrappers to bwplot
 
 
-
-dotplot <- function(x, ...)
-{
-    ocall <- match.call()
-    formula <- ocall$formula
-    if (!is.null(formula))
-    {
-        warning("The 'formula' argument has been renamed to 'x'. See ?xyplot")
-        ocall$formula <- NULL
-        if (is.null(ocall$x)) ocall$x <- formula
-        eval(ocall, parent.frame())
-    }
-    else UseMethod("dotplot")
-}
-
+dotplot <- function(formula, ...) UseMethod("dotplot")
 
 
 ## dotplot.numeric <-
@@ -1135,14 +1121,14 @@ dotplot <- function(x, ...)
 ## }
 
 dotplot.numeric <-
-    function(x, data = NULL, xlab = deparse(substitute(x)), ...)
+    function(formula, data = NULL, xlab = deparse(substitute(formula)), ...)
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit data specification ignored")
-    ccall$data <- list(x = x)
+    ccall$data <- list(x = formula)
     ccall$xlab <- xlab
-    ccall$x <- ~x
+    ccall$formula <- ~x
     ccall[[1]] <- as.name("dotplot")
     ans <- eval(ccall, parent.frame())
     ans$call <- ocall
@@ -1158,9 +1144,8 @@ dotplot.numeric <-
 
 
 dotplot.table <-
-    function(x, data = NULL, groups = TRUE, ...)
+    function(formula, data = NULL, groups = TRUE, ...)
 {
-    formula <- x
     ocall <- match.call()
     ## formula <- eval(substitute(~foo, list(foo = substitute(formula))))
     data <- as.data.frame(formula)
@@ -1190,13 +1175,13 @@ dotplot.table <-
 }
 
 
-dotplot.default <- function(x, ...) dotplot(table(x), ...)
-dotplot.array <- function(x, ...) dotplot(as.table(x), ...)
-dotplot.matrix <- function(x, ...) dotplot(as.table(x), ...)
+dotplot.default <- function(formula, ...) dotplot(table(formula), ...)
+dotplot.array <- function(formula, ...) dotplot(as.table(formula), ...)
+dotplot.matrix <- function(formula, ...) dotplot(as.table(formula), ...)
 
 
 dotplot.formula <-
-    function(x,
+    function(formula,
              data = parent.frame(),
              panel = "panel.dotplot",
              ...)
@@ -1211,30 +1196,18 @@ dotplot.formula <-
 }
 
 
-barchart <- function(x, ...)
-{
-    ocall <- match.call()
-    formula <- ocall$formula
-    if (!is.null(formula))
-    {
-        warning("The 'formula' argument has been renamed to 'x'. See ?xyplot")
-        ocall$formula <- NULL
-        if (is.null(ocall$x)) ocall$x <- formula
-        eval(ocall, parent.frame())
-    }
-    else UseMethod("barchart")
-}
+barchart <- function(formula, ...) UseMethod("barchart")
 
 
 barchart.numeric <-
-    function(x, data = NULL, xlab = deparse(substitute(x)), ...)
+    function(formula, data = NULL, xlab = deparse(substitute(formula)), ...)
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit data specification ignored")
-    ccall$data <- list(x = x)
+    ccall$data <- list(x = formula)
     ccall$xlab <- xlab
-    ccall$x <- ~x
+    ccall$formula <- ~x
     ccall[[1]] <- as.name("barchart")
     ans <- eval(ccall, parent.frame())
     ans$call <- ocall
@@ -1245,10 +1218,9 @@ barchart.numeric <-
 
 
 barchart.table <-
-    function(x, data = NULL, groups = TRUE,
+    function(formula, data = NULL, groups = TRUE,
              origin = 0, stack = TRUE, ...)
 {
-    formula <- x
     ocall <- match.call()
     if (!is.null(data)) warning("explicit data specification ignored")
     ## formula <- eval(substitute(~foo, list(foo = substitute(formula))))
@@ -1272,22 +1244,20 @@ barchart.table <-
         form <- paste(form, rest, sep = "|")
     }
     ans <-
-        barchart(as.formula(form), data,
-                 groups = eval(groups),
-                 ##groups = groups,
+        barchart(as.formula(form), data, groups = eval(groups),
                  origin = origin, stack = stack, 
                  ...)
     ans$call <- ocall
     ans
 }
 
-barchart.default <- function(x, ...) barchart(table(x), ...)
-barchart.array <- function(x, ...) barchart(as.table(x), ...)
-barchart.matrix <- function(x, ...) barchart(as.table(x), ...)
+barchart.default <- function(formula, ...) barchart(table(formula), ...)
+barchart.array <- function(formula, ...) barchart(as.table(formula), ...)
+barchart.matrix <- function(formula, ...) barchart(as.table(formula), ...)
 
 
 barchart.formula <-
-    function(x,
+    function(formula,
              data = parent.frame(),
              panel = "panel.barchart",
              box.ratio = 2, 
@@ -1304,30 +1274,18 @@ barchart.formula <-
 }
 
 
-stripplot <- function(x, ...)
-{
-    ocall <- match.call()
-    formula <- ocall$formula
-    if (!is.null(formula))
-    {
-        warning("The 'formula' argument has been renamed to 'x'. See ?xyplot")
-        ocall$formula <- NULL
-        if (is.null(ocall$x)) ocall$x <- formula
-        eval(ocall, parent.frame())
-    }
-    else UseMethod("stripplot")
-}
+stripplot <- function(formula, ...) UseMethod("stripplot")
 
 
 stripplot.numeric <-
-    function(x, data = NULL, xlab = deparse(substitute(x)), ...)
+    function(formula, data = NULL, xlab = deparse(substitute(formula)), ...)
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit data specification ignored")
-    ccall$data <- list(x = x)
+    ccall$data <- list(x = formula)
     ccall$xlab <- xlab
-    ccall$x <- ~x
+    ccall$formula <- ~x
     ccall[[1]] <- as.name("stripplot")
     ans <- eval(ccall, parent.frame())
     ans$call <- ocall
@@ -1337,7 +1295,7 @@ stripplot.numeric <-
 
 
 stripplot.formula <-
-    function(x,
+    function(formula,
              data = parent.frame(),
              panel = "panel.stripplot",
              ...)
@@ -1356,31 +1314,19 @@ stripplot.formula <-
 
 ### bwplot (the workhorse)
 
-bwplot <- function(x, ...)
-{
-    ocall <- match.call()
-    formula <- ocall$formula
-    if (!is.null(formula))
-    {
-        warning("The 'formula' argument has been renamed to 'x'. See ?xyplot")
-        ocall$formula <- NULL
-        if (is.null(ocall$x)) ocall$x <- formula
-        eval(ocall, parent.frame())
-    }
-    else UseMethod("bwplot")
-}
+bwplot <- function(formula, ...) UseMethod("bwplot")
 
 
 
 bwplot.numeric <-
-    function(x, data = NULL, xlab = deparse(substitute(x)), ...)
+    function(formula, data = NULL, xlab = deparse(substitute(formula)), ...)
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit data specification ignored")
-    ccall$data <- list(x = x)
+    ccall$data <- list(x = formula)
     ccall$xlab <- xlab
-    ccall$x <- ~x
+    ccall$formula <- ~x
     ccall[[1]] <- as.name("bwplot")
     ans <- eval(ccall, parent.frame())
     ans$call <- ocall
@@ -1391,7 +1337,7 @@ bwplot.numeric <-
 
 
 bwplot.formula <-
-    function(x,
+    function(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
              outer = FALSE,
@@ -1416,7 +1362,6 @@ bwplot.formula <-
              subscripts = !is.null(groups),
              subset = TRUE)
 {
-    formula <- x
     dots <- list(...)
     groups <- eval(substitute(groups), data, parent.frame())
     subset <- eval(substitute(subset), data, parent.frame())
@@ -1618,7 +1563,7 @@ bwplot.formula <-
     cond.current.level <- rep(1, number.of.cond)
 
 
-    for (packet.number in seq(length = nplots))
+    for (panel.number in seq(length = nplots))
     {
 
         id <- !id.na
@@ -1638,12 +1583,12 @@ bwplot.formula <-
         {
             if (is.f.y)
             {
-                foo$panel.args[[packet.number]] <-
+                foo$panel.args[[panel.number]] <-
                     list(x = x[id],
                          ##y = as.numeric(y[id]))
                          y = y[id])
                 if (subscripts)
-                    foo$panel.args[[packet.number]]$subscripts <-
+                    foo$panel.args[[panel.number]]$subscripts <-
                         subscr[id]
             }
             else  # shingle
@@ -1658,11 +1603,11 @@ bwplot.formula <-
                     panel.y <- c(panel.y, rep(k,length(tid[tid])))
                     if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
                 }
-                foo$panel.args[[packet.number]] <-
+                foo$panel.args[[panel.number]] <-
                     list(x = panel.x,
                          y = panel.y)
                 if (subscripts)
-                    foo$panel.args[[packet.number]]$subscripts <-
+                    foo$panel.args[[panel.number]]$subscripts <-
                         panel.subscr
 
             }
@@ -1671,12 +1616,12 @@ bwplot.formula <-
         {
             if (is.f.x)
             {
-                foo$panel.args[[packet.number]] <-
+                foo$panel.args[[panel.number]] <-
                     ##list(x = as.numeric(x[id]),
                     list(x = x[id],
                          y = y[id])
                 if (subscripts)
-                    foo$panel.args[[packet.number]]$subscripts <-
+                    foo$panel.args[[panel.number]]$subscripts <-
                         subscr[id]
             }
             else   # shingle
@@ -1691,11 +1636,11 @@ bwplot.formula <-
                     panel.x <- c(panel.x, rep(k,length(tid[tid])))
                     if (subscripts) panel.subscr <- c(panel.subscr, subscr[tid])
                 }
-                foo$panel.args[[packet.number]] <-
+                foo$panel.args[[panel.number]] <-
                     list(x = panel.x,
                          y = panel.y)
                 if (subscripts)
-                    foo$panel.args[[packet.number]]$subscripts <-
+                    foo$panel.args[[panel.number]]$subscripts <-
                         panel.subscr
             }
         }

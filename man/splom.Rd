@@ -6,64 +6,17 @@
 \alias{parallel.data.frame}
 \alias{splom.formula}
 \alias{parallel.formula}
-% \synopsis{
-% \method{splom}{formula}(x,
-%              data = parent.frame(),
-%              auto.key = FALSE,
-%              aspect = 1,
-%              between = list(x = 0.5, y = 0.5),
-%              panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
-%              prepanel = NULL,
-%              scales = list(),
-%              strip = TRUE,
-%              groups = NULL,
-%              xlab = "Scatter Plot Matrix",
-%              xlim,
-%              ylab = NULL,
-%              ylim,
-%              superpanel = "panel.pairs",
-%              pscales = 5,
-%              varnames,
-%              drop.unused.levels,
-%              \dots,
-%              default.scales,
-%              subset = TRUE)
-% \method{parallel}{formula}(x,
-%              data = parent.frame(),
-%              aspect = "fill",
-%              between = list(x = 0.5, y = 0.5),
-%              panel = "panel.parallel",
-%              prepanel = NULL,
-%              scales = list(),
-%              strip = TRUE,
-%              groups = NULL,
-%              xlab = NULL,
-%              xlim,
-%              ylab = NULL,
-%              ylim,
-%              varnames,
-%              drop.unused.levels,
-%              \dots,
-%              default.scales,
-%              subset = TRUE)
-% \method{splom}{data.frame}(x, data = NULL, \dots)
-% \method{parallel}{data.frame}(x, data = NULL, \dots)
-% }
-\usage{
-splom(x, \dots)
-parallel(x, \dots)
-
-
-\method{splom}{formula}(x,
+\synopsis{
+\method{splom}{formula}(formula,
              data = parent.frame(),
              auto.key = FALSE,
              aspect = 1,
              between = list(x = 0.5, y = 0.5),
              panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
-             prepanel,
-             scales,
-             strip,
-             groups,
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
              xlab = "Scatter Plot Matrix",
              xlim,
              ylab = NULL,
@@ -72,42 +25,63 @@ parallel(x, \dots)
              pscales = 5,
              varnames,
              drop.unused.levels,
-             \dots,
+             ...,
              default.scales,
              subset = TRUE)
-\method{parallel}{formula}(x,
+\method{parallel}{formula}(formula,
              data = parent.frame(),
              aspect = "fill",
              between = list(x = 0.5, y = 0.5),
              panel = "panel.parallel",
-             prepanel,
-             scales,
-             strip,
-             groups,
+             prepanel = NULL,
+             scales = list(),
+             strip = TRUE,
+             groups = NULL,
              xlab = NULL,
              xlim,
              ylab = NULL,
              ylim,
              varnames,
              drop.unused.levels,
-             \dots,
+             ...,
              default.scales,
              subset = TRUE)
-\method{splom}{data.frame}(x, data = NULL, \dots)
-\method{parallel}{data.frame}(x, data = NULL, \dots)
+\method{splom}{data.frame}(formula, data = NULL, ...)
+\method{parallel}{data.frame}(formula, data = NULL, ...)
+}
+\usage{
+splom(formula, \dots)
+parallel(formula, \dots)
+
+\method{splom}{formula}(formula,
+      data,
+      aspect = 1,
+      between = list(x = 0.5, y = 0.5),
+      panel = if (is.null(groups)) "panel.splom" else "panel.superpose",
+      superpanel = "panel.pairs",
+      pscales = 5,
+      varnames, \dots)
+\method{parallel}{formula}(formula,
+         data,
+         between = list(x = 0.5, y = 0.5),
+         panel = "panel.parallel",
+         varnames,
+         \dots)
+
+\method{splom}{data.frame}(formula, \dots)
+\method{parallel}{data.frame}(formula, \dots)
 }
 \description{
   Draw Conditional Scatter Plot Matrices and Parallel Coordinate Plots
 }
 \arguments{
-  \item{x}{
-    The object on which method dispatch is carried out.
-
-    For the \code{"formula"} method, a formula describing the structure
-    of the plot, which should be of the form \code{~ x | g1 * g2 *
-      \dots}, where \code{x} is a data frame or matrix.  Each of
+  \item{formula}{
+    For the formula method, a formula describing the structure of the
+    plot, which should be of the form \code{~ x | g1 * g2 * \dots},
+    where \code{x} is a data frame or a matrix. Each of
     \code{g1,g2,\dots} must be either factors or shingles. The
-    conditioning variables \code{g1, g2, \dots} may be omitted.
+    conditioning variables \code{g1,g2,\dots} may be omitted, in which
+    case the leading \code{~} may also be omitted.
 
     For the \code{data.frame} methods, a data frame.
   }
@@ -154,11 +128,7 @@ parallel(x, \dots)
     character vector giving the names of the p variables in x. By
     default, the column names of x.
   }
-  \item{auto.key, prepanel, scales,
-    strip, groups, xlab, xlim, ylab, ylim, drop.unused.levels,
-    default.scales, subset}{ See \code{\link{xyplot}} }
-  \item{\dots}{ Further arguments.  See corresponding entry in
-    \code{\link{xyplot}} for non-trivial details.  }
+  \item{\dots}{ other arguments}
 }
 \details{
   \code{splom} produces Scatter Plot Matrices. The role usually played by
@@ -218,4 +188,9 @@ splom(~iris[1:3]|Species, data = iris,
 parallel(~iris[1:4] | Species, iris) 
 }
 \keyword{hplot}
+
+
+
+
+
 

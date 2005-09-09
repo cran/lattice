@@ -151,25 +151,11 @@ panel.xyplot <-
 
 
 
-xyplot <- function(x, ...)
-{
-    ocall <- match.call()
-    formula <- ocall$formula
-    if (!is.null(formula))
-    {
-        warning("The 'formula' argument has been renamed to 'x'. See ?xyplot")
-        ocall$formula <- NULL
-        if (is.null(ocall$x)) ocall$x <- formula
-        eval(ocall, parent.frame())
-    }
-    else UseMethod("xyplot")
-}
-
-
+xyplot <- function(formula, ...)  UseMethod("xyplot")
 
 
 xyplot.formula <-
-    function(x,
+    function(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
              outer = !is.null(groups),
@@ -194,6 +180,7 @@ xyplot.formula <-
              subscripts = !is.null(groups),
              subset = TRUE)
 {
+
     ##dots <- eval(substitute(list(...)), data, parent.frame())
     dots <- list(...)
 
@@ -204,7 +191,7 @@ xyplot.formula <-
 
     ## FIXME: make sure this is done everywhere else
     form <-
-        latticeParseFormula(x, data, subset = subset,
+        latticeParseFormula(formula, data, subset = subset,
                             groups = groups, multiple = allow.multiple,
                             outer = outer, subscripts = TRUE,
                             drop = drop.unused.levels)
@@ -347,7 +334,7 @@ xyplot.formula <-
     cond.current.level <- rep(1, number.of.cond)
 
 
-    for (packet.number in seq(length = nplots))
+    for (panel.number in seq(length = nplots))
     {
 
         id <- !id.na
@@ -360,10 +347,10 @@ xyplot.formula <-
                  & (var <= levels(var)[[cond.current.level[i]]][2]))
             else (as.numeric(var) == cond.current.level[i])
         }
-        foo$panel.args[[packet.number]] <-
+        foo$panel.args[[panel.number]] <-
             list(x = x[id], y = y[id])
         if (subscripts)
-            foo$panel.args[[packet.number]]$subscripts <-
+            foo$panel.args[[panel.number]]$subscripts <-
                 subscr[id]
 
         cond.current.level <-

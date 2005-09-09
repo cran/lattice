@@ -191,25 +191,14 @@ lrect <-
              y = (ybottom + ytop) / 2,
              width = xright - xleft,
              height = ytop - ybottom,
-             col = "transparent",
-             border = "black",
-             lty = 1, lwd = 1, alpha = 1,
-             just = "center",
-             hjust = NULL, vjust = NULL,
+             just = "center", hjust = NULL, vjust = NULL,
              ...)
 {
-    if (is.logical(border))
-    {
-        border <- if (border) col else "transparent"
-    }
     grid.rect(x = x, y = y,
               width = width, height = height,
               default.units = "native",
               just = just, hjust = hjust, vjust = vjust,
-              gp =
-              gpar(fill = col, col = border,
-                   lty = lty, lwd = lwd,
-                   alpha = alpha))
+              gp = gpar(...))
 }
 
 

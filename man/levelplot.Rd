@@ -7,7 +7,7 @@
 \alias{levelplot.matrix}
 \alias{contourplot.matrix}
 \synopsis{
-\method{levelplot}{formula}(x,
+\method{levelplot}{formula}(formula,
              data = parent.frame(),
              allow.multiple = is.null(groups) || outer,
              outer = TRUE,
@@ -34,7 +34,7 @@
              subset = TRUE)
 
 
-\method{contourplot}{formula}(x,
+\method{contourplot}{formula}(formula,
              data = parent.frame(),
              panel = "panel.contourplot",
              cuts = 7,
@@ -43,14 +43,14 @@
              pretty = TRUE,
              region = FALSE,
              ...)
-\method{levelplot}{matrix}(x, data = NULL, aspect = "iso", ...)
-\method{contourplot}{matrix}(x, data = NULL, aspect = "iso", ...)
+\method{levelplot}{matrix}(formula, data = NULL, aspect = "iso", ...)
+\method{contourplot}{matrix}(formula, data = NULL, aspect = "iso", ...)
 }
 \usage{
-levelplot(x, \dots)
-contourplot(x, \dots)
+levelplot(formula, \dots)
+contourplot(formula, \dots)
 
-\method{levelplot}{formula}(x, data,
+\method{levelplot}{formula}(formula, data,
           panel = "panel.levelplot",
           at,
           contour = FALSE,
@@ -60,7 +60,7 @@ contourplot(x, \dots)
           \dots,
           col.regions = trellis.par.get("regions")$col,
           colorkey = region)
-\method{contourplot}{formula}(x,
+\method{contourplot}{formula}(formula,
              data = parent.frame(),
              panel = "panel.contourplot",
              cuts = 7,
@@ -70,15 +70,15 @@ contourplot(x, \dots)
              region = FALSE,
             \dots)
 
-\method{levelplot}{matrix}(x, data, aspect = "iso", \dots)
-\method{contourplot}{matrix}(x, data, aspect = "iso", \dots)
+\method{levelplot}{matrix}(formula, aspect = "iso", \dots)
+\method{contourplot}{matrix}(formula, aspect = "iso", \dots)
 
 }
 \description{
   Draw Level Plots and Contour plots.
 }
 \arguments{
-  \item{x}{
+  \item{formula}{
     for the \code{formula} method, a formula of the form \code{z ~ x * y
       | g1 * g2 * \dots}, where \code{z} is a numeric response, and
     \code{x}, \code{y} are numeric values evaluated on a rectangular
@@ -92,7 +92,7 @@ contourplot(x, \dots)
     spaced.
 
     Both \code{levelplot} and \code{wireframe} have methods for
-    \code{matrix} objects, in which case \code{x} provides the
+    \code{matrix} objects, in which case \code{formula} provides the
     \code{z} vector described above, while its rows and columns are
     interpreted as the \code{x} and \code{y} vectors respectively.  This
     is similar to the form used in \code{filled.contour} and
@@ -102,8 +102,7 @@ contourplot(x, \dots)
     For the \code{formula} methods, an optional data frame in which
     variables in the formula (as well as \code{groups} and
     \code{subset}, if any) are to be evaluated.  By default, the
-    environment where the function was called from is used.  Ignored
-    with a warning in other cases.
+    environment where the function was called from is used.
   }
   \item{panel}{
     panel function used to create the display, as described in

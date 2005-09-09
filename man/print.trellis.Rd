@@ -142,10 +142,10 @@ print(p2, position = c(.5,.75,1,1), more=FALSE)
 ## repeat same plot, with different polynomial fits in each panel
 xyplot(Armed.Forces ~ Year, longley, index.cond = list(rep(1, 6)),
        layout = c(3, 2),
-       panel = function(x, y, panel.number, ...)
+       panel = function(x, y, panel.counter, ...)
        {
            panel.xyplot(x, y, ...)
-           fm <- lm(y ~ poly(x, panel.number))
+           fm <- lm(y ~ poly(x, panel.counter))
            llines(x, predict(fm))
        })
 

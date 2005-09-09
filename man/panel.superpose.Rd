@@ -9,55 +9,43 @@
   graphical parameters for each distinct value of the grouping variable.
 }
 
-% \synopsis{
-% panel.superpose(x, y = NULL, subscripts, groups,
-%              panel.groups = "panel.xyplot",
-%              col,
-%              col.line = superpose.line$col,
-%              col.symbol = superpose.symbol$col,
-%              pch = superpose.symbol$pch,
-%              cex = superpose.symbol$cex, 
-%              font = superpose.symbol$font,
-%              fontface = superpose.symbol$fontface,
-%              fontfamily = superpose.symbol$fontfamily,
-%              lty = superpose.line$lty,
-%              lwd = superpose.line$lwd,
-%              alpha = superpose.symbol$alpha,
-%              type = "p",
-%              \dots)
-% panel.superpose.2(x, y = NULL, subscripts, groups,
-%                   panel.groups = "panel.xyplot",
-%                   col,
-%                   col.line = superpose.line$col,
-%                   col.symbol = superpose.symbol$col,
-%                   pch = superpose.symbol$pch,
-%                   cex = superpose.symbol$cex, 
-%                   font = superpose.symbol$font, 
-%                   fontface = superpose.symbol$fontface, 
-%                   fontfamily = superpose.symbol$fontfamily, 
-%                   lty = superpose.line$lty,
-%                   lwd = superpose.line$lwd,
-%                   alpha = superpose.symbol$alpha,
-%                   type = "p",
-%                   \dots)
-% }
-\usage{
+\synopsis{
 panel.superpose(x, y = NULL, subscripts, groups,
-                panel.groups = "panel.xyplot",
-                col, col.line, col.symbol,
-                pch, cex, font,
-                fontface, fontfamily,
-                lty, lwd, alpha,
-                type = "p",
-                \dots)
+             panel.groups = "panel.xyplot",
+             col,
+             col.line = superpose.line$col,
+             col.symbol = superpose.symbol$col,
+             pch = superpose.symbol$pch,
+             cex = superpose.symbol$cex, 
+             font = superpose.symbol$font,
+             fontface = superpose.symbol$fontface,
+             fontfamily = superpose.symbol$fontfamily,
+             lty = superpose.line$lty,
+             lwd = superpose.line$lwd,
+             alpha = superpose.symbol$alpha,
+             type = "p",
+             ...)
 panel.superpose.2(x, y = NULL, subscripts, groups,
                   panel.groups = "panel.xyplot",
-                  col, col.line, col.symbol,
-                  pch, cex, font, 
-                  fontface, fontfamily, 
-                  lty, lwd, alpha,
+                  col,
+                  col.line = superpose.line$col,
+                  col.symbol = superpose.symbol$col,
+                  pch = superpose.symbol$pch,
+                  cex = superpose.symbol$cex, 
+                  font = superpose.symbol$font, 
+                  fontface = superpose.symbol$fontface, 
+                  fontfamily = superpose.symbol$fontfamily, 
+                  lty = superpose.line$lty,
+                  lwd = superpose.line$lwd,
+                  alpha = superpose.symbol$alpha,
                   type = "p",
-                  \dots)
+                  ...)
+}
+\usage{
+panel.superpose(x, y, panel.groups = "panel.xyplot",
+                subscripts, groups, type = "p", ...)
+panel.superpose.2(x, y, panel.groups = "panel.xyplot",
+                  subscripts, groups, type = "p", ...)
 }
 \arguments{
   \item{x,y}{ coordinates of the points to be displayed}
@@ -96,15 +84,13 @@ panel.superpose.2(x, y = NULL, subscripts, groups,
     \code{type} causes a grid to be drawn, and all such occurrences are
     removed before \code{type} is passed on to \code{panel.groups}.
   }
-  \item{col, col.line, col.symbol, pch, cex, font, fontface, fontfamily,
-    lty, lwd, alpha}{ graphical parameters, replicated to be as long as
-    the number of groups, and eventually ultimately passed down to
-    \code{panel.groups}. }
-  
-  \item{\dots}{ other arguments, passed down to \code{panel.groups}.  }
-
+  \item{\dots}{ other arguments (mostly graphical parameters, replicated
+    to be as long as the number of groups), ultimately passed down to
+    \code{panel.xyplot}. In particular, colour can be specified using 3
+    arguments (\code{col}, \code{col.line} and \code{col.symbol}), as
+    described in \code{\link{panel.xyplot}}.
+  }
 }
-
 \seealso{
   Different functions when used as \code{panel.groups} gives different
   types of plots, for example \code{\link{panel.xyplot}},

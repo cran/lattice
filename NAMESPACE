@@ -13,21 +13,19 @@ importFrom(stats, as.formula, density, fitted.values, loess.smooth,
            median, ppoints, qnorm, residuals, update)
 
 
-export(
-       ## "[.shingle",
-       as.factorOrShingle, as.shingle, banking, barchart,
+export("[.shingle", as.factorOrShingle, as.shingle, banking, barchart,
        bwplot, canonical.theme, cloud, col.whitebg, Rows,
 
 ### construct.scales,
 
        contourplot, densityplot, dotplot, draw.colorkey, draw.key,
-       equal.count, histogram, is.shingle, 
+       equal.count, histogram, is.shingle, larrows,
 
        latticeParseFormula,
 
-       llines, lplot.xy, lpoints, lsegments, ltext, lrect, larrows,
+       levelplot, llines, lplot.xy, lpoints, lsegments, lset, ltext,
 
-       ltransform3dMatrix, ltransform3dto3d, levelplot,
+       ltransform3dMatrix, ltransform3dto3d,
 
        oneway, panel.3dscatter, panel.3dwire, panel.abline,
        panel.barchart, panel.bwplot, panel.violin, panel.cloud,
@@ -36,8 +34,8 @@ export(
        panel.contourplot, panel.linejoin, panel.identify,
        panel.lmline, panel.loess, panel.mathdensity, panel.pairs,
        panel.parallel, panel.qq, panel.qqmath, panel.qqmathline,
-       panel.splom, diag.panel.splom, panel.stripplot,
-       panel.superpose, panel.axis, panel.superpose.2,
+       panel.splom, panel.stripplot, panel.superpose, panel.axis,
+       panel.superpose.2,
 
 
        prepanel.tmd.default, prepanel.tmd.qqmath, panel.tmd.default,
@@ -49,13 +47,13 @@ export(
        trellis.device, trellis.par.get, trellis.par.set, wireframe,
        xyplot,
 
-       do.breaks, lattice.getOption, lattice.options,
-       trellis.currentLayout, trellis.focus, trellis.unfocus,
-       trellis.switchFocus, trellis.panelArgs, trellis.vpname,
-       trellis.grobname,
+       do.breaks,
+       lattice.getOption, lattice.options, trellis.currentLayout,
+       trellis.focus, trellis.unfocus, trellis.switchFocus,
+       trellis.panelArgs, trellis.vpname, trellis.grobname,
 
        panel.arrows, panel.segments, panel.lines, panel.points,
-       panel.text, panel.rect, current.panel.limits,
+       panel.text, current.panel.limits,
 
        strip.custom, trellis.last.object,
 

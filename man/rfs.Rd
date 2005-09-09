@@ -5,15 +5,13 @@
   Plots fitted values and residuals (via qqmath) on a common scale for
   any object that has methods for fitted values and residuals. 
 }
-% \synopsis{
-% rfs(model, layout=c(2, 1), xlab="f-value", ylab=NULL,
-%     distribution = qunif,
-%     panel, prepanel, strip, \dots)
-% }
-\usage{
+\synopsis{
 rfs(model, layout=c(2, 1), xlab="f-value", ylab=NULL,
     distribution = qunif,
-    panel, prepanel, strip, \dots)
+    panel, prepanel, strip, ...)
+}
+\usage{
+rfs(model, layout=c(2, 1), xlab="f-value", distribution = qunif,...)
 }
 \arguments{
   \item{model}{a fitted model object with methods \code{fitted.values}
@@ -21,8 +19,7 @@ rfs(model, layout=c(2, 1), xlab="f-value", ylab=NULL,
   \item{layout}{default layout is c(2,1)  }
   \item{xlab}{defaults to \code{"f.value"} }
   \item{distribution}{the distribution function to be used for \code{qqmath}}
-  \item{ylab, panel, prepanel, strip}{ See \code{\link{xyplot}} }
-  \item{\dots}{ other arguments, passed on to \code{\link{qqmath}}.  }
+  \item{\dots}{other arguments}
 }
 \value{
 

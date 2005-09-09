@@ -5,38 +5,39 @@
   This is a panel function that can create a violin plot.  It is
   typically used in a high-level call to \code{bwplot}.
 }
-% \synopsis{
-% panel.violin(x, y, box.ratio = 1, horizontal = TRUE,
+\synopsis{
+panel.violin(x, y, box.ratio = 1, horizontal = TRUE,
 
-%              alpha = bar.fill$alpha,
-%              border = bar.fill$border,
-%              lty = bar.fill$lty,
-%              lwd = bar.fill$lwd,
-%              col = bar.fill$col,
+             alpha = bar.fill$alpha,
+             border = bar.fill$border,
+             lty = bar.fill$lty,
+             lwd = bar.fill$lwd,
+             col = bar.fill$col,
 
-%              varwidth = FALSE,
+             varwidth = FALSE,
 
-%              bw = NULL,
-%              adjust = NULL,
-%              kernel = NULL,
-%              window = NULL,
-%              width = NULL,
-%              n = 50,
-%              from = NULL,
-%              to = NULL,
-%              cut = NULL,
-%              na.rm = TRUE,
+             bw = NULL,
+             adjust = NULL,
+             kernel = NULL,
+             window = NULL,
+             width = NULL,
+             n = 50,
+             from = NULL,
+             to = NULL,
+             cut = NULL,
+             na.rm = TRUE,
              
-%              \dots)
-% }
+             ...)
+}
 \usage{
 
-panel.violin(x, y, box.ratio = 1, horizontal = TRUE,
-             alpha, border, lty, lwd, col,
+panel.violin(x, y,
+             box.ratio = 1,
+             horizontal = TRUE,
              varwidth = FALSE,
-             bw, adjust, kernel, window, 
-             width, n = 50, from, to, cut,
-             na.rm, \dots)
+             alpha, border, lty, lwd, col,
+             \dots)
+
 }
 \arguments{
   \item{x, y}{
@@ -64,8 +65,6 @@ panel.violin(x, y, box.ratio = 1, horizontal = TRUE,
     \code{box.ratio}).  If \code{TRUE}, densities across violins will
     have comparable scale.
   }
-  \item{bw, adjust, kernel, window, width, n, from, to, cut, na.rm}{
-    arguments to \code{\link{density}}, passed on as appropriate }
   \item{\dots}{
     arguments passed on to \code{density}.
   }

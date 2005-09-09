@@ -15,21 +15,21 @@
   \code{tmd} on the object created by calling \code{xyplot} on that
   formula.
 }
-% \synopsis{
-% prepanel.tmd.qqmath(x,
-%              f.value = NULL,
-%              distribution = qnorm,
-%              qtype = 7,
-%              groups = NULL,
-%              subscripts, \dots)
-% panel.tmd.qqmath(x,
-%              f.value = NULL,
-%              distribution = qnorm,
-%              qtype = 7,
-%              groups = NULL, 
-%              subscripts, \dots)
-% panel.tmd.default(x, y, groups = NULL, \dots)
-% }
+\synopsis{
+prepanel.tmd.qqmath(x,
+             f.value = NULL,
+             distribution = qnorm,
+             qtype = 7,
+             groups = NULL,
+             subscripts, ...)
+panel.tmd.qqmath(x,
+             f.value = NULL,
+             distribution = qnorm,
+             qtype = 7,
+             groups = NULL, 
+             subscripts, ...)
+panel.tmd.default(x, y, groups = NULL, ...)
+}
 \usage{
 tmd(object, \dots)
 
@@ -40,31 +40,29 @@ tmd(object, \dots)
     prepanel, 
     \dots)
 
-prepanel.tmd.qqmath(x,
-             f.value = NULL,
-             distribution = qnorm,
-             qtype = 7,
-             groups = NULL,
-             subscripts, \dots)
-panel.tmd.qqmath(x,
-             f.value = NULL,
-             distribution = qnorm,
-             qtype = 7,
-             groups = NULL, 
-             subscripts, \dots)
-panel.tmd.default(x, y, groups = NULL, \dots)
+\method{tmd}{trellis}(object, data, \dots)
+
 prepanel.tmd.default(x, y, \dots)
+prepanel.tmd.qqmath(x, \dots)
+panel.tmd.default(x, y, \dots)
+panel.tmd.qqmath(x, \dots)
 }
 \arguments{
   \item{object}{ An object of class \code{"trellis"} returned by
-    \code{xyplot}, \code{qq} or \code{qqmath}.  }
+    \code{xyplot}, \code{qq} or \code{qqmath}
+  }
+  \item{data}{ data used in implicit \code{xyplot} call}
   \item{xlab}{ x label}
   \item{ylab}{ y label}
-  \item{panel}{ panel function to be used.  See details below.  }
-  \item{prepanel}{ prepanel function.  See details below.  }
-  \item{f.value, distribution, qtype}{see \code{\link{panel.qqmath}}.  }
-  \item{groups, subscripts}{see \code{\link{xyplot}}.  }
-  \item{x, y}{ data as passed to panel functions in original call.  }
+  \item{panel}{
+    panel function to be used.  See details below.
+  }
+  \item{prepanel}{
+    prepanel function.  See details below.
+  }
+  \item{x, y}{
+    data as passed to panel functions in original call.
+  }
   \item{\dots}{ other arguments}
 }
 \details{

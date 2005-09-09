@@ -69,7 +69,7 @@ as.factorOrShingle(x, subset, drop)
   \code{co.intervals}
 
   \code{shingle} creates a shingle using the given \code{intervals}. If
-  \code{intervals} is a vector, these are used to form 0 length
+  \code{intervels} is a vector, these are used to form 0 length
   intervals.
 
   \code{as.shingle} returns \code{shingle(x)} if \code{x} is not a

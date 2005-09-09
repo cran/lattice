@@ -4,28 +4,25 @@
 \description{
   This is the default panel function for \code{bwplot}.
 }
-% \synopsis{
-% panel.bwplot(x, y, box.ratio = 1,
-%              horizontal = TRUE,
-%              pch = box.dot$pch,
-%              col = box.dot$col,
-%              cex = box.dot$cex,
-%              font = box.dot$font,
-%              fontfamily = box.dot$fontfamily,
-%              fontface = box.dot$fontface, 
-%              fill = box.rectangle$fill,
-%              varwidth = FALSE,
-%              levels.fos = if (horizontal) sort(unique(y)) else sort(unique(x)),
-%              coef = 1.5, do.out = TRUE, \dots)
-% }
-\usage{
+\synopsis{
 panel.bwplot(x, y, box.ratio = 1,
              horizontal = TRUE,
-             pch, col, cex, 
-             font, fontfamily, fontface, 
-             fill, varwidth = FALSE,
-             levels.fos, coef = 1.5,
-             do.out = TRUE, \dots)
+             pch = box.dot$pch,
+             col = box.dot$col,
+             cex = box.dot$cex,
+             font = box.dot$font,
+             fontfamily = box.dot$fontfamily,
+             fontface = box.dot$fontface, 
+             fill = box.rectangle$fill,
+             varwidth = FALSE,
+             levels.fos = if (horizontal) sort(unique(y)) else sort(unique(x)),
+             coef = 1.5, do.out = TRUE, ...)
+}
+\usage{
+panel.bwplot(x, y,
+             box.ratio = 1, horizontal,
+             pch, col, cex, fill = "transparent",
+             varwidth = FALSE, coef = 1.5, do.out = TRUE, ...)
 }
 \arguments{
   \item{x, y}{ numeric vector or factor. Boxplots drawn for each unique value of
@@ -38,18 +35,13 @@ panel.bwplot(x, y, box.ratio = 1,
     accordingly. See documentation of \code{\link{bwplot}} for a fuller
     explanation.
   }
-  \item{pch, col, cex, font, fontfamily, fontface}{ graphical parameters
-    controlling the dot.  \code{pch="|"} is treated specially, by
-    replacing the dot with a line (similar to \code{\link{boxplot}})
-  }
+  \item{pch, col, cex}{ graphical parameters controlling the dot}
   \item{fill}{ color to fill the boxplot}
   \item{varwidth}{ logical. If TRUE, widths of boxplots are proportional
     to the number of points used in creating it.}
-  \item{coef, do.out}{ passed to \code{\link{boxplot.stats}}}
-  \item{levels.fos}{ numeric values corresponding to positions of the
-    factor or shingle variable.  For internal use. }
+  \item{coef, do.out}{ passed to \code{boxplot.stats}}
   \item{\dots}{
-    further arguments, ignored.
+    more graphical parameters controlling the display can be supplied
   }
 }
 \details{

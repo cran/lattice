@@ -20,28 +20,25 @@ panel.xyplot(x, y, type="p",
              lty = plot.line$lty,
              cex = plot.symbol$cex,
              lwd = plot.line$lwd,
-             horizontal = FALSE, \dots)
-panel.splom(\dots)
-panel.qq(\dots)
+             horizontal = FALSE, ...)
+panel.splom(...)
+panel.qq(...)
 }
 \arguments{
   \item{x,y}{ variables to be plotted in the scatterplot}
   \item{type}{ character vector consisting of one or more of the
     following: \code{"p"}, \code{"l"}, \code{"h"}, \code{"b"},
-    \code{"o"}, \code{"s"}, \code{"S"}, \code{"r"}, \code{"a"},
-    \code{"g"}, \code{"smooth"}.  If type has more than one element, an
-    attempt is made to combine the effect of each of the components.
+    \code{"o"}, \code{"s"}, \code{"S"}, \code{"r"}, \code{"g"},
+    \code{"smooth"}. If type has more than one element, an attempt is
+    made to combine the effect of each of the components.
 
     The behaviour if any of the first six are included in \code{type} is
     similar to the effect of \code{type} in \code{\link{plot}} (type
     \code{"b"} is actually the same as \code{"o"}).  \code{"r"} adds a
     regression line (same as \code{\link{panel.lmline}}, except for
     default graphical parameters), and \code{"smooth"} adds a lowess fit
-    (same as \code{\link{panel.loess}}).  \code{"g"} adds a reference
-    grid using \code{\link{panel.grid}} in the background.  \code{"a"}
-    has the effect of calling \code{\link{panel.linejoin}}, which can be
-    useful for creating interaction plots.  The effect of several of
-    these specifications depend on the value of \code{horizontal}.
+    (same as \code{\link{panel.loess}}). \code{"g"} adds a reference
+    grid using \code{\link{panel.grid}} in the background.
 
     See \code{example(xyplot)} and \code{demo(lattice)} for examples.
   }
@@ -60,18 +57,15 @@ panel.qq(\dots)
     "smooth", these are passed on to \code{panel.lmline} and
     \code{panel.loess} respectively.
   }
-  \item{horizontal}{ logical. Controls orientation for certain
-    \code{type}'s, e.g.  one of \code{"h"}, \code{"s"} or \code{"S"}}. }
-
-
-\details{
+  \item{horizontal}{ logical. Controls orientation when \code{type} is
+    one of \code{"h"}, \code{"s"} or \code{"S"}} } \details{
 
   Creates scatterplot of \code{x} and \code{y}, with various
   modifications possible via the type argument. \code{panel.qq} draws a
   45 degree line before calling \code{panel.xyplot}.
 
   Note that most of the arguments controlling the display can be
-  supplied directly to the high-level (e.g. \code{\link{xyplot}}) call.
+  supplied directly to the high-level (e.g. \code{xyplot}) call.
 
 }
 \author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
