@@ -5,54 +5,74 @@
 \alias{lpoints}
 \alias{lsegments}
 \alias{ltext}
+\alias{lrect}
 \alias{panel.arrows}
 \alias{panel.lines}
 \alias{panel.points}
 \alias{panel.segments}
 \alias{panel.text}
+\alias{panel.rect}
 \title{Lattice Replacements of base graphics functions}
 \description{
   These functions are intended to replace some commonly used base R
   graphics functions in panel functions.
 }
-\synopsis{
+% \synopsis{
+% larrows(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
+%         angle = 30, code = 2, length = 0.25, unit = "inches",
+%         col = add.line$col, alpha = add.line$alpha, lty =
+%         add.line$lty, lwd = add.line$lwd, fill = NULL, \dots)
+% llines(x, y = NULL, type = "l", col = plot.line$col,
+%     alpha = plot.line$alpha, 
+%     lty = plot.line$lty, 
+%     lwd = plot.line$lwd, \dots)
+% lplot.xy(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
+%          font = 1, fontfamily = NULL, fontface = NULL,
+%          col.line = col, alpha = 0, \dots)  
+% lpoints(x, y = NULL, type = "p", col = plot.symbol$col,
+%         pch = plot.symbol$pch, 
+%         alpha = plot.symbol$alpha, 
+%         font = plot.symbol$font,
+%         fontfamily  = plot.symbol$fontfamily,
+%         fontface = plot.symbol$fontface,
+%         cex = plot.symbol$cex, \dots)  
+% lsegments(x0, y0, x1, y1, x2, y2, col = add.line$col,
+%     alpha = add.line$alpha, 
+%     lty = add.line$lty, 
+%     lwd = add.line$lwd, \dots)
+% ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
+%     alpha = add.text$alpha, 
+%     cex = add.text$cex, srt = 0,
+%     font, fontfamily = add.text$fontfamily,
+%     fontface = add.text$fontface, adj = c(0.5, 0.5), pos = NULL,
+%     offset = 0.5, \dots)  
+% }
+\usage{
 larrows(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
         angle = 30, code = 2, length = 0.25, unit = "inches",
-        col = add.line$col, alpha = add.line$alpha, lty =
-        add.line$lty, lwd = add.line$lwd, fill = NULL, \dots)
-llines(x, y = NULL, type = "l", col = plot.line$col,
-    alpha = plot.line$alpha, 
-    lty = plot.line$lty, 
-    lwd = plot.line$lwd, \dots)
-lplot.xy(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
-         font = 1, fontfamily = NULL, fontface = NULL,
-         col.line = col, alpha = 0, \dots)  
-lpoints(x, y = NULL, type = "p", col = plot.symbol$col,
-        pch = plot.symbol$pch, 
-        alpha = plot.symbol$alpha, 
-        font = plot.symbol$font,
-        fontfamily  = plot.symbol$fontfamily,
-        fontface = plot.symbol$fontface,
-        cex = plot.symbol$cex, \dots)  
-lsegments(x0, y0, x1, y1, x2, y2, col = add.line$col,
-    alpha = add.line$alpha, 
-    lty = add.line$lty, 
-    lwd = add.line$lwd, \dots)
-ltext(x, y = NULL, labels = seq(along = x), col = add.text$col,
-    alpha = add.text$alpha, 
-    cex = add.text$cex, srt = 0,
-    font, fontfamily = add.text$fontfamily,
-    fontface = add.text$fontface, adj = c(0.5, 0.5), pos = NULL,
-    offset = 0.5, \dots)  
-}
-\usage{
-larrows(x0, y0, x1, y1, length = 0.25, unit = "inches", \dots)
-llines(x, y, \dots)
-lplot.xy(xy, \dots)
-lpoints(x, \dots)
-lsegments(x0, y0, x1, y1, \dots)
-lsegments(x1, y1, x2, y2, \dots)
-ltext(x, \dots)
+        col, alpha, lty, lwd, fill = NULL, \dots)
+llines(x, y = NULL, type = "l", col, alpha, lty, lwd, \dots)
+lplot.xy(xy, type, pch, lty, col, cex, lwd,
+         font, fontfamily, fontface, col.line, alpha, \dots)
+lpoints(x, y = NULL, type = "p", col, pch, alpha,
+        font, fontfamily, fontface, cex, \dots)  
+lsegments(x0, y0, x1, y1, x2, y2,
+          col, alpha, lty, lwd, \dots)
+ltext(x, y = NULL, labels = seq(along = x),
+      col, alpha, cex, srt = 0,
+      font, fontfamily, fontface,
+      adj = c(0.5, 0.5), pos = NULL, offset = 0.5, \dots)  
+lrect(xleft, ybottom, xright, ytop,
+      x = (xleft + xright) / 2,
+      y = (ybottom + ytop) / 2,
+      width = xright - xleft,
+      height = ytop - ybottom,
+      col = "transparent",
+      border = "black",
+      lty = 1, lwd = 1, alpha = 1,
+      just = "center",
+      hjust = NULL, vjust = NULL,
+      \dots)
 panel.arrows(\dots)
 panel.lines(\dots)
 panel.points(\dots)
@@ -60,25 +80,30 @@ panel.segments(\dots)
 panel.text(\dots)
 }
 \arguments{
-  \item{ x, y, x0, y0, x1, y1, x2, y2, xy}{ locations. x2, y2 present
-    for S compatibility
-  }
+  \item{ x, y, x0, y0, x1, y1, x2, y2, xy}{ locations. \code{x2} and
+    \code{y2} are available for for S compatibility.  }
   \item{length, unit}{
     determines extent of arrow head.  \code{length} specifies the length
     in terms of \code{unit}, which can be any valid grid unit as long as
     it doesn't need a \code{data} argument.  \code{unit} defaults to
     inches, which is the only option in the base version of the
-    function, \code{\link{arrows}}.
-  }
-  \item{\dots}{
-    other arguments, including ones to control graphical parameters like
-    color, line type, etc. For devices that support alpha-transparency,
-    a numeric argument \code{alpha} between 0 and 1 can be supplied. Be
-    careful with this, since for devices that do not support
-    alpha-transparency, nothing will be drawn at all if this is set to
-    anything other than 0.
-  }
+    function, \code{\link{arrows}}.  }
+  \item{angle, code, type, labels, srt, adj, pos, offset}{ arguments
+    controlling behaviour.  See respective base functions for details. }
+  \item{col, alpha, lty, lwd, fill, pch, cex, font, fontfamily,
+    fontface, col.line, border}{graphical parameters.  For devices that
+    support alpha-transparency, a numeric argument \code{alpha} between
+    0 and 1 can controls transparency.  Be careful with this, since for
+    devices that do not support alpha-transparency, nothing will be
+    drawn at all if this is set to anything other than 0.  }
+  \item{xleft, ybottom, xright, ytop}{ see \code{\link{rect}}}
+  \item{width, height, just, hjust, vjust}{ finer control over
+    rectangles, see \code{\link[grid:grid.rect]{grid.rect}} }
+  \item{\dots}{ extra arguments, passed on to lower level functions as
+    appropriate.  }
 }
+
+
 \details{
   These functions are meant to be grid replacements of the corresponding
   base R graphics functions, to allow existing Trellis code to be used
@@ -96,9 +121,11 @@ panel.text(\dots)
   There is a new \code{type="H"} option wherever appropriate, which is
   similar to \code{type="h"}, but with horizontal lines.
 }
-\seealso{\code{\link{points}}, \code{\link{lines}},
+
+\seealso{\code{\link{points}}, \code{\link{lines}}, \code{\link{rect}},
   \code{\link{text}}, \code{\link{segments}}, \code{\link{arrows}},
   \code{\link{Lattice}}
 }
+
 \author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
 \keyword{dplot}

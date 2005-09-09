@@ -15,8 +15,7 @@ lattice.options         Low-level Options Controlling Behaviour of
                         Lattice
 latticeParseFormula     Parse Trellis formula
 levelplot               Level Plots
-llines                  Lattice Replacements of base graphics
-                        functions
+llines                  Lattice Replacements of base graphics functions
 lset                    Interface to modify Trellis Settings -
                         Deprecated
 make.groups             Grouped data from multiple vectors

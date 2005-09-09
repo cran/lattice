@@ -49,7 +49,9 @@ panel.splom <-
 
 
 diag.panel.splom <-
-    function(varname = NULL, limits, at = NULL, lab = NULL,
+    function(x = NULL,
+
+             varname = NULL, limits, at = NULL, lab = NULL,
              draw = TRUE,
 
              varname.col = add.text$col,
@@ -142,6 +144,7 @@ diag.panel.splom <-
 
 
 
+## FIXME: add alpha pars
 
 panel.pairs <-
     function(z,
@@ -156,11 +159,11 @@ panel.pairs <-
              subscripts,
              pscales = 5,
 
+             packet.number = 0,  ## should always be supplied
              panel.number = 0,  ## should always be supplied
-             panel.counter = 0,  ## should always be supplied
 
              prepanel.limits = function(x) if (is.factor(x)) levels(x) else
-             extend.limits(range(as.numeric(x), na.rm = TRUE)),
+             extend.limits(range(as.numeric(x), finite = TRUE)),
 
              varname.col = add.text$col,
              varname.cex = add.text$cex,
@@ -177,7 +180,8 @@ panel.pairs <-
              axis.line.col = axis.line$col,
              axis.line.lty = axis.line$lty,
              axis.line.lwd = axis.line$lwd,
-
+             ## axis.line.alpha = axis.line$alpha,
+             
              ...)
 {
     lower.panel <- 
@@ -267,10 +271,13 @@ panel.pairs <-
                     }
                         
 
-                    diag.panel(varname = colnames(z)[i],
+                    diag.panel(x = z[subscripts, j],
+                               varname = colnames(z)[i],
                                limits = lim[[i]],
                                at = axls, lab = labels,
                                draw = draw,
+                               panel.number = panel.number,
+                               packet.number = packet.number,
 
                                varname.col = varname.col,
                                varname.cex = varname.cex,
@@ -286,28 +293,33 @@ panel.pairs <-
 
                                axis.line.col = axis.line.col,
                                axis.line.lty = axis.line.lty,
-                               axis.line.lwd = axis.line.lwd)
+                               axis.line.lwd = axis.line.lwd,
+
+                               ...)
 
                     grid.rect(gp =
                               gpar(col = axis.line.col,
                                    lty = axis.line.lty,
-                                   lwd = axis.line.lwd))
+                                   lwd = axis.line.lwd,
+                                   fill = "transparent"))
 
                 }
                 else
                 {
                     pargs <-
                         if (!panel.subscripts)
-                            c(list(x = as.numeric(z[subscripts, j]),
-                                   y = as.numeric(z[subscripts, i]),
-                                   panel.number = panel.number),
+                            c(list(x = z[subscripts, j],
+                                   y = z[subscripts, i],
+                                   panel.number = panel.number,
+                                   packet.number = packet.number),
                               list(...))
                         else
-                            c(list(x = as.numeric(z[subscripts, j]),
-                                   y = as.numeric(z[subscripts, i]),
+                            c(list(x = z[subscripts, j],
+                                   y = z[subscripts, i],
                                    groups = groups,
                                    subscripts = subscripts,
-                                   panel.number = panel.number),
+                                   panel.number = panel.number,
+                                   packet.number = packet.number),
                               list(...))
 
                     if (!("..." %in% names(formals(panel))))
@@ -323,7 +335,8 @@ panel.pairs <-
                     grid.rect(gp =
                               gpar(col = axis.line.col,
                                    lty = axis.line.lty,
-                                   lwd = axis.line.lwd))
+                                   lwd = axis.line.lwd,
+                                   fill = "transparent"))
                 }
                 upViewport()
             }
@@ -333,17 +346,29 @@ panel.pairs <-
 
 
 
-splom <- function(formula, ...)  UseMethod("splom")
+splom <- function(x, ...)
+{
+    ocall <- match.call()
+    formula <- ocall$formula
+    if (!is.null(formula))
+    {
+        warning("The 'formula' argument has been renamed to 'x'. See ?xyplot")
+        ocall$formula <- NULL
+        if (!("x" %in% names(ocall))) ocall$x <- formula else warning("'formula' overridden by 'x'")
+        eval(ocall, parent.frame())
+    }
+    else UseMethod("splom")
+}
 
 
 splom.data.frame <-
-    function(formula, data = NULL, ...)
+    function(x, data = NULL, ...)
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit data specification ignored")
-    ccall$data <- list(x = formula)
-    ccall$formula <- ~x
+    ccall$data <- list(x = x)
+    ccall$x <- ~x
     ccall[[1]] <- as.name("splom")
     ans <- eval(ccall, parent.frame())
     ans$call <- ocall
@@ -353,7 +378,7 @@ splom.data.frame <-
 
 
 splom.formula <-
-    function(formula,
+    function(x,
              data = parent.frame(),
              auto.key = FALSE,
              aspect = 1,
@@ -383,36 +408,15 @@ splom.formula <-
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
 
-    ## right.name <- deparse(substitute(formula))
-    ## formula <- eval(substitute(formula), data, parent.frame())
+    ## right.name <- deparse(substitute(x))
+    ## x <- eval(substitute(x), data, parent.frame())
+
     form <-
-        ## if (inherits(formula, "formula"))
-        latticeParseFormula(formula, data,
+        latticeParseFormula(x, data,
                             subset = subset, groups = groups,
                             multiple = FALSE,
                             outer = FALSE, subscripts = TRUE,
                             drop = drop.unused.levels)
-##         else {
-##             if (is.matrix(formula)) {
-##                 list(left = NULL,
-##                      right = as.data.frame(formula)[subset,],
-##                      condition = NULL,
-##                      left.name = "",
-##                      right.name =  right.name,
-##                      groups = groups,
-##                      subscr = seq(length = nrow(formula))[subset])
-##             }
-##             else if (is.data.frame(formula)) {
-##                 list(left = NULL,
-##                      right = formula[subset,],
-##                      condition = NULL,
-##                      left.name = "",
-##                      right.name =  right.name,
-##                      groups = groups,
-##                      subscr = seq(length = nrow(formula))[subset])
-##             }
-##             else stop("invalid formula")
-##         }
 
 
     ## We need to be careful with subscripts here. It HAS to be there,
@@ -560,7 +564,7 @@ splom.formula <-
     cond.current.level <- rep(1, number.of.cond)
 
 
-    for (panel.number in seq(length = nplots))
+    for (packet.number in seq(length = nplots))
     {
 
         ##id <- !id.na  WHY ?
@@ -575,7 +579,7 @@ splom.formula <-
             else (as.numeric(var) == cond.current.level[i])
         }
 
-        foo$panel.args[[panel.number]] <-
+        foo$panel.args[[packet.number]] <-
             list(subscripts = subscr[id])
 
         cond.current.level <-
@@ -584,19 +588,20 @@ splom.formula <-
     }
 
 
-    more.comp <- c(limits.and.aspect(prepanel.default.splom,
-                                     prepanel = prepanel, 
-                                     have.xlim = have.xlim, xlim = xlim, 
-                                     have.ylim = have.ylim, ylim = ylim, 
-                                     x.relation = foo$x.scales$relation,
-                                     y.relation = foo$y.scales$relation,
-                                     panel.args.common = foo$panel.args.common,
-                                     panel.args = foo$panel.args,
-                                     aspect = aspect,
-                                     nplots = nplots,
-                                     x.axs = foo$x.scales$axs,
-                                     y.axs = foo$y.scales$axs),
-                   cond.orders(foo))
+    more.comp <-
+        c(limits.and.aspect(prepanel.default.splom,
+                            prepanel = prepanel, 
+                            have.xlim = have.xlim, xlim = xlim, 
+                            have.ylim = have.ylim, ylim = ylim, 
+                            x.relation = foo$x.scales$relation,
+                            y.relation = foo$y.scales$relation,
+                            panel.args.common = foo$panel.args.common,
+                            panel.args = foo$panel.args,
+                            aspect = aspect,
+                            nplots = nplots,
+                            x.axs = foo$x.scales$axs,
+                            y.axs = foo$y.scales$axs),
+          cond.orders(foo))
     foo[names(more.comp)] <- more.comp
 
 
