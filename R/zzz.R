@@ -33,7 +33,7 @@ assign("last.object",     NULL,   env = .LatticeEnv)
 
 .onLoad <- function(libname, pkgname) 
 {
-    library.dynam("lattice", pkgname, libname)
+    library.dynam("lattice", pkgname, libname )
     lattice.options(.defaultLatticeOptions())
     lattice.setStatus(.defaultLatticeStatus())
 }
