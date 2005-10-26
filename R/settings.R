@@ -75,12 +75,12 @@ canonical.theme <- function(name = "null device", color = TRUE)
                   "#A9E2FF", "#FFFFC3", "#FF8C8A", "#AAAAAA",
                   "#909090")
     }
-    else ## b&w colors, same for all devices (8:16 actually unnecessary)
+    else ## b&w colors, same for all devices (8:15 mostly unnecessary)
         can.col <-
             c("#000000", "#999999", "#4C4C4C", "#E6E6E6", "#F2F2F2",
               "#B2B2B2", "#000000", "#030303", "#050505", "#080808",
               "#0A0A0A", "#0D0D0D", "#0F0F0F", "#121212", "#151515",
-              "#171717", "transparent")
+              "#AAAAAA", "transparent")
 
     ## The following definition is the basis for what elements are
     ## valid in any setting. Adding something here should be necessary
@@ -100,14 +100,15 @@ canonical.theme <- function(name = "null device", color = TRUE)
              dot.line         = list(alpha = 1, col = can.col[16], lty = 1, lwd = 1),
              dot.symbol       = list(alpha = 1, cex = 0.8, col = can.col[2], font = 1, pch = 16),
              plot.line        = list(alpha = 1, col = can.col[2], lty = 1, lwd = 1),
-             plot.symbol      = list(alpha = 1, cex = 0.8, col = can.col[2], font = 1, pch = 1),
+             plot.symbol      = list(alpha = 1, cex = 0.8, col = can.col[2], font = 1, pch = 1, fill = "transparent"),
              reference.line   = list(alpha = 1, col = can.col[16], lty = 1, lwd = 1),
              strip.background = list(alpha = 1, col = can.col[c(12, 11, 9, 13, 10, 15, 14)]),
              strip.shingle    = list(alpha = 1, col = can.col[c(5, 4, 2, 6, 3, 8, 7)]),
              strip.border     = list(alpha = 1, col = rep(can.col[1], 7), lty = rep(1, 7), lwd = rep(1, 7)),
              superpose.line   = list(alpha = 1, col = can.col[2:8], lty = rep(1, 7), lwd = rep(1, 7)),
              superpose.symbol = list(alpha = rep(1, 7), cex = rep(0.8, 7), col = can.col[2:8],
-                                     font = rep(1, 7), pch = rep(1, 7)),
+                                     font = rep(1, 7), pch = rep(1, 7),
+                                     fill = rep("transparent", 7)),
              superpose.fill   = list(alpha = rep(1, 7), col = can.col[2:8],
                                      border = rep("black", 7), lty = rep(1, 7), lwd = rep(1, 7)),
              regions          = list(alpha = 1, col = rev(cm.colors(100))),
@@ -181,13 +182,13 @@ canonical.theme <- function(name = "null device", color = TRUE)
     else {
         ## black and white settings
         ans$bar.fill$col <- can.col[5]
-        ans$box.dot$col <- can.col[1]
+###        ans$box.dot$col <- can.col[1]
         ans$box.rectangle$col <- can.col[1]
         ans$box.umbrella$col <- can.col[1]
-        ans$box.umbrella$lty <- 2
-        ans$dot.line$col <- can.col[4]
-        ans$dot.symbol$col <- can.col[1]
-        ans$dot.symbol$cex <- 0.85
+###        ans$box.umbrella$lty <- 2
+###        ans$dot.line$col <- can.col[4]
+###        ans$dot.symbol$col <- can.col[1]
+###        ans$dot.symbol$cex <- 0.85
         ans$plot.line$col <- can.col[1]
         ans$plot.symbol$col <- can.col[1]
         ## changing this to be like barplot
@@ -196,7 +197,7 @@ canonical.theme <- function(name = "null device", color = TRUE)
         ans$shade.colors$palette <-
             function(irr, ref, height, w = .5)
                 grey(w * irr + (1 - w) * (1 - (1-ref)^.4))
-        ans$reference.line$col <- can.col[4]
+###        ans$reference.line$col <- can.col[4]
         ans$strip.background$col <- can.col[rep(5, 7)]
         ans$strip.shingle$col <- can.col[rep(6, 7)]
         ans$superpose.line$col <- can.col[rep(1, 7)]
