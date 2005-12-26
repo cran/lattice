@@ -56,6 +56,7 @@ diag.panel.splom <-
 
              varname.col = add.text$col,
              varname.cex = add.text$cex,
+             varname.lineheight = add.text$lineheight,
              varname.font = add.text$font,
              varname.fontfamily = add.text$fontfamily,
              varname.fontface = add.text$fontface,
@@ -73,8 +74,7 @@ diag.panel.splom <-
              axis.line.lwd = axis.line$lwd,
              ...)
 {
-
-    add.text <- trellis.par.get("axis.line")
+    add.text <- trellis.par.get("add.text")
     axis.line <- trellis.par.get("axis.line")
     axis.text <- trellis.par.get("axis.text")
 
@@ -83,12 +83,12 @@ diag.panel.splom <-
                   gp =
                   gpar(col = varname.col,
                        cex = varname.cex,
+                       lineheight = varname.lineheight,
                        fontface = chooseFace(varname.fontface, varname.font),
                        fontfamily = varname.fontfamily))
 
-    if (draw) {
-        ## plot axes
-
+    if (draw) ## plot axes
+    {
         rot <- c(90, 0)
         if (is.null(at))
         {
@@ -128,16 +128,6 @@ diag.panel.splom <-
                        line.lwd = axis.line.lwd)
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -199,7 +189,7 @@ panel.pairs <-
         else if (is.character(diag.panel)) get(diag.panel)
         else eval(diag.panel)
 
-    add.text <- trellis.par.get("axis.line")
+    add.text <- trellis.par.get("add.text")
     axis.line <- trellis.par.get("axis.line")
     axis.text <- trellis.par.get("axis.text")
 
@@ -215,8 +205,8 @@ panel.pairs <-
     
     ## maybe (ideally) this should be affected by scales
 
-    if (any(subscripts)) {
-
+    if (any(subscripts))
+    {
         draw <- is.list(pscales) || (is.numeric(pscales) && pscales!=0) # whether axes to be drawn
         splom.layout <- grid.layout(nrow = n.var, ncol = n.var)
         pushViewport(viewport(layout = splom.layout, name = "pairs"))
@@ -346,19 +336,7 @@ panel.pairs <-
 
 
 
-splom <- function(x, ...)
-{
-    ocall <- match.call()
-    formula <- ocall$formula
-    if (!is.null(formula))
-    {
-        warning("The 'formula' argument has been renamed to 'x'. See ?xyplot")
-        ocall$formula <- NULL
-        if (!("x" %in% names(ocall))) ocall$x <- formula else warning("'formula' overridden by 'x'")
-        eval(ocall, parent.frame())
-    }
-    else UseMethod("splom")
-}
+splom <- function(x, data, ...) UseMethod("splom")
 
 
 splom.data.frame <-
@@ -370,7 +348,7 @@ splom.data.frame <-
     ccall$data <- list(x = x)
     ccall$x <- ~x
     ccall[[1]] <- as.name("splom")
-    ans <- eval(ccall, parent.frame())
+    ans <- eval.parent(ccall)
     ans$call <- ocall
     ans
 }
@@ -388,7 +366,7 @@ splom.formula <-
              scales = list(),
              strip = TRUE,
              groups = NULL,
-             xlab = "Scatter Plot Matrix",
+             xlab = gettext("Scatter Plot Matrix"),
              xlim,
              ylab = NULL,
              ylim,
@@ -400,19 +378,21 @@ splom.formula <-
              default.scales = list(draw = FALSE, relation = "same", axs = "i"),
              subset = TRUE)
 {
-    ## dots <- eval(substitute(list(...)), data, parent.frame())
+    formula <- x
+
+    ## dots <- eval(substitute(list(...)), data, environment(formula))
     dots <- list(...)
 
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
+    groups <- eval(substitute(groups), data, environment(formula))
+    subset <- eval(substitute(subset), data, environment(formula))
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
 
     ## right.name <- deparse(substitute(x))
-    ## x <- eval(substitute(x), data, parent.frame())
+    ## x <- eval(substitute(x), data, environment(formula))
 
     form <-
-        latticeParseFormula(x, data,
+        latticeParseFormula(formula, data,
                             subset = subset, groups = groups,
                             multiple = FALSE,
                             outer = FALSE, subscripts = TRUE,
@@ -438,30 +418,31 @@ splom.formula <-
         else eval(prepanel)
 
     cond <- form$condition
-    number.of.cond <- length(cond)
     x <- as.data.frame(form$right)
 
-    if (number.of.cond == 0) {
+    if (length(cond) == 0)
+    {
         strip <- FALSE
         cond <- list(as.factor(rep(1, nrow(x))))
-        number.of.cond <- 1
     }
 
     if (!missing(varnames)) colnames(x) <-
-        eval(substitute(varnames), data, parent.frame())
+        eval(substitute(varnames), data, environment(formula))
 
     ## create a skeleton trellis object with the
     ## less complicated components:
 
-    foo <- do.call("trellis.skeleton",
-                   c(list(cond = cond,
-                          aspect = aspect,
-                          between = between,
-                          panel = superpanel,
-                          strip = strip,
-                          xlab = xlab,
-                          ylab = ylab,
-                          xlab.default = "Scatter Plot Matrix"), dots))
+    foo <-
+        do.call("trellis.skeleton",
+                c(list(formula = formula, 
+                       cond = cond,
+                       aspect = aspect,
+                       between = between,
+                       panel = superpanel,
+                       strip = strip,
+                       xlab = xlab,
+                       ylab = ylab,
+                       xlab.default = gettext("Scatter Plot Matrix")), dots))
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
@@ -476,77 +457,34 @@ splom.formula <-
     ## ways. However, I'm postponing all that to later, if at all
 
     if (!is.list(scales)) scales <- list()
-
-    ## some defaults for scales
-
-#     if (is.null(scales$draw)) scales$draw <- FALSE
-#     if (is.null(scales$relation)) scales$relation <- "same"
-#     if (is.null(scales$axs)) scales$axs <- "i"
-
     scales <- updateList(default.scales, scales)
-    foo <- c(foo,
-             do.call("construct.scales", scales))
-
+    foo <- c(foo, do.call("construct.scales", scales))
 
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit)) {
+    if (!is.null(foo$x.scales$limit))
+    {
         have.xlim <- TRUE
         xlim <- foo$x.scales$limit
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit)) {
+    if (!is.null(foo$y.scales$limit))
+    {
         have.ylim <- TRUE
         ylim <- foo$y.scales$limit
     }
     
     ## Step 4: Decide if log scales are being used (has to be NO):
 
-    have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
-    have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
+    ## have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
+    ## have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
 
-    ## immaterial, since scales has no effect.
-
-#    if (have.xlog) {
-#        xlog <- foo$x.scales$log
-#        xbase <-
-#            if (is.logical(xlog)) 10
-#            else if (is.numeric(xlog)) xlog
-#            else if (xlog == "e") exp(1)
-#
-#        x <- log(x, xbase)
-#        if (have.xlim) xlim <- log(xlim, xbase)
-#    }
-#    if (have.ylog) {
-#        ylog <- foo$y.scales$log
-#        ybase <-
-#            if (is.logical(ylog)) 10
-#            else if (is.numeric(ylog)) ylog
-#            else if (ylog == "e") exp(1)
-#
-#        y <- log(y, ybase)
-#        if (have.ylim) ylim <- log(ylim, ybase)
-#    }
-    
     ## Step 5: Process cond
 
     cond.max.level <- unlist(lapply(cond, nlevels))
 
-    ## id.na used only to see if any plotting is needed. Not used
-    ## subsequently, unlike other functions
-
-    id.na <- FALSE
-    for (j in 1:ncol(x))
-        id.na <- id.na | is.na(x[,j])
-    for (var in cond)
-        id.na <- id.na | is.na(var)
-    if (!any(!id.na)) stop("nothing to draw")
-    ## Nothing simpler ?
-
-
-    ## Step 6: Evaluate layout, panel.args.common and panel.args
-
+    ## Step 6: Determine packets
 
     foo$panel.args.common <-
         c(list(z = x,
@@ -556,28 +494,26 @@ splom.formula <-
                pscales = pscales),
           dots)
 
-    nplots <- prod(cond.max.level)
-    if (nplots != prod(sapply(foo$condlevels, length))) stop("mismatch")
-    foo$panel.args <- vector(mode = "list", length = nplots)
+    npackets <- prod(cond.max.level)
+    if (npackets != prod(sapply(foo$condlevels, length))) 
+        stop("mismatch in number of packets")
+    foo$panel.args <- vector(mode = "list", length = npackets)
 
 
-    cond.current.level <- rep(1, number.of.cond)
-
-
-    for (packet.number in seq(length = nplots))
+    foo$packet.sizes <- numeric(npackets)
+    if (npackets > 1)
     {
+        dim(foo$packet.sizes) <- sapply(foo$condlevels, length)
+        dimnames(foo$packet.sizes) <- lapply(foo$condlevels, as.character)
+    }
 
-        ##id <- !id.na  WHY ?
-        for(i in 1:number.of.cond)
-        {
-            var <- cond[[i]]
-            id <- if (is.shingle(var))
-                ((var >=
-                  levels(var)[[cond.current.level[i]]][1])
-                 & (var <=
-                    levels(var)[[cond.current.level[i]]][2]))
-            else (as.numeric(var) == cond.current.level[i])
-        }
+    cond.current.level <- rep(1, length(cond))
+
+
+    for (packet.number in seq(length = npackets))
+    {
+        id <- compute.packet(cond, cond.current.level)
+        foo$packet.sizes[packet.number] <- sum(id)
 
         foo$panel.args[[packet.number]] <-
             list(subscripts = subscr[id])
@@ -586,7 +522,6 @@ splom.formula <-
             cupdate(cond.current.level,
                     cond.max.level)
     }
-
 
     more.comp <-
         c(limits.and.aspect(prepanel.default.splom,
@@ -598,13 +533,11 @@ splom.formula <-
                             panel.args.common = foo$panel.args.common,
                             panel.args = foo$panel.args,
                             aspect = aspect,
-                            nplots = nplots,
+                            npackets = npackets,
                             x.axs = foo$x.scales$axs,
                             y.axs = foo$y.scales$axs),
           cond.orders(foo))
     foo[names(more.comp)] <- more.comp
-
-
 
     if (is.null(foo$legend) && !is.null(groups) &&
         (is.list(auto.key) || (is.logical(auto.key) && auto.key)))

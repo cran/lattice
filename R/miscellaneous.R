@@ -246,40 +246,7 @@ larrows <-
 }
 
 
-## larrows.old <-
-##     function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
-##              angle = 30, code = 2, length = NULL, proportion = .05, ...) 
-## {
 
-##     if (missing(x0)) {x0 <- x1; x1 <- x2}
-##     if (missing(y0)) {y0 <- y1; y1 <- y2}
-##     if (!is.null(length))
-##         warning("length not implemented in larrows, use proportion instead")
-
-##     angle <- angle / 180 * pi
-##     start <- rbind(x0, y0)
-##     end <- rbind(x1, y1)
-##     v.forward <- end - start
-##     v.backward <- start - end
-##     lsegments(x0, y0, x1, y1, ...)
-    
-##     if (code %in% c(1,3)) { # arrow at starting point
-##         edge.1 <- proportion * 
-##             matrix( c(cos(angle), -sin(angle), sin(angle), cos(angle)), 2, 2) %*% v.forward
-##         edge.2 <- proportion *
-##             matrix( c(cos(-angle), -sin(-angle), sin(-angle), cos(-angle)), 2, 2) %*% v.forward
-##         lsegments(x0, y0, x0 + edge.1[1,], y0 + edge.1[2,], ...)
-##         lsegments(x0, y0, x0 + edge.2[1,], y0 + edge.2[2,], ...)
-##     }
-##     if (code %in% c(2,3)) { # arrow at ending point
-##         edge.1 <- proportion * 
-##             matrix( c(cos(angle), -sin(angle), sin(angle), cos(angle)), 2, 2) %*% v.backward
-##         edge.2 <- proportion *
-##             matrix( c(cos(-angle), -sin(-angle), sin(-angle), cos(-angle)), 2, 2) %*% v.backward
-##         lsegments(x1, y1, x1 + edge.1[1,], y1 + edge.1[2,], ...)
-##         lsegments(x1, y1, x1 + edge.2[1,], y1 + edge.2[2,], ...)
-##     }
-## }
 
 
 
@@ -289,6 +256,7 @@ ltext <-
              alpha = add.text$alpha,
              cex = add.text$cex,
              srt = 0,
+             lineheight = add.text$lineheight,
              font = add.text$font,
              fontfamily = add.text$fontfamily,
              fontface = add.text$fontface,
@@ -327,7 +295,8 @@ ltext <-
     if (length(adj) == 1) adj <- c(adj, .5)
     grid.text(label = labels, x = ux, y = uy,
               gp =
-              gpar(col = col, alpha = alpha, 
+              gpar(col = col, alpha = alpha,
+                   lineheight = lineheight,
                    fontfamily = fontfamily,
                    fontface = chooseFace(fontface, font),
                    cex = cex),
@@ -383,72 +352,152 @@ lpoints <-
 
 
 lplot.xy <-
-    function(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
+    function(xy,
+             type = c("p", "l", "o", "b", "c", "s", "S", "h", "H"),
+             pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
              font = 1, fontfamily = NULL, fontface = NULL,
              col.line = col, alpha = 0, fill = NULL,
+             origin = 0,
              ...)
 {
     x <- xy$x
     y <- xy$y
     fontsize.points <- trellis.par.get("fontsize")$points
-
     if (length(x) == 0) return()
-    else if (type %in% c("l", "o", "b", "c"))
-        grid.lines(x = x, y = y,
-                   gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
-                   default.units = "native")
-    else if (type %in% c("p", "o", "b", "c"))
-        grid.points(x = x, y = y, 
-                    gp =
-                    gpar(col = col, cex = cex,
-                         alpha = alpha, fill = fill,
-                         fontsize = fontsize.points,
-                         fontfamily = fontfamily,
-                         fontface = chooseFace(fontface, font)),
-                    pch = pch, 
-                    default.units = "native")
-    else if (type %in% c("s", "S"))
-    {
-        ord <- sort.list(x)
-        n <- length(x)
-        xx <- numeric(2*n-1)
-        yy <- numeric(2*n-1)
-        xx[2*1:n-1] <- x[ord]
-        yy[2*1:n-1] <- y[ord]
-        xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
-        yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
-        grid.lines(x=xx, y=yy,
-                   gp = gpar(lty=lty, col=col.line, lwd=lwd, alpha = alpha),
-                   default.units="native")
-    }
-    else if (type == "h")
-    {
-        ylim <- current.viewport()$yscale
-        zero <-
-            if (ylim[1] > 0) ylim[1]
-            else if (ylim[2] < 0) ylim[2]
-            else 0
-        grid.segments(x0 = x, x1 = x,
-                      y0 = y, y1 = zero,
-                      gp =
-                      gpar(lty = lty, col = col.line,
-                           lwd = lwd, alpha = alpha),
-                      default.units="native")
-    }
-    else if (type == "H")
-    {
-        xlim <- current.viewport()$xscale
-        zero <-
-            if (xlim[1] > 0) xlim[1]
-            else if (xlim[2] < 0) xlim[2]
-            else 0
-        grid.segments(x0 = x, x1 = zero,
-                      y0 = y, y1 = y,
-                      gp =
-                      gpar(lty = lty, col = col.line,
-                           lwd = lwd, alpha = alpha),
-                      default.units="native")
-    }
+
+    ## the main difference between this and panel.xyplot is that the
+    ## latter allows vector 'type', this doesn't
+
+    type <- match.arg(type)
+    switch(type,
+           p = {
+               grid.points(x = x, y = y, 
+                           gp =
+                           gpar(col = col, cex = cex,
+                                alpha = alpha, fill = fill,
+                                fontsize = fontsize.points,
+                                fontfamily = fontfamily,
+                                fontface = chooseFace(fontface, font)),
+                           pch = pch, 
+                           default.units = "native")
+           },
+           c = ,
+           l = {
+               grid.lines(x = x, y = y,
+                          gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
+                          default.units = "native")
+           },
+           o = ,
+           b = {
+               grid.points(x = x, y = y, 
+                           gp =
+                           gpar(col = col, cex = cex,
+                                alpha = alpha, fill = fill,
+                                fontsize = fontsize.points,
+                                fontfamily = fontfamily,
+                                fontface = chooseFace(fontface, font)),
+                           pch = pch, 
+                           default.units = "native")
+               grid.lines(x = x, y = y,
+                          gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
+                          default.units = "native")
+           },
+           s = ,
+           S = {
+               ord <- sort.list(x)
+               n <- length(x)
+               xx <- numeric(2*n-1)
+               yy <- numeric(2*n-1)
+               xx[2*1:n-1] <- x[ord]
+               yy[2*1:n-1] <- y[ord]
+               xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
+               yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
+               grid.lines(x=xx, y=yy,
+                          gp = gpar(lty=lty, col=col.line, lwd=lwd, alpha = alpha),
+                          default.units="native")
+           },
+           h = {
+               ylim <- current.viewport()$yscale
+               zero <-
+                   if (ylim[1] > origin) ylim[1]
+                   else if (ylim[2] < origin) ylim[2]
+                   else origin
+               grid.segments(x0 = x, x1 = x,
+                             y0 = y, y1 = zero,
+                             gp =
+                             gpar(lty = lty, col = col.line,
+                                  lwd = lwd, alpha = alpha),
+                             default.units="native")
+           },
+           H = {
+               xlim <- current.viewport()$xscale
+               zero <-
+                   if (xlim[1] > origin) xlim[1]
+                   else if (xlim[2] < origin) xlim[2]
+                   else origin
+               grid.segments(x0 = x, x1 = zero,
+                             y0 = y, y1 = y,
+                             gp =
+                             gpar(lty = lty, col = col.line,
+                                  lwd = lwd, alpha = alpha),
+                             default.units="native")
+           })
+##     if (type %in% c("l", "o", "b", "c"))
+##         grid.lines(x = x, y = y,
+##                    gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
+##                    default.units = "native")
+##     else if (type %in% c("p", "o", "b", "c"))
+##         grid.points(x = x, y = y, 
+##                     gp =
+##                     gpar(col = col, cex = cex,
+##                          alpha = alpha, fill = fill,
+##                          fontsize = fontsize.points,
+##                          fontfamily = fontfamily,
+##                          fontface = chooseFace(fontface, font)),
+##                     pch = pch, 
+##                     default.units = "native")
+##     else if (type %in% c("s", "S"))
+##     {
+##         ord <- sort.list(x)
+##         n <- length(x)
+##         xx <- numeric(2*n-1)
+##         yy <- numeric(2*n-1)
+##         xx[2*1:n-1] <- x[ord]
+##         yy[2*1:n-1] <- y[ord]
+##         xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
+##         yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
+##         grid.lines(x=xx, y=yy,
+##                    gp = gpar(lty=lty, col=col.line, lwd=lwd, alpha = alpha),
+##                    default.units="native")
+##     }
+##     else if (type == "h")
+##     {
+##         ylim <- current.viewport()$yscale
+##         zero <-
+##             if (ylim[1] > 0) ylim[1]
+##             else if (ylim[2] < 0) ylim[2]
+##             else 0
+##         grid.segments(x0 = x, x1 = x,
+##                       y0 = y, y1 = zero,
+##                       gp =
+##                       gpar(lty = lty, col = col.line,
+##                            lwd = lwd, alpha = alpha),
+##                       default.units="native")
+##     }
+##     else if (type == "H")
+##     {
+##         xlim <- current.viewport()$xscale
+##         zero <-
+##             if (xlim[1] > 0) xlim[1]
+##             else if (xlim[2] < 0) xlim[2]
+##             else 0
+##         grid.segments(x0 = x, x1 = zero,
+##                       y0 = y, y1 = y,
+##                       gp =
+##                       gpar(lty = lty, col = col.line,
+##                            lwd = lwd, alpha = alpha),
+##                       default.units="native")
+##     }
     return()
 }
 

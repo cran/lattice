@@ -9,28 +9,28 @@
 \alias{do.breaks}
 \title{Histograms and Kernel Density Plots}
 \usage{
-histogram(x, \dots)
-densityplot(x, \dots)
+histogram(x, data, \dots)
+densityplot(x, data, \dots)
 \method{histogram}{formula}(x,
-             data = parent.frame(),
-             allow.multiple, outer = TRUE,
-             auto.key = FALSE,
-             aspect = "fill",
-             panel = "panel.histogram",
-             prepanel, scales, strip, groups,
-             xlab, xlim, ylab, ylim,
-             type = c("percent", "count", "density"),
-             nint = if (is.factor(x)) length(levels(x))
-             else round(log2(length(x)) + 1),
-             endpoints = extend.limits(range(x, finite = TRUE), prop = 0.04),
-             breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
-             else do.breaks(endpoints, nint),
-             equal.widths = TRUE,
-             drop.unused.levels = lattice.getOption("drop.unused.levels"),
-             \dots,
-             default.scales = list(),
-             subscripts,
-             subset)
+          data = parent.frame(),
+          allow.multiple, outer = TRUE,
+          auto.key = FALSE,
+          aspect = "fill",
+          panel = "panel.histogram",
+          prepanel, scales, strip, groups,
+          xlab, xlim, ylab, ylim,
+          type = c("percent", "count", "density"),
+          nint = if (is.factor(x)) length(levels(x))
+          else round(log2(length(x)) + 1),
+          endpoints = extend.limits(range(x, finite = TRUE), prop = 0.04),
+          breaks = if (is.factor(x)) seq(0.5, length = length(levels(x))+1)
+          else do.breaks(endpoints, nint),
+          equal.widths = TRUE,
+          drop.unused.levels = lattice.getOption("drop.unused.levels"),
+          \dots,
+          default.scales = list(),
+          subscripts,
+          subset)
 
 \method{histogram}{numeric}(x, data, xlab, \dots)
 \method{histogram}{factor}(x, data, xlab, \dots)
@@ -42,7 +42,7 @@ densityplot(x, \dots)
             outer = !is.null(groups),
             auto.key = FALSE,
             aspect = "fill",
-            panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
+            panel = "panel.densityplot",
             prepanel, scales, strip, groups,
             xlab, xlim, ylab, ylim,
             bw, adjust, kernel, window, width, give.Rkern,
@@ -50,7 +50,6 @@ densityplot(x, \dots)
             drop.unused.levels = lattice.getOption("drop.unused.levels"),
             \dots,
             default.scales = list(),
-            panel.groups = "panel.densityplot",
             subscripts,
             subset)
 \method{densityplot}{numeric}(x, data, xlab, \dots)
@@ -128,25 +127,15 @@ do.breaks(endpoints, nint)
     the breakpoints will \bold{not} be equally spaced).
   }
   \item{n}{ number of points at which density is to be evaluated }
-%   \item{plot.points}{
-%     logical or character string specifying whether (and how) the
-%     \code{x} values should be plotted along the \code{y=0} line.  This
-%     argument is passed unchanged to \code{\link{panel.densityplot}},
-%     whose help page should be consulted for details.
-%   }
-%   \item{ref}{
-%     logical specifying whether a reference x-axis should be drawn.
-%   }
-
   \item{panel}{ The function that uses the packet (subset of display
     variables) corresponding to a panel to create a display.  Default
     panel functions are documented separately, and often have arguments
     that can be used to customize its display in various ways.  Such
     arguments can usually be directly supplied to the high level
     function.  }
-  \item{panel.groups}{ function used as the \code{panel.groups} argument
-    when \code{panel.superpose} is used as the panel function, which
-    happens by default when \code{groups} is non-null.  }
+%   \item{panel.groups}{ function used as the \code{panel.groups} argument
+%     when \code{panel.superpose} is used as the panel function, which
+%     happens by default when \code{groups} is non-null.  }
   \item{allow.multiple, outer, auto.key, aspect, prepanel, scales,
     strip, groups, xlab, xlim, ylab, ylim, drop.unused.levels,
     default.scales, subscripts, subset}{ See \code{\link{xyplot}} }

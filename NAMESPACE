@@ -5,6 +5,10 @@
 import(grid)
 
 
+## ## can I do this?
+## export(grid.prompt)
+
+
 importFrom(grDevices, dev.list, cm.colors, gray, heat.colors)
 importFrom(graphics, plot, co.intervals)
 
@@ -14,7 +18,6 @@ importFrom(stats, as.formula, density, fitted.values, loess.smooth,
 
 
 export(
-       ## "[.shingle",
        as.factorOrShingle, as.shingle, banking, barchart,
        bwplot, canonical.theme, cloud, col.whitebg, Rows,
 
@@ -71,6 +74,7 @@ S3method(as.data.frame, shingle)
 S3method(plot, shingle)
 S3method(print, shingle)
 S3method(summary, shingle)
+S3method(as.character, shingleLevel)
 S3method(print, shingleLevel)
 
 ## trellis methods (see also tmd below)
@@ -79,6 +83,7 @@ S3method(print, trellis)
 S3method(plot, trellis)
 S3method(update, trellis)
 S3method(summary, trellis)
+S3method(print, summary.trellis)
 S3method(dim, trellis)
 S3method(dimnames, trellis)
 S3method("[", trellis)
@@ -89,11 +94,11 @@ S3method(t, trellis)
 ## methods for high level functions
 
 S3method(barchart,    formula)
-S3method(barchart,    array)   #
+S3method(barchart,    array)
 S3method(barchart,    default) 
-S3method(barchart,    matrix)  #
+S3method(barchart,    matrix)
 S3method(barchart,    numeric)
-S3method(barchart,    table)   #
+S3method(barchart,    table)
 
 S3method(bwplot,      formula)
 S3method(bwplot,      numeric)

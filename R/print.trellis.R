@@ -38,14 +38,16 @@ getLabelList <- function(label, text.settings, default.label = NULL)
     if (!is.null(label))
     {
         if (inherits(label, "grob")) return(label)
-        ans <- list(label = 
-                    if (is.characterOrExpression(label)) label
-                    else if (is.list(label) && (is.null(names(label)) || names(label)[1] == "")) label[[1]]
-                    else default.label,
-                    col = text.settings$col, cex = text.settings$cex,
-                    fontfamily = text.settings$fontfamily,
-                    fontface = text.settings$fontface,
-                    font = text.settings$font)
+        ans <-
+            list(label = 
+                 if (is.characterOrExpression(label)) label
+                 else if (is.list(label) && (is.null(names(label)) || names(label)[1] == "")) label[[1]]
+                 else default.label,
+                 col = text.settings$col, cex = text.settings$cex,
+                 fontfamily = text.settings$fontfamily,
+                 fontface = text.settings$fontface,
+                 font = text.settings$font,
+                 lineheight = text.settings$lineheight)
         if (is.list(label)) ans[names(label)] <- label
     }
     else ans <- NULL
@@ -68,6 +70,7 @@ grobFromLabelList <- function(lab, name = "label", rot = 0)
              gpar(col = lab$col,
                   fontfamily = lab$fontfamily,
                   fontface = chooseFace(lab$fontface, lab$font),
+                  lineheight = lab$lineheight,
                   cex = lab$cex))
 }
 
@@ -160,11 +163,14 @@ print.trellis <-
     lattice.setStatus(current.prefix = prefix)
     lattice.setStatus(plot.index = 1 + lattice.getStatus("plot.index"))
 
-    fontsize.text <- trellis.par.get("fontsize")$text
+    global.gpar <-
+        do.call(gpar,
+                updateList(trellis.par.get("grid.pars"),
+                           list(fontsize = trellis.par.get("fontsize")$text)))
 
     if (!missing(position))
     {
-        if (length(position)!=4) stop("Incorrect value of position")
+        stopifnot (length(position) == 4)
         if (new)
         {
             grid.newpage()
@@ -178,7 +184,7 @@ print.trellis <-
 
         if (!missing(split))
         {
-            if (length(split)!=4) stop("Incorrect value of split")
+            stopifnot (length(split) == 4)
             pushViewport(viewport(layout = grid.layout(nrow = split[4], ncol = split[3]),
                                   name = trellis.vpname("split") ))
             pushViewport(viewport(layout.pos.row = split[2], layout.pos.col = split[1],
@@ -189,7 +195,7 @@ print.trellis <-
 
     else if (!missing(split))
     {
-        if (length(split)!=4) stop("Incorrect value of split")
+        stopifnot(length(split) == 4)
         if (new)
         {
             grid.newpage()
@@ -263,9 +269,6 @@ print.trellis <-
     ## panel.width <- 1
     if (!x$aspect.fill)
         panel.height[[1]] <- x$aspect.ratio * panel.width[[1]]
-
-
-
 
 
     ## Evaluate the legend / key grob(s): 
@@ -351,12 +354,14 @@ print.trellis <-
 
 
     strip.col.default.bg <-
-        rep(trellis.par.get("strip.background")$col, length=number.of.cond)
+        rep(trellis.par.get("strip.background")$col,
+            length = number.of.cond)
     strip.col.default.fg <-
-        rep(trellis.par.get("strip.shingle")$col,length=number.of.cond)
+        rep(trellis.par.get("strip.shingle")$col,
+            length = number.of.cond)
     strip.border <-
         lapply(trellis.par.get("strip.border"),
-               function(x) rep(x, length=number.of.cond))
+               function(x) rep(x, length = number.of.cond))
 
 
     ## Start layout calculations when only number of panels per page
@@ -388,8 +393,9 @@ print.trellis <-
     rows.per.page <- panel.layout[2]
     number.of.pages <- panel.layout[3]
     lattice.setStatus(current.plot.multipage = number.of.pages > 1)
-    ## this will also eventually be a 'status' variable
+    ## these will also eventually be 'status' variables
     current.panel.positions <- matrix(0, rows.per.page, cols.per.page)
+    current.packet.positions <- matrix(0, rows.per.page, cols.per.page)
 
 
     skip <- rep(x$skip, length = number.of.pages * rows.per.page * cols.per.page)
@@ -480,8 +486,8 @@ print.trellis <-
 
     for(page.number in seq(length = number.of.pages))
     {
-        if (!any(cond.max.level - cond.current.level < 0)) {
-            
+        if (!any(cond.max.level - cond.current.level < 0))
+        {
             if (usual)
             {
                 if (new) grid.newpage()
@@ -490,8 +496,7 @@ print.trellis <-
             }
 
             pushViewport(viewport(layout = page.layout,
-                                  gp =
-                                  gpar(fontsize = fontsize.text),
+                                  gp = global.gpar,
                                   name = trellis.vpname("toplevel")))
 
             if (!is.null(main))
@@ -542,7 +547,7 @@ print.trellis <-
 
                         packet.number <- 
                             do.call("[", c(list(x = order.cond), as.list(cond.current.level)))
-                        current.panel.positions[row, column] <- packet.number
+                        current.packet.positions[row, column] <- packet.number
 
                         ## this index retrieves the appropriate entry
                         ## of panel.args and [xy].limits. It has to be
@@ -554,6 +559,7 @@ print.trellis <-
                         ## panel function argument
 
                         panel.number <- panel.number + 1
+                        current.panel.positions[row, column] <- panel.number
 
                         ## this gives the row position from the bottom
                         actual.row <- if (x$as.table)
@@ -945,7 +951,7 @@ print.trellis <-
 
 
 
-        ## legend / key plotting
+            ## legend / key plotting
 
             if (!is.null(legend))
             {
@@ -974,7 +980,7 @@ print.trellis <-
                     else if (key.space == "top")
                     {
                         pushViewport(viewport(layout.pos.row = pos.heights$key.top,
-                                              layout.pos.col = pos.widths$panel,
+                                              layout.pos.col = range(pos.widths$panel, pos.widths$strip.left),
                                               name = trellis.vpname("legend", side = "top")))
                         grid.draw(key.gf)
                         upViewport()
@@ -982,7 +988,7 @@ print.trellis <-
                     else if (key.space == "bottom")
                     {
                         pushViewport(viewport(layout.pos.row = pos.heights$key.bottom,
-                                              layout.pos.col = pos.widths$panel,
+                                              layout.pos.col = range(pos.widths$panel, pos.widths$strip.left),
                                               name = trellis.vpname("legend", side = "bottom")))
                         grid.draw(key.gf)
                         upViewport()
@@ -996,16 +1002,14 @@ print.trellis <-
                         key.corner <-
                             if (is.null(legend[[i]]$corner)) c(0,1)
                             else legend[[i]]$corner
-
                         key.x <- 
                             if (is.null(legend[[i]]$x)) key.corner[1]
                             else legend[[i]]$x
-
                         key.y <- 
                             if (is.null(legend[[i]]$y)) key.corner[2]
                             else legend[[i]]$y
-                        
-                        if (all(key.corner == c(0,1))) {
+                        if (all(key.corner == c(0,1)))
+                        {
                             pushViewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
                                                   widths = unit(c(key.x, 1, 1),
                                                   c("npc", "grobwidth", "null"),
@@ -1014,7 +1018,8 @@ print.trellis <-
                                                   c("npc", "grobheight", "null"),
                                                   list(1, key.gf, 1)))))
                         }
-                        else if (all(key.corner == c(1,1))) {
+                        else if (all(key.corner == c(1,1)))
+                        {
                             pushViewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
                                                   heights = unit(c(1 - key.y, 1, 1),
                                                   c("npc", "grobheight", "null"),
@@ -1023,7 +1028,8 @@ print.trellis <-
                                                   c("null", "grobwidth", "npc"),
                                                   list(1, key.gf, 1)))))
                         }
-                        else if (all(key.corner == c(0,0))) {
+                        else if (all(key.corner == c(0,0)))
+                        {
                             pushViewport(viewport(layout = grid.layout(nrow = 3, ncol = 3,
                                                   widths = unit(c(key.x, 1, 1),
                                                   c("npc", "grobwidth", "null"),
@@ -1032,7 +1038,8 @@ print.trellis <-
                                                   c("null", "grobheight", "npc"),
                                                   list(1, key.gf, 1)))))
                         }
-                        else if (all(key.corner == c(1,0))) {
+                        else if (all(key.corner == c(1,0)))
+                        {
                             pushViewport(viewport(layout=grid.layout(nrow = 3, ncol = 3,
                                                   widths = unit(c(1, 1, 1 - key.x),
                                                   c("null", "grobwidth", "npc"),
@@ -1047,7 +1054,6 @@ print.trellis <-
                     }
                 }
             }
-            
             pushViewport(viewport(layout.pos.row = c(1, n.row),
                                   layout.pos.col = c(1, n.col),
                                   name = trellis.vpname("page")))
@@ -1055,15 +1061,18 @@ print.trellis <-
             upViewport()
             upViewport()
         }
-}
-if (!missing(position)) {
-        if (!missing(split)) {
+    }
+    if (!missing(position))
+    {
+        if (!missing(split))
+        {
             upViewport()
             upViewport()
         }
         upViewport()
     }
-    else if (!missing(split)) {
+    else if (!missing(split))
+    {
         upViewport()
         upViewport()
     }
@@ -1083,6 +1092,7 @@ if (!missing(position)) {
     else
         lattice.setStatus(current.plot.saved = FALSE)
     lattice.setStatus(current.panel.positions = current.panel.positions)
+    lattice.setStatus(current.packet.positions = current.packet.positions)
     lattice.setStatus(current.focus.row = 0,
                       current.focus.column = 0,
                       vp.highlighted = FALSE,

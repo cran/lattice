@@ -23,8 +23,7 @@
              outer = !is.null(groups),
              auto.key = FALSE,
              aspect = "fill",
-             panel = if (is.null(groups)) "panel.xyplot"
-             else "panel.superpose",
+             panel = "panel.xyplot",
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -66,11 +65,11 @@
           \dots)
 }
 \usage{
-xyplot(x, \dots)
-dotplot(x, \dots)
-barchart(x, \dots)
-stripplot(x, \dots)
-bwplot(x, \dots)
+xyplot(x, data, \dots)
+dotplot(x, data, \dots)
+barchart(x, data, \dots)
+stripplot(x, data, \dots)
+bwplot(x, data, \dots)
 
 \method{xyplot}{formula}(x,
        data = parent.frame(),
@@ -1030,6 +1029,7 @@ bwplot(x, \dots)
 
 }
 \seealso{
+  \code{\link{Lattice}} for an overview of the package, as well as 
   \code{\link{barchart.table}},
   \code{\link{Lattice}},
   \code{\link{print.trellis}},

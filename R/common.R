@@ -22,24 +22,21 @@
 
 cupdate <- function(index, maxim)
 {
-    ##  This function is used to handle arbitrary number of
-    ## conditioning variables : every time it is called, it
-    ## increments the "current" level of the conditioning
-    ## variables suitably, i.e., it tries to increment the
-    ## level of the 1st conditining variable (the one which
-    ## varies fastest along panel order) and if it happens
-    ## to be at its maximum (last) value, it sets it to the
-    ## first value AND increments the "current" level of the
-    ## 2nd (next) conditioning variable recursively.
 
-    ## This is an internal function, not to be documented
-    ## for the high level user.
-    
+    ## This unexported function is used to handle arbitrary number of
+    ## conditioning variables : every time it is called, it increments
+    ## the "current" level of the conditioning variables suitably,
+    ## i.e., it tries to increment the level of the 1st conditining
+    ## variable (the one which varies fastest along panel order) and
+    ## if it happens to be at its maximum (last) value, it sets it to
+    ## the first value AND increments the "current" level of the 2nd
+    ## (next) conditioning variable recursively.
+
     if(length(index)!=length(maxim)||length(maxim)<=0)
         stop("Inappropriate arguments")
     index[1] <- index[1] + 1
-    if(index[1]>maxim[1] && length(maxim)>1)
-        c(1,cupdate(index[-1],maxim[-1]))
+    if (index[1] > maxim[1] && length(maxim) > 1)
+        c(1, cupdate(index[-1], maxim[-1]))
     else index
 }
 
@@ -66,12 +63,13 @@ latticeParseFormula <-
              subscripts = FALSE, drop = NULL)
     ## this function mostly written by Saikat
 {
-    ## local function to get length-1 names from expressions (deparse
-    ## can be longer). Could be either of the following
+
+    ## local function to get length 1 name from expressions (deparse
+    ## can split long expressions into several pieces), typically for
+    ## subsequent use as labels.  Could be either of the following:
 
     expr2char <- function(x) paste(deparse(x), collapse = "")
     ## expr2char <- function(x) deparse(x)[1]
-
 
     ## by this time, groups is usually already evaluated.  To make
     ## things slightly more convenient, we will now also allow groups
@@ -81,7 +79,7 @@ latticeParseFormula <-
     if (inherits(groups, "formula"))
     {
         groupVar <- as.character(groups)[2]
-        groups <- eval(parse(text = groupVar), data, parent.frame())
+        groups <- eval(parse(text = groupVar), data, environment(groups))
     }
 
     if (is.null(drop)) drop <- TRUE
@@ -161,8 +159,7 @@ latticeParseFormula <-
              left.name = character(0), right.x.name = character(0),
              right.y.name = character(0))
     }
-    else stop(paste("invalid dimension : ", dimension))
-
+    else stop(gettextf("invalid dimension '%s'", as.character(dimension)))
     
     if (length(model) == 3) {  ## <something> ~ <something>
         if (multiple) {
@@ -445,7 +442,8 @@ extend.limits <-
 
 
 trellis.skeleton <-
-    function(cond,
+    function(formula = NULL,
+             cond,
              as.table = default.args$as.table,
              aspect = default.args$aspect,
              between = default.args$between,
@@ -472,30 +470,32 @@ trellis.skeleton <-
     default.args <- lattice.getOption("default.args")
 
     if (is.null(skip)) skip <- FALSE
-    foo <- list(as.table = as.table,
-                aspect.fill = aspect == "fill",
-                ## key = key,
-                legend = construct.legend(legend = legend, key = key),
-                panel = panel, 
-                page = page,
-                layout = layout,
-                skip = skip,
-                strip = if (is.logical(strip) && strip) "strip.default"
-                else strip,
-                strip.left = if (is.logical(strip.left) && strip.left) strip.custom(horizontal = FALSE)
-                else strip.left,
-                xlab = xlab,
-                ylab = ylab,
-                xlab.default = xlab.default,
-                ylab.default = ylab.default,
-                main = main,
-                sub = sub,
-                x.between = 0,
-                y.between = 0,
-                par.settings = par.settings,
-                par.strip.text = par.strip.text,
-                index.cond = index.cond,
-                perm.cond = perm.cond)
+    foo <-
+        list(formula = formula,
+             as.table = as.table,
+             aspect.fill = aspect == "fill",
+             ## key = key,
+             legend = construct.legend(legend = legend, key = key),
+             panel = panel, 
+             page = page,
+             layout = layout,
+             skip = skip,
+             strip = if (is.logical(strip) && strip) "strip.default"
+             else strip,
+             strip.left = if (is.logical(strip.left) && strip.left) strip.custom(horizontal = FALSE)
+             else strip.left,
+             xlab = xlab,
+             ylab = ylab,
+             xlab.default = xlab.default,
+             ylab.default = ylab.default,
+             main = main,
+             sub = sub,
+             x.between = 0,
+             y.between = 0,
+             par.settings = par.settings,
+             par.strip.text = par.strip.text,
+             index.cond = index.cond,
+             perm.cond = perm.cond)
 
     if (!is.null(between$x)) foo$x.between <- between$x
     if (!is.null(between$y)) foo$y.between <- between$y
@@ -604,10 +604,12 @@ compute.layout <-
     number.of.cond <- length(cond.max.level)
     nplots <- prod(cond.max.level)
     
-    if (!is.numeric(layout)) {
+    if (!is.numeric(layout))
+    {
         layout <- c(0,1,1)
-        if (number.of.cond==1) layout[2] <- nplots
-        else {
+        if (number.of.cond == 1) layout[2] <- nplots
+        else
+        {
             layout[1] <- cond.max.level[1]
             layout[2] <- cond.max.level[2]
         }
@@ -615,24 +617,46 @@ compute.layout <-
         plots.per.page <- length(skip) - length(skip[skip])
         layout[3] <- ceiling(nplots/plots.per.page) # + 1
     }
-    else if (length(layout)==1)
+    else if (length(layout) == 1)
         stop("layout must have at least 2 elements")
-    else if (length(layout)==2)
+    else if (length(layout) == 2)
     {
-        if(all(layout<1))
+        if(all(layout < 1))
             stop("at least one element of layout must be positive")
         else if (layout[2]==0) stop("inadmissible value of layout")
         
         skip <- rep(skip, length = max(layout[1] * layout[2], layout[2]))
         plots.per.page <- length(skip) - length(skip[skip])
-        layout[3] <- ceiling(nplots/plots.per.page) # + 1 
+        layout[3] <- ceiling(nplots / plots.per.page) # + 1 
     }
-    else if (length(layout)==3) {
-        if(layout[1]<0||layout[2]<1||layout[3]<1)
+    else if (length(layout)==3)
+    {
+        if(layout[1] < 0 || layout[2] < 1 || layout[3] < 1)
             stop("invalid value for layout")
     }
     layout
 }
 
 
+
+
+compute.packet <-
+    function(cond, levels)
+{
+    id <- !(do.call("pmax", lapply(cond, is.na)))
+    stopifnot(any(id))
+    for (i in seq(along = cond))
+    {
+        var <- cond[[i]]
+        id <-
+            id & (
+                  if (is.shingle(var))
+                  ((var >= levels(var)[[levels[i]]][1]) &
+                   (var <= levels(var)[[levels[i]]][2]))
+                  else
+                  (as.numeric(var) == levels[i])
+                  )
+    }
+    id
+}
 

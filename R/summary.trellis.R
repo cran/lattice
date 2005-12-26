@@ -17,28 +17,62 @@
 ### MA 02111-1307, USA
 
 
-
-summary.trellis <- function(object, ...)
+summary.trellis <-
+    function(object, ...)
 {
-    cat("\nCall:\n")
-    print(object$call)
-    cat("\nY label:\n")
-    str(object$ylab)
-    cat("\nX label:\n")
-    str(object$xlab)
-
-    if (!is.null(names(object$condlevels)))
-    {
-        cat("\nLevels of Conditioning variables:")
-        for (i in seq(along = object$condlevels))
-        {
-            cat("\n<", i, "> ", names(object$condlevels)[i], "\n", sep = "")
-            print(object$condlevels[[i]])
-        }
-    }
-    cat("\n")
-    invisible()
+    ans <- 
+        with(object,
+             list(call = call,
+                  packet.sizes = packet.sizes,
+                  index.cond = index.cond,
+                  perm.cond = perm.cond))
+    class(ans) <- "summary.trellis"
+    ans
 }
+
+
+
+print.summary.trellis <- function(x, ...)
+{
+    cat(gettext("\nCall:\n"))
+    print(x$call)
+    cat(gettext("\nNumber of observations:\n"))
+    ps <-
+        do.call("[",
+                c(list(x$packet.sizes),
+                  x$index.cond,
+                  list(drop = FALSE)))
+    if (!is.null(dim(ps)))
+        ps <- aperm(ps, x$perm.cond)
+    print(ps)
+    invisible(x)
+}
+
+
+
+
+## summary.trellis.old <- function(object, ...)
+## {
+##     cat(gettext("\nCall:\n"))
+##     print(object$call)
+##     cat("\nY label:\n")
+##     str(object$ylab)
+##     cat("\nX label:\n")
+##     str(object$xlab)
+##     if (!is.null(names(object$condlevels)))
+##     {
+##         cat("\nLevels of Conditioning variables:")
+##         for (i in seq(along = object$condlevels))
+##         {
+##             cat("\n<", i, "> ", names(object$condlevels)[i], "\n", sep = "")
+##             print(object$condlevels[[i]])
+##         }
+##     }
+##     cat("\n")
+##     invisible()
+## }
+
+
 
 
 dim.trellis <- function(x)
@@ -51,7 +85,7 @@ dim.trellis <- function(x)
 
 
 dimnames.trellis <- function(x)
-    names(x$condlevels)
+    x$condlevels
 
 
 

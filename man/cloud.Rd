@@ -48,8 +48,8 @@
       \dots)
 }
 \usage{
-cloud(x, \dots)
-wireframe(x, \dots)
+cloud(x, data, \dots)
+wireframe(x, data, \dots)
 \method{cloud}{formula}(x, data,
       aspect = c(1, 1),
       panel = "panel.cloud",
@@ -276,9 +276,9 @@ wireframe(x, \dots)
 
 }
 \seealso{
+  \code{\link{Lattice}} for an overview of the package, as well as 
   \code{\link{xyplot}}, \code{\link{levelplot}},
-  \code{\link{panel.cloud}},
-  \code{\link{Lattice}}  
+  \code{\link{panel.cloud}}
 }
 \author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
 \examples{
