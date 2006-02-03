@@ -3,9 +3,9 @@
 
 
 
-### Copyright (C) 2001-2005  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
+### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
 ###
-### This file is part of the lattice library for R.
+### This file is part of the lattice package for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -457,7 +457,7 @@ panel.3dwire <-
             }
 
 
-        .Call("wireframePanelCalculations",
+        .Call(wireframePanelCalculations,
               as.double(x),
               as.double(y),
               as.double(z),
@@ -469,8 +469,7 @@ panel.3dwire <-
               as.double(light.source),
               environment(),
               as.integer(shade),
-              as.integer(isParametrizedSurface),
-              PACKAGE="lattice")
+              as.integer(isParametrizedSurface))
 
 
 
@@ -567,7 +566,7 @@ panel.3dwire <-
             }
 
 
-        .Call("wireframePanelCalculations",
+        .Call(wireframePanelCalculations,
               as.double(x),
               as.double(y),
               as.double(z),
@@ -579,8 +578,7 @@ panel.3dwire <-
               as.double(light.source),
               environment(),
               as.integer(shade),
-              as.integer(isParametrizedSurface),
-              PACKAGE="lattice")
+              as.integer(isParametrizedSurface))
 
 
         if (count > 0)
