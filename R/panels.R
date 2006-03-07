@@ -146,6 +146,8 @@ panel.rug <-
              alpha = plot.line$alpha,
              ...)
 {
+    if (!any(is.finite(x))) x <- NULL
+    if (!any(is.finite(y))) y <- NULL
     plot.line <- trellis.par.get("plot.line")
     x.units <- rep(x.units, length = 2)
     y.units <- rep(y.units, length = 2)
@@ -476,6 +478,7 @@ panel.superpose <-
                          lwd = lwd[i],
                          alpha = alpha[i],
                          type = type[[i]],
+                         group.number = i,
                          ...)
                 ## if (have.type) args$type <- type
                 if (!is.null(y)) args$y <- y[id]

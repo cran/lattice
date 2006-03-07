@@ -103,10 +103,10 @@ panel.barchart <-
              origin = NULL, reference = TRUE,
              stack = FALSE,
              groups = NULL, 
-             col = if (is.null(groups)) bar.fill$col else superpose.fill$col,
-             border = if (is.null(groups)) bar.fill$border else superpose.fill$border,
-             lty = if (is.null(groups)) bar.fill$lty else superpose.fill$lty,
-             lwd = if (is.null(groups)) bar.fill$lwd else superpose.fill$lwd,
+             col = if (is.null(groups)) plot.polygon$col else superpose.polygon$col,
+             border = if (is.null(groups)) plot.polygon$border else superpose.polygon$border,
+             lty = if (is.null(groups)) plot.polygon$lty else superpose.polygon$lty,
+             lwd = if (is.null(groups)) plot.polygon$lwd else superpose.polygon$lwd,
              ...)
 {
     ## this function doesn't have a subscripts argument (which would
@@ -125,8 +125,8 @@ panel.barchart <-
     x <- as.numeric(x[keep])
     y <- as.numeric(y[keep])
 
-    bar.fill <- trellis.par.get("bar.fill")
-    superpose.fill <- trellis.par.get("superpose.fill")
+    plot.polygon <- trellis.par.get("plot.polygon")
+    superpose.polygon <- trellis.par.get("superpose.polygon")
     reference.line <- trellis.par.get("reference.line")
 
     groupSub <- function(groups, subscripts, ...)
@@ -653,11 +653,11 @@ panel.bwplot <-
 panel.violin <-
     function(x, y, box.ratio = 1, horizontal = TRUE,
 
-             alpha = bar.fill$alpha,
-             border = bar.fill$border,
-             lty = bar.fill$lty,
-             lwd = bar.fill$lwd,
-             col = bar.fill$col,
+             alpha = plot.polygon$alpha,
+             border = plot.polygon$border,
+             lty = plot.polygon$lty,
+             lwd = plot.polygon$lwd,
+             col = plot.polygon$col,
 
              varwidth = FALSE,
 
@@ -679,7 +679,7 @@ panel.violin <-
     y <- as.numeric(y)
 
     ##reference.line <- trellis.par.get("reference.line")
-    bar.fill <- trellis.par.get("bar.fill")
+    plot.polygon <- trellis.par.get("plot.polygon")
 
     ## density doesn't handle unrecognized arguments (not even to
     ## ignore it).  A tedious but effective way to handle that is to
@@ -835,7 +835,7 @@ dotplot.matrix <- function(x, data = NULL, ...) dotplot(as.table(x), data, ...)
 
 dotplot.formula <-
     function(x,
-             data = parent.frame(),
+             data = NULL,
              panel = "panel.dotplot",
              ...)
 {
@@ -914,7 +914,7 @@ barchart.matrix <- function(x, data = NULL, ...) barchart(as.table(x), data, ...
 
 barchart.formula <-
     function(x,
-             data = parent.frame(),
+             data = NULL,
              panel = "panel.barchart",
              box.ratio = 2, 
              ...)
@@ -952,7 +952,7 @@ stripplot.numeric <-
 
 stripplot.formula <-
     function(x,
-             data = parent.frame(),
+             data = NULL,
              panel = "panel.stripplot",
              ...)
 {
@@ -994,7 +994,7 @@ bwplot.numeric <-
 
 bwplot.formula <-
     function(x,
-             data = parent.frame(),
+             data = NULL,
              allow.multiple = is.null(groups) || outer,
              outer = FALSE,
              auto.key = FALSE,

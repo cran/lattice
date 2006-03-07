@@ -1,4 +1,89 @@
 ------------------------------------------------------------------------
+r2343 | deepayan | 2006-03-05 03:09:03 -0600 (Sun, 05 Mar 2006) | 1 line
+Changed paths:
+   M /trunk/lattice/R/print.trellis.R
+   M /trunk/lattice/R/strip.R
+   M /trunk/lattice/inst/Changes
+   M /trunk/lattice/man/strip.default.Rd
+
+several changes in strip.default, including support for displaying
+shingle levels, and possible use of panel.number and packet.number in
+strip.  Bugfix: scales now counts rows from top if as.table = TRUE
+------------------------------------------------------------------------
+r2335 | deepayan | 2006-03-02 00:12:18 -0600 (Thu, 02 Mar 2006) | 1 line
+Changed paths:
+   M /trunk/lattice/R/bwplot.R
+   M /trunk/lattice/R/cloud.R
+   M /trunk/lattice/R/densityplot.R
+   M /trunk/lattice/R/histogram.R
+   M /trunk/lattice/R/levelplot.R
+   M /trunk/lattice/R/parallel.R
+   M /trunk/lattice/R/qq.R
+   M /trunk/lattice/R/qqmath.R
+   M /trunk/lattice/R/splom.R
+   M /trunk/lattice/R/tmd.R
+   M /trunk/lattice/R/xyplot.R
+   M /trunk/lattice/inst/Changes
+   M /trunk/lattice/man/cloud.Rd
+   M /trunk/lattice/man/histogram.Rd
+   M /trunk/lattice/man/latticeParseFormula.Rd
+   M /trunk/lattice/man/levelplot.Rd
+   M /trunk/lattice/man/qq.Rd
+   M /trunk/lattice/man/qqmath.Rd
+   M /trunk/lattice/man/splom.Rd
+   M /trunk/lattice/man/xyplot.Rd
+
+changed defaults of data=parent.frame() to data=NULL
+------------------------------------------------------------------------
+r2333 | deepayan | 2006-03-01 14:15:54 -0600 (Wed, 01 Mar 2006) | 1 line
+Changed paths:
+   M /trunk/lattice/R/bwplot.R
+   M /trunk/lattice/R/cloud.R
+   M /trunk/lattice/R/histogram.R
+   M /trunk/lattice/R/legend.R
+   M /trunk/lattice/R/levelplot.R
+   D /trunk/lattice/R/plot.shingle.R
+   M /trunk/lattice/R/settings.R
+   M /trunk/lattice/R/shingle.R
+   M /trunk/lattice/R/strip.R
+   M /trunk/lattice/man/panel.barchart.Rd
+   M /trunk/lattice/man/panel.cloud.Rd
+   M /trunk/lattice/man/panel.histogram.Rd
+   M /trunk/lattice/man/panel.violin.Rd
+   M /trunk/lattice/update.sh
+
+improved some uses of grid.rect, changed [bar|superpose].fill settings
+to [plot.superpose].polygon
+------------------------------------------------------------------------
+r2330 | deepayan | 2006-02-28 21:47:19 -0600 (Tue, 28 Feb 2006) | 1 line
+Changed paths:
+   M /trunk/lattice/DESCRIPTION
+   M /trunk/lattice/R/layout.R
+   M /trunk/lattice/R/miscellaneous.R
+   M /trunk/lattice/R/panels.R
+   M /trunk/lattice/man/llines.Rd
+   M /trunk/lattice/po/R-fr.po
+
+removed use of deprecated grid functions, French translations updated
+------------------------------------------------------------------------
+r2328 | deepayan | 2006-02-26 15:05:59 -0600 (Sun, 26 Feb 2006) | 1 line
+Changed paths:
+   M /trunk/lattice/man/panel.bwplot.Rd
+
+clarification about unavailaibility of notches
+------------------------------------------------------------------------
+r2305 | deepayan | 2006-02-21 09:45:27 -0600 (Tue, 21 Feb 2006) | 1 line
+Changed paths:
+   M /trunk/lattice/man/cloud.Rd
+
+updated docs to explain [xyz]lab and scales
+------------------------------------------------------------------------
+r2302 | deepayan | 2006-02-20 10:06:52 -0600 (Mon, 20 Feb 2006) | 1 line
+Changed paths:
+   M /trunk/lattice/R/panels.R
+
+bug fix in panel.rug (failed with zero-length or NA vectors)
+------------------------------------------------------------------------
 r2244 | deepayan | 2006-01-22 01:45:40 -0600 (Sun, 22 Jan 2006) | 1 line
 Changed paths:
    M /trunk/lattice/R/*.R
