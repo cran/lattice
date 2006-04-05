@@ -1,4 +1,45 @@
 ------------------------------------------------------------------------
+r3046 | deepayan | 2006-04-04 11:15:30 -0500 (Tue, 04 Apr 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/miscellaneous.R
+   M /branches/lattice/stable-00.13/lattice/R/print.trellis.R
+   M /branches/lattice/stable-00.13/lattice/R/settings.R
+   M /branches/lattice/stable-00.13/lattice/SvnLog
+   M /branches/lattice/stable-00.13/lattice/inst/Changes
+   M /branches/lattice/stable-00.13/lattice/man/trellis.device.Rd
+   M /branches/lattice/stable-00.13/lattice/po/R-lattice.pot
+
+ported r3045 changes from trunk: default settings changed to white
+background, grid pars should be specifiable in panel functions
+------------------------------------------------------------------------
+r3036 | deepayan | 2006-03-30 23:51:00 -0600 (Thu, 30 Mar 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/bwplot.R
+   M /branches/lattice/stable-00.13/lattice/man/interaction.Rd
+   M /branches/lattice/stable-00.13/lattice/man/panel.bwplot.Rd
+   M /branches/lattice/stable-00.13/lattice/man/panel.stripplot.Rd
+   M /branches/lattice/stable-00.13/lattice/po/R-lattice.pot
+   M /branches/lattice/stable-00.13/lattice/update.sh
+
+ported r3035 changes from trunk: added 'amount' argument in
+panel.stripplot to control jitter; horizontal now defaults to TRUE if
+'x' is character in 'bwplot' and friends; miscellaneous other fixes
+------------------------------------------------------------------------
+r2353 | deepayan | 2006-03-10 10:48:00 -0600 (Fri, 10 Mar 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/DESCRIPTION
+   M /branches/lattice/stable-00.13/lattice/R/strip.R
+   M /branches/lattice/stable-00.13/lattice/man/xyplot.Rd
+   M /branches/lattice/stable-00.13/lattice/update.sh
+
+(porting r2352 changes from trunk) fixed strip bug, modified example
+------------------------------------------------------------------------
+r2345 | deepayan | 2006-03-05 10:50:30 -0600 (Sun, 05 Mar 2006) | 2 lines
+Changed paths:
+   A /branches/lattice/stable-00.13/lattice (from /trunk/lattice:2344)
+
+copying lattice 0.13-4 to a stable branch
+------------------------------------------------------------------------
 r2343 | deepayan | 2006-03-05 03:09:03 -0600 (Sun, 05 Mar 2006) | 1 line
 Changed paths:
    M /trunk/lattice/R/print.trellis.R
