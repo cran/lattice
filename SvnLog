@@ -1,4 +1,134 @@
 ------------------------------------------------------------------------
+r3303 | deepayan | 2006-07-07 13:07:47 -0500 (Fri, 07 Jul 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/DESCRIPTION
+
+updated version and date
+------------------------------------------------------------------------
+r3302 | deepayan | 2006-07-07 13:07:05 -0500 (Fri, 07 Jul 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/man/xyplot.Rd
+
+ported r3300/r3301 changes from trunk: initial attempt to get rid of
+synopsis in xyplot.Rd
+------------------------------------------------------------------------
+r3299 | deepayan | 2006-07-07 12:47:07 -0500 (Fri, 07 Jul 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/man/shingles.Rd
+
+ported r3298 changes from trunk: removed unnecessary usage entry for
+as.data.frame.shingle
+------------------------------------------------------------------------
+r3297 | deepayan | 2006-07-07 12:39:45 -0500 (Fri, 07 Jul 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/strip.R
+   M /branches/lattice/stable-00.13/lattice/man/strip.default.Rd
+
+ported r3296 changes from trunk: added support for abbreviating strip
+labels
+------------------------------------------------------------------------
+r3250 | deepayan | 2006-06-24 13:23:31 -0500 (Sat, 24 Jun 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/tests/scales.R
+
+ported r3249 changes from trunk: fix to guard against non-coercion of
+character to factor in R >= 2.4.0
+------------------------------------------------------------------------
+r3208 | deepayan | 2006-06-05 15:50:52 -0500 (Mon, 05 Jun 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/axis.R
+   M /branches/lattice/stable-00.13/lattice/R/bwplot.R
+   M /branches/lattice/stable-00.13/lattice/R/cloud.R
+   M /branches/lattice/stable-00.13/lattice/R/common.R
+   M /branches/lattice/stable-00.13/lattice/R/densityplot.R
+   M /branches/lattice/stable-00.13/lattice/R/histogram.R
+   M /branches/lattice/stable-00.13/lattice/R/interaction.R
+   M /branches/lattice/stable-00.13/lattice/R/layout.R
+   M /branches/lattice/stable-00.13/lattice/R/legend.R
+   M /branches/lattice/stable-00.13/lattice/R/levelplot.R
+   M /branches/lattice/stable-00.13/lattice/R/make.groups.R
+   M /branches/lattice/stable-00.13/lattice/R/miscellaneous.R
+   M /branches/lattice/stable-00.13/lattice/R/panels.R
+   M /branches/lattice/stable-00.13/lattice/R/parallel.R
+   M /branches/lattice/stable-00.13/lattice/R/print.trellis.R
+   M /branches/lattice/stable-00.13/lattice/R/qq.R
+   M /branches/lattice/stable-00.13/lattice/R/qqmath.R
+   M /branches/lattice/stable-00.13/lattice/R/shingle.R
+   M /branches/lattice/stable-00.13/lattice/R/splom.R
+   M /branches/lattice/stable-00.13/lattice/R/strip.R
+   M /branches/lattice/stable-00.13/lattice/R/summary.trellis.R
+   M /branches/lattice/stable-00.13/lattice/R/tmd.R
+   M /branches/lattice/stable-00.13/lattice/R/update.trellis.R
+   M /branches/lattice/stable-00.13/lattice/R/xyplot.R
+   M /branches/lattice/stable-00.13/lattice/R/zzz.R
+
+ported r3207 changes from trunk: updated copyright notices
+------------------------------------------------------------------------
+r3206 | deepayan | 2006-06-05 15:48:28 -0500 (Mon, 05 Jun 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/settings.R
+   M /branches/lattice/stable-00.13/lattice/man/trellis.par.get.Rd
+
+ported r3204 changes from trunk: allow 'theme' in trellis.par.set to
+be a function (possibly quoted)
+------------------------------------------------------------------------
+r3205 | deepayan | 2006-06-05 15:47:34 -0500 (Mon, 05 Jun 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/scales.R
+
+ported r3203 changes from trunk: renamed variable 'nplots' to the more
+accurate 'npackets'
+------------------------------------------------------------------------
+r3202 | deepayan | 2006-06-02 13:23:20 -0500 (Fri, 02 Jun 2006) | 1 line
+Changed paths:
+   A /branches/lattice/stable-00.13/lattice/COPYING
+
+added copy of GPL
+------------------------------------------------------------------------
+r3200 | deepayan | 2006-06-02 13:05:43 -0500 (Fri, 02 Jun 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/densityplot.R
+
+ported r3199 changes from trunk: bugfix (NA-s in groups) for densityplot
+------------------------------------------------------------------------
+r3076 | deepayan | 2006-04-17 15:18:05 -0500 (Mon, 17 Apr 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/DESCRIPTION
+   M /branches/lattice/stable-00.13/lattice/INDEX
+   M /branches/lattice/stable-00.13/lattice/man/panel.superpose.Rd
+   M /branches/lattice/stable-00.13/lattice/man/panel.xyplot.Rd
+   M /branches/lattice/stable-00.13/lattice/po/R-lattice.pot
+
+ported r3075 changes from trunk (doc updates)
+------------------------------------------------------------------------
+r3074 | deepayan | 2006-04-17 09:24:46 -0500 (Mon, 17 Apr 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/miscellaneous.R
+   M /branches/lattice/stable-00.13/lattice/R/panels.R
+   M /branches/lattice/stable-00.13/lattice/R/shingle.R
+   M /branches/lattice/stable-00.13/lattice/R/xyplot.R
+
+ported r3073 changes from trunk: bugfixes, (1) fill in lpoints and (2)
+print.shingle
+
+------------------------------------------------------------------------
+r3050 | deepayan | 2006-04-06 11:30:00 -0500 (Thu, 06 Apr 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/R/legend.R
+   M /branches/lattice/stable-00.13/lattice/man/xyplot.Rd
+
+ported r3049 changes from trunk: added a 'padding.text' component to keys
+------------------------------------------------------------------------
+r3048 | deepayan | 2006-04-05 15:09:31 -0500 (Wed, 05 Apr 2006) | 1 line
+Changed paths:
+   M /branches/lattice/stable-00.13/lattice/DESCRIPTION
+   M /branches/lattice/stable-00.13/lattice/INDEX
+   M /branches/lattice/stable-00.13/lattice/SvnLog
+   M /branches/lattice/stable-00.13/lattice/inst/Changes
+   M /branches/lattice/stable-00.13/lattice/po/R-lattice.pot
+
+latest changes, mostly cosmetic
+------------------------------------------------------------------------
 r3046 | deepayan | 2006-04-04 11:15:30 -0500 (Tue, 04 Apr 2006) | 1 line
 Changed paths:
    M /branches/lattice/stable-00.13/lattice/R/miscellaneous.R
