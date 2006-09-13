@@ -458,23 +458,27 @@ trellis.skeleton <-
              skip = default.args$skip,
              strip = default.args$strip.default,
              strip.left = FALSE,
+             xscale.components = default.args$xscale.components,
+             yscale.components = default.args$yscale.components,
+             axis = default.args$axis,
              xlab = NULL,
              ylab = NULL,
              xlab.default = NULL,
              ylab.default = NULL,
              panel,
              par.settings = NULL,
+             plot.args = NULL,
+             lattice.options = NULL,
              index.cond = NULL,
              perm.cond = NULL,
              ...)
 {
     default.args <- lattice.getOption("default.args")
-
     if (is.null(skip)) skip <- FALSE
     foo <-
         list(formula = formula,
              as.table = as.table,
-             aspect.fill = aspect == "fill",
+             aspect.fill = (aspect == "fill"),
              ## key = key,
              legend = construct.legend(legend = legend, key = key),
              panel = panel, 
@@ -485,6 +489,9 @@ trellis.skeleton <-
              else strip,
              strip.left = if (is.logical(strip.left) && strip.left) strip.custom(horizontal = FALSE)
              else strip.left,
+             xscale.components = xscale.components,
+             yscale.components = yscale.components,
+             axis = axis,
              xlab = xlab,
              ylab = ylab,
              xlab.default = xlab.default,
@@ -494,6 +501,8 @@ trellis.skeleton <-
              x.between = 0,
              y.between = 0,
              par.settings = par.settings,
+             plot.args = plot.args,
+             lattice.options = lattice.options,
              par.strip.text = par.strip.text,
              index.cond = index.cond,
              perm.cond = perm.cond)

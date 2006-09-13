@@ -159,7 +159,7 @@ trellis.focus <-
 {
     trellis.unfocus()
 
-    if (name == "panel" || name == "strip" || "strip.left")
+    if (name %in% c("panel", "strip", "strip.left"))
     {
         ll <- lattice.getStatus("current.panel.positions")
         if (column > 0 && row > 0 &&
@@ -239,6 +239,23 @@ trellis.unfocus <-
 }
 
 
+### This version didn't work
+
+## trellis.panelArgs <-
+##     function(x, packet.number)
+## {
+##     if (lattice.getStatus("current.plot.multipage"))
+##         warning("plot spans multiple pages, only last page can be updated")
+##     if (missing(x)) 
+##         if (lattice.getStatus("current.plot.saved")) x <- trellis.last.object()
+##         else stop("current plot was not saved, can't retrieve panel data")
+##     if (missing(packet.number))
+##         packet.number <- packet.number()
+##     if (!length(packet.number)) ## should be 0x0 matrix otherwise
+##         stop("you have to first select a panel using trellis.focus()")
+##     c(x$panel.args[[packet.number]], x$panel.args.common)
+## }
+
 
 
 trellis.panelArgs <-
@@ -251,21 +268,24 @@ trellis.panelArgs <-
         else stop("current plot was not saved, can't retrieve panel data")
     if (missing(packet.number))
     {
-        row <- lattice.getStatus("current.focus.row")
-        column <- lattice.getStatus("current.focus.column")
-        if (row == 0 || column == 0)
-            stop("you have to first select a panel using trellis.focus()")
-        packet.number <- lattice.getStatus("current.packet.positions")[row, column]
-        panel.number <- lattice.getStatus("current.panel.positions")[row, column]
+        ## FIXME: workaround for unfortunate choice of names.  May
+        ## require more extensive changes
+
+        pn <- get("packet.number", mode = "function")
+        packet.number <- pn()
     }
-    else panel.number <- NULL
-    c(x$panel.args[[packet.number]],
-      x$panel.args.common,
-      list(packet.number = packet.number, panel.number = panel.number))
+    if (!length(packet.number)) ## should be 0x0 matrix otherwise
+        stop("you have to first select a panel using trellis.focus()")
+    c(x$panel.args[[packet.number]], x$panel.args.common)
 }
 
 
 
-trellis.currentLayout <- function()
-    lattice.getStatus("current.panel.positions")
+trellis.currentLayout <- function(which = c("packet", "panel"))
+{
+    which <- match.arg(which)
+    switch(which,
+           packet = lattice.getStatus("current.packet.positions"),
+           panel = lattice.getStatus("current.panel.positions"))
+}
 

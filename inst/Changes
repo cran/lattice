@@ -1,9 +1,6 @@
 
 
 
-
-
-
 Changes in lattice 0.13
 =======================
 
@@ -47,8 +44,6 @@ new features
 
  o Added wrappers lrect, lpolygon (and panel.rect, panel.polygon)
 
- o Added support for abbreviating strip labels via 'par.strip.text'
-
 
 
 changes in behaviour
@@ -75,8 +70,6 @@ changes in behaviour
  o Default Trellis settings (a.k.a. theme) changed.  See
    ?trellis.device for details
 
-
- o 'theme' in trellis.par.set can be a function (possibly quoted)
 
 
 bug fixes

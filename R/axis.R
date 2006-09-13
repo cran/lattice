@@ -29,7 +29,218 @@ current.panel.limits <- function(unit = "native")
 }
 
 
-calculateAxisComponents <- function(x, ..., abbreviate = NULL, minlength = 4)
+
+
+## Functions to compute axis tick mark positions and labels.  From
+## lattice 0.14 onwards, there will be user specifiable functions (one
+## each for the x and y axes) that does this.  The function defined
+## here is intended to serve as the default choice for that function.
+## The goal is to make anything reasonable possible, so suggested
+## changes to the API will be considered.  The tentative plan is to
+## specify them as optional arguments, e.g.  xyplot(...,
+## xscale.components = function(lim, ...) list(...))
+
+
+
+## NOTE: A LOT OF CODE WILL NEED TO BE CHANGED ELSEWHERE TO SUPPORT
+## THIS.  ONE APPROACH MIGHT BE TO EXPOSE THE API AND DEAL WITH THE
+## DETAILS AFTER R 2.4.0 IS RELEASED.
+
+## This function is intended to work with one packet at a time.  It
+## will be called only once when relation=same, and once for each
+## packet otherwise.  The major difference is that there can be
+## different things on opposite sides (left/right or top/bottom),
+## e.g. both transformed and original axes on log transformed data.
+
+## The output can be a list with tick locations, labels, etc.  I also
+## considered allowing it to be a ``grob''.  (I don't necessarily
+## endorse the idea of having a grid dependency built into the Trellis
+## object, as opposed to just the plotting procedure, but that ship
+## has sailed a long time back: xlab, main, etc can already be grobs.)
+## However, this is difficult to implement, and I don't even know how
+## to design a grob that will be properly coordinated with the axes.
+## Anyone who can figure that out will also be capable of writing a
+## custom axis function.
+
+
+## Output formats: The output is a list of the form
+
+## list(num.limit = ..., left=..., right=...) or
+## list(num.limit = ..., bottom=..., top=...)
+
+## num.limit is the numeric range suggested
+
+## right and top can be logical: TRUE means same as left/bottom, FALSE
+## means to be omitted.  Prior default behaviour corresponds to TRUE
+## for relation=same, FALSE otherwise.  They can also be like
+## left/bottom, whose possible values are described next.
+
+## One thing to remember is that tick marks and labels are treated
+## separately.  This strategy has worked successfully in the past, and
+## I'm not willing to give it up (mostly because I'm not really sure
+## how to create a single grob that combines both, and then can be
+## used to determine widths/heights (even if I could, I'm sure the
+## calculations will be slower)).  So, the output will be like
+
+## left =
+## list(ticks = list(at = ..., tck = ...),
+##      labels =
+##      list(at = ..., labels = ..., check.overlap = TRUE))
+
+## or
+
+## left =
+## list(ticks = list(at = ..., tck = ...),
+##      labels = textGrob("foo"))
+
+
+xscale.components.default <-
+    function(lim,
+             packet.number = 0,
+             packet.list = NULL,
+             top = TRUE,
+             ...)
+{
+    comps <-
+        calculateAxisComponents(lim, packet.list = packet.list,
+                                packet.number = packet.number, ...)
+    list(num.limit = comps$num.limit,
+         bottom =
+         list(ticks = list(at = comps$at, tck = 1),
+              labels =
+              list(at = comps$at,
+                   labels = comps$labels,
+                   check.overlap = comps$check.overlap)),
+         top = top)
+}
+
+
+## should be same as above with s/bottom/left/g and s/top/right/g
+
+yscale.components.default <-
+    function(lim,
+             packet.number = 0,
+             packet.list = NULL,
+             right = TRUE,
+             ...)
+{
+    comps <-
+        calculateAxisComponents(lim, packet.list = packet.list,
+                                packet.number = packet.number, ...)
+    list(num.limit = comps$num.limit,
+         left =
+         list(ticks = list(at = comps$at, tck = 1, lwd = 1),
+              labels =
+              list(at = comps$at,
+                   labels = comps$labels,
+                   cex = 1,
+                   check.overlap = comps$check.overlap)),
+         right = right)
+}
+
+
+
+## default function to draw axes.  This (or its user-specified
+## replacement) will be called once for each side of each panel,
+## regardless of whether relation == "same".
+
+
+
+axis.default <-
+    function(side = c("top", "bottom", "left", "right"),
+             scales, components, as.table,
+             labels = c("default", "yes", "no"),
+             ticks = c("default", "yes", "no"),
+             ...)
+{
+    side <- match.arg(side)
+    labels <- match.arg(labels)
+    ticks <- match.arg(ticks)
+
+    row <- lattice.getStatus("current.focus.row")
+    column <- lattice.getStatus("current.focus.column")
+    panel.layout <- trellis.currentLayout("panel")
+    layout.dim <- dim(panel.layout)
+
+    determineStatus <- function(x)
+    {
+        if (is.null(x) || (is.logical(x) && !x)) FALSE
+        else TRUE
+    }
+    lastPanel <- function()
+    {
+        ## is this the last panel? In that case, it is considered to
+        ## be ``on the boundary'' on the right side.
+        ((pn <- panel.number()) > 0 && pn == max(panel.layout))
+    }
+    atBoundary <- function()
+    {
+        switch(side,
+               top = if (as.table) row == 1 else row == layout.dim[1],
+               bottom = if (!as.table) row == 1 else row == layout.dim[1],
+               left = column == 1,
+               right = column == layout.dim[2] || lastPanel())
+    }
+
+    ## what about scales$relation ?
+    do.ticks <-
+        switch(ticks,
+               yes = TRUE,
+               no = FALSE,
+               default = scales$draw && atBoundary() && determineStatus(components[[side]]))
+    do.labels <-
+        switch(labels,
+               yes = TRUE,
+               no = FALSE,
+
+               default =
+               scales$draw && atBoundary() &&
+
+               ## rule: if (alternating[row/column] %in% c(2, 3)) for
+               ## a ``boundary'' panel, then draw, otherwise don't.
+               switch(side,
+                      top    = rep(scales$alternating, length = column)[column] %in% c(2, 3),
+                      bottom = rep(scales$alternating, length = column)[column] %in% c(1, 3),
+                      left   = rep(scales$alternating, length = row)[row] %in% c(1, 3),
+                      right  = rep(scales$alternating, length = row)[row] %in% c(2, 3))
+               )
+
+    if (do.ticks || do.labels)
+    {
+        comp.list <-
+            switch(side,
+                   top = if (is.logical(components[["top"]]) && components[["top"]]) components[["bottom"]] else components[["top"]],
+                   bottom = components[["bottom"]],
+                   left = components[["left"]],
+                   right = if (is.logical(components[["right"]]) && components[["right"]]) components[["left"]] else components[["right"]])
+
+        panel.axis(side = side,
+                   at = comp.list$ticks$at,
+                   labels = comp.list$labels$labels,
+                   draw.labels = do.labels, 
+                   check.overlap = comp.list$labels$check.overlap,
+                   outside = TRUE,
+                   tick = do.ticks,
+                   tck = scales$tck * comp.list$ticks$tck,
+                   ...)
+    }
+
+}
+
+
+
+
+## FIXME: Long term goal: some of the following code is possibly too
+## cautious.  A review might make the code simpler without substantial
+## drawbacks (the point being that we know exactly how the code is
+## being called).
+
+
+calculateAxisComponents <-
+    function(x, ...,
+             ## ignored, but needs to be caught:
+             packet.number, packet.list, 
+             abbreviate = NULL, minlength = 4)
 
     ## This aims to be a general function which given a general
     ## 'range' x and optional at, generates the locations of tick
@@ -89,14 +300,14 @@ formattedTicksAndLabels <- function(x, ...)
 
 
 formattedTicksAndLabels.default <-
-    function (x, at = FALSE,
-              used.at = NULL,
-              num.limit = NULL,
-              labels = FALSE,
-              logsc = FALSE,
-              abbreviate = NULL,
-              minlength = 4,
-              format.posixt, ...)
+    function(x, at = FALSE,
+             used.at = NULL,
+             num.limit = NULL,
+             labels = FALSE,
+             logsc = FALSE,
+             abbreviate = NULL,
+             minlength = 4,
+             format.posixt, ...)
     ## meant for when x is numeric
 {
     range <-
@@ -145,14 +356,14 @@ formattedTicksAndLabels.default <-
 
 
 formattedTicksAndLabels.date <-
-    function (x, at = FALSE,
-              used.at = NULL,
-              num.limit = NULL,
-              labels = FALSE,
-              logsc = FALSE,
-              abbreviate = NULL,
-              minlength = 4,
-              format.posixt, ...)
+    function(x, at = FALSE,
+             used.at = NULL,
+             num.limit = NULL,
+             labels = FALSE,
+             logsc = FALSE,
+             abbreviate = NULL,
+             minlength = 4,
+             format.posixt, ...)
 {
     ## handle log scales (not very meaningful, though)
 
@@ -218,14 +429,14 @@ formattedTicksAndLabels.character <-
 
 
 formattedTicksAndLabels.expression <-
-    function (x, at = FALSE,
-              used.at = NULL,
-              num.limit = NULL,
-              labels = FALSE,
-              logsc = FALSE,
-              abbreviate = NULL,
-              minlength = 4,
-              format.posixt, ...)
+    function(x, at = FALSE,
+             used.at = NULL,
+             num.limit = NULL,
+             labels = FALSE,
+             logsc = FALSE,
+             abbreviate = NULL,
+             minlength = 4,
+             format.posixt, ...)
 {
     retain <- if (is.null(used.at) || any(is.na(used.at))) TRUE else used.at
     ans <- list(at = if (is.logical(at)) seq(along = x)[retain] else at,
@@ -239,21 +450,21 @@ formattedTicksAndLabels.expression <-
 
 
 
-## FIXME: add a method for "Date" here (regurgitate axis.Date)
+## method for "Date" (regurgitating axis.Date)
 
 formattedTicksAndLabels.Date <-
-    function (x, at = FALSE,
-              used.at = NULL,
-              num.limit = NULL,
-              labels = FALSE,
-              logsc = FALSE, 
-              abbreviate = NULL,
-              minlength = 4,
-              format.posixt = NULL, ...) 
+    function(x, at = FALSE,
+             used.at = NULL,
+             num.limit = NULL,
+             labels = FALSE,
+             logsc = FALSE, 
+             abbreviate = NULL,
+             minlength = 4,
+             format.posixt = NULL, ...) 
 {
-    num.lim <-
+    num.lim <- 
         if (length(x) == 2) as.numeric(x)
-        else as.numeric(range(x))
+        else range(as.numeric(x))
     mat <- is.logical(at)
     if(!mat) x <- as.Date(at) else x <- as.Date(x)
     range <- range(num.lim)
@@ -261,26 +472,27 @@ formattedTicksAndLabels.Date <-
     range[2] <- floor(range[2])
     ## find out the scale involved
     d <- range[2] - range[1]
-    z <- c(range, x[is.finite(x)])
+    ## z <- c(range, x[is.finite(x)])
+    z <- range
     class(z) <- "Date"
     if (d < 7) # days of a week
         if (is.null(format.posixt)) format.posixt <- "%a"
     if (d < 100) { # month and day
-        z <- structure(pretty(z), class="Date")
+        z <- structure(pretty(z, ...), class="Date")
         if (is.null(format.posixt)) format.posixt <- "%b %d"
     } else if (d < 1.1*365) { # months
         zz <- as.POSIXlt(z)
-        zz$mday <- 1;
-        zz$mon <- pretty(zz$mon)
+        zz$mday <- 1
+        zz$mon <- pretty(zz$mon, ...)
         m <- length(zz$mon)
         m <- rep.int(zz$year[1], m)
-        zz$year <- c(m, m+1)
+        zz$year <- c(m, m + 1)
         z <- .Internal(POSIXlt2Date(zz))
         if(is.null(format.posixt)) format.posixt <- "%b"
     } else { # years
         zz <- as.POSIXlt(z)
         zz$mday <- 1; zz$mon <- 0
-        zz$year <- pretty(zz$year)
+        zz$year <- pretty(zz$year, ...)
         z <- .Internal(POSIXlt2Date(zz))
         if(is.null(format.posixt)) format.posixt <- "%Y"
     }
@@ -403,10 +615,10 @@ formattedTicksAndLabels.POSIXct <-
 
 
 formattedTicksAndLabels.times <-
-    function (x, at = FALSE, used.at = NULL,
-              num.limit = NULL, labels = FALSE, logsc = FALSE, 
-              abbreviate = NULL, minlength = 4, simplify = TRUE, 
-              ...) 
+    function(x, at = FALSE, used.at = NULL,
+             num.limit = NULL, labels = FALSE, logsc = FALSE, 
+             abbreviate = NULL, minlength = 4, simplify = TRUE, 
+             ...) 
 {
     ## most arguments ignored for now
 
@@ -419,7 +631,7 @@ formattedTicksAndLabels.times <-
     bad <- is.na(x) | abs(as.vector(x)) == Inf
     ## rng <- extend.limits(range(as.numeric(x[!bad])))
     rng <- range(as.numeric(x[!bad]))
-    tmp <- pretty(rng)
+    tmp <- pretty(rng, ...)
     att <- attributes(x)
     at <-
         structure(tmp, # [tmp >= rng[1] & tmp <= rng[2]],
@@ -490,13 +702,13 @@ panel.axis <-
 {
     side <- match.arg(side)
     orientation <- if (outside) "outer" else "inner"
-    cvp <- current.viewport() ## FIXME: grid should have accessors for xscale and yscale
+    cpl <- current.panel.limits() ## FIXME: grid should have accessors for xscale and yscale
     scale.range <-
         range(switch(side,
-                     left = cvp$yscale,
-                     top = cvp$xscale,
-                     right = cvp$yscale,
-                     bottom = cvp$xscale))
+                     left = cpl$ylim,
+                     top = cpl$xlim,
+                     right = cpl$ylim,
+                     bottom = cpl$xlim))
 
     axis.line <- trellis.par.get("axis.line")
     axis.text <- trellis.par.get("axis.text")
@@ -576,11 +788,11 @@ panel.axis <-
     tck.unit.x <- tck * axis.settings$tck * axis.units$tick$x
     tck.unit <- unit(x = tck.unit.x, units = axis.units$tick$units)
     lab.unit <-
-        if (tck.unit.x > 0) tck.unit + unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
+        if (any(tck.unit.x > 0)) tck.unit + unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
         else unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
     orient.factor <- if (outside) -1 else 1
 
-    if (tck.unit.x != 0)
+    if (any(tck.unit.x != 0))
         switch(side, 
                bottom = 
                grid.segments(x0 = unit(at[axid], "native"),
@@ -661,9 +873,4 @@ panel.axis <-
     }
     invisible()
 }
-
-
-
-
-
 

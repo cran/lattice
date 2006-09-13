@@ -5,8 +5,8 @@
 \usage{
 strip.default(which.given,
               which.panel,
-              packet.number,
-              panel.number,
+%               packet.number,
+%               panel.number,
               var.name,
               factor.levels,
               shingle.intervals,
@@ -36,14 +36,16 @@ strip.custom(\dots)
   \item{which.panel}{ vector of integers as long as the number of
     conditioning variables. The contents are indices specifying the
     current levels of each of the conditioning variables (thus, this
-    would be unique for each distinct panel).
+    would be unique for each distinct packet).  This is identical to the
+    return value of \code{\link{which.packet}}, which is a more accurate
+    name.
   }
-  \item{panel.number, packet.number}{ integer indices specifying which
-    panel and packet is being drawn (see the entry for \code{panel} in
-    \code{\link{xyplot}} for details).  These arguments are ignored by
-    the \code{strip.default}, but may be used by user supplied
-    replacements.
-  }
+%   \item{panel.number, packet.number}{ integer indices specifying which
+%     panel and packet is being drawn (see the entry for \code{panel} in
+%     \code{\link{xyplot}} for details).  These arguments are ignored by
+%     the \code{strip.default}, but may be used by user supplied
+%     replacements.
+%   }
   \item{var.name}{ vector of character strings or expressions as long as
     the number of conditioning variables.  The contents are interpreted
     as names for the conditioning variables.  Whether they are shown on
