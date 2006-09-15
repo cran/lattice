@@ -107,6 +107,7 @@ densityplot(rln,
             xscale.components = function(...) {
                 ans <- xscale.components.default(...)
                 ans$top <- ans$bottom
+                ans$bottom$labels$labels <- parse(text = ans$bottom$labels$labels)
                 ans$top$labels$labels <-
                     if (require(MASS))
                         fractions(2^(ans$top$labels$at))
@@ -114,6 +115,7 @@ densityplot(rln,
                         2^(ans$top$labels$at)
                 ans
             })
+
 }
 
 
