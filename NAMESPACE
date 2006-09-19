@@ -29,6 +29,8 @@ importFrom(stats,
 
 export(
 
+       modifyList,
+
        ## high level generics:
 
        histogram,
@@ -254,6 +256,12 @@ S3method(parallel,    data.frame)
 
 S3method(tmd,         formula)
 S3method(tmd,         trellis)
+
+
+S3method(llines,      default)
+S3method(ltext,       default)
+S3method(lpoints,     default)
+
 
 
 ### Local variables:
