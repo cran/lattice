@@ -67,7 +67,7 @@ prepanel.default.densityplot <-
         yl <- 0
         dxl <- numeric(0) # bad names !!
         dyl <- numeric(0) 
-        for (i in seq(along = vals))
+        for (i in seq_along(vals))
         {
             id <- (groups[subscripts] == vals[i])
             if (sum(id, na.rm = TRUE) > 1) ## need at least 2
@@ -134,7 +134,7 @@ panel.densityplot <-
         {
             h <- do.call("density", c(list(x = x), darg))
             lim <- current.panel.limits()$xlim
-            id <- h$x > lim[1] & h$x < lim[2]
+            id <- h$x > min(lim) & h$x < max(lim)
             panel.lines(x = h$x[id], y = h$y[id], ...)
         }
         switch(as.character(plot.points),
@@ -351,7 +351,7 @@ densityplot.formula <-
 
     cond.current.level <- rep(1, length(cond))
 
-    for (packet.number in seq(length = npackets))
+    for (packet.number in seq_len(npackets))
     {
         id <- compute.packet(cond, cond.current.level)
         foo$packet.sizes[packet.number] <- sum(id)

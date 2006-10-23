@@ -55,7 +55,7 @@ oneway <-
             else rep(spread, num.l.x)
         foo$fitted.values <- numeric(length(y))
         sc <- numeric(length(y))
-        for (i in seq(along = y)){
+        for (i in seq_along(y)){
             foo$fitted.values[i] <- foo$location[as.numeric(x)[i]]
             sc[i] <- foo$spread[as.numeric(x)[i]]
         }
@@ -133,7 +133,7 @@ do.breaks  <- function(endpoints, nint)
 
 Rows <- function(x, which)
 {
-    for (i in seq(along = x)) x[[i]] <-
+    for (i in seq_along(x)) x[[i]] <-
         rep(x[[i]], length = max(which, length(which)))[which]
     x
 }
@@ -174,10 +174,14 @@ lpolygon <-
              ## lty = NULL,
              ...) 
 {
-    if (is.logical(border))
-        border <-
+    border <- 
+        if (all(is.na(border)))
+            "transparent"
+        else if (is.logical(border))
+        {
             if (border) "black"
             else "transparent"
+        }
     xy <- xy.coords(x, y, recycle = TRUE)
     if (with(xy, sum(!is.na(x) & !is.na(y))) > 0)
         grid.polygon(x = xy$x,
@@ -233,10 +237,14 @@ lrect <-
              hjust = NULL, vjust = NULL,
              ...)
 {
-    if (is.logical(border))
-    {
-        border <- if (border) col else "transparent"
-    }
+    border <- 
+        if (all(is.na(border)))
+            "transparent"
+        else if (is.logical(border))
+        {
+            if (border) "black"
+            else "transparent"
+        }
     grid.rect(x = x, y = y,
               width = width, height = height,
               default.units = "native",
@@ -287,7 +295,7 @@ larrows <-
 ltext <- function(x, ...) UseMethod("ltext")
 
 ltext.default <-
-    function(x, y = NULL, labels = seq(along = x),
+    function(x, y = NULL, labels = seq_along(x),
              col = add.text$col,
              alpha = add.text$alpha,
              cex = add.text$cex,
@@ -463,8 +471,8 @@ lplot.xy <-
            h = {
                ylim <- current.viewport()$yscale
                zero <-
-                   if (ylim[1] > origin) ylim[1]
-                   else if (ylim[2] < origin) ylim[2]
+                   if (min(ylim) > origin) min(ylim)
+                   else if (max(ylim) < origin) max(ylim)
                    else origin
                grid.segments(x0 = x, x1 = x,
                              y0 = y, y1 = zero,
@@ -476,8 +484,8 @@ lplot.xy <-
            H = {
                xlim <- current.viewport()$xscale
                zero <-
-                   if (xlim[1] > origin) xlim[1]
-                   else if (xlim[2] < origin) xlim[2]
+                   if (min(xlim) > origin) min(xlim)
+                   else if (max(xlim) < origin) max(xlim)
                    else origin
                grid.segments(x0 = x, x1 = zero,
                              y0 = y, y1 = y,

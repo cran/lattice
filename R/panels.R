@@ -121,8 +121,8 @@ panel.curve <-
         expr <- sexpr
     }
     lims <- current.panel.limits()$xlim
-    if (missing(from)) from <- lims[1]
-    if (missing(to)) to <- lims[2]
+    if (missing(from)) from <- min(lims)
+    if (missing(to)) to <- max(lims)
     x <- seq(from, to, length = n)
     y <- eval(expr, envir = list(x = x), enclos = parent.frame())
     panel.lines(x, y, type = curve.type, col = col, lty = lty, lwd = lwd, ...)
@@ -240,7 +240,7 @@ panel.grid <-
     {
         scale <- limits$ylim
         at <- pretty(scale)
-        at <- at[at > scale[1] & at < scale[2]]
+        at <- at[at > min(scale) & at < max(scale)]
         grid.segments(y0 = at,
                       y1 = at,
                       gp = gpar(col = col.line, lty = lty, lwd = lwd),
@@ -251,7 +251,7 @@ panel.grid <-
     {
         scale <- limits$xlim
         at <- pretty(scale)
-        at <- at[at > scale[1] & at < scale[2]]
+        at <- at[at > min(scale) & at < max(scale)]
         grid.segments(x0 = at,
                       x1 = at,
                       gp = gpar(col = col.line, lty = lty, lwd = lwd),
@@ -460,7 +460,7 @@ panel.superpose <-
 
         subg <- groups[subscripts]
         ok <- !is.na(subg)
-        for (i in seq(along = vals))
+        for (i in seq_along(vals))
         {
             id <- ok & (subg == vals[i])
             if (any(id))
@@ -566,7 +566,7 @@ panel.superpose.2 <-
 
 ##         subg <- groups[subscripts]
 ##         ok <- !is.na(subg)
-##         for (i in seq(along = vals))
+##         for (i in seq_along(vals))
 ##         {
 ##             id <- ok & (subg == vals[i])
 ##             if (any(id))
@@ -641,7 +641,7 @@ panel.superpose.2 <-
 #         lwd <- rep(lwd, length = nvals)
 #         cex <- rep(cex, length = nvals)
 #         type <- rep(type, length = nvals)      # new line here
-#         for (i in seq(along = vals)) {
+#         for (i in seq_along(vals)) {
 #             id <- (groups[subscripts] == vals[i])
 #             if (any(id))
 #                 panel.xyplot(x = x[id], y = y[id], pch = pch[i],
@@ -679,7 +679,7 @@ panel.linejoin <-
     if (horizontal)
     {
         vals <- unique(sort(y))
-        yy <- seq(along = vals)
+        yy <- seq_along(vals)
         xx <- numeric(length(yy))
         for (i in yy)
             xx[i] <- fun(x[y == vals[i]])
@@ -688,7 +688,7 @@ panel.linejoin <-
     else
     {
         vals <- unique(sort(x))
-        xx <- seq(along = vals)
+        xx <- seq_along(vals)
         yy <- numeric(length(xx))
         for (i in xx)
             yy[i] <- fun(y[x == vals[i]])

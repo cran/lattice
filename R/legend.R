@@ -91,7 +91,7 @@ simpleKey <-
              ...)
 {
     add.text <- trellis.par.get("add.text")
-    foo <- seq(along = text)
+    foo <- seq_along(text)
     ans <-
         list(text = list(lab = text),
              col = col, cex = cex, font = font,
@@ -103,7 +103,8 @@ simpleKey <-
     if (rectangles) ans$rectangles <- 
         Rows(trellis.par.get("superpose.polygon"), foo)
     if (lines) ans$lines <-
-        Rows(trellis.par.get("superpose.line"), foo)
+        updateList(Rows(trellis.par.get("superpose.symbol"), foo), ## for pch
+                   Rows(trellis.par.get("superpose.line"), foo))
     ans
 }
              
@@ -147,6 +148,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                  angle = 0, 
                  density = -1,
                  ...,
+                 reverse.rows = FALSE, ## invert rows (e.g. for barchart, stack = FALSE)
                  between = 2,
                  between.columns = 3,
                  columns = 1,
@@ -158,7 +160,8 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                  fontface = NULL, 
                  fontfamily = NULL)
         {
-            list(between = between,
+            list(reverse.rows = reverse.rows,
+                 between = between,
                  align = align,
                  title = title,
                  rep = rep,
@@ -297,24 +300,28 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
     ## will be repeated as necessary to have the same length.
 
     
-    for (i in 1:number.of.components)
+    for (i in seq_len(number.of.components))
     {
-        if (components[[i]]$type != "text")
-        {
-            components[[i]]$pars <-
-                lapply(components[[i]]$pars, rep,
-                       length = if (key$rep) max.length
-                       else components[[i]]$length)
-            if (key$rep) components[[i]]$length <- max.length
-        }
-        else
-        {
-            ## NB: rep doesn't work with expressions of length > 1
-            components[[i]]$pars <-
-                c(components[[i]]$pars[1],
-                  lapply(components[[i]]$pars[-1], rep,
-                         length = components[[i]]$length))
-        }
+        if (key$rep && (components[[i]]$type != "text"))
+            components[[i]]$length <- max.length
+        components[[i]]$pars <-
+            lapply(components[[i]]$pars, rep, length = components[[i]]$length)
+        if (key$reverse.rows) 
+            components[[i]]$pars <- 
+                lapply(components[[i]]$pars, rev)
+##         {
+##             if (key$rep) components[[i]]$length <- max.length
+##             components[[i]]$pars <-
+##                 lapply(components[[i]]$pars, rep, components[[i]]$length)
+##         }
+##         else
+##         {
+##             components[[i]]$pars <-
+##                 c(components[[i]]$pars[1],
+##                   lapply(components[[i]]$pars[-1], rep,
+##                          length = components[[i]]$length))
+##         }
+
     }
     column.blocks <- key$columns
     rows.per.block <- ceiling(max.length/column.blocks)
@@ -499,11 +506,15 @@ draw.key <- function(key, draw = FALSE, vp = NULL)
                     key.gf <-
                         placeGrob(key.gf, 
                                   textGrob(x = cur$pars$adj[j],
-                                           just = c(
-                                           if (cur$pars$adj[j] == 1) "right"
-                                           else if (cur$pars$adj[j] == 0) "left"
-                                           else "center",
-                                           "center"),
+
+                                           hjust = cur$pars$adj[j],
+
+##                                            just = c(
+##                                            if (cur$pars$adj[j] == 1) "right"
+##                                            else if (cur$pars$adj[j] == 0) "left"
+##                                            else "center",
+##                                            "center"),
+
                                            label = cur$pars$labels[j],
                                            gp =
                                            gpar(col = cur$pars$col[j],
@@ -718,7 +729,7 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
     if (is.null(key$lab))
     {
         at <- lpretty(atrange, key$tick.number)
-        at <- at[at>=atrange[1] & at<=atrange[2]]
+        at <- at[at >= atrange[1] & at <= atrange[2]]
         labels <- format(at, trim = TRUE)
     }
     else if (is.characterOrExpression(key$lab) && length(key$lab)==length(key$at))
@@ -730,7 +741,7 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
     else if (is.list(key$lab))
     {
         at <- if (!is.null(key$lab$at)) key$lab$at else lpretty(atrange, key$tick.number)
-        at <- at[at>=atrange[1] & at<=atrange[2]]
+        at <- at[at >= atrange[1] & at <= atrange[2]]
         labels <- if (!is.null(key$lab$lab)) {
             check.overlap <- FALSE
             key$lab$lab
