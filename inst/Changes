@@ -27,6 +27,13 @@ new features
    'reverse.rows' to reverse the order of rows.  This applies to
    'draw.key', 'auto.key' and 'simpleKey' as well.
 
+ o extended interpretation of 'breaks' in histogram()
+
+ o matrix methods for 'splom' and 'parallel' (whose absence was an
+   oversight)
+
+
+
 changes in behaviour
 --------------------
 

@@ -39,7 +39,7 @@ panel.parallel <-
              lwd = superpose.line$lwd,
              lty = superpose.line$lty,
              alpha = superpose.line$alpha,
-             common.scale = TRUE,
+             common.scale = FALSE,
              lower = sapply(z, function(x) min(as.numeric(x), na.rm = TRUE)),
              upper = sapply(z, function(x) max(as.numeric(x), na.rm = TRUE)),
              ...)
@@ -66,7 +66,7 @@ panel.parallel <-
         alpha <- rep(alpha, length = n.g)
     }
 
-    if (!common.scale)
+    if (common.scale)
     {
         lower <- min(lower)
         upper <- max(upper)
@@ -179,7 +179,7 @@ parallel <- function(x, data, ...) UseMethod("parallel")
 ##     else UseMethod("parallel")
 ## }
 
-
+parallel.matrix <-
 parallel.data.frame <-
     function(x, data = NULL, ...)
 {
