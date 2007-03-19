@@ -109,13 +109,9 @@ panel.barchart <-
              lwd = if (is.null(groups)) plot.polygon$lwd else superpose.polygon$lwd,
              ...)
 {
-
-    ## This is to make sure `levels' are calculated based on the whole
-    ## groups vector and not just the values represented in this
-    ## particular panel (which might make the key inconsistent and/or
-    ## cause other problems)
-
-    if (!is.null(groups) && !is.factor(groups)) groups <- factor(groups)
+    plot.polygon <- trellis.par.get("plot.polygon")
+    superpose.polygon <- trellis.par.get("superpose.polygon")
+    reference.line <- trellis.par.get("reference.line")
 
     ## this function doesn't have a subscripts argument (which would
     ## make barchart always pass the subscripts to the trellis object,
@@ -133,12 +129,21 @@ panel.barchart <-
     x <- as.numeric(x[keep])
     y <- as.numeric(y[keep])
 
-    plot.polygon <- trellis.par.get("plot.polygon")
-    superpose.polygon <- trellis.par.get("superpose.polygon")
-    reference.line <- trellis.par.get("reference.line")
+    if (!is.null(groups))
+    {
+        groupSub <- function(groups, subscripts, ...)
+            groups[subscripts[keep]]
 
-    groupSub <- function(groups, subscripts, ...)
-        groups[subscripts[keep]]
+        ## This is to make sure `levels' are calculated based on the
+        ## whole groups vector and not just the values represented in
+        ## this particular panel (which might make the key
+        ## inconsistent and/or cause other problems)
+
+        if (!is.factor(groups)) groups <- factor(groups)
+        nvals <- nlevels(groups)
+        groups <- as.numeric(groupSub(groups, ...))
+    }
+
 
     if (horizontal)
     {
@@ -172,11 +177,12 @@ panel.barchart <-
         else if (stack)
         {
             if (!is.null(origin) && origin != 0)
-                warning("origin forced to 0 for stacked bars")
-
-            groups <- as.numeric(groupSub(groups, ...))
-            vals <- sort(unique(groups))
-            nvals <- length(vals)
+                warning("'origin' forced to 0 for stacked bars")
+ 
+##             vals <- seq_len(nlevels(groups))
+##             groups <- as.numeric(groupSub(groups, ...))
+##             ## vals <- sort(unique(groups))
+##             nvals <- length(vals)
 
             col <- rep(col, length = nvals)
             border <- rep(border, length = nvals)
@@ -231,9 +237,10 @@ panel.barchart <-
                 origin <- current.panel.limits()$xlim[1]
                 reference <- FALSE
             }
-            groups <- as.numeric(groupSub(groups, ...))
-            vals <- sort(unique(groups))
-            nvals <- length(vals)
+##             vals <- seq_len(nlevels(groups))
+##             groups <- as.numeric(groupSub(groups, ...))
+##             ## vals <- sort(unique(groups))
+##             nvals <- length(vals)
 
             col <- rep(col, length = nvals)
             border <- rep(border, length = nvals)
@@ -294,11 +301,12 @@ panel.barchart <-
         {
 
             if (!is.null(origin) && origin != 0)
-                warning("origin forced to 0 for stacked bars")
+                warning("'origin' forced to 0 for stacked bars")
 
-            groups <- as.numeric(groupSub(groups, ...))
-            vals <- sort(unique(groups))
-            nvals <- length(vals)
+##             vals <- seq_len(nlevels(groups))
+##             groups <- as.numeric(groupSub(groups, ...))
+##             ## vals <- sort(unique(groups))
+##             nvals <- length(vals)
 
             col <- rep(col, length = nvals)
             border <- rep(border, length = nvals)
@@ -350,9 +358,10 @@ panel.barchart <-
                 origin <- current.panel.limits()$ylim[1]
                 reference = FALSE
             }
-            groups <- as.numeric(groupSub(groups, ...))
-            vals <- sort(unique(groups))
-            nvals <- length(vals)
+##             vals <- seq_len(nlevels(groups))
+##             groups <- as.numeric(groupSub(groups, ...))
+##             ## vals <- sort(unique(groups))
+##             nvals <- length(vals)
 
             col <- rep(col, length = nvals)
             border <- rep(border, length = nvals)
@@ -780,7 +789,7 @@ dotplot <- function(x, data, ...) UseMethod("dotplot")
 ## (e.g. dotplot(x, groups = a):
 
 ##     if (!missing(data))
-##         warning("explicit data specification ignored")
+##         warning("explicit 'data' specification ignored")
 ##     dotplot(~x, data = list(x = formula),
 ##             xlab = xlab,
 ##             ...)
@@ -791,7 +800,7 @@ dotplot.numeric <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$xlab <- xlab
     ccall$x <- ~x
@@ -846,7 +855,7 @@ dotplot.matrix <- function(x, data = NULL, ...) dotplot(as.table(x), data, ...)
 dotplot.formula <-
     function(x,
              data = NULL,
-             panel = "panel.dotplot",
+             panel = lattice.getOption("panel.dotplot"),
              ...)
 {
     ocall <- ccall <- match.call()
@@ -867,7 +876,7 @@ barchart.numeric <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$xlab <- xlab
     ccall$x <- ~x
@@ -886,7 +895,7 @@ barchart.table <-
 {
     formula <- x
     ocall <- match.call()
-    if (!is.null(data)) warning("explicit data specification ignored")
+    if (!is.null(data)) warning("explicit 'data' specification ignored")
     ## formula <- eval(substitute(~foo, list(foo = substitute(formula))))
     data <- as.data.frame(formula)
     nms <- names(data)
@@ -925,7 +934,7 @@ barchart.matrix <- function(x, data = NULL, ...) barchart(as.table(x), data, ...
 barchart.formula <-
     function(x,
              data = NULL,
-             panel = "panel.barchart",
+             panel = lattice.getOption("panel.barchart"),
              box.ratio = 2, 
              ...)
 {
@@ -948,7 +957,7 @@ stripplot.numeric <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$xlab <- xlab
     ccall$x <- ~x
@@ -963,7 +972,7 @@ stripplot.numeric <-
 stripplot.formula <-
     function(x,
              data = NULL,
-             panel = "panel.stripplot",
+             panel = lattice.getOption("panel.stripplot"),
              ...)
 {
     ocall <- ccall <- match.call()
@@ -989,7 +998,7 @@ bwplot.numeric <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$xlab <- xlab
     ccall$x <- ~x
@@ -1009,7 +1018,7 @@ bwplot.formula <-
              outer = FALSE,
              auto.key = FALSE,
              aspect = "fill",
-             panel = "panel.bwplot",
+             panel = lattice.getOption("panel.bwplot"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -1081,10 +1090,10 @@ bwplot.formula <-
     }
     if (horizontal)
     {
-        if (!(is.numeric(x)))
-        {
-            warning("x should be numeric")
-        }
+##         if (!(is.numeric(x)))
+##         {
+##             warning("x should be numeric")
+##         }
         y <- as.factorOrShingle(y)
         is.f.y <- is.factor(y)  # used throughout the rest of the code
         num.l.y <- nlevels(y)
@@ -1093,10 +1102,10 @@ bwplot.formula <-
     }
     else
     {
-        if (!(is.numeric(y)))
-        {
-            warning("y should be numeric")
-        }
+##         if (!(is.numeric(y)))
+##         {
+##             warning("y should be numeric")
+##         }
         x <- as.factorOrShingle(x)
         is.f.x <- is.factor(x)  # used throughout the rest of the code
         num.l.x <- nlevels(x)

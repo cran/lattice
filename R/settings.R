@@ -91,7 +91,7 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
         list(grid.pars        = list(), ## set globally at the beginning
              fontsize         = list(text = 12, points = 8),
              background       = list(alpha = 1, col = can.col[17]),
-             clip             = list(panel = "on", strip = "on"),
+             clip             = list(panel = "on", strip = "off"),
              add.line         = list(alpha = 1, col = can.col[1], lty = 1, lwd = 1),
              add.text         = list(alpha = 1, cex = 1, col = can.col[1], font = 1, lineheight = 1.2),
              plot.polygon         = list(alpha = 1, col = can.col[2], border = "black", lty = 1, lwd = 1),
@@ -150,7 +150,7 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
                                      ylab.axis.padding = 1,
                                      axis.left = 1,
                                      axis.panel = 1, ## can be useful
-                                     strip.left = 1,  
+                                     strip.left = 1,
                                      panel = 1, ## shouldn't be changed
                                      between = 1,
                                      axis.right = 1,
@@ -210,7 +210,7 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
         ##ans$superpose.symbol$pch <- c("o","+",">","s","w","#","{")
     }
     ans
-}   
+}
 
 
 
@@ -229,7 +229,7 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
 ##     for (nm in nms[id])
 ##     {
 ##         print(nm)
-##         theme[[nm]] <- 
+##         theme[[nm]] <-
 ##             if (is.list(theme[[nm]]))
 ##                 trellis.par.grep(pattern, theme[[nm]], ...)
 ##             else
@@ -251,7 +251,7 @@ trellis.par.get <-
     ## just in case settings for the current device haven't been
     ## created yet, which may happen if the device is opened by x11(),
     ## say, (i.e., not by trellis.device()) and no trellis object has
-    ## been printed on this device yet. 
+    ## been printed on this device yet.
 
     if (is.null(lattice.theme[[.Device]])) {
         trellis.device(device = .Device, new = FALSE)
@@ -267,7 +267,7 @@ trellis.par.get <-
 
 
 trellis.par.set <-
-    function(name, value, ..., theme, warn = TRUE)
+    function(name, value, ..., theme, warn = TRUE, strict = FALSE)
 {
     ## the default device is opened if none already open
     if (is.null(dev.list()))
@@ -310,12 +310,15 @@ trellis.par.set <-
         if (is.function(theme)) theme <- theme()
         if (!is.list(theme))
         {
-            warning("Invalid theme specified")
+            warning("Invalid 'theme' specified")
             theme <- NULL
         }
     }
 
-    lattice.theme[[.Device]] <- updateList(lattice.theme[[.Device]], theme)
+    if (strict)
+        lattice.theme[[.Device]][names(theme)] <- theme
+    else
+        lattice.theme[[.Device]] <- updateList(lattice.theme[[.Device]], theme)
     assign("lattice.theme", lattice.theme, envir = .LatticeEnv)
     invisible()
 }
@@ -358,7 +361,7 @@ trellis.device <-
 
     ## FIXME: remove this warning in some future version
     if ("bg" %in% names(list(...)))
-        warning("trellis.device has changed, 'bg' may not be doing what you think it is")
+        warning("'trellis.device' has changed, 'bg' may not be doing what you think it is")
 
     if (new || is.null(dev.list()))
     {
@@ -375,7 +378,7 @@ trellis.device <-
     ## 'lattice.options(default.theme = "canonical.theme")' after
     ## loading lattice.
 
-    
+
     ## Make sure there's an entry for this device in the theme list
     lattice.theme <- get("lattice.theme", envir = .LatticeEnv)
     if (!(.Device %in% names(lattice.theme)))
@@ -394,12 +397,12 @@ trellis.device <-
         if (is.function(theme)) theme <- theme()
         if (!is.list(theme))
         {
-            warning("Invalid theme specified")
+            warning("Invalid 'theme' specified")
             theme <- NULL
         }
     }
 
-    ## apply theme 
+    ## apply theme
     if (!is.null(theme)) trellis.par.set(theme)
     return(invisible())
 }
@@ -451,7 +454,7 @@ show.settings <- function(x = NULL)
               col = "transparent"))
     pushViewport(viewport(layout = page.layout,
                           gp = gpar(fontsize = theme$fontsize$text)))
-    gp.box <- 
+    gp.box <-
         gpar(col = theme$axis.line$col,
              lty = theme$axis.line$lty,
              lwd = theme$axis.line$lwd,
@@ -697,14 +700,14 @@ lattice.options <- function(...)
     ## lattice.options("foo", "bar") and
     ## lattice.options(foo=1, bar=2). But it could also be
     ## lattice.options(foo=1, "bar"), which makes some juggling necessary
-    
+
     new <- list(...)
     if (is.null(names(new)) && length(new) == 1 && is.list(new[[1]])) new <- new[[1]]
     old <- .LatticeEnv$lattice.options
     ## any reason to prefer get("lattice.options", envir = .LatticeEnv)?
 
     ## if no args supplied, returns full options list
-    if (length(new) == 0) return(old) 
+    if (length(new) == 0) return(old)
 
     nm <- names(new)
     if (is.null(nm)) return(old[unlist(new)]) ## typically getting options, not setting
@@ -718,7 +721,7 @@ lattice.options <- function(...)
     names(retVal) <- nm
     nm <- nm[isNamed]
 
-    ## this used to be 
+    ## this used to be
 
     ## modified <- updateList(retVal[nm], new[nm])
     ## .LatticeEnv$lattice.options[names(modified)] <- modified
@@ -773,6 +776,28 @@ lattice.options <- function(...)
          ## factor (see 'allow.multiple' argument in ?xyplot)
 
          interaction.sep = " * ",
+
+         ## default panel functions
+
+         panel.contourplot = "panel.contourplot",
+         panel.levelplot = "panel.levelplot",
+         panel.parallel = "panel.parallel",
+         panel.densityplot = "panel.densityplot",
+         panel.splom = "panel.splom",
+         panel.wireframe = "panel.wireframe",
+         panel.dotplot = "panel.dotplot",
+         panel.qq = "panel.qq",
+         panel.stripplot = "panel.stripplot",
+         panel.xyplot = "panel.xyplot",
+         panel.qqmath = "panel.qqmath",
+         panel.barchart = "panel.barchart",
+         panel.bwplot = "panel.bwplot",
+         panel.histogram = "panel.histogram",
+         panel.cloud = "panel.cloud",
+         panel.pairs = "panel.pairs",
+
+
+         ## axis units.  Usually not a good idea for users to manipulate
 
          axis.units =
          list(outer =
@@ -850,7 +875,7 @@ lattice.options <- function(...)
 ##                         pad1 = list(x = 0.01, units = "snpc"),
 ##                         pad2 = list(x = 0.01, units = "snpc")))),
 
-         
+
 
          layout.heights =
 
@@ -926,7 +951,7 @@ lattice.options <- function(...)
               axis.key.padding = list(x = 0.01, units = "snpc", data = NULL),
               key.right = list(x = 0, units = "grobwidth", data = textGrob(lab="")),
               right.padding = list(x = 0.01, units = "snpc", data = NULL)),
-         
+
          highlight.gpar = list(col = "red", lwd = 2, fill = "transparent")
 
          )
@@ -939,18 +964,18 @@ lattice.options <- function(...)
 lattice.getStatus <- function(name)
     get("lattice.status", envir = .LatticeEnv)[[name]]
 
-lattice.setStatus <- function (...) 
+lattice.setStatus <- function (...)
 {
     dots <- list(...)
     if (is.null(names(dots)) && length(dots) == 1 && is.list(dots[[1]]))
         dots <- dots[[1]]
-    if (length(dots) == 0) 
+    if (length(dots) == 0)
         return()
     lattice.status <- get("lattice.status", envir = .LatticeEnv)
     lattice.status[names(dots)] <- dots
     assign("lattice.status", lattice.status, env = .LatticeEnv)
 }
-    
+
 
 
 

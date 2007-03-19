@@ -119,7 +119,7 @@ panel.histogram <-
         breaks <- h$breaks
 
         nb <- length(breaks)
-        if (length(y) != nb-1) warning("problem with hist computations")
+        if (length(y) != nb-1) warning("problem with 'hist' computations")
 
         if (nb > 1)
         {
@@ -146,7 +146,7 @@ histogram.factor <- histogram.numeric <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$xlab <- xlab
     ccall$x <- ~x
@@ -167,7 +167,7 @@ histogram.formula <-
              outer = TRUE,
              auto.key = FALSE,
              aspect = "fill",
-             panel = "panel.histogram",
+             panel = lattice.getOption("panel.histogram"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,

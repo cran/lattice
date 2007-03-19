@@ -138,7 +138,7 @@ panel.levelplot <-
             if ("x" %in% names(shrink)) shrinkx <- rep(shrink$x, length = 2)
             if ("y" %in% names(shrink)) shrinky <- rep(shrink$y, length = 2)
         }
-        else warning("Invalid shrink, ignored")
+        else warning("Invalid 'shrink' parameter ignored")
     }
 
     scaleWidth <- function(z, min = .8, max = .8, zl = range(z, finite = TRUE)) {
@@ -332,7 +332,7 @@ contourplot <- function(x, data, ...) UseMethod("contourplot")
 contourplot.matrix <-
     function(x, data = NULL, aspect = "iso", ...)
 {
-    if (!missing(data)) warning("explicit data specification ignored")
+    if (!missing(data)) warning("explicit 'data' specification ignored")
     form <- z ~ row * column
     data <-
         expand.grid(row = seq_len(nrow(x)),
@@ -351,7 +351,7 @@ contourplot.matrix <-
 contourplot.formula <-
     function(x,
              data = NULL,
-             panel = "panel.contourplot",
+             panel = lattice.getOption("panel.contourplot"),
              cuts = 7,
              labels = TRUE,
              contour = TRUE,
@@ -381,7 +381,7 @@ levelplot <- function(x, data, ...) UseMethod("levelplot")
 levelplot.matrix <-
     function(x, data = NULL, aspect = "iso", ...)
 {
-    if (!missing(data)) warning("explicit data specification ignored")
+    if (!missing(data)) warning("explicit 'data' specification ignored")
     form <- z ~ row * column
     data <-
         expand.grid(row = seq_len(nrow(x)),
@@ -401,7 +401,7 @@ levelplot.formula <-
              allow.multiple = is.null(groups) || outer,
              outer = TRUE,
              aspect = "fill",
-             panel = "panel.levelplot",
+             panel = lattice.getOption("panel.levelplot"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,

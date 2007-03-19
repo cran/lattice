@@ -271,7 +271,7 @@ panel.3dscatter <-
         }
         if (any(!(type %in% c('p', 'h', 'l', 'b', 'o'))))
         {
-            warning("type has unsupported values")
+            warning("'type' has unsupported values")
         }
     }
 }
@@ -1351,7 +1351,7 @@ wireframe.matrix <-
              zlab = deparse(substitute(x)),
              ...)
 {
-    if (!is.null(data)) warning("explicit data specification ignored")
+    if (!is.null(data)) warning("explicit 'data' specification ignored")
     form <- eval(z ~ row * column)
     data <-
         expand.grid(row = seq_len(nrow(x)),
@@ -1366,7 +1366,7 @@ wireframe.matrix <-
 wireframe.formula <-
     function(x,
              data = NULL,
-             panel = "panel.wireframe",
+             panel = lattice.getOption("panel.wireframe"),
              ...)
 {
     ocall <- ccall <- match.call()
@@ -1392,7 +1392,7 @@ cloud.matrix <-
              zlab = deparse(substitute(x)),
              ...)
 {
-    if (!is.null(data)) warning("explicit data specification ignored")
+    if (!is.null(data)) warning("explicit 'data' specification ignored")
     form <- eval(z ~ row * column)
     data <-
         expand.grid(row = seq_len(nrow(x)),
@@ -1410,16 +1410,16 @@ cloud.formula <-
              outer = FALSE,
              auto.key = FALSE,
              aspect = c(1,1),
-             panel = "panel.cloud",
+             panel = lattice.getOption("panel.cloud"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
              groups = NULL,
              xlab,
-             xlim = if (is.factor(x)) levels(x) else range(x, finite = TRUE),
              ylab,
-             ylim = if (is.factor(y)) levels(y) else range(y, finite = TRUE),
              zlab,
+             xlim = if (is.factor(x)) levels(x) else range(x, finite = TRUE),
+             ylim = if (is.factor(y)) levels(y) else range(y, finite = TRUE),
              zlim = if (is.factor(z)) levels(z) else range(z, finite = TRUE),
              at,
              drape = FALSE,

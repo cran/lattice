@@ -164,7 +164,7 @@ densityplot.numeric <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$xlab <- xlab
     ccall$x <- ~x
@@ -185,7 +185,7 @@ densityplot.formula <-
 ##              outer = FALSE,
              auto.key = FALSE,
              aspect = "fill",
-             panel = "panel.densityplot",
+             panel = lattice.getOption("panel.densityplot"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,

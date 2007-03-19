@@ -66,6 +66,8 @@ panel.parallel <-
         alpha <- rep(alpha, length = n.g)
     }
 
+    if (is.function(lower)) lower <- sapply(z, lower)
+    if (is.function(upper)) upper <- sapply(z, upper)
     if (common.scale)
     {
         lower <- min(lower)
@@ -185,7 +187,7 @@ parallel.data.frame <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$x <- ~x
     ccall[[1]] <- as.name("parallel")
@@ -200,7 +202,7 @@ parallel.formula <-
              data = NULL,
              aspect = "fill",
              between = list(x = 0.5, y = 0.5),
-             panel = "panel.parallel",
+             panel = lattice.getOption("panel.parallel"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,

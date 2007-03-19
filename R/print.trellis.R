@@ -91,6 +91,7 @@ grobFromLabelList <- function(lab, name = "label", rot = 0)
                   fontfamily = lab$fontfamily,
                   fontface = chooseFace(lab$fontface, lab$font),
                   lineheight = lab$lineheight,
+                  alpha = lab$alpha,
                   cex = lab$cex))
 }
 
@@ -178,6 +179,8 @@ print.trellis <-
 
     ## if necessary, save current settings and apply temporary
     ## settings in x$par.settings
+
+    ## FIXME: do these using on.exit rather than the current scheme
 
     if (!is.null(x$par.settings))
     {
@@ -900,6 +903,8 @@ print.trellis <-
                                line.alpha = yaxis.alpha.line)
                         upViewport()
 
+
+
                         ## X-axis bottom and Y-axis right
                         pushViewport(viewport(layout.pos.row = pos.row,
                                               layout.pos.col = pos.col,
@@ -943,8 +948,17 @@ print.trellis <-
                                line.lty = yaxis.lty,
                                line.lwd = yaxis.lwd,
                                line.alpha = yaxis.alpha.line)
+
+                        ## N.B.: We'll need this viewport again later
+                        ## to draw a border around it.  However, this
+                        ## must be postponed till after the panel is
+                        ## drawn, since otherwise the border is liable
+                        ## to be obscured.
+                        
                         upViewport()
 
+
+                        
 ############################################
 ###        done drawing axes              ##
 ############################################
@@ -988,15 +1002,6 @@ print.trellis <-
                             pargs <- pargs[names(formals(panel))]
                         do.call("panel", pargs)
 
-
-                                
-                        grid.rect(gp =
-                                  gpar(col = axis.line$col,
-                                       lty = axis.line$lty,
-                                       lwd = axis.line$lwd,
-                                       alpha = axis.line$alpha,
-                                       fill = "transparent"))
-
                         upViewport()
 
 
@@ -1005,6 +1010,27 @@ print.trellis <-
 ############################################
 
 
+
+######################################################################
+### Draw the box around panels.  This used to be done with clipping ##
+### on, which caused some subtle and puzzling side effects.         ##
+######################################################################
+
+
+                        downViewport(trellis.vpname("panel",
+                                                    column = column,
+                                                    row = row,
+                                                    clip.off = TRUE))
+                        grid.rect(gp =
+                                  gpar(col = axis.line$col,
+                                       lty = axis.line$lty,
+                                       lwd = axis.line$lwd,
+                                       alpha = axis.line$alpha,
+                                       fill = "transparent"))
+                        upViewport()
+
+
+                        
 
 
 #########################################
@@ -1064,7 +1090,6 @@ print.trellis <-
                                                                  column = column,
                                                                  row = row,
                                                                  clip.off = FALSE)))
-
 
                             for(i in seq_len(number.of.cond))
                             {
@@ -1226,7 +1251,7 @@ print.trellis <-
     }
     if (!is.null(x$par.settings))
     {
-        trellis.par.set(opar)
+        trellis.par.set(opar, strict = TRUE)
     }
 
     if (!is.null(draw.in)) upViewport(depth)

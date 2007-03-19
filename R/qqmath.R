@@ -224,7 +224,7 @@ qqmath.numeric <-
 {
     ocall <- ccall <- match.call()
     if (!is.null(ccall$data)) 
-        warning("explicit data specification ignored")
+        warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
     ccall$ylab <- ylab
     ccall$x <- ~x
@@ -245,8 +245,7 @@ qqmath.formula <-
              f.value = NULL,
              auto.key = FALSE,
              aspect = "fill",
-             panel = "panel.qqmath",
-             ## panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
+             panel = lattice.getOption("panel.qqmath"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
