@@ -72,6 +72,7 @@ diag.panel.splom <-
              axis.line.alpha = axis.line$alpha,
              axis.line.lty = axis.line$lty,
              axis.line.lwd = axis.line$lwd,
+             axis.line.tck = 1,
              ...)
 {
     add.text <- trellis.par.get("add.text")
@@ -112,7 +113,7 @@ diag.panel.splom <-
                        tick = TRUE,
                        half = TRUE,
 
-                       tck = 1, ## from scales ?
+                       tck = axis.line.tck,
                        rot = rot, 
 
                        text.col = axis.text.col,
@@ -170,8 +171,8 @@ panel.pairs <-
              axis.line.col = axis.line$col,
              axis.line.lty = axis.line$lty,
              axis.line.lwd = axis.line$lwd,
-             ## axis.line.alpha = axis.line$alpha,
-             
+             axis.line.alpha = axis.line$alpha,
+             axis.line.tck = 1,
              ...)
 {
     lower.panel <- 
@@ -284,6 +285,8 @@ panel.pairs <-
                                axis.line.col = axis.line.col,
                                axis.line.lty = axis.line.lty,
                                axis.line.lwd = axis.line.lwd,
+                               axis.line.alpha = axis.line.alpha,
+                               axis.line.tck = axis.line.tck,
 
                                ...)
 
@@ -378,16 +381,19 @@ splom.formula <-
              varnames,
              drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
+             lattice.options = NULL,
              default.scales = list(draw = FALSE, relation = "same", axs = "i"),
              subset = TRUE)
 {
     formula <- x
-
-    ## dots <- eval(substitute(list(...)), data, environment(formula))
     dots <- list(...)
-
     groups <- eval(substitute(groups), data, environment(formula))
     subset <- eval(substitute(subset), data, environment(formula))
+    if (!is.null(lattice.options))
+    {
+        oopt <- lattice.options(lattice.options)
+        on.exit(lattice.options(oopt), add = TRUE)
+    }
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
 
@@ -445,7 +451,9 @@ splom.formula <-
                        strip = strip,
                        xlab = xlab,
                        ylab = ylab,
-                       xlab.default = gettext("Scatter Plot Matrix")), dots))
+                       xlab.default = gettext("Scatter Plot Matrix"),
+                       lattice.options = lattice.options),
+                  dots))
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
