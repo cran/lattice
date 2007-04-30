@@ -1372,7 +1372,7 @@ wireframe.formula <-
     ocall <- ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
-    ccall[[1]] <- as.name("cloud")
+    ccall[[1]] <- quote(lattice::cloud)
     ans <- eval.parent(ccall)
     ans$call <- ocall
     ans
@@ -1398,8 +1398,15 @@ cloud.matrix <-
         expand.grid(row = seq_len(nrow(x)),
                     column = seq_len(ncol(x)))
     data$z <- as.vector(as.numeric(x))
-    ## What if rownames/colnames are non-null?
-    cloud(form, data, type = type, zlab = zlab, ...)
+    ## Change default tick labels if rownames/colnames are non-null
+    default.scales <- list()
+    if (!is.null(rownames(x)))
+        default.scales$x <- list(at = seq_len(nrow(x)), labels = rownames(x))
+    if (!is.null(colnames(x)))
+        default.scales$y <- list(at = seq_len(ncol(x)), labels = colnames(x))
+    cloud(form, data, type = type, zlab = zlab,
+          default.scales = default.scales,
+          ...)
 }
 
 

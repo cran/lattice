@@ -373,28 +373,37 @@ panel.loess <-
              col,
              col.line = plot.line$col,
              type, ## ignored
+             horizontal = FALSE,
              ...)
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
-    if (length(x)>0)
+    ok <- is.finite(x) & is.finite(y)
+    if (sum(ok) < 1) return()
+
+    if (!missing(col))
     {
-        if (!missing(col))
-        {
-            if (missing(col.line)) col.line <- col
-        }
-        plot.line <- trellis.par.get("plot.line")
+        if (missing(col.line)) col.line <- col
+    }
+    plot.line <- trellis.par.get("plot.line")
+    if (horizontal)
+    {
         smooth <-
-            loess.smooth(x, y, span = span, family = family,
+            loess.smooth(y[ok], x[ok], span = span, family = family,
                          degree = degree, evaluation = evaluation)
-        panel.lines(x = smooth$x,
-                    y = smooth$y,
-                    col = col.line,
-                    lty = lty,
-                    lwd = lwd,
-                    ...)
+        panel.lines(x = smooth$y, y = smooth$x,
+                    col = col.line, lty = lty, lwd = lwd, ...)
+    }
+    else
+    {
+        smooth <-
+            loess.smooth(x[ok], y[ok], span = span, family = family,
+                         degree = degree, evaluation = evaluation)
+        panel.lines(x = smooth$x, y = smooth$y,
+                    col = col.line, lty = lty, lwd = lwd, ...)
     }
 }
+
 
 
 prepanel.loess <-
@@ -405,10 +414,11 @@ prepanel.loess <-
 {
     x <- as.numeric(x)
     y <- as.numeric(y)
-    if (length(x)>0)
+    ok <- is.finite(x) & is.finite(y)
+    if (sum(ok) > 0)
     {
         smooth <-
-            loess.smooth(x, y, span = span, family = family,
+            loess.smooth(x[ok], y[ok], span = span, family = family,
                          degree = degree, evaluation = evaluation)
         list(xlim = range(x, smooth$x, finite = TRUE),
              ylim = range(y, smooth$y, finite = TRUE),
@@ -725,6 +735,7 @@ panel.superpose.2 <-
 
 
 panel.linejoin <-
+panel.average <-
     function(x, y, fun = mean,
              horizontal = TRUE,
              lwd = reference.line$lwd,
