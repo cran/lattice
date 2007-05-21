@@ -16,6 +16,7 @@ wireframe(x, data, \dots)
       outer = FALSE,
       auto.key = FALSE,
       aspect = c(1,1),
+      panel.aspect = 1,
       panel = lattice.getOption("panel.cloud"),
       prepanel = NULL,
       scales = list(),
@@ -118,9 +119,13 @@ wireframe(x, data, \dots)
     type of display in \code{cloud} (see \code{\link{panel.3dscatter}}
     for details).  Defaults to \code{"h"} for the \code{matrix} method.
   }
-  \item{aspect}{
-    vector of length 2, giving the relative aspects of the y-size/x-size
-    and z-size/x-size of the enclosing cube.
+  \item{aspect, panel.aspect}{
+    unlike other high level functions, \code{aspect} is taken to be a
+    numeric vector of length 2, giving the relative aspects of the
+    y-size/x-size and z-size/x-size of the enclosing cube.  The usual
+    role of the \code{aspect} argument in determining the aspect ratio
+    of the panel (see \code{\link{xyplot}} for details) is played by
+    \code{panel.aspect}, except that it can only be a numeric value.
   }
   \item{panel}{
     panel function used to create the display.  See
@@ -325,20 +330,23 @@ cloud(Sepal.Length ~ Petal.Length * Petal.Width | Species, data = iris,
       screen = list(x = -90, y = 70), distance = .4, zoom = .6)
 
 par.set <-
-    list(axis.line = list(col = "transparent"), clip = list(panel = FALSE))
+    list(axis.line = list(col = "transparent"),
+         clip = list(panel = "off"))
 print(cloud(Sepal.Length ~ Petal.Length * Petal.Width, 
             data = iris, cex = .8, 
             groups = Species, 
             main = "Stereo",
             screen = list(z = 20, x = -70, y = 3),
-            par.settings = par.set),
+            par.settings = par.set,
+            scales = list(col = "black")),
       split = c(1,1,2,1), more = TRUE)
 print(cloud(Sepal.Length ~ Petal.Length * Petal.Width,
             data = iris, cex = .8, 
             groups = Species,
             main = "Stereo",
             screen = list(z = 20, x = -70, y = 0),
-            par.settings = par.set),
+            par.settings = par.set,
+            scales = list(col = "black")),
       split = c(2,1,2,1))
 
 }
