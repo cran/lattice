@@ -443,18 +443,12 @@ panel.stripplot <-
              factor = 0.5, amount = NULL,
              horizontal = TRUE, groups = NULL, ...)
 {
-    if (all(is.na(x) | is.na(y))) return()
-    x <- as.numeric(x)
-    y <- as.numeric(y)
-    if (jitter.data)
-    {
-        if (horizontal)
-            y[] <- jitter(y, factor = factor, amount = amount)
-        else
-            x[] <- jitter(x, factor = factor, amount = amount)
-    }
+    if (!any(is.finite(x) & is.finite(y))) return()
     panel.xyplot(x = x,
                  y = y,
+                 jitter.x = jitter.data && !horizontal,
+                 jitter.y = jitter.data &&  horizontal,
+                 factor = factor, amount = amount,
                  groups = groups,
                  horizontal = horizontal, ...)
 }
@@ -798,7 +792,8 @@ dotplot <- function(x, data, ...) UseMethod("dotplot")
 dotplot.numeric <-
     function(x, data = NULL, xlab = deparse(substitute(x)), ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
@@ -818,7 +813,7 @@ dotplot.table <-
     function(x, data = NULL, groups = TRUE, ...)
 {
     formula <- x
-    ocall <- match.call()
+    ocall <- sys.call(sys.parent())
     ## formula <- eval(substitute(~foo, list(foo = substitute(formula))))
     data <- as.data.frame(formula)
     nms <- names(data)
@@ -858,7 +853,8 @@ dotplot.formula <-
              panel = lattice.getOption("panel.dotplot"),
              ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
     ccall[[1]] <- quote(lattice::bwplot)
@@ -874,7 +870,8 @@ barchart <- function(x, data, ...) UseMethod("barchart")
 barchart.numeric <-
     function(x, data = NULL, xlab = deparse(substitute(x)), ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
@@ -894,7 +891,7 @@ barchart.table <-
              origin = 0, stack = TRUE, ...)
 {
     formula <- x
-    ocall <- match.call()
+    ocall <- sys.call(sys.parent())
     if (!is.null(data)) warning("explicit 'data' specification ignored")
     ## formula <- eval(substitute(~foo, list(foo = substitute(formula))))
     data <- as.data.frame(formula)
@@ -938,7 +935,8 @@ barchart.formula <-
              box.ratio = 2, 
              ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
     ccall$box.ratio <- box.ratio
@@ -955,7 +953,8 @@ stripplot <- function(x, data, ...)  UseMethod("stripplot")
 stripplot.numeric <-
     function(x, data = NULL, xlab = deparse(substitute(x)), ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
@@ -975,7 +974,8 @@ stripplot.formula <-
              panel = lattice.getOption("panel.stripplot"),
              ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
     ccall[[1]] <- quote(lattice::bwplot)
@@ -996,7 +996,8 @@ bwplot <- function(x, data, ...) UseMethod("bwplot")
 bwplot.numeric <-
     function(x, data = NULL, xlab = deparse(substitute(x)), ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
     ccall$data <- list(x = x)
@@ -1137,7 +1138,7 @@ bwplot.formula <-
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- match.call()
+    foo$call <- sys.call(sys.parent())
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 

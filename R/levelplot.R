@@ -78,8 +78,8 @@ prepanel.default.levelplot <-
 panel.contourplot <- function(...) panel.levelplot(...)
 
 
-## new version using contourLines, and hopefully to work for missing
-## matrix entries as well
+## version using contourLines, and hopefully works for missing matrix
+## entries as well
 
 panel.levelplot <-
     function(x, y, z, 
@@ -102,26 +102,39 @@ panel.levelplot <-
              col.regions = regions$col,
              alpha.regions = regions$alpha)
 {
+    if (length(subscripts) == 0) return()
     regions <- trellis.par.get("regions")
+    label.style <- match.arg(label.style)
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+    z <- as.numeric(z)
     numcol <- length(at) - 1
     numcol.r <- length(col.regions)
     col.regions <-
         if (numcol.r <= numcol)
             rep(col.regions, length = numcol)
-        else col.regions[floor(1+(1:numcol-1)*(numcol.r-1)/(numcol-1))]
-    zcol <- rep(NA, length(z)) #numeric(length(z))
-    for (i in seq_along(col.regions))
-        zcol[!is.na(x) & !is.na(y) & !is.na(z) & z>=at[i] & z<at[i+1]] <- i
-
-    label.style <- match.arg(label.style)
-    x <- as.numeric(x[subscripts])
-    y <- as.numeric(y[subscripts])
-    minXwid <- min(diff(sort(unique(x))))
-    minYwid <- min(diff(sort(unique(y))))
-
+        else
+            col.regions[round(seq(1, numcol.r, length = numcol))]
+    zcol <- cut(z, at, include.lowest = TRUE, labels = FALSE)
+    x <- x[subscripts]
+    y <- y[subscripts]
+    minXwid <- if (length(unique(x)) > 1) min(diff(sort(unique(x)))) else 1
+    minYwid <- if (length(unique(x)) > 1) min(diff(sort(unique(y)))) else 1
     fullZrange <- range(as.numeric(z), finite = TRUE) # for shrinking
-    z <- as.numeric(z[subscripts])
+    z <- z[subscripts]
     zcol <- as.numeric(zcol[subscripts])
+##     numcol <- length(at) - 1
+##     numcol.r <- length(col.regions)
+##     col.regions <-
+##         if (numcol.r <= numcol)
+##             rep(col.regions, length = numcol)
+##         else col.regions[floor(1+(1:numcol-1)*(numcol.r-1)/(numcol-1))]
+##     zcol <- rep(NA, length(z)) #numeric(length(z))
+##     for (i in seq_along(col.regions))
+##         zcol[!is.na(x) & !is.na(y) & !is.na(z) & z>=at[i] & z<at[i+1]] <- i
+##     x <- as.numeric(x[subscripts])
+##     y <- as.numeric(y[subscripts])
+##     z <- as.numeric(z[subscripts])
 
     ## Do we need a zlim-like argument ?
 
@@ -146,180 +159,172 @@ panel.levelplot <-
         else min + (max - min) * (z - zl[1]) / diff(zl)
     }
 
-    
-    if (any(subscripts)) {
 
-        ## sorted unique values of x 
-        ux <- sort(unique(x[!is.na(x)]))
-        ## actual box boundaries (x axis)
-        bx <-
-            if (length(ux) > 1)
-                c(3 * ux[1] - ux[2],
-                  ux[-length(ux)] + ux[-1],
-                  3 * ux[length(ux)] - ux[length(ux)-1]) / 2
-            else
-                ux + c(-.5, .5) * minXwid
-        ## dimension of rectangles
-        lx <- diff(bx)
-        ## centers of rectangles
-        cx <- (bx[-1] + bx[-length(bx)])/2
+    ## sorted unique values of x 
+    ux <- sort(unique(x[!is.na(x)]))
+    ## actual box boundaries (x axis)
+    bx <-
+        if (length(ux) > 1)
+            c(3 * ux[1] - ux[2],
+              ux[-length(ux)] + ux[-1],
+              3 * ux[length(ux)] - ux[length(ux)-1]) / 2
+        else
+            ux + c(-.5, .5) * minXwid
+    ## dimension of rectangles
+    lx <- diff(bx)
+    ## centers of rectangles
+    cx <- (bx[-1] + bx[-length(bx)])/2
 
-        ## same things for y
-        uy <- sort(unique(y[!is.na(y)]))
-        by <-
-            if (length(uy) > 1)
-                c(3 * uy[1] - uy[2],
-                  uy[-length(uy)] + uy[-1],
-                  3 * uy[length(uy)] - uy[length(uy)-1]) / 2
-            else
-                uy + c(-.5, .5) * minYwid
-        ly <- diff(by)
-        cy <- (by[-1] + by[-length(by)])/2
+    ## same things for y
+    uy <- sort(unique(y[!is.na(y)]))
+    by <-
+        if (length(uy) > 1)
+            c(3 * uy[1] - uy[2],
+              uy[-length(uy)] + uy[-1],
+              3 * uy[length(uy)] - uy[length(uy)-1]) / 2
+        else
+            uy + c(-.5, .5) * minYwid
+    ly <- diff(by)
+    cy <- (by[-1] + by[-length(by)])/2
 
 
-        idx <- match(x, ux)
-        idy <- match(y, uy)
+    idx <- match(x, ux)
+    idy <- match(y, uy)
 
-        if (region) 
-            grid.rect(x = cx[idx],
-                      y = cy[idy],
-                      width = lx[idx] *
-                      scaleWidth(z, shrinkx[1], shrinkx[2], fullZrange),
-                      height = ly[idy] *
-                      scaleWidth(z, shrinky[1], shrinky[2], fullZrange),
-                      default.units = "native",
-                      gp =
-                      gpar(fill = col.regions[zcol],
-                           lwd = 0.00001,
-                           col = "transparent",
-                           alpha = alpha.regions))
+    if (region) 
+        grid.rect(x = cx[idx],
+                  y = cy[idy],
+                  width = lx[idx] * scaleWidth(z, shrinkx[1], shrinkx[2], fullZrange),
+                  height = ly[idy] * scaleWidth(z, shrinky[1], shrinky[2], fullZrange),
+                  default.units = "native",
+                  gp =
+                  gpar(fill = col.regions[zcol],
+                       lwd = 0.00001,
+                       col = "transparent",
+                       alpha = alpha.regions))
 
-        if (contour)
+    if (contour)
+    {
+        ## calculate aspect ratio of panel to use in calculating label alignment
+        cpl <- current.panel.limits(unit="cm")
+        asp <- diff(cpl$ylim) / diff(cpl$xlim)
+
+        ## Processing the labels argument
+        if (is.logical(labels) && !labels) labels <- NULL
+        else
         {
-            ## calculate aspect ratio of panel to use in calculating label alignment
-            cpl <- current.panel.limits(unit="cm")
-            asp <- diff(cpl$ylim) / diff(cpl$xlim)
+            if (is.logical(labels)) labels <- format(at, trim = TRUE)
+            text <- trellis.par.get("add.text") # something better ?
+            tmp <- list(label = if (is.list(labels)) labels[[1]] else labels,
+                        col = text$col, rot = text$rot,
+                        cex = text$cex,
+                        fontfamily = text$fontfamily,
+                        fontface = text$fontface,
+                        font = text$font)
+            labels <-
+                updateList(tmp,
+                           if (is.list(labels)) labels
+                           else list()) # FIXME: risky
+            if (!is.characterOrExpression(labels$label))
+                labels$label <- format(at)
+        }
 
-            ## Processing the labels argument
-            if (is.logical(labels) && !labels) labels <- NULL
-            else
+        add.line <- trellis.par.get("add.line")
+        add.text <- trellis.par.get("add.text")
+
+        ## convert z into a matrix, with NA entries for those
+        ## 'missing' from data frame. There's scope for ambiguity
+        ## here, which can be avoided by the user.
+
+        m <- matrix(NA, nrow = length(ux), ncol = length(uy))
+        m[(idy - 1) * length(ux) + idx ] <- z
+
+        clines <-
+            contourLines(x = ux, y = uy, z = m,
+                         nlevels = length(at), ## necessary ?
+                         levels = at)
+
+        for (val in clines) {
+
+            ## each val looks like:
+
+            ## $ :List of 3
+            ##  ..$ level: num 170
+            ##  ..$ x    : num [1:21] 0.535 0.534 0.534 0.534 0.535 ...
+            ##  ..$ y    : num [1:21] 0.398 0.400 0.417 0.433 0.434 ...
+
+            ## we don't know how to leave gap in lines for labels.
+
+            llines(val, ## hopefully $levels won't matter
+                   col = col, lty = lty, lwd = lwd)
+
+
+            ## if too small, don't add label. How small is small ?
+            ## Should depend on resolution. How ?
+
+            if (length(val$x) > 5)
             {
-                if (is.logical(labels)) labels <- format(at, trim = TRUE)
-                text <- trellis.par.get("add.text") # something better ?
-                tmp <- list(label = if (is.list(labels)) labels[[1]] else labels,
-                            col = text$col, rot = text$rot,
-                            cex = text$cex,
-                            fontfamily = text$fontfamily,
-                            fontface = text$fontface,
-                            font = text$font)
-                labels <-
-                    updateList(tmp,
-                               if (is.list(labels)) labels
-                               else list()) # FIXME: risky
-                if (!is.characterOrExpression(labels$label))
-                    labels$label <- format(at)
-            }
-
-            add.line <- trellis.par.get("add.line")
-            add.text <- trellis.par.get("add.text")
-
-            ## convert z into a matrix, with NA entries for those
-            ## 'missing' from data frame. There's scope for ambiguity
-            ## here, which can be avoided by the user.
-
-            m <- matrix(NA, nrow = length(ux), ncol = length(uy))
-            m[(idy - 1) * length(ux) + idx ] <- z
-
-            clines <-
-                contourLines(x = ux, y = uy, z = m,
-                             nlevels = length(at), ## necessary ?
-                             levels = at)
-
-            for (val in clines) {
-
-                ## each val looks like:
-
-                ## $ :List of 3
-                ##  ..$ level: num 170
-                ##  ..$ x    : num [1:21] 0.535 0.534 0.534 0.534 0.535 ...
-                ##  ..$ y    : num [1:21] 0.398 0.400 0.417 0.433 0.434 ...
-
-                ## we don't know how to leave gap in lines for labels.
-
-                llines(val, ## hopefully $levels won't matter
-                       col = col, lty = lty, lwd = lwd)
-
-
-                ## if too small, don't add label. How small is small ?
-                ## Should depend on resolution. How ?
-
-                if (length(val$x) > 5)
+                if (!is.null(labels))
                 {
-                    if (!is.null(labels))
+                    slopes <- diff(val$y) / diff(val$x)
+                    ## slopes[is.na(slopes)] <- 0
+
+                    if (label.style == "flat")
                     {
-                        slopes <- diff(val$y) / diff(val$x)
-                        ## slopes[is.na(slopes)] <- 0
+                        ## draw label at 'flattest' position along contour
 
-                        if (label.style == "flat")
-                        {
-                            ## draw label at 'flattest' position along contour
+                        textloc <- which.min(abs(slopes))
+                        rotangle <- 0
+                    }
+                    else if (label.style == "align")
+                    {
 
-                            textloc <- which.min(abs(slopes))
-                            rotangle <- 0
-                        }
-                        else if (label.style == "align")
-                        {
+                        ## draw label at 'deepest' position along
+                        ## contour, depth being min distance to either
+                        ## of the four edges, scaled appropriately
 
-                            ## draw label at 'deepest' position along
-                            ## contour, depth being min distance to either
-                            ## of the four edges, scaled appropriately
-
-                            rx <- range(ux)
-                            ry <- range(uy)
-                            depth <- pmin(pmin(val$x - rx[1], rx[2] - val$x) / diff(rx), 
-                                          pmin(val$y - ry[1], ry[2] - val$y) / diff(ry))
-                            textloc <- min(which.max(depth), length(slopes)) 
+                        rx <- range(ux)
+                        ry <- range(uy)
+                        depth <- pmin(pmin(val$x - rx[1], rx[2] - val$x) / diff(rx), 
+                                      pmin(val$y - ry[1], ry[2] - val$y) / diff(ry))
+                        textloc <- min(which.max(depth), length(slopes)) 
                                         # slopes has one less entry,
                                         # and textloc indexes slopes
 
+                        rotangle <- atan(asp * slopes[textloc] * diff(rx) / diff(ry)) * 180 / base::pi
+                    }
+                    else if (label.style == "mixed")
+                    {
+
+                        ## mix both. align for contours whose flattest
+                        ## portion is too close to edge
+
+                        rx <- range(ux)
+                        ry <- range(uy)
+                        depth <- pmin(pmin(val$x - rx[1], rx[2] - val$x) / diff(rx), 
+                                      pmin(val$y - ry[1], ry[2] - val$y) / diff(ry))
+                        textloc <- which.min(abs(slopes))
+                        rotangle <- 0
+
+
+                        if (depth[textloc] < .05 ) {
+                            textloc <- min(which.max(depth), length(slopes))
                             rotangle <- atan(asp * slopes[textloc] * diff(rx) / diff(ry)) * 180 / base::pi
                         }
-                        else if (label.style == "mixed")
-                        {
-
-                            ## mix both. align for contours whose flattest
-                            ## portion is too close to edge
-
-                            rx <- range(ux)
-                            ry <- range(uy)
-                            depth <- pmin(pmin(val$x - rx[1], rx[2] - val$x) / diff(rx), 
-                                          pmin(val$y - ry[1], ry[2] - val$y) / diff(ry))
-                            textloc <- which.min(abs(slopes))
-                            rotangle <- 0
-
-
-                            if (depth[textloc] < .05 ) {
-                                textloc <- min(which.max(depth), length(slopes))
-                                rotangle <- atan(asp * slopes[textloc] * diff(rx) / diff(ry)) * 180 / base::pi
-                            }
-
-                        }
-                        else stop("Invalid label.style")
-
-                        i <- match(val$level, at)
-
-                        
-                        ltext(lab = labels$lab[i], adj = c(.5, 0),
-                              srt = rotangle,
-                              col = labels$col,
-                              cex = labels$cex,
-                              font = labels$font,
-                              fontfamily = labels$fontfamily,
-                              fontface = labels$fontface,
-                              x = .5 * (val$x[textloc]+val$x[textloc + 1]),
-                              y = .5 * (val$y[textloc]+val$y[textloc + 1]))
-
                     }
+                    else stop("Invalid label.style")
+
+                    i <- match(val$level, at)
+
+                    ltext(lab = labels$lab[i], adj = c(.5, 0),
+                          srt = rotangle,
+                          col = labels$col,
+                          cex = labels$cex,
+                          font = labels$font,
+                          fontfamily = labels$fontfamily,
+                          fontface = labels$fontface,
+                          x = .5 * (val$x[textloc]+val$x[textloc + 1]),
+                          y = .5 * (val$y[textloc]+val$y[textloc + 1]))
                 }
             }
         }
@@ -361,7 +366,8 @@ contourplot.formula <-
              region = FALSE,
              ...)
 {
-    ocall <- ccall <- match.call()
+    ocall <- sys.call(sys.parent())
+    ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
     ccall$cuts <- cuts
@@ -506,7 +512,7 @@ levelplot.formula <-
     
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- match.call()
+    foo$call <- sys.call(sys.parent())
 
     ## Step 2: Compute scales.common (excluding limits)
 
