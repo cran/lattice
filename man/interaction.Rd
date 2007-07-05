@@ -1,5 +1,7 @@
 \name{interaction}
 \alias{panel.identify}
+\alias{panel.identify.qqmath}
+\alias{panel.brush.splom}
 \alias{trellis.focus}
 \alias{trellis.unfocus}
 \alias{trellis.switchFocus}
@@ -26,6 +28,11 @@ panel.identify(x, y = NULL,
                threshold = 18, ## in points, roughly 0.25 inches
                panel.args = trellis.panelArgs(),
                \dots)
+panel.identify.qqmath(x, distribution, groups, subscripts, labels,
+                      panel.args = trellis.panelArgs(),
+                      \dots)
+panel.brush.splom(threshold = 18, verbose = getOption("verbose"), \dots)
+
 trellis.vpname(name = c("position", "split", "split.location", "toplevel",
                "panel", "strip", "strip.left", "legend",
                "main", "sub", "xlab", "ylab", "page"),
@@ -34,7 +41,8 @@ trellis.vpname(name = c("position", "split", "split.location", "toplevel",
                clip.off = FALSE, prefix)
 trellis.grobname(name, prefix)
 trellis.focus(name, column, row, side, clip.off,
-              highlight = interactive(), \dots)
+              highlight = interactive(), \dots,
+              guess = TRUE, verbose = getOption("verbose"))
 trellis.switchFocus(name, side, clip.off, highlight, \dots)
 trellis.unfocus()
 trellis.panelArgs(x, packet.number)
@@ -54,6 +62,10 @@ trellis.panelArgs(x, packet.number)
   \item{labels}{
     an optional vector of labels associated with each point.  Defaults
     to \code{subscripts}
+  }
+  \item{distribution, groups}{ typical panel arguments of
+    \code{\link{panel.qqmath}}.  These will usually be obtained from
+    \code{panel.args}
   }
   \item{offset}{
     the labels are printed either below, above, to the left or to the
@@ -81,12 +93,21 @@ trellis.panelArgs(x, packet.number)
     names only, and only accept the values explicitly listed above.
     \code{trellis.grobname} is meant to create names for grobs, and can
     currently accept any value.
+
+    If \code{name}, as well as \code{column} and \code{row} is missing
+    in a call to \code{trellis.focus}, the user can click inside a panel
+    (or an associated strip) to focus on that panel.
   }
   \item{column, row}{
     integers, indicating position of the panel or strip that should be
     assigned focus in the Trellis layout. Rows are usually calculated
     from the bottom up, unless the plot was created with
     \code{as.table=TRUE}
+  }
+  \item{guess}{
+    logical.  If \code{TRUE}, and the display has only one panel, that
+    panel will be automatically selected by a call to
+    \code{trellis.focus}.
   }
   \item{side}{
     character string, relevant only for legends (i.e. when
@@ -123,11 +144,15 @@ trellis.panelArgs(x, packet.number)
     integer, which panel to get data from.  See
     \code{\link{packet.number}} for details on how this is calculated
   }
+  \item{verbose}{ whether details  will be printed }
   \item{\dots}{
-    graphical parameters. For \code{panel.identify} these are used for
-    labelling.  For \code{trellis.focus} and \code{trellis.switchFocus},
-    these are used (in combination with \code{\link{lattice.options}})
-    for highlighting the chosen viewport if so requested.
+    For \code{panel.identify.qqmath}, extra parameters are passed on to
+    \code{panel.identify}.  For \code{panel.identify}, extra arguments
+    are treated as graphical parameters and are used for labelling.  For
+    \code{trellis.focus} and \code{trellis.switchFocus}, these are used
+    (in combination with \code{\link{lattice.options}}) for highlighting
+    the chosen viewport if so requested.  Graphical parameters can be
+    supplied for \code{panel.brush.splom}.
   }
 }
 
@@ -140,7 +165,15 @@ trellis.panelArgs(x, packet.number)
   plotting the whole object, in which case a call to
   \code{trellis.focus} first is necessary.
 
-  One way in which \code{panel.identify} is different from
+  \code{panel.brush.splom} is meant for use with \code{\link{splom}},
+  and requires a panel to be chosen using \code{trellis.focus} before it
+  is called.  Clicking on a point causes that and the corresponding
+  proections in other pairwise scatter plots to be highlighted.
+
+  \code{panel.identify.qqmath} is a specialized wrapper meant for use
+  with the display produced by \code{\link{qqmath}}.
+  
+  One way in which \code{panel.identify} etc. are different from
   \code{\link{identify}} is in how it uses the \code{subscripts}
   argument.  In general, when one identifies points in a panel, one
   wants to identify the origin in the data frame used to produce the
@@ -230,6 +263,14 @@ trellis.panelArgs(x, packet.number)
 
   \code{trellis.vpname} and \code{trellis.grobname} return character
   strings.
+
+  \code{trellis.focus} has a meaningful return value only if it has been
+  used to focus on a panel interactively, in which case the return value
+  is a list with components \code{col} and \code{row} giving the column
+  and row positions respectively of the chosen panel, unless the choice
+  was cancelled (by a right click), in which case the return value is
+  \code{NULL}.  If click was outside a panel, both \code{col} and
+  \code{row} are set to 0.
 }
   
 \note{
@@ -331,7 +372,12 @@ for (row in 1:nrow(panel.locs))
   \code{\link[grid:viewports]{viewports}}
 }
 
-\author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
+\author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}.  Felix
+  Andrews provided initial implementations of
+  \code{panel.identify.qqmath} and support for focusing on panels
+  interctively.
+}
+
 \keyword{dplot}
 
 

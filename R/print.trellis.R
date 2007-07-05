@@ -137,6 +137,12 @@ plot.trellis <-
 
 
 
+panel.error <- function(e)
+{
+    grid.text(gettextf("Error using packet %g\n%s",
+                       panel.number(),
+                       conditionMessage(e)))
+}
 
 
 
@@ -152,9 +158,14 @@ print.trellis <-
              panel.height = lattice.getOption("layout.heights")$panel,
              panel.width = lattice.getOption("layout.widths")$panel,
              save.object = lattice.getOption("save.object"),
+             panel.error = lattice.getOption("panel.error"),
              prefix = NULL,
              ...)
 {
+    panel.error <-
+        if (is.function(panel.error)) panel.error 
+        else if (is.character(panel.error)) get(panel.error)
+        else eval(panel.error)
 
     ## save the current object, if so requested.  This used to be done
     ## at the end, so that it wouldn't happen if there were errors
@@ -216,6 +227,7 @@ print.trellis <-
         if ("panel.height" %in% supplied && missing(panel.height)) panel.height <- x$plot.args$panel.height
         if ("panel.width"  %in% supplied && missing(panel.width))  panel.width  <- x$plot.args$panel.width
         if ("save.object"  %in% supplied && missing(save.object))  save.object  <- x$plot.args$save.object
+        if ("panel.error"  %in% supplied && missing(panel.error))  panel.error  <- x$plot.args$panel.error
         if ("prefix"       %in% supplied && missing(prefix))       prefix       <- x$plot.args$prefix
     }
 
@@ -572,7 +584,6 @@ print.trellis <-
     ## this layout will now be used for each page (this is quite
     ## complicated and unfortunately very convoluted)
 
-
     layoutCalculations <-
         calculateGridLayout(x,
                             rows.per.page, cols.per.page,
@@ -586,6 +597,9 @@ print.trellis <-
                             xaxis.cex, yaxis.cex,
                             par.strip.text,
                             legend)
+    lattice.setStatus(layout.details = layoutCalculations)
+    lattice.setStatus(as.table = x$as.table)
+
     page.layout <- layoutCalculations$page.layout
     pos.heights <- layoutCalculations$pos.heights
     pos.widths <- layoutCalculations$pos.widths
@@ -1004,7 +1018,8 @@ print.trellis <-
 
                         if (!("..." %in% names(formals(panel))))
                             pargs <- pargs[names(formals(panel))]
-                        do.call("panel", pargs)
+                        tryCatch(do.call("panel", pargs),
+                                 error = function(e) panel.error(e))
 
                         upViewport()
 

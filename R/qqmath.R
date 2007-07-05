@@ -135,12 +135,12 @@ prepanel.default.qqmath <-
         if (is.null(f.value))
             sort(x)
         else if (is.numeric(f.value))
-            fast.quantile(x, f.value,
+            quantile(x, f.value,       # was fast.quantile 
                      names = FALSE,
                      type = qtype,
                      na.rm = TRUE)
         else
-            fast.quantile(x, f.value(nobs),
+            quantile(x, f.value(nobs), # was fast.quantile
                      names = FALSE,
                      type = qtype,
                      na.rm = TRUE)
@@ -204,7 +204,7 @@ panel.qqmath <-
         else
             panel.xyplot(x = distribution(if (is.numeric(f.value)) f.value else f.value(nobs)), 
                          y =
-                         fast.quantile(x, if (is.numeric(f.value)) f.value else f.value(nobs),
+                         quantile(x, if (is.numeric(f.value)) f.value else f.value(nobs), # was fast.quantile 
                                   names = FALSE,
                                   type = qtype,
                                   na.rm = TRUE),
@@ -222,7 +222,6 @@ qqmath <- function(x, data, ...) UseMethod("qqmath")
 qqmath.numeric <-
     function(x, data = NULL, ylab = deparse(substitute(x)), ...)
 {
-    ocall <- sys.call(sys.parent())
     ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
@@ -230,9 +229,7 @@ qqmath.numeric <-
     ccall$ylab <- ylab
     ccall$x <- ~x
     ccall[[1]] <- quote(lattice::qqmath)
-    ans <- eval.parent(ccall)
-    ans$call <- ocall
-    ans
+    eval.parent(ccall)
 }
 
 
@@ -324,7 +321,7 @@ qqmath.formula <-
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- sys.call(sys.parent())
+    foo$call <- sys.call(sys.parent()); foo$call[[1]] <- quote(qqmath)
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
@@ -503,7 +500,7 @@ panel.qqmathline <-
     else if (nobs)
     {
         yy <-
-            fast.quantile(y, p, names = FALSE,
+            quantile(y, p, names = FALSE, # was fast.quantile 
                      type = qtype, na.rm = TRUE)
         xx <- distribution(p)
         r <- diff(yy)/diff(xx)
@@ -537,7 +534,7 @@ prepanel.qqmathline <-
     nobs <- sum(!is.na(y))
     getdy <- function(x)
     {
-        diff(fast.quantile(x, p, names = FALSE,
+        diff(quantile(x, p, names = FALSE, # was fast.quantile 
                       type = qtype,
                       na.rm = TRUE))
     }
@@ -551,4 +548,11 @@ prepanel.qqmathline <-
     }
     ans
 }
+
+
+
+
+
+
+
 

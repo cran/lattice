@@ -1,6 +1,7 @@
 
 
 ### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
+### Copyright (C) 2007 Felix Andrews <felix@nfrac.org> 
 ###
 ### This file is part of the lattice package for R.
 ### It is made available under the terms of the GNU General Public
@@ -65,6 +66,8 @@ panel.identify <-
     px <- convertX(unit(x, "native"), "points", TRUE)
     py <- convertY(unit(y, "native"), "points", TRUE)
     labels <- as.character(labels)
+    if (length(labels) > length(subscripts))
+        labels <- labels[subscripts]
 
     unmarked <- rep(TRUE, length(x))
     count <- 0
@@ -157,9 +160,18 @@ trellis.focus <-
              side = NULL,
              clip.off = FALSE,
              highlight = interactive(),
-             ...)
+             ...,
+             guess = TRUE,
+             verbose = getOption("verbose"))
 {
     trellis.unfocus()
+
+    if (missing(name) && missing(column) && missing(row))
+        return(trellis.clickFocus(clip.off = clip.off,
+                                  highlight = highlight,
+                                  ...,
+                                  guess = guess,
+                                  verbose = verbose))
 
     if (name %in% c("panel", "strip", "strip.left"))
     {
@@ -283,4 +295,193 @@ trellis.panelArgs <-
 
 
 
+### trellis.clickFocus() and panel.identify.qqmath() are based on
+### contributions by Felix Andrews <felix@nfrac.org> (2007/06/21)
+
+
+### click on a panel to focus on it.  trellis.clickFocus is not
+### exported, but used by trellis.focus() when 'name' etc. is missing.
+
+trellis.clickFocus <-
+    function(clip.off = FALSE,
+             highlight = interactive(),
+             ...,
+             guess = TRUE,
+             verbose = TRUE)
+{
+    layoutMatrix <- trellis.currentLayout()
+    if (guess && sum(layoutMatrix > 0) == 1)
+    {
+        ## there's only one panel, so just select it
+        w <- which(layoutMatrix > 0)
+        focusRow <- row(layoutMatrix)[w]
+        focusCol <- col(layoutMatrix)[w]
+        if (verbose) message(sprintf("Selecting panel at position (%g, %g)", focusRow, focusCol))
+    }
+    else if (all(layoutMatrix == 0))
+    {
+        warning("No panels available")
+        return()
+    }
+    else 
+    {
+        if (verbose) message("Click on panel to focus")
+        ## trellis.focus("toplevel", highlight = FALSE)
+        glayout <- lattice.getStatus("layout.details")
+        rowRange <- range(glayout$pos.heights$panel, glayout$pos.heights$strip)
+        colRange <- range(glayout$pos.widths$panel, glayout$pos.widths$strip.left)
+        layCols <-  glayout$page.layout$ncol
+        layRows <- glayout$page.layout$nrow
+        leftPad <- convertX(sum(glayout$page.layout$widths[1:(colRange[1]-1)]), "npc", valueOnly = TRUE)
+        rightPad <- convertX(sum(glayout$page.layout$widths[(colRange[2]+1):layCols]), "npc", valueOnly = TRUE)
+        topPad <- convertY(sum(glayout$page.layout$heights[1:(rowRange[1]-1)]), "npc", valueOnly = TRUE)
+        botPad <- convertY(sum(glayout$page.layout$heights[(rowRange[2]+1):layRows]), "npc", valueOnly = TRUE)
+        clickLoc <- grid.locator("npc")
+        if (is.null(clickLoc)) return()
+        clickXScaled <- (as.numeric(clickLoc$x) - leftPad) / (1 - leftPad - rightPad)
+        focusCol <- ceiling(clickXScaled * ncol(layoutMatrix))
+        clickYScaled <- (as.numeric(clickLoc$y) - botPad) / (1 - botPad - topPad)
+        focusRow <- ceiling(clickYScaled * nrow(layoutMatrix))
+        if (lattice.getStatus("as.table")) focusRow <- nrow(layoutMatrix) - focusRow + 1
+    }
+    if ((focusCol >= 1) && (focusCol <= ncol(layoutMatrix)) &&
+        (focusRow >= 1) && (focusRow <= nrow(layoutMatrix)) &&
+        layoutMatrix[focusRow, focusCol] > 0)
+    {
+        trellis.focus("panel", column = focusCol, row = focusRow,
+                      clip.off = clip.off, highlight = highlight,
+                      ...)
+    }
+    else
+    {
+        focusCol <- focusRow <- 0
+    }
+    invisible(list(col=focusCol, row=focusRow))
+}
+
+
+### wrapper around panel.identify meant to work with qqmath.
+
+panel.identify.qqmath <-
+    function(x = panel.args$x,
+             distribution = panel.args$distribution,
+             groups = panel.args$groups, 
+             subscripts = panel.args$subscripts,
+             labels = subscripts, 
+             panel.args = trellis.panelArgs(),
+             ...)
+{
+    x <- as.numeric(x)
+    if (is.null(subscripts)) subscripts <- seq_along(x)
+    labels <- as.character(labels)
+    if (length(labels) > length(subscripts))
+        labels <- labels[subscripts]
+    if (!is.null(panel.args$f.value)) warning("'f.value' not supported; ignoring")
+    distribution <-
+        if (is.function(distribution)) distribution 
+        else if (is.character(distribution)) get(distribution)
+        else eval(distribution)
+    ## compute quantiles corresponding to given vector, possibly
+    ## containing NA's.  The return value must correspond to the
+    ## original order
+    getq <- function(x)
+    {
+        ans <- x
+        id <- !is.na(x)
+        ord <- order(x[id])
+        if (any(id)) ans[id] <- distribution(ppoints(sum(id)))[order(ord)]
+        ans
+    }
+    if (is.null(groups))
+    {
+        ## panel.points(x = getq(x), y = x, pch = ".", col = "red", cex = 3)
+        panel.identify(x = getq(x), y = x, labels = labels, ...)
+    }
+    else
+    {
+        allq <- rep(NA_real_, length(x))
+        subg <- groups[subscripts]
+        vals <- if (is.factor(groups)) levels(groups) else sort(unique(groups))
+        for (i in seq_along(vals))
+        {
+            ok <- !is.na(subg) & (subg == vals[i])
+            allq[ok] <- getq(x[ok])
+        }
+        panel.identify(x = allq, y = x, labels = labels, ...)
+    }
+}
+
+
+
+
+### `brushing' for splom
+
+panel.brush.splom <-
+    function(threshold = 18, verbose = getOption("verbose"), ...)
+{
+    ans <- numeric(0)
+    repeat {
+        new <- splom.brushPoint(threshold = threshold, verbose = verbose, ...)
+        if (is.null(new)) break
+        else ans[length(ans) + 1] <- new
+    }
+    ans
+}
+
+splom.brushPoint <-
+    function(pargs = trellis.panelArgs(),
+             threshold = 18,
+             col = 'black', pch = 16, cex = 0.8, ...,
+             verbose = getOption("verbose"))
+{
+    if (verbose) message("Click to choose one point to highlight")
+    ll <- grid.locator(unit = "npc")
+    if (is.null(ll)) return(NULL)
+    nvars <- length(pargs$z)
+    ## which subpanel
+    colpos <- ceiling(convertUnit(ll$x, "npc", valueOnly = TRUE) * nvars)
+    rowpos <- ceiling(convertUnit(ll$y, "npc", valueOnly = TRUE) * nvars)
+    if (rowpos == colpos) return(numeric(0))
+    subpanel.name <- paste("subpanel", colpos, rowpos, sep = ".")
+    ## coordinates of click in subpanel
+    ll$x <- nvars * (ll$x - unit((colpos-1) / nvars, "npc"))
+    ll$y <- nvars * (ll$y - unit((rowpos-1) / nvars, "npc"))
+    ## get to that viewport, so we can convert units
+    depth <- downViewport(subpanel.name)
+    xnative <- convertX(ll$x, "native", TRUE)
+    ynative <- convertY(ll$y, "native", TRUE)
+    ## find nearest point in data (replicate steps in panel.identify)
+    xpoints <- convertX(unit(xnative, "native"), "points", TRUE)
+    ypoints <- convertY(unit(ynative, "native"), "points", TRUE)
+    data.xp <- convertX(unit(pargs$z[, colpos], "native"), "points", TRUE)
+    data.yp <- convertY(unit(pargs$z[, rowpos], "native"), "points", TRUE)
+    pdists <- sqrt((data.xp - xpoints)^2 + (data.yp - ypoints)^2)
+    if (min(pdists, na.rm = TRUE) > threshold)
+    {
+        if (verbose) warning("no points within ", threshold, " points of click")
+        upViewport(depth)
+        return(numeric(0))
+    }
+    else
+    {
+        w <- which.min(pdists)
+        if (verbose) print(pargs$z[w,])
+        upViewport(depth)
+        for (row in 1:nvars)
+        for (column in 1:nvars)
+            if (row != column)
+            {
+                subpanel.name <-
+                    paste("subpanel",
+                          column, row, sep = ".")
+                depth <- downViewport(subpanel.name)
+                panel.points(x = pargs$z[w, column],
+                             y = pargs$z[w, row],
+                             pch = pch, col = col, cex = cex,
+                             ...)
+                upViewport(depth)
+            }
+        return(w)
+    }
+}
 

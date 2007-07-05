@@ -254,6 +254,12 @@ latticeParseFormula <-
 
         tmp <- eval(varsRHS[[1]], data, env)
         if (is.matrix(tmp)) tmp <- as.data.frame(tmp)
+        else if (length(model) == 2 && is.data.frame(data) &&
+                 (is.vector(tmp, "numeric") || is.factor(tmp)) &&
+                 is.null(names(tmp)))
+        {
+            names(tmp) <- rownames(data) # for dotplot(~x, data)
+        }
         nobs <- if (is.data.frame(tmp)) nrow(tmp) else length(tmp)
 
         if (nLHS == 1 && nRHS == 1) {
@@ -476,6 +482,17 @@ extend.limits <-
 ### documented).
 
 
+### one special exception is 'subscripts'.  A 'subscripts' argument is
+### required in the panel functions for panel.identify etc to work
+### properly.  However, not all high level functions always pass a
+### suitable 'subscripts' argument to its panel function (but some,
+### like 'splom' and 'levelplot' do).  For those that do not, a
+### 'subscripts=TRUE' argument can change the behaviour.  The others
+### don't have a 'subscripts' argument (as it is redundant), but we'll
+### capture and ignore it here to keep the interface consistent.
+
+
+
 trellis.skeleton <-
     function(formula = NULL,
              cond,
@@ -501,6 +518,8 @@ trellis.skeleton <-
              xscale.components = default.args$xscale.components,
              yscale.components = default.args$yscale.components,
              axis = default.args$axis,
+
+             subscripts = TRUE, # ignored, for reasons given above
 
              index.cond = NULL,
              perm.cond = NULL,

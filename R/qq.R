@@ -152,7 +152,7 @@ qq.formula <-
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- sys.call(sys.parent())
+    foo$call <- sys.call(sys.parent()); foo$call[[1]] <- quote(qq)
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
@@ -253,10 +253,10 @@ qq.formula <-
                 else f.value(n)
             foo$panel.args[[packet.number]] <-
                 list(x =
-                     fast.quantile(x = x.val, probs = p,
+                     quantile(x = x.val, probs = p, # was fast.quantile 
                                    type = qtype, na.rm = TRUE),
                      y =
-                     fast.quantile(x = y.val, probs = p,
+                     quantile(x = y.val, probs = p, # was fast.quantile 
                                    type = qtype, na.rm = TRUE))
         }
         else
