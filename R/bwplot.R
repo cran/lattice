@@ -792,6 +792,7 @@ dotplot <- function(x, data, ...) UseMethod("dotplot")
 dotplot.numeric <-
     function(x, data = NULL, xlab = deparse(substitute(x)), ...)
 {
+    ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(dotplot)
     ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
@@ -799,7 +800,9 @@ dotplot.numeric <-
     ccall$xlab <- xlab
     ccall$x <- ~x
     ccall[[1]] <- quote(lattice::dotplot)
-    eval.parent(ccall)
+    ans <- eval.parent(ccall)
+    ans$call <- ocall
+    ans
 }
 
 
@@ -858,6 +861,7 @@ barchart <- function(x, data, ...) UseMethod("barchart")
 barchart.numeric <-
     function(x, data = NULL, xlab = deparse(substitute(x)), ...)
 {
+    ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(barchart)
     ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
@@ -865,7 +869,9 @@ barchart.numeric <-
     ccall$xlab <- xlab
     ccall$x <- ~x
     ccall[[1]] <- quote(lattice::barchart)
-    eval.parent(ccall)
+    ans <- eval.parent(ccall)
+    ans$call <- ocall
+    ans
 }
 
 
@@ -873,14 +879,15 @@ barchart.numeric <-
 
 barchart.table <-
     function(x, data = NULL, groups = TRUE,
-             origin = 0, stack = TRUE, ...)
+             origin = 0, stack = TRUE, ..., horizontal = TRUE)
 {
     if (!is.null(data)) warning("explicit 'data' specification ignored")
     data <- as.data.frame(x)
     nms <- names(data)
     freq <- which(nms == "Freq")
     nms <- nms[-freq]
-    form <- paste(nms[1], "Freq", sep = "~")
+    form <- ## WAS paste(nms[1], "Freq", sep = "~")
+        sprintf(if (horizontal) "%s ~ Freq" else "Freq ~ %s", nms[1])
     nms <- nms[-1]
     len <- length(nms)
     if (is.logical(groups) && groups && len > 0)

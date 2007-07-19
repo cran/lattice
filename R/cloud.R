@@ -1307,14 +1307,14 @@ panel.cloud <-
         ## supplied in the *lab lists
 
         xlab <-
-            grobFromLabelList(xlab, name = trellis.grobname("xlab"),
-                              rot = if (is.null(xlab$rot)) 0 else xlab$rot)
+            grobFromLabelList(xlab, name = trellis.grobname("xlab"))
+#                              rot = if (is.null(xlab$rot)) 0 else xlab$rot)
         ylab <-
-            grobFromLabelList(ylab, name = trellis.grobname("ylab"),
-                              rot = if (is.null(ylab$rot)) 0 else ylab$rot)
+            grobFromLabelList(ylab, name = trellis.grobname("ylab"))
+#                              rot = if (is.null(ylab$rot)) 0 else ylab$rot)
         zlab <-
-            grobFromLabelList(zlab, name = trellis.grobname("zlab"),
-                              rot = if (is.null(zlab$rot)) 0 else zlab$rot)
+            grobFromLabelList(zlab, name = trellis.grobname("zlab"))
+#                              rot = if (is.null(zlab$rot)) 0 else zlab$rot)
 
         if (!is.null(xlab))
         {
@@ -1359,14 +1359,16 @@ wireframe.matrix <-
     function(x, data = NULL,
              zlab = deparse(substitute(x)),
              aspect,
-             ...)
+             ...,
+             row.values = seq_len(nrow(x)),
+             column.values = seq_len(ncol(x)))
 {
+    stopifnot(length(row.values) == nrow(x),
+              length(column.values) == ncol(x))
     if (!is.null(data)) warning("explicit 'data' specification ignored")
     form <- eval(z ~ row * column)
     if (missing(aspect)) aspect <- pmin(ncol(x) / nrow(x), c(Inf, 1))
-    data <-
-        expand.grid(row = seq_len(nrow(x)),
-                    column = seq_len(ncol(x)))
+    data <- expand.grid(row = row.values, column = column.values)
     data$z <- as.vector(as.numeric(x))
     ## Change default tick labels if rownames/colnames are non-null
 ##     default.scales <- list()
@@ -1410,8 +1412,12 @@ cloud.matrix <-
     function(x, data = NULL, type = 'h',
              zlab = deparse(substitute(x)),
              aspect,
-             ...)
+             ...,
+             row.values = seq_len(nrow(x)),
+             column.values = seq_len(ncol(x)))
 {
+    stopifnot(length(row.values) == nrow(x),
+              length(column.values) == ncol(x))
     if (!is.null(data)) warning("explicit 'data' specification ignored")
     form <- eval(z ~ row * column)
     if (missing(aspect)) aspect <- pmin(ncol(x) / nrow(x), c(Inf, 1))
