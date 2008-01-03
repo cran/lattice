@@ -197,15 +197,20 @@ parallel <- function(x, data, ...) UseMethod("parallel")
 ##     else UseMethod("parallel")
 ## }
 
+
+
 parallel.matrix <-
 parallel.data.frame <-
-    function(x, data = NULL, ...)
+    function(x, data = NULL, ..., groups = NULL, subset = TRUE)
 {
     ccall <- match.call()
     if (!is.null(ccall$data)) 
         warning("explicit 'data' specification ignored")
-    ccall$data <- list(x = x)
+    ccall$data <-
+        list(x = x, groups = groups, subset = subset)
     ccall$x <- ~x
+    ccall$groups <- groups
+    ccall$subset <- subset
     ccall[[1]] <- quote(lattice::parallel)
     eval.parent(ccall)
 }
@@ -214,6 +219,7 @@ parallel.data.frame <-
 parallel.formula <-
     function(x,
              data = NULL,
+             auto.key = FALSE,
              aspect = "fill",
              between = list(x = 0.5, y = 0.5),
              panel = lattice.getOption("panel.parallel"),
@@ -410,6 +416,30 @@ parallel.formula <-
           cond.orders(foo))
     foo[names(more.comp)] <- more.comp
 
+    if (is.null(foo$legend) && !is.null(groups) &&
+        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
+    {
+        foo$legend <-
+            list(list(fun = "drawSimpleKey",
+                      args =
+                      updateList(list(text = levels(as.factor(groups)),
+                                      points = FALSE,
+                                      rectangles = FALSE,
+                                      lines = TRUE), 
+                                 if (is.list(auto.key)) auto.key else list())))
+        foo$legend[[1]]$x <- foo$legend[[1]]$args$x
+        foo$legend[[1]]$y <- foo$legend[[1]]$args$y
+        foo$legend[[1]]$corner <- foo$legend[[1]]$args$corner
+
+        names(foo$legend) <- 
+            if (any(c("x", "y", "corner") %in% names(foo$legend[[1]]$args)))
+                "inside"
+            else
+                "top"
+        if (!is.null(foo$legend[[1]]$args$space))
+            names(foo$legend) <- foo$legend[[1]]$args$space
+    }
+    
     class(foo) <- "trellis"
     foo
 }
