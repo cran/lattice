@@ -1,6 +1,7 @@
 \name{interaction}
 \alias{panel.identify}
 \alias{panel.identify.qqmath}
+\alias{panel.identify.cloud}
 \alias{panel.link.splom}
 \alias{panel.brush.splom}
 \alias{trellis.focus}
@@ -32,8 +33,20 @@ panel.identify(x, y = NULL,
 panel.identify.qqmath(x, distribution, groups, subscripts, labels,
                       panel.args = trellis.panelArgs(),
                       \dots)
+panel.identify.cloud(x, y, z, subscripts,
+                     perspective, distance, 
+                     xlim, ylim, zlim,
+                     screen, R.mat, aspect, scales.3d,
+                     \dots,
+                     panel.3d.identify,
+                     n = length(subscripts),
+                     offset = 0.5,
+                     threshold = 18,
+                     labels = subscripts,
+                     panel.args = trellis.panelArgs())
 panel.link.splom(threshold = 18, verbose = getOption("verbose"), \dots)
 panel.brush.splom(threshold = 18, verbose = getOption("verbose"), \dots)
+
 
 trellis.vpname(name = c("position", "split", "split.location", "toplevel",
                "panel", "strip", "strip.left", "legend",
@@ -51,7 +64,7 @@ trellis.panelArgs(x, packet.number)
 }
 
 \arguments{
-  \item{x, y}{ variables defining the contents of the panel.  In the
+  \item{x, y, z}{ variables defining the contents of the panel.  In the
     case of \code{trellis.panelArgs}, a \code{"trellis"} object. }
   \item{n}{
     the number of points to identify by default (overridden by a right
@@ -84,6 +97,18 @@ trellis.panelArgs(x, packet.number)
     to be used if \code{x} is missing.  Typically, when called after
     \code{trellis.focus}, this would appropriately be the arguments
     passed to that panel.
+  }
+  \item{perspective, distance, xlim, ylim, zlim, screen, R.mat, aspect,
+    scales.3d}{
+    arguments as passed to \code{\link{panel.cloud}}.  These are
+    required to recompute the relevant three-dimensional projections in
+    \code{panel.identify.cloud}.
+  }
+  \item{panel.3d.identify}{
+    the function that is responsible for the actual interaction once the
+    data rescaling and rotation computations have been done.  By
+    default, an internal function similar to \code{panel.identify} is
+    used.
   }
   \item{name}{
     character string indicating which viewport or grob we are looking
@@ -182,6 +207,10 @@ trellis.panelArgs(x, packet.number)
 
   \code{panel.identify.qqmath} is a specialized wrapper meant for use
   with the display produced by \code{\link{qqmath}}.
+  \code{panel.identify.qqmath} is a specialized wrapper meant for use
+  with the display produced by \code{\link{cloud}}.  It would be unusual
+  to call them except in a context where default panel function
+  arguments are available through \code{trellis.panelArgs} (see below).
   
   One way in which \code{panel.identify} etc. are different from
   \code{\link{identify}} is in how it uses the \code{subscripts}

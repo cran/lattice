@@ -50,7 +50,7 @@ parallel(x, data, \dots)
          ylab = NULL,
          ylim,
          varnames,
-         horizontal = TRUE,
+         horizontal.axis = TRUE,
          drop.unused.levels,
          \dots,
          lattice.options = NULL,
@@ -120,7 +120,7 @@ parallel(x, data, \dots)
     character vector giving the names of the p variables in x. By
     default, the column names of x.
   }
-  \item{horizontal}{logical indicating whether the parallel axes should
+  \item{horizontal.axis}{logical indicating whether the parallel axes should
     be laid out horizontally (\code{TRUE}) or vertically (\code{FALSE}).
   }
   \item{auto.key, prepanel, scales,
@@ -163,7 +163,9 @@ parallel(x, data, \dots)
 }
 
 \seealso{
-  \code{\link{xyplot}}, \code{\link{Lattice}}, \code{\link{panel.pairs}}
+  \code{\link{xyplot}}, \code{\link{Lattice}}, \code{\link{panel.pairs},
+    \code{\link{panel.parallel}}
+  }
 }
 \author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
 \examples{
@@ -185,7 +187,8 @@ splom(~iris[1:3]|Species, data = iris,
                 cex = 2)
       })
 parallel(~iris[1:4] | Species, iris) 
-parallel(~iris[1:4], iris, groups = Species, horizontal = FALSE)
+parallel(~iris[1:4], iris, groups = Species,
+         horizontal.axis = FALSE, scales = list(x = list(rot = 90)))
 }
 \keyword{hplot}
 
