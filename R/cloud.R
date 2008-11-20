@@ -163,7 +163,7 @@ panel.3dscatter <-
         else
         {
             nvals <- nlevels(as.factor(groups))
-            groups <- as.numeric(groups[subscripts])
+            groups <- as.numeric(as.factor(groups))[subscripts]
 
             col.point <- rep(col.point, length = nvals)[groups]
             col.line <- rep(col.line, length = nvals)[groups]
@@ -372,9 +372,9 @@ panel.3dwire <-
 
     if (isParametrizedSurface)
     {
-        x[x < xlim.scaled[1] | x > xlim.scaled[2]] <- NA
-        y[y < ylim.scaled[1] | y > ylim.scaled[2]] <- NA
-        z[z < zlim.scaled[1] | z > zlim.scaled[2]] <- NA
+        is.na(x) <- (x < xlim.scaled[1] | x > xlim.scaled[2])
+        is.na(y) <- (y < ylim.scaled[1] | y > ylim.scaled[2])
+        is.na(z) <- (z < zlim.scaled[1] | z > zlim.scaled[2])
         htrange <- extend.limits(sqrt(range(x^2 + y^2 + z^2, finite = TRUE)), prop = 0.01)
         ngroups <- 1
     }
@@ -1039,7 +1039,7 @@ panel.cloud <-
                     ## frame. There's scope for ambiguity here, which
                     ## can be avoided by the user.
 
-                    tmp <- rep(NA, nx * ny)
+                    tmp <- rep(NA_real_, nx * ny)
                     ux <- sort(unique(x[!is.na(x)]))
                     uy <- sort(unique(y[!is.na(y)]))
                     idx <- match(x, ux)

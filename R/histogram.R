@@ -41,7 +41,6 @@ hist.constructor <-
 }
 
 
-
 prepanel.default.histogram <-
     function(x,
              breaks,
@@ -50,8 +49,7 @@ prepanel.default.histogram <-
              nint = round(log2(length(x)) + 1),
              ...)
 {
-    if (length(x) < 1)
-        list(xlim = NA, ylim = NA, dx = NA, dy = NA)
+    if (length(x) < 1) prepanel.null()
     else
     {
         if (is.null(breaks))
@@ -67,7 +65,9 @@ prepanel.default.histogram <-
             if (type == "count") h$counts
             else if (type == "percent") 100 * h$counts / length(x)
             else h$intensities
-        list(xlim = scale.limits(c(x, h$breaks)),
+        list(xlim =
+             if (is.factor(x)) levels(x)
+             else scale.limits(c(x, h$breaks)),
              ## if (is.factor(x)) levels(x)
              ## else range(x, h$breaks, finite = TRUE),
              ylim = range(0, y, finite = TRUE),

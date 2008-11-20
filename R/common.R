@@ -20,6 +20,14 @@
 
 
 
+prepanel.null <- function() {
+    list(xlim = rep(NA_real_, 2),
+         ylim = rep(NA_real_, 2),
+         dx = NA_real_,
+         dy = NA_real_)
+}
+
+
 
 cupdate <- function(index, maxim)
 {
@@ -481,7 +489,7 @@ extend.limits <-
              else lattice.getOption("axis.padding")$numeric)
 {
     ## if (!is.numeric(lim)) NA
-    if (is.character(lim)) NA # or lim?
+    if (is.character(lim) || all(is.na(lim))) NA_real_ # or lim?
     else if (length(lim) == 2)
     {
         if (lim[1] > lim[2])
@@ -682,7 +690,7 @@ cond.orders <- function(foo, ...)
                 }
                 else  ## this happens for empty panels
                 {
-                    panel.order[count] <- NA
+                    is.na(panel.order) <- count # panel.order[count] <- NA
                 }
             }
             dim(panel.order) <- sapply(foo$condlevels, length)

@@ -131,7 +131,7 @@ update.trellis <-
         object$call[nm] <- upcall[nm]
     }
     have.xlim <- !missing(xlim)    ## needed later
-    have.ylim <- !missing(xlim)
+    have.ylim <- !missing(ylim)
 
     ## deal with the non-problematic stuff first
 
@@ -335,12 +335,12 @@ update.trellis <-
         if (!is.null(xscales$limits))
         {
             have.xlim <- TRUE
-            xlim <- scales$limits
+            xlim <- xscales$limits
         }
         if (!is.null(yscales$limits))
         {
             have.ylim <- TRUE
-            xlim <- scales$limits
+            ylim <- yscales$limits
         }
 
         if (!is.null(scales$relation) || !is.null(xscales$relation) || !is.null(yscales$relation))
@@ -433,43 +433,39 @@ update.trellis <-
 
 ## `subsetting': shortcut to updating index.cond
 
+
 "[.trellis" <- function(x, i, j, ..., drop = FALSE)
 {
-    ## index.cond <-
-    tmp <- as.list(match.call())[-(1:2)]
-    isj <- "j" %in% names(tmp)
-    isi <- "i" %in% names(tmp)
-    if (drop)
+    ## call update.trellis with a suitable 'index.cond' argument
+    ocall <- match.call()[-2] # removes 'x'
+    ocall[[1]] <- quote(base::list)
+    if (!missing(drop))
     {
-        warning("'drop=TRUE' ignored")
-        tmp$drop <- NULL
+        if (drop) warning("'drop=TRUE' ignored")
+        ocall$drop <- NULL
     }
-    len <-
-        if (length(dim(x)) == 1) 1
-        else length(tmp) + (1 - isj) + (1 - isi)
-    indices <- rep(list(TRUE), length = len)
-    if (isi)
+    indices <- rep(list(TRUE), length = length(x$condlevels))
+    if (!missing(i)) {
+        indices[[1]] <- i
+        ocall$i <- NULL
+    }
+    if (!missing(j)) {
+        indices[[2]] <- j
+        ocall$j <- NULL
+    }
+    ## set missing args in ocall to TRUE before evaluating
+    if (length(ocall) > 1)
     {
-        indices[[1]] <- tmp$i
-        tmp <- tmp[-1]
+        emptyArgs <-
+            sapply(as.list(ocall[-1]),
+                   function(x) (typeof(x) == "symbol" &&
+                                as.character(x) == ""))
+        ocall[1L + which(emptyArgs)] <- quote(TRUE)
+        dots <- eval.parent(ocall)
+        indices[-c(1, 2)] <- dots
     }
-    if (isj)
-    {
-        indices[[2]] <- tmp$j
-        tmp <- tmp[-1]
-    }
-    if (len > 2)
-    {
-        keep <-
-            sapply(tmp,
-                   function(x) 
-                   typeof(x) == "symbol" && as.character(x) == "")
-        tmp[keep] <- list(TRUE)
-        indices[-(1:2)] <- tmp
-    }
-    indices <- lapply(indices, eval)
     original.levs <- lapply(sapply(x$condlevels, length), seq)
-    stopifnot(length(original.levs) == len)
+    stopifnot(length(original.levs) == length(indices))
     current.levs <-
         mapply("[", original.levs, x$index.cond,
                SIMPLIFY = FALSE)
@@ -480,6 +476,62 @@ update.trellis <-
         stop("Invalid indices")
     update(x, index.cond = new.levs)
 }
+
+
+
+## ## Old version.  Failed with
+
+## ## bar <- function(i) { foo[,,,i] }
+## ## bar(1)
+
+## "[.trellis" <- function(x, i, j, ..., drop = FALSE)
+## {
+##     ## index.cond <-
+##     ocall <- match.call()
+##     tmp <- as.list(ocall)[-(1:2)]
+##     isj <- "j" %in% names(tmp)
+##     isi <- "i" %in% names(tmp)
+##     if (drop)
+##     {
+##         warning("'drop=TRUE' ignored")
+##         tmp$drop <- NULL
+##     }
+##     len <-
+##         if (length(dim(x)) == 1) 1
+##         else length(tmp) + (1 - isj) + (1 - isi)
+##     indices <- rep(list(TRUE), length = len)
+##     if (isi)
+##     {
+##         indices[[1]] <- tmp$i
+##         tmp <- tmp[-1]
+##     }
+##     if (isj)
+##     {
+##         indices[[2]] <- tmp$j
+##         tmp <- tmp[-1]
+##     }
+##     if (len > 2)
+##     {
+##         keep <-
+##             sapply(tmp,
+##                    function(x) 
+##                    typeof(x) == "symbol" && as.character(x) == "")
+##         tmp[keep] <- list(TRUE)
+##         indices[-(1:2)] <- tmp
+##     }
+##     indices <- lapply(indices, eval)
+##     original.levs <- lapply(sapply(x$condlevels, length), seq)
+##     stopifnot(length(original.levs) == len)
+##     current.levs <-
+##         mapply("[", original.levs, x$index.cond,
+##                SIMPLIFY = FALSE)
+##     new.levs <-
+##         mapply("[", current.levs, indices,
+##                SIMPLIFY = FALSE)
+##     if (any(sapply(new.levs, function(x) any(is.na(x)))))
+##         stop("Invalid indices")
+##     update(x, index.cond = new.levs)
+## }
 
 
 
