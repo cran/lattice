@@ -51,15 +51,20 @@ contourplot(x, data, \dots)
             region = FALSE,
             \dots)
 
-\method{levelplot}{table}(x, data = NULL, aspect = "iso", \dots,
-          xlim, ylim, row.values, column.values)
+\method{levelplot}{table}(x, data = NULL, aspect = "iso", \dots, xlim, ylim)
 
-\method{contourplot}{table}(x, data = NULL, aspect = "iso", \dots,
-            xlim, ylim, row.values, column.values)
+\method{contourplot}{table}(x, data = NULL, aspect = "iso", \dots, xlim, ylim)
 
-\method{levelplot}{matrix}(x, data = NULL, xlab, ylab, \dots)
+\method{levelplot}{matrix}(x, data = NULL, aspect = "iso",
+          \dots, xlim, ylim,
+          row.values = seq_len(nrow(x)),
+          column.values = seq_len(ncol(x)))
 
-\method{contourplot}{matrix}(x, data = NULL, xlab, ylab, \dots)
+\method{contourplot}{matrix}(x, data = NULL, aspect = "iso",
+            \dots, xlim, ylim,
+            row.values = seq_len(nrow(x)),
+            column.values = seq_len(ncol(x)))
+
 
 \method{levelplot}{array}(x, data = NULL, \dots)
 
@@ -233,8 +238,8 @@ contourplot(x, data, \dots)
 }
 \author{Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
 \examples{
-x <- seq(pi/4, 5 * pi, length = 100)
-y <- seq(pi/4, 5 * pi, length = 100)
+x <- seq(pi/4, 5 * pi, length.out = 100)
+y <- seq(pi/4, 5 * pi, length.out = 100)
 r <- as.vector(sqrt(outer(x^2, y^2, "+")))
 grid <- expand.grid(x=x, y=y)
 grid$z <- cos(r^2) * exp(-r/(pi^3))
@@ -248,9 +253,9 @@ require(stats)
 attach(environmental)
 ozo.m <- loess((ozone^(1/3)) ~ wind * temperature * radiation,
        parametric = c("radiation", "wind"), span = 1, degree = 2)
-w.marginal <- seq(min(wind), max(wind), length = 50)
-t.marginal <- seq(min(temperature), max(temperature), length = 50)
-r.marginal <- seq(min(radiation), max(radiation), length = 4)
+w.marginal <- seq(min(wind), max(wind), length.out = 50)
+t.marginal <- seq(min(temperature), max(temperature), length.out = 50)
+r.marginal <- seq(min(radiation), max(radiation), length.out = 4)
 wtr.marginal <- list(wind = w.marginal, temperature = t.marginal,
         radiation = r.marginal)
 grid <- expand.grid(wtr.marginal)

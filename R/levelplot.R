@@ -35,9 +35,9 @@ level.colors <- function(x, at, col.regions, colors = TRUE, ...)
         ncolor <- length(col.regions)
         col.regions <-
             if (ncolor <= nregions)
-                rep(col.regions, length = nregions)
+                rep(col.regions, length.out = nregions)
             else 
-                col.regions[round(seq(1, ncolor, length = nregions))]
+                col.regions[round(seq(1, ncolor, length.out = nregions))]
         col.regions[ind.col]
     }
 }
@@ -141,9 +141,9 @@ panel.levelplot <-
 ##     numcol.r <- length(col.regions)
 ##     col.regions <-
 ##         if (numcol.r <= numcol)
-##             rep(col.regions, length = numcol)
+##             rep(col.regions, length.out = numcol)
 ##         else
-##             col.regions[round(seq(1, numcol.r, length = numcol))]
+##             col.regions[round(seq(1, numcol.r, length.out = numcol))]
 ##     zcol <- cut(z, at, include.lowest = TRUE, labels = FALSE)
 
     zcol <- level.colors(z, at, col.regions, colors = TRUE)
@@ -162,14 +162,14 @@ panel.levelplot <-
     shrinky <- c(1, 1)
     if (!missing(shrink)) {
         if (is.numeric(shrink)) {
-            shrinkx <- rep(shrink, length = 2)
-            shrinky <- rep(shrink, length = 2)
+            shrinkx <- rep(shrink, length.out = 2)
+            shrinky <- rep(shrink, length.out = 2)
         }
         else if (is.list(shrink)) {
-            shrinkx <- rep(shrink[[1]], length = 2)
-            shrinky <- rep(shrink[[1]], length = 2)
-            if ("x" %in% names(shrink)) shrinkx <- rep(shrink$x, length = 2)
-            if ("y" %in% names(shrink)) shrinky <- rep(shrink$y, length = 2)
+            shrinkx <- rep(shrink[[1]], length.out = 2)
+            shrinky <- rep(shrink[[1]], length.out = 2)
+            if ("x" %in% names(shrink)) shrinkx <- rep(shrink$x, length.out = 2)
+            if ("y" %in% names(shrink)) shrinky <- rep(shrink$y, length.out = 2)
         }
         else warning("Invalid 'shrink' parameter ignored")
     }
@@ -358,7 +358,8 @@ panel.levelplot <-
 
                     i <- match(val$level, at)
 
-                    ltext(lab = labels$labels[i], adj = c(.5, 0),
+                    ltext(labels$labels[i],
+                          adj = c(.5, 0),
                           srt = rotangle,
                           col = labels$col,
                           alpha = labels$alpha,
@@ -379,16 +380,13 @@ contourplot <- function(x, data, ...) UseMethod("contourplot")
 
 
 contourplot.table <-
-    function(x, data = NULL, aspect = "iso",
-             ..., xlim, ylim,
-             row.values = seq_len(dim(x)[1]),
-             column.values = seq_len(dim(x)[2]))
+    function(x, data = NULL, aspect = "iso", ..., xlim, ylim)
 {
+    ## see comments in levelplot.table below
     if (!missing(data)) warning("explicit 'data' specification ignored")
-    stopifnot(length(row.values) == nrow(x),
-              length(column.values) == ncol(x))
     dn <- dimnames(x)
-    if (!is.null(dn)) dimnames(x) <- lapply(dn, make.unique)
+    ## if (!is.null(dn))
+    dimnames(x) <- lapply(dn, make.unique)
     data <- as.data.frame.table(x)
     nms <- names(data)
     freq <- which(nms == "Freq")
@@ -401,63 +399,60 @@ contourplot.table <-
         rest <- paste(nms, collapse = "+")
         form <- paste(form, rest, sep = "|")
     }
-    ## if rownames/colnames are non-null, use them to label
-    if (missing(xlim))
-        xlim <-
-            if (!is.null(dn[[1]])) dn[[1]]
-            else range(row.values, finite = TRUE) + c(-0.5, 0.5)
-    if (missing(ylim))
-        ylim <-
-            if (!is.null(dn[[2]])) dn[[2]]
-            else range(column.values, finite = TRUE) + c(-0.5, 0.5)
+    if (missing(xlim)) xlim <- dn[[1]]
+    if (missing(ylim)) ylim <- dn[[2]]
     contourplot(as.formula(form), data,
                 aspect = aspect, xlim = xlim, ylim = ylim, ...)
 }
 
-contourplot.matrix <- function(x, data = NULL, xlab, ylab, ...)
+
+contourplot.matrix <-
+    function(x, data = NULL, aspect = "iso", 
+             ..., xlim, ylim,
+             row.values = seq_len(nrow(x)),
+             column.values = seq_len(ncol(x)))
 {
+    stopifnot(length(row.values) == nrow(x),
+              length(column.values) == ncol(x))
     if (!missing(data)) warning("explicit 'data' specification ignored")
-    dns <- names(dimnames(x))
-    if (missing(xlab))
-        xlab <- if (is.null(dns)) "row" else dns[1]
-    if (missing(ylab))
-        ylab <- if (is.null(dns)) "column" else dns[2]
-    contourplot(as.table(x), xlab = xlab, ylab = ylab, ...)
+    form <- z ~ row * column
+    data <- expand.grid(row = row.values, column = column.values)
+    data$z <- as.vector(as.numeric(x))
+    ## if rownames/colnames are non-null, use them to label
+    if (missing(xlim))
+        xlim <-
+            if (!is.null(rownames(x))) rownames(x)
+            else range(row.values, finite = TRUE) + c(-0.5, 0.5)
+    if (missing(ylim))
+        ylim <-
+            if (!is.null(colnames(x))) colnames(x)
+            else range(column.values, finite = TRUE) + c(-0.5, 0.5)
+    contourplot(form, data, aspect = aspect, xlim = xlim, ylim = ylim, ...)
 }
+
+
+### FIXME: This would have been cleaner, except that as.table() forces
+### row and column names, whereas we would prefer numeric axes if no
+### names are present.  The same point could be made for arrays
+### (although what should happen to conditioning variables is less
+### clear in that case), but we will ignore that issue for now.
+
+## contourplot.matrix <- function(x, data = NULL, xlab, ylab, ...)
+## {
+##     if (!missing(data)) warning("explicit 'data' specification ignored")
+##     dns <- names(dimnames(x))
+##     if (missing(xlab))
+##         xlab <- if (is.null(dns)) "row" else dns[1]
+##     if (missing(ylab))
+##         ylab <- if (is.null(dns)) "column" else dns[2]
+##     contourplot(as.table(x), xlab = xlab, ylab = ylab, ...)
+## }
 
 contourplot.array <- function(x, data = NULL, ...)
 {
     if (!missing(data)) warning("explicit 'data' specification ignored")
     contourplot(as.table(x), ...)
 }
-
-
-
-
-## contourplot.matrix <-
-##     function(x, data = NULL, aspect = "iso", 
-##              ..., xlim, ylim,
-##              row.values = seq_len(nrow(x)),
-##              column.values = seq_len(ncol(x)))
-## {
-##     stopifnot(length(row.values) == nrow(x),
-##               length(column.values) == ncol(x))
-##     if (!missing(data)) warning("explicit 'data' specification ignored")
-##     form <- z ~ row * column
-##     data <- expand.grid(row = row.values, column = column.values)
-##     data$z <- as.vector(as.numeric(x))
-##     ## if rownames/colnames are non-null, use them to label
-##     if (missing(xlim))
-##         xlim <-
-##             if (!is.null(rownames(x))) rownames(x)
-##             else range(row.values, finite = TRUE) + c(-0.5, 0.5)
-##     if (missing(ylim))
-##         ylim <-
-##             if (!is.null(colnames(x))) colnames(x)
-##             else range(column.values, finite = TRUE) + c(-0.5, 0.5)
-##     contourplot(form, data, aspect = aspect, xlim = xlim, ylim = ylim, ...)
-## }
-
 
 
 contourplot.formula <-
@@ -491,17 +486,6 @@ contourplot.formula <-
 
 levelplot <- function(x, data, ...) UseMethod("levelplot")
 
-levelplot.matrix <- function(x, data = NULL, xlab, ylab, ...)
-{
-    if (!missing(data)) warning("explicit 'data' specification ignored")
-    dns <- names(dimnames(x))
-    if (missing(xlab))
-        xlab <- if (is.null(dns)) "row" else dns[1]
-    if (missing(ylab))
-        ylab <- if (is.null(dns)) "column" else dns[2]
-    levelplot(as.table(x), xlab = xlab, ylab = ylab, ...)
-}
-
 levelplot.array <- function(x, data = NULL, ...)
 {
     if (!missing(data)) warning("explicit 'data' specification ignored")
@@ -509,23 +493,18 @@ levelplot.array <- function(x, data = NULL, ...)
 }
 
 levelplot.table <-
-    function(x, data = NULL, aspect = "iso",
-             ..., xlim, ylim,
-             row.values = seq_len(dim(x)[1]),
-             column.values = seq_len(dim(x)[2]))
+    function(x, data = NULL, aspect = "iso", ..., xlim, ylim)
 {
     if (!missing(data)) warning("explicit 'data' specification ignored")
-    stopifnot(length(dim(x)) >= 2,
-              length(row.values) == nrow(x),
-              length(column.values) == ncol(x))
-    dn <- dimnames(x)
+    dn <- dimnames(x) ## cannot be NULL for tables
 
     ## We don't want to collapse duplicate names. We do prefer to use
     ## original names for labeling, and we do so for xlim and ylim
     ## below, but not for conditioning variables (too much work, plus
     ## may not even be possible)
 
-    if (!is.null(dn)) dimnames(x) <- lapply(dn, make.unique)
+    ## if (!is.null(dn))
+    dimnames(x) <- lapply(dn, make.unique)
     data <- as.data.frame.table(x)
     nms <- names(data)
     freq <- which(nms == "Freq")
@@ -538,42 +517,49 @@ levelplot.table <-
         rest <- paste(nms, collapse = "+")
         form <- paste(form, rest, sep = "|")
     }
-    ## if rownames/colnames are non-null, use them to label
-    if (missing(xlim))
-        xlim <-
-            if (!is.null(dn[[1]])) dn[[1]]
-            else range(row.values, finite = TRUE) + c(-0.5, 0.5)
-    if (missing(ylim))
-        ylim <-
-            if (!is.null(dn[[2]])) dn[[2]]
-            else range(column.values, finite = TRUE) + c(-0.5, 0.5)
+    ## if rownames/colnames are non-null, use them to label (not the unique versions)
+    if (missing(xlim)) xlim <- dn[[1]]
+    if (missing(ylim)) ylim <- dn[[2]]
     levelplot(as.formula(form), data,
               aspect = aspect, xlim = xlim, ylim = ylim, ...)
 }
 
 
-## levelplot.matrix <-
-##     function(x, data = NULL, aspect = "iso",
-##              ..., xlim, ylim,
-##              row.values = seq_len(nrow(x)),
-##              column.values = seq_len(ncol(x)))
+levelplot.matrix <-
+    function(x, data = NULL, aspect = "iso",
+             ..., xlim, ylim,
+             row.values = seq_len(nrow(x)),
+             column.values = seq_len(ncol(x)))
+{
+    stopifnot(length(row.values) == nrow(x),
+              length(column.values) == ncol(x))
+    if (!missing(data)) warning("explicit 'data' specification ignored")
+    form <- z ~ row * column
+    data <- expand.grid(row = row.values, column = column.values)
+    data$z <- as.vector(as.numeric(x))
+    ## if rownames/colnames are non-null, use them to label
+    if (missing(xlim))
+        xlim <-
+            if (!is.null(rownames(x))) rownames(x)
+            else range(row.values, finite = TRUE) + c(-0.5, 0.5)
+    if (missing(ylim))
+        ylim <-
+            if (!is.null(colnames(x))) colnames(x)
+            else range(column.values, finite = TRUE) + c(-0.5, 0.5)
+    levelplot(form, data, aspect = aspect, xlim = xlim, ylim = ylim, ...)
+}
+
+### See FIXME for contourplot.matrix above
+
+## levelplot.matrix <- function(x, data = NULL, xlab, ylab, ...)
 ## {
-##     stopifnot(length(row.values) == nrow(x),
-##               length(column.values) == ncol(x))
 ##     if (!missing(data)) warning("explicit 'data' specification ignored")
-##     form <- z ~ row * column
-##     data <- expand.grid(row = row.values, column = column.values)
-##     data$z <- as.vector(as.numeric(x))
-##     ## if rownames/colnames are non-null, use them to label
-##     if (missing(xlim))
-##         xlim <-
-##             if (!is.null(rownames(x))) rownames(x)
-##             else range(row.values, finite = TRUE) + c(-0.5, 0.5)
-##     if (missing(ylim))
-##         ylim <-
-##             if (!is.null(colnames(x))) colnames(x)
-##             else range(column.values, finite = TRUE) + c(-0.5, 0.5)
-##     levelplot(form, data, aspect = aspect, xlim = xlim, ylim = ylim, ...)
+##     dns <- names(dimnames(x))
+##     if (missing(xlab))
+##         xlab <- if (is.null(dns)) "row" else dns[1]
+##     if (missing(ylab))
+##         ylab <- if (is.null(dns)) "column" else dns[2]
+##     levelplot(as.table(x), xlab = xlab, ylab = ylab, ...)
 ## }
 
 
@@ -622,7 +608,7 @@ levelplot.formula <-
     ## Step 1: Evaluate x, y, z etc. and do some preprocessing
 
     form <-
-        latticeParseFormula(formula, data, dim = 3,
+        latticeParseFormula(formula, data, dimension = 3,
                             subset = subset, groups = groups,
                             multiple = allow.multiple,
                             outer = outer, subscripts = TRUE,
@@ -667,7 +653,7 @@ levelplot.formula <-
     if (missing(at))
         at <-
             if (pretty) pretty(zrng, cuts)
-            else seq(zrng[1], zrng[2], length = cuts + 2)
+            else seq(zrng[1], zrng[2], length.out = cuts + 2)
     
     ## create a skeleton trellis object with the
     ## less complicated components:
@@ -787,7 +773,7 @@ levelplot.formula <-
 
 #     col.regions <-
 #         if (numcol.r <= numcol)
-#             rep(col.regions, length = numcol)
+#             rep(col.regions, length.out = numcol)
 #         else col.regions[floor(1+(1:numcol-1)*(numcol.r-1)/(numcol-1))]
 
 #     if (is.logical(colorkey))

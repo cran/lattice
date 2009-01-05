@@ -243,7 +243,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
             tmplen <- length(pars$labels)
             for (j in 1:length(pars))
                 if (is.character(pars))
-                    pars[[j]] <- rep(pars[[j]], length = tmplen)
+                    pars[[j]] <- rep(pars[[j]], length.out = tmplen)
             max.length <- max(max.length, tmplen)
             components[[length(components)+1]] <-
                 list(type = "text", pars = pars, length = tmplen)
@@ -252,6 +252,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
         {
             pars <-
                 list(col = key$col,
+                     border = "black",
                      alpha = key$alpha,
                      size = key$size,
                      angle = key$angle,
@@ -323,7 +324,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
         if (key$rep && (components[[i]]$type != "text"))
             components[[i]]$length <- max.length
         components[[i]]$pars <-
-            lapply(components[[i]]$pars, rep, length = components[[i]]$length)
+            lapply(components[[i]]$pars, rep, length.out = components[[i]]$length)
         if (key$reverse.rows) 
             components[[i]]$pars <- 
                 lapply(components[[i]]$pars, rev)
@@ -337,14 +338,14 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
 ##             components[[i]]$pars <-
 ##                 c(components[[i]]$pars[1],
 ##                   lapply(components[[i]]$pars[-1], rep,
-##                          length = components[[i]]$length))
+##                          length.out = components[[i]]$length))
 ##         }
 
     }
     column.blocks <- key$columns
     rows.per.block <- ceiling(max.length/column.blocks)
     if (column.blocks > max.length) warning("not enough rows for columns")
-    key$between <- rep(key$between, length = number.of.components)
+    key$between <- rep(key$between, length.out = number.of.components)
     
     if (key$align)
     {
@@ -553,7 +554,9 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                         placeGrob(key.gf, 
                                   rectGrob(width = cur$pars$size[j] / max(cur$pars$size),
                                            ## centred, unlike S-PLUS, due to aesthetic reasons !
-                                           gp = gpar(alpha = cur$pars$alpha[j], fill = cur$pars$col[j])),
+                                           gp = gpar(alpha = cur$pars$alpha[j],
+                                                     fill = cur$pars$col[j],
+                                                     col = cur$pars$border[j])),
                                   row = yy, col = xx)
                     ## FIXME: Need to make changes to support angle/density
                 }
@@ -742,7 +745,7 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 ##     numcol.r <- length(key$col)
 ##     key$col <-
 ##         if (is.function(key$col)) key$col(numcol)
-##         else if (numcol.r <= numcol) rep(key$col, length = numcol)
+##         else if (numcol.r <= numcol) rep(key$col, length.out = numcol)
 ##         else key$col[floor(1+(1:numcol-1)*(numcol.r-1)/(numcol-1))]
 
     key$col <-

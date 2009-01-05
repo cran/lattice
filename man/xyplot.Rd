@@ -801,11 +801,16 @@ bwplot(x, data, \dots)
 	  \item \code{density=-1}
 	}
 
-	\code{angle} and \code{density} are currently unimplemented.
-	\code{size} determines the width of columns of rectangles and
-	lines in character widths. \code{type} is relevant for lines;
-	\code{"l"} denotes a line, \code{"p"} denotes a point, and
-	\code{"b"} and \code{"o"} both denote both together.
+	In addition, the component \code{border} can be included inside
+	the \code{"rect"} component to control the border color of the
+	rectangles; when specified at the top level, \code{border}
+	controls the border of the entire key (see below).
+
+	\code{angle} and \code{density} are unimplemented.  \code{size}
+	determines the width of columns of rectangles and lines in
+	character widths. \code{type} is relevant for lines; \code{"l"}
+	denotes a line, \code{"p"} denotes a point, and \code{"b"} and
+	\code{"o"} both denote both together.
 
 	Other possible components of \code{key} are:
 
@@ -1237,7 +1242,7 @@ states <- data.frame(state.x77,
 xyplot(Murder ~ Population | state.region, data = states, 
        groups = state.name, 
        panel = function(x, y, subscripts, groups)  
-       ltext(x = x, y = y, label = groups[subscripts], cex=1,
+       ltext(x = x, y = y, labels = groups[subscripts], cex=1,
              fontfamily = "HersheySans"))
 
 barchart(yield ~ variety | site, data = barley,
@@ -1260,7 +1265,7 @@ dotplot(variety ~ yield | site, data = barley, groups = year,
         aspect=0.5, layout = c(1,6), ylab=NULL)
 
 stripplot(voice.part ~ jitter(height), data = singer, aspect = 1,
-          jitter = TRUE, xlab = "Height (inches)")
+          jitter.data = TRUE, xlab = "Height (inches)")
 ## Interaction Plot
 
 xyplot(decrease ~ treatment, OrchardSprays, groups = rowpos,
