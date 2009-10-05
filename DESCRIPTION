@@ -1,6 +1,6 @@
 Package: lattice
-Version: 0.17-25
-Date: 2009/05/14
+Version: 0.17-26
+Date: 2009/10/05
 Priority: recommended
 Title: Lattice Graphics
 Author: Deepayan Sarkar <deepayan.sarkar@r-project.org>
@@ -14,6 +14,6 @@ Enhances: chron
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
-Packaged: Thu May 14 16:27:57 2009; dsarkar
+Packaged: 2009-10-04 19:52:55 UTC; dsarkar
 Repository: CRAN
-Date/Publication: 2009-05-15 11:26:16
+Date/Publication: 2009-10-05 07:01:14
