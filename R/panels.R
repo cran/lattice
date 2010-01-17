@@ -558,6 +558,7 @@ panel.superpose <-
                          alpha = alpha[i],
                          type = type[[i]],
                          group.number = i,
+                         group.value = vals[i],
                          ...)
                 ## if (have.type) args$type <- type
                 if (!is.null(y)) args$y <- y[id]
@@ -741,7 +742,7 @@ panel.average <-
              lty = reference.line$lty,
              col,
              col.line = reference.line$col,
-             type = "l",
+             type = "l", ## ignored
              ...)
 {
     ## FIXME: pretty sure this can be made more readable using tapply
@@ -760,7 +761,7 @@ panel.average <-
         xx <- numeric(length(yy))
         for (i in yy)
             xx[i] <- fun(x[y == vals[i]])
-        panel.lines(xx, vals[yy], col = col.line, lty = lty, lwd = lwd, type = type, ...)
+        panel.lines(xx, vals[yy], col = col.line, lty = lty, lwd = lwd, ...)
     }
     else
     {
@@ -769,7 +770,7 @@ panel.average <-
         yy <- numeric(length(xx))
         for (i in xx)
             yy[i] <- fun(y[x == vals[i]])
-        panel.lines(vals[xx], yy, col = col.line, lty = lty, lwd = lwd, type = type, ...)
+        panel.lines(vals[xx], yy, col = col.line, lty = lty, lwd = lwd, ...)
      }
 }
 

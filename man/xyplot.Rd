@@ -394,7 +394,9 @@ bwplot(x, data, \dots)
     specified in the call, a key is created with \code{simpleKey} with
     \code{levels(groups)} as the first argument. (Note: this may not
     work in all high level functions, but it does work for the ones
-    where grouping makes sense with the default panel function)
+    where grouping makes sense with the default panel function).
+    The \code{text} parameter sets the key labels, and forces the key
+    to be drawn even without \code{groups}.
 
     \code{simpleKey} uses the trellis settings to determine the
     graphical parameters in the key, so this will be meaningful only if
@@ -1026,20 +1028,24 @@ bwplot(x, data, \dots)
       }
       \item{\code{index.cond}:}{
 	While \code{perm.cond} permutes the dimensions of the
-	multidimensional array of panels, \code{index.cond} can be used to
-	subset (or reorder) margins of that array.  \code{index.cond} can be
-	a list or a function, with behavior in each case described
-	below. 
+	multidimensional array of panels, \code{index.cond} can be used
+	to subset (or reorder) margins of that array.  \code{index.cond}
+	can be a list or a function, with behavior in each case
+	described below.
 
-	The panel display order within each conditioning variable depends on
-	the order of their levels.  \code{index.cond} can be used to choose
-	a \sQuote{subset} (in the R sense) of these levels, which is then
-	used as the display order for that variable.  If \code{index.cond}
-	is a list, it has to be as long as the number of conditioning
-	variables, and the \code{i}-th component has to be a valid
-	indexing vector for the integer vector \code{1:nlevels(g_i)}
-	(which can, among other things, repeat some of the levels or
-	drop some altogether).  The result of this indexing determines
+	The panel display order within each conditioning variable
+	depends on the order of their levels.  \code{index.cond} can be
+	used to choose a \sQuote{subset} (in the R sense) of these
+	levels, which is then used as the display order for that
+	variable.  If \code{index.cond} is a list, it has to be as long
+	as the number of conditioning variables, and the \code{i}-th
+	component has to be a valid indexing vector for
+	\code{levels(g_i)}, where \code{g_i} is the \code{i}-th
+	conditioning variable in the plot (note that these levels may
+	not contain all levels of the original variable, depending on
+	the effects of the \code{subset} and \code{drop.unused.levels}
+	arguments).  In particular, this indexing may repeat levels, or
+	drop some altogether.  The result of this indexing determines
 	the order of panels within that conditioning variable. To keep
 	the order of a particular variable unchanged, the corresponding
 	component must be set to \code{TRUE}.
@@ -1111,7 +1117,7 @@ bwplot(x, data, \dots)
   a single panel.
 
   The coordinate system used by lattice by default is like a graph,
-  with the origin at the bottom left, with axes increasing to left and
+  with the origin at the bottom left, with axes increasing right and
   up. In particular, panels are by default drawn starting from the
   bottom left corner, going right and then up; unless \code{as.table =
     TRUE}, in which case panels are drawn from the top left corner,

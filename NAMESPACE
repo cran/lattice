@@ -266,6 +266,7 @@ S3method(stripplot,   formula)
 S3method(stripplot,   numeric)
 S3method(qq,          formula)
 S3method(xyplot,      formula)
+S3method(xyplot,      ts)
 S3method(levelplot,   formula)
 S3method(levelplot,   table)
 S3method(levelplot,   array)
@@ -293,7 +294,6 @@ S3method(tmd,         trellis)
 S3method(llines,      default)
 S3method(ltext,       default)
 S3method(lpoints,     default)
-
 
 
 ### Local variables:
