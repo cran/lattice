@@ -467,9 +467,155 @@ formattedTicksAndLabels.expression <-
 
 
 
-## method for "Date" (regurgitating axis.Date)
+## prettyDate copied here temporarily.
+## remove after it appears in R 2.12 ?
 
+prettyDate_TMP <-
+    function(x, n = 5, min.n = max(2, round(n / 2)), ...)
+{
+    isDate <- inherits(x, "Date")
+    zz <- range(as.POSIXct(x))
+    ## specify the set of pretty timesteps
+    MIN <- 60
+    HOUR <- MIN * 60
+    DAY <- HOUR * 24
+    YEAR <- DAY * 365.25
+    MONTH <- YEAR / 12
+    steps <-
+        list("1 sec" = list(1, format = "%S", start = "mins"),
+             "2 secs" = list(2),
+             "5 secs" = list(5),
+             "10 secs" = list(10),
+             "15 secs" = list(15),
+             "30 secs" = list(30, format = "%H:%M:%S"),
+             "1 min" = list(1*MIN, format = "%H:%M"),
+             "2 mins" = list(2*MIN, start = "hours"),
+             "5 mins" = list(5*MIN),
+             "10 mins" = list(10*MIN),
+             "15 mins" = list(15*MIN),
+             "30 mins" = list(30*MIN),
+             "1 hour" = list(1*HOUR),
+             "3 hours" = list(3*HOUR, start = "days"),
+             "6 hours" = list(6*HOUR, format = "%b %d %H:%M"),
+             "12 hours" = list(12*HOUR),
+             "1 DSTday" = list(1*DAY, format = "%b %d"),
+             "2 DSTdays" = list(2*DAY),
+             "1 week" = list(7*DAY, start = "weeks"),
+             "2 weeks" = list(14*DAY),
+             "1 month" = list(1*MONTH, format = "%Y %b"),
+             "3 months" = list(3*MONTH, start = "years"),
+             "6 months" = list(6*MONTH, format = "%Y-%m"),
+             "1 year" = list(1*YEAR, format = "%Y"),
+             "2 years" = list(2*YEAR, start = "decades"),
+             "5 years" = list(5*YEAR),
+             "10 years" = list(10*YEAR),
+             "20 years" = list(20*YEAR, start = "centuries"),
+             "50 years" = list(50*YEAR),
+             "100 years" = list(100*YEAR),
+             "200 years" = list(200*YEAR),
+             "500 years" = list(500*YEAR),
+             "1000 years" = list(1000*YEAR))
+    ## carry forward 'format' and 'start' to following steps
+    for (i in seq_along(steps)) {
+        if (is.null(steps[[i]]$format))
+            steps[[i]]$format <- steps[[i-1]]$format
+        if (is.null(steps[[i]]$start))
+            steps[[i]]$start <- steps[[i-1]]$start
+        steps[[i]]$spec <- names(steps)[i]
+    }
+    ## crudely work out number of steps in the given interval
+    xspan <- diff(as.numeric(zz))
+    nsteps <- sapply(steps, function(s) {
+        xspan / s[[1]]
+    })
+    init.i <- which.min(abs(nsteps - n))
+    ## calculate actual number of ticks in the given interval
+    calcSteps <- function(s) {
+        startTime <- trunc_POSIXt_TMP(min(zz), units = s$start) ## FIXME: should be trunc() eventually
+        at <- seq(startTime, max(zz), by = s$spec)
+        at <- at[(min(zz) <= at) & (at <= max(zz))]
+        at
+    }
+    init.at <- calcSteps(steps[[init.i]])
+    init.n <- length(init.at)
+    ## bump it up if below acceptable threshold
+    while (init.n < min.n) {
+        init.i <- init.i - 1
+        if (init.i == 0) stop("range too small for min.n")
+        init.at <- calcSteps(steps[[init.i]])
+        init.n <- length(init.at)
+    }
+    makeOutput <- function(at, s) {
+        flabels <- format(at, s$format)
+        ans <-
+            if (isDate) round(as.Date(at))
+            else as.POSIXct(at)
+        attr(ans, "labels") <- flabels
+        ans
+    }
+    if (init.n == n) ## perfect
+        return(makeOutput(init.at, steps[[init.i]]))
+    if (init.n > n) {
+        ## too many ticks
+        new.i <- init.i + 1
+        new.i <- min(new.i, length(steps))
+    } else {
+        ## too few ticks
+        new.i <- init.i - 1
+        new.i <- max(new.i, 1)
+    }
+    new.at <- calcSteps(steps[[new.i]])
+    new.n <- length(new.at)
+    ## work out whether new.at or init.at is better
+    if (new.n < min.n)
+        new.n <- -Inf
+    if (abs(new.n - n) < abs(init.n - n))
+        return(makeOutput(new.at, steps[[new.i]]))
+    else
+        return(makeOutput(init.at, steps[[init.i]]))
+}
+
+trunc_POSIXt_TMP <-
+    function(x, units = c("secs", "mins", "hours", "days",
+                "weeks", "months", "years", "decades", "centuries"),
+             start.on.monday = TRUE)
+{
+    x <- as.POSIXlt(x)
+    if (units %in% c("secs", "mins", "hours", "days"))
+        return(base::trunc.POSIXt(x, units))
+    x <- base::trunc.POSIXt(x, "days")
+    if (length(x$sec))
+        switch(units,
+               weeks = {
+                   x$mday <- x$mday - x$wday
+                   if (start.on.monday)
+                       x$mday <- x$mday + ifelse(x$wday > 0L, 1L, -6L)
+               },
+               months = {
+                   x$mday <- 1
+               },
+               years = {
+                   x$mday <- 1
+                   x$mon <- 0
+               },
+               decades = {
+                   x$mday <- 1
+                   x$mon <- 0
+                   x$year <- (x$year %/% 10) * 10
+               },
+               centuries = {
+                   x$mday <- 1
+                   x$mon <- 0
+                   x$year <- (x$year %/% 100) * 100
+               })
+    x
+}
+
+
+## method for "Date" (using pretty.Date)
+## and POXIXct (using pretty.POSIXt)
 formattedTicksAndLabels.Date <-
+formattedTicksAndLabels.POSIXct <-
     function(x, at = FALSE,
              used.at = NULL,
              num.limit = NULL,
@@ -491,152 +637,27 @@ formattedTicksAndLabels.Date <-
                     check.overlap = FALSE,
                     num.limit = num.lim))
     }
+
     mat <- is.logical(at)
-    if(!mat) x <- as.Date(at) else x <- as.Date(x)
-    range <- range(num.lim) # thus, range[1] <= range[2]
-    range[1] <- ceiling(range[1])
-    range[2] <- floor(range[2])
-    ## find out the scale involved
-    d <- range[2] - range[1]
-    ## z <- c(range, x[is.finite(x)])
-    z <- range
-    class(z) <- "Date"
-    if (d < 7) # days of a week
-        if (is.null(format.posixt)) format.posixt <- "%a"
-    if (d < 100) { # month and day
-        z <- structure(pretty(z, ...), class="Date")
-        if (is.null(format.posixt)) format.posixt <- "%b %d"
-    } else if (d < 1.1*365) { # months
-        zz <- as.POSIXlt(z)
-        zz$mday <- 1
-        zz$mon <- pretty(zz$mon, ...)
-        m <- length(zz$mon)
-        m <- rep.int(zz$year[1], m)
-        zz$year <- c(m, m + 1)
-        z <- .Internal(POSIXlt2Date(zz))
-        if(is.null(format.posixt)) format.posixt <- "%b"
-    } else { # years
-        zz <- as.POSIXlt(z)
-        zz$mday <- 1; zz$mon <- 0
-        zz$year <- pretty(zz$year, ...)
-        z <- .Internal(POSIXlt2Date(zz))
-        if(is.null(format.posixt)) format.posixt <- "%Y"
+    if (mat) ## at not explicitly specified
+    {
+        at <- prettyDate_TMP(x, ...) ## FIXME: should be pretty() eventually
+        if (is.null(format.posixt))
+            labels <- attr(at, "labels")
+        else
+            labels <- format(at, format = format.posixt)
     }
-    if(!mat)
-        z <- x[is.finite(x)] # override changes
-    z <- z[z >= range[1] & z <= range[2]]
-    z <- structure(sort(unique(z)), class = "Date")    
-    labels <- format.Date(z, format = format.posixt)
-    list(at = as.numeric(z),
+    else
+    {
+        if (is.null(format.posixt))
+            format.posixt <- ""
+        labels <- format(at, format = format.posixt)
+    }
+    list(at = as.numeric(at),
          labels = labels,
-         check.overlap = FALSE,
+         check.overlap = mat,
          num.limit = num.lim)
 }
-
-
-
-
-
-
-formattedTicksAndLabels.POSIXct <-
-    function(x, at = FALSE,
-             used.at = NULL,
-             num.limit = NULL,
-             labels = FALSE,
-             logsc = FALSE, 
-             abbreviate = NULL,
-             minlength = 4,
-             format.posixt = NULL, ...) 
-{
-    ## modified from axis.POSIXct. 
-    num.lim <- ## could be reversed
-        if (length(x) == 2) as.numeric(x)
-        else as.numeric(range(x))
-    mat <- is.logical(at)
-    mlab <- is.logical(labels)
-    if (!mat) x <- as.POSIXct(at)
-    else x <- as.POSIXct(x)
-    range <- range(num.lim)
-    d <- range[2] - range[1]
-    z <- c(range, x[is.finite(x)])
-    if (d < 1.1 * 60) {
-        sc <- 1
-        if (is.null(format.posixt)) 
-            format.posixt <- "%S"
-    }
-    else if (d < 1.1 * 60 * 60) {
-        sc <- 60
-        if (is.null(format.posixt)) 
-            format.posixt <- "%M:%S"
-    }
-    else if (d < 1.1 * 60 * 60 * 24) {
-        sc <- 60 * 24
-        if (is.null(format.posixt)) 
-            format.posixt <- "%H:%M"
-    }
-    else if (d < 2 * 60 * 60 * 24) {
-        sc <- 60 * 24
-        if (is.null(format.posixt)) 
-            format.posixt <- "%a %H:%M"
-    }
-    else if (d < 7 * 60 * 60 * 24) {
-        sc <- 60 * 60 * 24
-        if (is.null(format.posixt)) 
-            format.posixt <- "%a"
-    }
-    else {
-        sc <- 60 * 60 * 24
-    }
-    if (d < 60 * 60 * 24 * 50) {
-        zz <- pretty(z/sc, ...)
-        z <- zz * sc
-        class(z) <- c("POSIXt", "POSIXct")
-        if (is.null(format.posixt)) 
-            format.posixt <- "%b %d"
-    }
-    else if (d < 1.1 * 60 * 60 * 24 * 365) {
-        class(z) <- c("POSIXt", "POSIXct")
-        zz <- as.POSIXlt(z)
-        zz$mday <- zz$wday <- zz$yday <- 1
-        zz$isdst <- -1
-        zz$hour <- zz$min <- zz$sec <- 0
-        zz$mon <- pretty(zz$mon, ...)
-        m <- length(zz$mon)
-        M <- 2 * m
-        m <- rep.int(zz$year[1], m)
-        zz$year <- c(m, m + 1)
-        zz <- lapply(zz, function(x) rep(x, length.out = M))
-        class(zz) <- c("POSIXt", "POSIXlt")
-        z <- as.POSIXct(zz)
-        if (is.null(format.posixt))
-            format.posixt <- "%b"
-    }
-    else {
-        class(z) <- c("POSIXt", "POSIXct")
-        zz <- as.POSIXlt(z)
-
-        zz$mday <- zz$wday <- zz$yday <- 1
-        zz$isdst <- -1
-        zz$mon <- zz$hour <- zz$min <- zz$sec <- 0
-        zz$year <- pretty(zz$year, ...)
-        M <- length(zz$year)
-        zz <- lapply(zz, function(x) rep(x, length.out = M))
-        class(zz) <- c("POSIXt", "POSIXlt")
-        z <- as.POSIXct(zz)
-        if (is.null(format.posixt))
-            format.posixt <- "%Y"
-    }
-    if (!mat) z <- x[is.finite(x)]
-    if (mlab) labels <- format(z, format = format.posixt)
-    z <- as.numeric(z)
-    keep <- z >= range[1] & z <= range[2]
-    list(at = z[keep],
-         labels = labels[keep],
-         check.overlap = FALSE,
-         num.limit = num.lim)
-}
-
-
 
 
 

@@ -70,6 +70,8 @@
     \code{\link{panel.xyplot}}.
     These arguments can also be vectors or (named) lists, see Details
     for more information.
+    Note that, except for \code{type}, these are not passed on to the
+    panel function.  See Details.
   }
   \item{auto.key}{
     a logical, or a list describing how to draw a key. See the
@@ -93,7 +95,9 @@
   \item{xlab, ylab}{
     X axis and Y axis labels; see \code{\link{xyplot}}. Note in
     particular that \code{ylab} may be a character vector, in which case the
-    labels are spaced out equally, to correspond to the panels.
+    labels are spaced out equally, to correspond to the panels;
+    but \emph{NOTE} in this case the vector should be reversed OR the
+    argument \code{as.table} set to \code{FALSE}. 
   }
   \item{default.scales}{
     \code{scales} specification. The default is set to have
@@ -111,7 +115,15 @@
   \code{list(A = c(1,2), c(3,4))} in which \code{c(3, 4)} is the
   default value and \code{c(1, 2)} the value only for series \code{A}.
   The \code{screens} argument can be specified in a similar way.
-
+  
+  NOTE: unlike \code{xyplot}, the arguments \code{col, lty,
+  lwd, pch} are not passed on to the panel function. Instead, they are
+  used to define graphical settings for \code{\link{trellis.par.set}},
+  and a corresponding \code{groups} argument is passed on to the panel
+  function. 
+  %% TODO - explain reasoning behind this, gotchas etc
+  %% To think about - could col etc be passed to the panel function as well?
+  
   Some examples are given below.
 }
 
@@ -191,6 +203,5 @@ xyplot(z, screens = list(a = "primary (a)", "other (b & c)"),
   type = list(a = c("p", "h"), b = c("p", "s"), "o"),
   pch = list(a = 2, c = 3), auto.key = list(type = "o"))
 }
-
 \keyword{hplot}
 \keyword{ ts }
