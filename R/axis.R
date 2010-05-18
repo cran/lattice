@@ -471,10 +471,16 @@ formattedTicksAndLabels.expression <-
 ## remove after it appears in R 2.12 ?
 
 prettyDate_TMP <-
-    function(x, n = 5, min.n = max(2, round(n / 2)), ...)
+    function(x, n = 5, min.n = n %/% 2, ...)
 {
     isDate <- inherits(x, "Date")
-    zz <- range(as.POSIXct(x))
+    x <- as.POSIXct(x)
+    if (isDate) # the timezone *does* matter
+        attr(x, "tzone") <- "GMT"
+    zz <- range(x, na.rm = TRUE)
+    if (diff(as.numeric(zz)) == 0)# one value only
+        zz <- zz + c(0,60)
+    
     ## specify the set of pretty timesteps
     MIN <- 60
     HOUR <- MIN * 60
@@ -501,7 +507,7 @@ prettyDate_TMP <-
              "1 DSTday" = list(1*DAY, format = "%b %d"),
              "2 DSTdays" = list(2*DAY),
              "1 week" = list(7*DAY, start = "weeks"),
-             "2 weeks" = list(15*DAY, start = "months"),
+             "halfmonth" = list(MONTH/2, start = "months"),
              "1 month" = list(1*MONTH, format = "%b"),
              "3 months" = list(3*MONTH, start = "years"),
              "6 months" = list(6*MONTH, format = "%Y-%m"),
@@ -532,18 +538,26 @@ prettyDate_TMP <-
     ## calculate actual number of ticks in the given interval
     calcSteps <- function(s) {
         startTime <- trunc_POSIXt_TMP(min(zz), units = s$start) ## FIXME: should be trunc() eventually
-        at <- seq(startTime, max(zz), by = s$spec)
+        if (identical(s$spec, "halfmonth")) {
+            at <- seq(startTime, max(zz), by = "months")
+            at2 <- as.POSIXlt(at)
+            at2$mday <- 15L
+            at <- structure(sort(c(as.POSIXct(at), as.POSIXct(at2))), 
+                            tzone = attr(at, "tzone"))
+        } else {
+            at <- seq(startTime, max(zz), by = s$spec)
+        }
         at <- at[(min(zz) <= at) & (at <= max(zz))]
         at
     }
     init.at <- calcSteps(steps[[init.i]])
-    init.n <- length(init.at)
+    init.n <- length(init.at) - 1L
     ## bump it up if below acceptable threshold
     while (init.n < min.n) {
         init.i <- init.i - 1
         if (init.i == 0) stop("range too small for min.n")
         init.at <- calcSteps(steps[[init.i]])
-        init.n <- length(init.at)
+        init.n <- length(init.at) - 1L
     }
     makeOutput <- function(at, s) {
         flabels <- format(at, s$format)
@@ -565,7 +579,7 @@ prettyDate_TMP <-
         new.i <- max(new.i, 1)
     }
     new.at <- calcSteps(steps[[new.i]])
-    new.n <- length(new.at)
+    new.n <- length(new.at) - 1L
     ## work out whether new.at or init.at is better
     if (new.n < min.n)
         new.n <- -Inf
@@ -616,18 +630,14 @@ trunc_POSIXt_TMP <-
 ## and POXIXct (using pretty.POSIXt)
 formattedTicksAndLabels.Date <-
 formattedTicksAndLabels.POSIXct <-
-    function(x, at = FALSE,
-             used.at = NULL,
-             num.limit = NULL,
-             labels = FALSE,
-             logsc = FALSE, 
-             abbreviate = NULL,
-             minlength = 4,
+    function(x, at = FALSE, used.at = NULL,
+             num.limit = NULL, labels = FALSE, logsc = FALSE, 
+             abbreviate = NULL, minlength = 4,
              format.posixt = NULL, ...) 
 {
     num.lim <- 
         if (length(x) == 2) as.numeric(x)
-        else range(as.numeric(x))
+        else range(as.numeric(x), na.rm = TRUE)
     if (!is.logical(labels)) ## no need to do anything
     {
         if (missing(at) || length(at) != length(labels))
@@ -659,12 +669,57 @@ formattedTicksAndLabels.POSIXct <-
          num.limit = num.lim)
 }
 
+## chron 'chron' objects: dates and times
 
+formattedTicksAndLabels.chron <-
+    function(x, at = FALSE, ...) 
+{
+    if (!inherits(x, "times")) 
+        x <- chron::chron(x)
+    x <- as.POSIXct(x)
+    attr(x, "tzone") <- "GMT"
+    if (!is.logical(at)) { ## at was explicitly specified
+        at <- as.POSIXct(at)
+        attr(at, "tzone") <- "GMT"
+    }
+    ans <- formattedTicksAndLabels(x, at = at, ...)
+    ans$at <- ans$at / 86400
+    ans$num.limit <- ans$num.limit / 86400
+    ans
+}
 
-## chron 'times' objects
+## chron 'dates' objects: only dates (no times here because caught by 'chron' method)
 
+formattedTicksAndLabels.dates <-
+    function(x, ...) 
+{
+    if (!inherits(x, "times")) 
+        x <- chron::chron(x)
+    formattedTicksAndLabels(as.Date(x), ...)
+}
+
+## chron 'times' objects: only times (no dates here because caught by 'dates' method)
 
 formattedTicksAndLabels.times <-
+    function(x, labels = FALSE, format.posixt = NULL, ..., simplify = TRUE) 
+{
+    ans <- formattedTicksAndLabels(chron::chron(dates = x), labels = labels,
+                                   format.posixt = format.posixt, ...)
+    if (is.logical(labels)) { ## labels not specified
+        if (is.null(format.posixt)) { ## format not specified
+            at <- chron::chron(times = ans$at)
+            ## format.times will revert to numeric format if any > 1
+            if (max(abs(at)) <= 1) ## 'x' might exceed 1
+                labels <- format(at - floor(at), simplify = simplify)
+            else labels <- format(at, simplify = simplify)
+            ans$labels <- labels
+        }
+    }
+    ans
+}
+
+
+OLD_formattedTicksAndLabels.times <-
     function(x, at = FALSE, used.at = NULL,
              num.limit = NULL, labels = FALSE, logsc = FALSE, 
              abbreviate = NULL, minlength = 4, simplify = TRUE, 
