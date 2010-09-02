@@ -254,12 +254,13 @@ parallel.formula <-
              xlim,
              ylab = NULL,
              ylim,
-             varnames,
+             varnames = NULL,
              horizontal.axis = TRUE,
              drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
              lattice.options = NULL,
-             default.scales,
+             default.scales = list(),
+             default.prepanel = lattice.getOption("prepanel.default.parallel"),
              subset = TRUE)
 {
     formula <- x
@@ -296,25 +297,20 @@ parallel.formula <-
 
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
-
     cond <- form$condition
-    ## number.of.cond <- length(cond)
     x <- as.data.frame(form$right)
 
     if (length(cond) == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, nrow(x))))
-        ## number.of.cond <- 1
     }
 
-    if (!missing(varnames)) colnames(x) <-
-        eval(substitute(varnames), data, environment(formula))
+    varnames <-
+        if (is.null(varnames)) colnames(x)
+        else varnames
+    ## WAS eval(substitute(varnames), data, environment(formula)), but
+    ## not sure why non-standard evaluation would be useful here
+    if (length(varnames) != ncol(x)) stop("'varnames' has wrong length.")
 
     ## create a skeleton trellis object with the
     ## less complicated components:
@@ -348,7 +344,7 @@ parallel.formula <-
             list(x = list(at = c(0, 1), labels = c("Min", "Max")),
                  y =
                  list(alternating = FALSE, axs = "i", tck = 0,
-                      at = seq_len(ncol(x)), labels = colnames(x)))
+                      at = seq_len(ncol(x)), labels = varnames))
         if (!horizontal.axis) names(default.scales) <- c("y", "x")
     }
     
@@ -359,16 +355,16 @@ parallel.formula <-
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit))
+    if (!is.null(foo$x.scales$limits))
     {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit))
+    if (!is.null(foo$y.scales$limits))
     {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
 
     ## Step 4: Decide if log scales are being used:
@@ -400,7 +396,7 @@ parallel.formula <-
     ## Step 6: Determine packets
 
     foo$panel.args.common <-
-        c(list(z = x, groups = groups), dots)
+        c(list(z = x, groups = groups, varnames = varnames), dots)
 
 
     npackets <- prod(cond.max.level)
@@ -433,7 +429,7 @@ parallel.formula <-
     }
 
     more.comp <-
-        c(limits.and.aspect(prepanel.default.parallel,
+        c(limits.and.aspect(default.prepanel,
                             prepanel = prepanel, 
                             have.xlim = have.xlim, xlim = xlim, 
                             have.ylim = have.ylim, ylim = ylim, 

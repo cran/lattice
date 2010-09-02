@@ -32,6 +32,17 @@ banking(dx, dy)
 
 \examples{
 
+## with and without banking
+
+plot <- xyplot(sunspot.year ~ 1700:1988, xlab = "", type = "l",
+               scales = list(x = list(alternating = 2)),
+               main = "Yearly Sunspots")
+print(plot, position = c(0, .3, 1, .9), more = TRUE)
+print(update(plot, aspect = "xy", main = "", xlab = "Year"),
+      position = c(0, 0, 1, .3))
+
+## cut-and-stack plot (see also xyplot.ts)
+
 xyplot(sunspot.year ~ time(sunspot.year) | equal.count(time(sunspot.year)), 
        xlab = "", type = "l", aspect = "xy", strip = FALSE,
        scales = list(x = list(alternating = 2, relation = "sliced")),
@@ -42,9 +53,10 @@ xyplot(sunspot.year ~ time(sunspot.year) | equal.count(time(sunspot.year)),
 
 \references{
 
-  Cleveland, William S.,  McGill, Marylyn E. and McGill, Robert (1988),
-    "The Shape Parameter of a Two-variable Graph",
-    \emph{Journal of the American Statistical Association}, 83, 289-300
+  Cleveland, William S. and McGill, Marylyn E. and McGill, Robert (1988)
+  \dQuote{The Shape Parameter of a Two-variable Graph}, \emph{Journal of
+  the American Statistical Association}, \bold{83}, 289--300.
+
 }
 \author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
 \seealso{\code{\link{Lattice}}, \code{\link{xyplot}}}

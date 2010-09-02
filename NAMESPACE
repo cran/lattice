@@ -3,16 +3,11 @@ useDynLib(lattice, .registration = TRUE)
 
 import(grid)
 
-
-## ## can I do this?
-## export(grid.prompt)
-
-
 importFrom(grDevices,
 
-           dev.list, cm.colors, gray, col2rgb,
+           dev.list, cm.colors, gray, col2rgb, rgb,
            heat.colors, grey, hsv, xy.coords,
-           boxplot.stats, contourLines)
+           boxplot.stats, contourLines, colorRampPalette, as.raster)
 
 importFrom(graphics, par, plot, co.intervals, hist)
 
@@ -23,7 +18,7 @@ importFrom(stats,
 
            as.formula, density, fitted.values, loess.smooth, median,
            ppoints, qnorm, residuals, update, var, coef, quantile, lm,
-           dnorm, qunif)
+           dnorm, qunif, uniroot)
 
 
 export(

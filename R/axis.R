@@ -151,15 +151,16 @@ axis.default <-
              scales, components, as.table,
              labels = c("default", "yes", "no"),
              ticks = c("default", "yes", "no"),
-             ...)
+             ...,
+             prefix = lattice.getStatus("current.prefix"))
 {
     side <- match.arg(side)
     labels <- match.arg(labels)
     ticks <- match.arg(ticks)
 
-    row <- lattice.getStatus("current.focus.row")
-    column <- lattice.getStatus("current.focus.column")
-    panel.layout <- trellis.currentLayout("panel")
+    row <- lattice.getStatus("current.focus.row", prefix = prefix)
+    column <- lattice.getStatus("current.focus.column", prefix = prefix)
+    panel.layout <- trellis.currentLayout("panel", prefix = prefix)
     layout.dim <- dim(panel.layout)
 
     determineStatus <- function(x)
@@ -173,7 +174,7 @@ axis.default <-
     {
         ## is this the last panel? In that case, it is considered to
         ## be ``on the boundary'' on the right side.
-        ((pn <- panel.number()) > 0 && pn == max(panel.layout))
+        ((pn <- panel.number(prefix = prefix)) > 0 && pn == max(panel.layout))
     }
     atBoundary <- function()
     {
@@ -323,10 +324,10 @@ formattedTicksAndLabels.default <-
              num.limit = NULL,
              abbreviate = NULL,
              minlength = 4,
-             format.posixt)
+             format.posixt = NULL)
     ## meant for when x is numeric
 {
-    range <-
+    rng <-
         if (length(x) == 2) as.numeric(x)
         else range(as.numeric(x))
 
@@ -349,7 +350,7 @@ formattedTicksAndLabels.default <-
         
     if (is.logical(at)) ## at not explicitly specified
     {
-        at <- pretty(x[is.finite(x)], ...)
+        at <- checkArgsAndCall(pretty, list(x = x[is.finite(x)], ...))
     }
     else if (have.log)  ## and at specified
     {
@@ -359,16 +360,8 @@ formattedTicksAndLabels.default <-
     list(at = at, labels = if (is.logical(labels))
          paste(logpaste, format(at, trim = TRUE), sep = "") else labels,
          check.overlap = check.overlap,
-         num.limit = range)
+         num.limit = rng)
 }
-
-
-
-
-
-
-
-
 
 
 formattedTicksAndLabels.date <-
@@ -380,7 +373,7 @@ formattedTicksAndLabels.date <-
              logsc = FALSE,
              abbreviate = NULL,
              minlength = 4,
-             format.posixt)
+             format.posixt = NULL)
 {
     ## handle log scales (not very meaningful, though)
 
@@ -421,14 +414,16 @@ formattedTicksAndLabels.date <-
 
 
 formattedTicksAndLabels.character <-
-    function (x, at = FALSE,
+    function (x,
+              at = FALSE,
               used.at = NULL,
-              num.limit = NULL,
               labels = FALSE,
               logsc = FALSE,
+              ...,
+              num.limit = NULL,
               abbreviate = NULL,
               minlength = 4,
-              format.posixt, ...)
+              format.posixt = NULL)
 {
     retain <- if (is.null(used.at) || any(is.na(used.at))) TRUE else used.at
     ans <- list(at = if (is.logical(at)) seq_along(x)[retain] else at,
@@ -440,20 +435,17 @@ formattedTicksAndLabels.character <-
     ans
 }
 
-
-
-
-
-
 formattedTicksAndLabels.expression <-
-    function(x, at = FALSE,
+    function(x,
+             at = FALSE,
              used.at = NULL,
-             num.limit = NULL,
              labels = FALSE,
              logsc = FALSE,
+             ...,
+             num.limit = NULL,
              abbreviate = NULL,
              minlength = 4,
-             format.posixt, ...)
+             format.posixt = NULL)
 {
     retain <- if (is.null(used.at) || any(is.na(used.at))) TRUE else used.at
     ans <- list(at = if (is.logical(at)) seq_along(x)[retain] else at,
@@ -630,10 +622,16 @@ trunc_POSIXt_TMP <-
 ## and POXIXct (using pretty.POSIXt)
 formattedTicksAndLabels.Date <-
 formattedTicksAndLabels.POSIXct <-
-    function(x, at = FALSE, used.at = NULL,
-             num.limit = NULL, labels = FALSE, logsc = FALSE, 
-             abbreviate = NULL, minlength = 4,
-             format.posixt = NULL, ...) 
+    function(x,
+             at = FALSE,
+             used.at = NULL,
+             labels = FALSE,
+             logsc = FALSE,
+             ...,
+             num.limit = NULL,
+             abbreviate = NULL,
+             minlength = 4,
+             format.posixt = NULL)
 {
     num.lim <- 
         if (length(x) == 2) as.numeric(x)
@@ -701,7 +699,7 @@ formattedTicksAndLabels.dates <-
 ## chron 'times' objects: only times (no dates here because caught by 'dates' method)
 
 formattedTicksAndLabels.times <-
-    function(x, labels = FALSE, format.posixt = NULL, ..., simplify = TRUE) 
+    function(x, labels = FALSE, ..., format.posixt = NULL, simplify = TRUE) 
 {
     ans <- formattedTicksAndLabels(chron::chron(dates = x), labels = labels,
                                    format.posixt = format.posixt, ...)
@@ -800,6 +798,7 @@ panel.axis <-
              text.font = axis.text$font,
              text.fontfamily = axis.text$fontfamily,
              text.fontface = axis.text$fontface,
+             text.lineheight = axis.text$lineheight,
 
              line.col = axis.line$col,
              line.lty = axis.line$lty,
@@ -822,7 +821,6 @@ panel.axis <-
 
 #    if (missing(at) || is.null(at))
 #    {
-#        
 #        warning("nothing to draw if at not specified")
 #        return()
 #    }
@@ -873,7 +871,7 @@ panel.axis <-
                     lty = line.lty, lwd = line.lwd)
     gp.text <- gpar(col = text.col, cex = text.cex, alpha = text.alpha,
                     fontface = chooseFace(text.fontface, text.font),
-                    fontfamily = text.fontfamily)
+                    fontfamily = text.fontfamily, lineheight = text.lineheight)
 
     ## We now compute some spacing information based on settings
     ## (combining trellis settings and the (newer) lattice.options).

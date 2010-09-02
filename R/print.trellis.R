@@ -28,18 +28,42 @@ layoutNCol <- function(x) x$ncol
 
 ## other accessors, for during (and sometimes after) plotting
 
-current.row <- function() lattice.getStatus("current.focus.row")
-current.column <- function() lattice.getStatus("current.focus.column")
-trellis.currentLayout <- function(which = c("packet", "panel"))
+current.row <- function(prefix = lattice.getStatus("current.prefix"))
+    lattice.getStatus("current.focus.row", prefix = prefix)
+
+current.column <- function(prefix = lattice.getStatus("current.prefix"))
+    lattice.getStatus("current.focus.column", prefix = prefix)
+
+trellis.currentLayout <-
+    function(which = c("packet", "panel"),
+             prefix = lattice.getStatus("current.prefix"))
 {
     which <- match.arg(which)
     switch(which,
-           packet = lattice.getStatus("current.packet.positions"),
-           panel = lattice.getStatus("current.panel.positions"))
+           packet = lattice.getStatus("current.packet.positions", prefix = prefix),
+           panel = lattice.getStatus("current.panel.positions", prefix = prefix))
 }
-panel.number <- function() trellis.currentLayout("panel")[current.row(), current.column()]
-packet.number <- function() trellis.currentLayout("packet")[current.row(), current.column()]
-which.packet <- function() lattice.getStatus("current.cond.levels")[[current.row(), current.column()]]
+
+panel.number <- function(prefix = lattice.getStatus("current.prefix"))
+{
+    trellis.currentLayout("panel",
+                          prefix = prefix)[current.row(prefix = prefix),
+                                           current.column(prefix = prefix)]
+}
+
+packet.number <- function(prefix = lattice.getStatus("current.prefix"))
+{
+    trellis.currentLayout("packet",
+                          prefix = prefix)[current.row(prefix = prefix),
+                                           current.column(prefix = prefix)]
+}
+
+which.packet <- function(prefix = lattice.getStatus("current.prefix"))
+{
+    lattice.getStatus("current.cond.levels",
+                      prefix = prefix)[[current.row(prefix = prefix),
+                                        current.column(prefix = prefix)]]
+}
 
 
 ## utility to create a full-fledged list describing a label from parts
@@ -50,27 +74,40 @@ getLabelList <- function(label, text.settings, default.label = NULL)
     if (!is.null(label))
     {
         if (inherits(label, "grob")) return(label)
+        ## ans <-
+        ##     list(label = 
+        ##          if (is.characterOrExpression(label)) label
+        ##          else if (is.list(label) && (is.null(names(label)) ||
+        ##                                      names(label)[1] == "")) label[[1]]
+        ##          else default.label,
+        ##          col = text.settings$col, cex = text.settings$cex,
+        ##          fontfamily = text.settings$fontfamily,
+        ##          fontface = text.settings$fontface,
+        ##          font = text.settings$font,
+        ##          alpha = text.settings$alpha,
+        ##          lineheight = text.settings$lineheight)
+        ## if (is.list(label) && !is.null(names(label)))
+        ## {
+        ##     if (names(label)[1] == "") label <- label[-1]
+        ##     ans[names(label)] <- label
+        ## }
         ans <-
             list(label = 
                  if (is.characterOrExpression(label)) label
                  else if (is.list(label) && (is.null(names(label)) ||
                                              names(label)[1] == "")) label[[1]]
-                 else default.label,
-                 col = text.settings$col, cex = text.settings$cex,
-                 fontfamily = text.settings$fontfamily,
-                 fontface = text.settings$fontface,
-                 font = text.settings$font,
-                 alpha = text.settings$alpha,
-                 lineheight = text.settings$lineheight)
+                 else default.label)
+        if ("label" %in% names(text.settings)) text.settings$label <- NULL
+        ans <- updateList(ans, text.settings)
         if (is.list(label) && !is.null(names(label)))
         {
             if (names(label)[1] == "") label <- label[-1]
-            ans[names(label)] <- label
+            ans <- updateList(ans, label)
         }
     }
     else ans <- NULL
-    if (is.null(ans$lab) ||
-        (is.character(ans) && ans$lab == "")) ans <- NULL
+    if (is.null(ans$label) ||
+        (is.character(ans) && ans$label == "")) ans <- NULL
     ans
 }
 
@@ -88,7 +125,7 @@ drawInViewport <-
 
 grobFromLabelList <- function(lab, name = "label", orient = 0)
 {
-    if (is.null(lab) || (is.character(lab) && lab == "")) return (NULL)
+    if (is.null(lab) || (is.character(lab) && (lab == "" || length(lab) == 0))) return (NULL)
     if (inherits(lab, "grob")) return(lab)
     process.lab <-
         function(label, rot = orient,
@@ -110,6 +147,8 @@ grobFromLabelList <- function(lab, name = "label", orient = 0)
             ans
         }
     lab <- do.call(process.lab, lab)
+    if (with(lab, is.null(label) || (is.character(label) && (label == "" || length(label) == 0))))
+        return (NULL)
     if (is.null(lab$x))
         lab$x <-
             if (orient == 0) ppoints(n = length(lab$label), a = 0.5)
@@ -147,10 +186,7 @@ evaluate.legend <- function(legend)
     for (i in seq_along(legend))
     {
         fun <- legend[[i]]$fun
-        fun <- 
-            if (is.function(fun)) fun 
-            else if (is.character(fun)) get(fun)
-            else eval(fun)  ## in case fun is a grob (is this OK?)
+        fun <- getFunctionOrName(fun) ## OK in case fun is a grob?
         if (is.function(fun)) fun <- do.call("fun", legend[[i]]$args)
         legend[[i]]$obj <- fun
         legend[[i]]$args <- NULL
@@ -197,25 +233,6 @@ plot.trellis <-
              prefix = NULL,
              ...)
 {
-    ## save the current object, if so requested.  This used to be done
-    ## at the end, so that it wouldn't happen if there were errors
-    ## during printing.  However, doing this now will allow things
-    ## like trellis.panelArgs() to work in panel/axis functions, which
-    ## I think is a better trade-off.
-
-    ## FIXME: the problem with this is that if, e.g., the panel
-    ## function calls print.trellis(), then the last object is not
-    ## what one would expect.
-
-    if (save.object)
-    {
-        assign("last.object", x, envir = .LatticeEnv)
-        lattice.setStatus(current.plot.saved = TRUE)
-    }
-    else
-        lattice.setStatus(current.plot.saved = FALSE)
-
-
     ## make sure we have a device open
 
     if (is.null(dev.list())) trellis.device()
@@ -231,7 +248,7 @@ plot.trellis <-
         ## save current state, restore later
         opar <- trellis.par.get() ## get("lattice.theme", envir = .LatticeEnv)
         trellis.par.set(theme = x$par.settings)
-        on.exit(trellis.par.set(opar, strict = TRUE), add = TRUE)
+        on.exit(trellis.par.set(opar, strict = 2L), add = TRUE)
     }
 
     ## do the same for lattice.options
@@ -251,7 +268,7 @@ plot.trellis <-
     if (!is.null(x$plot.args))
     {
         supplied <- names(x$plot.args)
-        ## can't think of a clean way, so...
+        ## Can't think of a clean way, so...
         if ("position"     %in% supplied && missing(position))     position     <- x$plot.args$position
         if ("split"        %in% supplied && missing(split))        split        <- x$plot.args$split
         if ("more"         %in% supplied && missing(more))         more         <- x$plot.args$more
@@ -265,11 +282,7 @@ plot.trellis <-
         if ("prefix"       %in% supplied && missing(prefix))       prefix       <- x$plot.args$prefix
     }
 
-    panel.error <-
-        if (is.function(panel.error)) panel.error 
-        else if (is.character(panel.error)) get(panel.error)
-        else eval(panel.error)
-
+    panel.error <- getFunctionOrName(panel.error)
     bg <- trellis.par.get("background")$col
     new <-  newpage && !lattice.getStatus("print.more") && is.null(draw.in)
     if (!is.null(draw.in))
@@ -281,14 +294,46 @@ plot.trellis <-
     on.exit(lattice.setStatus(print.more = more), add = TRUE)
     usual  <- (is.null(position) && is.null(split))
 
-    ## this means this plot will be the first one on a new page
-    if (new) lattice.setStatus(plot.index = 1)
+    ## This means this plot will be the first one on a new page, so reset counter
+    if (new) lattice.setStatus(plot.index = 0L)
 
     ## get default prefix for grid viewport/object names
-    if (is.null(prefix))
-        prefix <- paste("plot", lattice.getStatus("plot.index"), sep = "")
+    pindex <- 1L + lattice.getStatus("plot.index")
+    if (is.null(prefix)) prefix <- sprintf("plot_%02g", pindex)
+    lattice.setStatus(plot.index = pindex)
+
+    ## Set this so that panel and axis functions can use it, but set
+    ## it again before exiting (in case some user action has changed
+    ## it in the meantime) so that further calls to trellis.focus()
+    ## etc. can use it.
+
     lattice.setStatus(current.prefix = prefix)
-    lattice.setStatus(plot.index = 1 + lattice.getStatus("plot.index"))
+    on.exit(lattice.setStatus(current.prefix = prefix), add = TRUE)
+
+    ## Initialize list for this prefix
+    .LatticeEnv$lattice.status[[prefix]] <- .defaultLatticePrefixStatus()
+    ## Equivalently
+    ## lattice.setStatus(structure(list(.defaultLatticePrefixStatus()),
+    ##                             names = prefix))
+
+    ## save the current object, if so requested.  This used to be done
+    ## at the end, so that it wouldn't happen if there were errors
+    ## during printing.  However, doing this now will allow things
+    ## like trellis.panelArgs() to work in panel/axis functions, which
+    ## I think is a better trade-off.
+
+    ## FIXME: the problem with this is that if, e.g., the panel
+    ## function calls print.trellis(), then the last object is not
+    ## what one would expect.
+
+    if (save.object)
+    {
+        lattice.setStatus(current.plot.saved = TRUE, prefix = prefix)
+        ## assign("last.object", x, envir = .LatticeEnv)
+        lattice.setStatus(last.object = x, prefix = prefix)
+    }
+    else
+        lattice.setStatus(current.plot.saved = FALSE, prefix = prefix)
 
     global.gpar <-
         do.call(gpar,
@@ -424,23 +469,12 @@ plot.trellis <-
     panel.layout <-
         compute.layout(x$layout, cond.max.levels, skip = x$skip)
 
-    panel <- # shall use "panel" in do.call
-        if (is.function(x$panel)) x$panel 
-        else if (is.character(x$panel)) get(x$panel)
-        else eval(x$panel)
-
-    strip <- 
-        if (is.function(x$strip)) x$strip 
-        else if (is.character(x$strip)) get(x$strip)
-        else eval(x$strip)
-    strip.left <- 
-        if (is.function(x$strip.left)) x$strip.left 
-        else if (is.character(x$strip.left)) get(x$strip.left)
-        else eval(x$strip.left)
+    panel <- getFunctionOrName(x$panel) # shall use "panel" in do.call
+    strip <- getFunctionOrName(x$strip)
+    strip.left <- getFunctionOrName(x$strip.left)
 
     axis.line <- trellis.par.get("axis.line")
     axis.text <- trellis.par.get("axis.text")
-
 
     ## make sure aspect ratio is preserved for aspect != "fill" but
     ## this may not always be what's expected. In fact, aspect should
@@ -486,6 +520,9 @@ plot.trellis <-
     xaxis.fontfamily <-
         if (is.logical(x$x.scales$fontfamily)) axis.text$fontfamily
         else x$x.scales$fontfamily
+    xaxis.lineheight <-
+        if (is.logical(x$x.scales$lineheight)) axis.text$lineheight
+        else x$x.scales$lineheight
     xaxis.cex <-
         if (is.logical(x$x.scales$cex)) rep(axis.text$cex, length.out = 2)
         else x$x.scales$cex
@@ -522,6 +559,9 @@ plot.trellis <-
     yaxis.fontfamily <-
         if (is.logical(x$y.scales$fontfamily)) axis.text$fontfamily
         else x$y.scales$fontfamily
+    yaxis.lineheight <-
+        if (is.logical(x$y.scales$lineheight)) axis.text$lineheight
+        else x$y.scales$lineheight
     yaxis.cex <-
         if (is.logical(x$y.scales$cex)) rep(axis.text$cex, length.out = 2)
         else x$y.scales$cex
@@ -571,7 +611,7 @@ plot.trellis <-
     cols.per.page <- panel.layout[1]
     rows.per.page <- panel.layout[2]
     number.of.pages <- panel.layout[3]
-    lattice.setStatus(current.plot.multipage = number.of.pages > 1)
+    lattice.setStatus(current.plot.multipage = number.of.pages > 1, prefix = prefix)
 
     ## these will also eventually be 'status' variables
     current.panel.positions <- matrix(0, rows.per.page, cols.per.page)
@@ -607,6 +647,14 @@ plot.trellis <-
                                        trellis.par.get("par.ylab.text"),
                                        x$ylab.default),
                           name = trellis.grobname("ylab"), orient = 90)
+    xlab.top <-
+        grobFromLabelList(getLabelList(x$xlab.top,
+                                       trellis.par.get("par.xlab.text")),
+                          name = trellis.grobname("xlab.top"))
+    ylab.right <-
+        grobFromLabelList(getLabelList(x$ylab.right,
+                                       trellis.par.get("par.ylab.text")),
+                          name = trellis.grobname("ylab.right"), orient = 90)
 
 
     ## get par.strip.text
@@ -629,15 +677,16 @@ plot.trellis <-
                             number.of.cond,
                             panel.height, panel.width,
                             main, sub,
-                            xlab, ylab,
+                            xlab, ylab, xlab.top, ylab.right, 
                             x.alternating, y.alternating,
                             x.relation.same, y.relation.same,
                             xaxis.rot, yaxis.rot,
                             xaxis.cex, yaxis.cex,
+                            xaxis.lineheight, yaxis.lineheight,
                             par.strip.text,
                             legend)
-    lattice.setStatus(layout.details = layoutCalculations)
-    lattice.setStatus(as.table = x$as.table)
+    lattice.setStatus(layout.details = layoutCalculations, prefix = prefix)
+    lattice.setStatus(as.table = x$as.table, prefix = prefix)
 
     page.layout <- layoutCalculations$page.layout
     pos.heights <- layoutCalculations$pos.heights
@@ -675,7 +724,7 @@ plot.trellis <-
     ## FIXME: what happens when number of pages is 0?
     ## message("no of pages: ", number.of.pages)
 
-    for(page.number in seq_len(number.of.pages))
+    for (page.number in seq_len(number.of.pages))
     {
         ##if (!any(cond.max.levels - which.packet < 0))
         if (TRUE) ## FIXME: remove this after a few versions and reformat
@@ -716,6 +765,20 @@ plot.trellis <-
                                viewport(layout.pos.col = pos.widths$ylab,
                                         layout.pos.row = pos.heights$panel,
                                         name= trellis.vpname("ylab", prefix = prefix)))
+            }
+            if (!is.null(xlab.top))
+            {
+                drawInViewport(xlab.top,
+                               viewport(layout.pos.row = pos.heights$xlab.top,
+                                        layout.pos.col = pos.widths$panel,
+                                        name= trellis.vpname("xlab.top", prefix = prefix)))
+            }
+            if (!is.null(ylab.right))
+            {
+                drawInViewport(ylab.right,
+                               viewport(layout.pos.col = pos.widths$ylab.right,
+                                        layout.pos.row = pos.heights$panel,
+                                        name= trellis.vpname("ylab.right", prefix = prefix)))
             }
 
             last.panel <- prod(sapply(x$index.cond, length))
@@ -784,9 +847,9 @@ plot.trellis <-
                     }
                 }
 
-            lattice.setStatus(current.cond.levels = current.cond.levels)
-            lattice.setStatus(current.panel.positions = current.panel.positions)
-            lattice.setStatus(current.packet.positions = current.packet.positions)
+            lattice.setStatus(current.cond.levels = current.cond.levels, prefix = prefix)
+            lattice.setStatus(current.panel.positions = current.panel.positions, prefix = prefix)
+            lattice.setStatus(current.packet.positions = current.packet.positions, prefix = prefix)
 
             ## loop through positions again, doing the actual drawing
             ## this time
@@ -795,12 +858,13 @@ plot.trellis <-
                 for (column in seq_len(cols.per.page))
                 {
                     lattice.setStatus(current.focus.row = row,
-                                      current.focus.column = column)
-                    which.packet <- which.packet()
+                                      current.focus.column = column,
+                                      prefix = prefix)
+                    which.packet <- which.packet(prefix = prefix)
                     if (!is.null(which.packet))
                     {
-                        packet.number <- packet.number()
-                        panel.number <- panel.number() ## needed? FIXME
+                        packet.number <- packet.number(prefix = prefix)
+                        panel.number <- panel.number(prefix = prefix) ## needed? FIXME
 
                         ## this gives the row position from the bottom
                         actual.row <- if (x$as.table)
@@ -822,10 +886,10 @@ plot.trellis <-
                                                     at = x$x.scales$at,
                                                     used.at = x$x.used.at,
                                                     num.limit = x$x.num.limit,
-                                                    labels = x$x.scales$lab,
+                                                    labels = x$x.scales$labels,
                                                     logsc = x$x.scales$log,
-                                                    abbreviate = x$x.scales$abbr,
-                                                    minlength = x$x.scales$minl,
+                                                    abbreviate = x$x.scales$abbreviate,
+                                                    minlength = x$x.scales$minlength,
                                                     n = x$x.scales$tick.number,
                                                     format.posixt = x$x.scales$format)
                             else 
@@ -844,12 +908,12 @@ plot.trellis <-
                                                     used.at = x$x.used.at[[packet.number]],
                                                     num.limit = x$x.num.limit[[packet.number]],
                                                     labels =
-                                                    if (is.list(x$x.scales$lab))
-                                                    x$x.scales$lab[[packet.number]]
-                                                    else x$x.scales$lab,
+                                                    if (is.list(x$x.scales$labels))
+                                                    x$x.scales$labels[[packet.number]]
+                                                    else x$x.scales$labels,
                                                     logsc = x$x.scales$log,
-                                                    abbreviate = x$x.scales$abbr,
-                                                    minlength = x$x.scales$minl,
+                                                    abbreviate = x$x.scales$abbreviate,
+                                                    minlength = x$x.scales$minlength,
                                                     n = x$x.scales$tick.number,
                                                     format.posixt = x$x.scales$format)
 
@@ -867,10 +931,10 @@ plot.trellis <-
                                                     at = x$y.scales$at,
                                                     used.at = x$y.used.at,
                                                     num.limit = x$y.num.limit,
-                                                    labels = x$y.scales$lab,
+                                                    labels = x$y.scales$labels,
                                                     logsc = x$y.scales$log,
-                                                    abbreviate = x$y.scales$abbr,
-                                                    minlength = x$y.scales$minl,
+                                                    abbreviate = x$y.scales$abbreviate,
+                                                    minlength = x$y.scales$minlength,
                                                     n = x$y.scales$tick.number,
                                                     format.posixt = x$y.scales$format)
                             else 
@@ -889,12 +953,12 @@ plot.trellis <-
                                                     used.at = x$y.used.at[[packet.number]],
                                                     num.limit = x$y.num.limit[[packet.number]],
                                                     labels =
-                                                    if (is.list(x$y.scales$lab))
-                                                    x$y.scales$lab[[packet.number]]
-                                                    else x$y.scales$lab,
+                                                    if (is.list(x$y.scales$labels))
+                                                    x$y.scales$labels[[packet.number]]
+                                                    else x$y.scales$labels,
                                                     logsc = x$y.scales$log,
-                                                    abbreviate = x$y.scales$abbr,
-                                                    minlength = x$y.scales$minl,
+                                                    abbreviate = x$y.scales$abbreviate,
+                                                    minlength = x$y.scales$minlength,
                                                     n = x$y.scales$tick.number,
                                                     format.posixt = x$y.scales$format)
 
@@ -902,10 +966,35 @@ plot.trellis <-
                         xscale <- xscale.comps$num.limit
                         yscale <- yscale.comps$num.limit
 
+
+############################################
+###      drawing panel background         ##
+############################################
+
+                        pushViewport(viewport(layout.pos.row = pos.row,
+                                              layout.pos.col = pos.col,
+                                              xscale = xscale,
+                                              yscale = yscale,
+                                              clip = trellis.par.get("clip")$panel,
+                                              name =
+                                              trellis.vpname("panel",
+                                                             column = column,
+                                                             row = row,
+                                                             prefix = prefix,
+                                                             clip.off = FALSE)))
+                        panel.bg <- trellis.par.get("panel.background")
+                        if (!is.null(panel.bg$col) && (panel.bg$col != "transparent"))
+                            panel.fill(col = panel.bg$col)
+                        upViewport()
+
+                        
 ############################################
 ###        drawing the axes               ##
 ############################################
 
+
+### Note: axes should always be drawn before the panel, so that
+### background grids etc. can be drawn.
 
 ### whether or not axes are drawn, we'll create viewports for them
 ### anyway, so that users can later interactively add axes/other stuff
@@ -939,10 +1028,12 @@ plot.trellis <-
                                text.font = xaxis.font,
                                text.fontfamily = xaxis.fontfamily,
                                text.fontface = xaxis.fontface,
+                               text.lineheight = xaxis.lineheight,
                                line.col = xaxis.col.line,
                                line.lty = xaxis.lty,
                                line.lwd = xaxis.lwd,
-                               line.alpha = xaxis.alpha.line)
+                               line.alpha = xaxis.alpha.line,
+                               prefix = prefix)
                         upViewport()
 
                         ## Y-axis to the left
@@ -967,10 +1058,12 @@ plot.trellis <-
                                text.font = yaxis.font,
                                text.fontfamily = yaxis.fontfamily,
                                text.fontface = yaxis.fontface,
+                               text.lineheight = yaxis.lineheight,
                                line.col = yaxis.col.line,
                                line.lty = yaxis.lty,
                                line.lwd = yaxis.lwd,
-                               line.alpha = yaxis.alpha.line)
+                               line.alpha = yaxis.alpha.line,
+                               prefix = prefix)
                         upViewport()
 
 
@@ -999,10 +1092,12 @@ plot.trellis <-
                                text.font = xaxis.font,
                                text.fontfamily = xaxis.fontfamily,
                                text.fontface = xaxis.fontface,
+                               text.lineheight = xaxis.lineheight,
                                line.col = xaxis.col.line,
                                line.lty = xaxis.lty,
                                line.lwd = xaxis.lwd,
-                               line.alpha = xaxis.alpha.line)
+                               line.alpha = xaxis.alpha.line,
+                               prefix = prefix)
                         ## Y-axis to the right
                         x$axis(side = "right",
                                scales = x$y.scales,
@@ -1015,10 +1110,12 @@ plot.trellis <-
                                text.font = yaxis.font,
                                text.fontfamily = yaxis.fontfamily,
                                text.fontface = yaxis.fontface,
+                               text.lineheight = yaxis.lineheight,
                                line.col = yaxis.col.line,
                                line.lty = yaxis.lty,
                                line.lwd = yaxis.lwd,
-                               line.alpha = yaxis.alpha.line)
+                               line.alpha = yaxis.alpha.line,
+                               prefix = prefix)
 
                         ## N.B.: We'll need this viewport again later
                         ## to draw a border around it.  However, this
@@ -1040,42 +1137,49 @@ plot.trellis <-
 ###        drawing the panel              ##
 ############################################
 
+                        ## viewport already created for drawing background
+                        downViewport(trellis.vpname("panel",
+                                                    column = column,
+                                                    row = row,
+                                                    prefix = prefix,
+                                                    clip.off = FALSE))
 
-                        pushViewport(viewport(layout.pos.row = pos.row,
-                                              layout.pos.col = pos.col,
-                                              xscale = xscale,
-                                              yscale = yscale,
-                                              clip = trellis.par.get("clip")$panel,
-                                              name =
-                                              trellis.vpname("panel",
-                                                             column = column,
-                                                             row = row,
-                                                             prefix = prefix,
-                                                             clip.off = FALSE)))
+                        
+                        ## pushViewport(viewport(layout.pos.row = pos.row,
+                        ##                       layout.pos.col = pos.col,
+                        ##                       xscale = xscale,
+                        ##                       yscale = yscale,
+                        ##                       clip = trellis.par.get("clip")$panel,
+                        ##                       name =
+                        ##                       trellis.vpname("panel",
+                        ##                                      column = column,
+                        ##                                      row = row,
+                        ##                                      prefix = prefix,
+                        ##                                      clip.off = FALSE)))
 
 
                         pargs <- c(x$panel.args[[packet.number]],
                                    x$panel.args.common) #,
-##                                    list(packet.number = packet.number,
-##                                         panel.number = panel.number))
 
-##########################################
-### FIXME: remove this at some point   ###
-###                                    ###
-                        if (any(c("packet.number", "panel.number") %in% names(formals(panel))))
-                        {
-                            warning("'packet.number' and 'panel.number' are no longer supplied to the panel function.  See ?packet.number")
-                        }
-###                                    ###
-##########################################
+                        ## FIXME: include prefix = prefix?  Could be
+                        ## important in very rare cases, but let's
+                        ## wait till someone actually has a relevant
+                        ## use-case.
 
-                        if (!("..." %in% names(formals(panel))))
-                            pargs <- pargs[intersect(names(pargs), names(formals(panel)))]
+                        ## if (!("..." %in% names(formals(panel))))
+                        ##     pargs <- pargs[intersect(names(pargs), names(formals(panel)))]
+                        ## if (is.null(panel.error))
+                        ##     do.call("panel", pargs)
+                        ## else
+                        ##     tryCatch(do.call("panel", pargs),
+                        ##              error = function(e) panel.error(e))
+
                         if (is.null(panel.error))
-                            do.call("panel", pargs)
+                            checkArgsAndCall(panel, pargs)
                         else
-                            tryCatch(do.call("panel", pargs),
+                            tryCatch(checkArgsAndCall(panel, pargs),
                                      error = function(e) panel.error(e))
+
                         upViewport()
 
 ############################################
@@ -1288,7 +1392,7 @@ plot.trellis <-
     lattice.setStatus(current.focus.row = 0,
                       current.focus.column = 0,
                       vp.highlighted = FALSE,
-                      vp.depth = 0)
+                      vp.depth = 0, prefix = prefix)
     invisible()
 }
 

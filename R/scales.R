@@ -37,6 +37,7 @@ construct.scales <-
              font = FALSE,
              fontfamily = FALSE,
              fontface = FALSE,
+             lineheight = FALSE,
              alternating = TRUE,
              relation = "same",
              abbreviate = FALSE,
@@ -53,7 +54,8 @@ construct.scales <-
                  cex = cex,
                  rot = rot,
                  font = font,
-                 fontfamily = fontfamily, fontface = fontface, 
+                 fontfamily = fontfamily, fontface = fontface,
+                 lineheight = lineheight,
                  at = at, labels = labels,
                  col = col, col.line = col.line,
                  alpha = alpha, alpha.line = alpha.line,
@@ -85,10 +87,10 @@ construct.scales <-
         xfoo[[nm]] <- rep(xfoo[[nm]], length.out = 2)
         yfoo[[nm]] <- rep(yfoo[[nm]], length.out = 2)
     }
-    if (xfoo$rel == "same" && (is.list(xfoo$at) || is.list(xfoo$lab)))
-        stop("the at and labels components of scales may not be lists when relation = same")
-    if (yfoo$rel == "same" && (is.list(yfoo$at) || is.list(yfoo$lab)))
-        stop("the at and labels components of scales may not be lists when relation = same")
+    if (xfoo$relation == "same" && (is.list(xfoo$at) || is.list(xfoo$labels)))
+        stop("the 'at' and 'labels' components of 'scales' may not be lists when 'relation = \"same\"'")
+    if (yfoo$relation == "same" && (is.list(yfoo$at) || is.list(yfoo$labels)))
+        stop("the 'at' and 'labels' components of 'scales' may not be lists when 'relation = \"same\"'")
     list(x.scales = xfoo, y.scales = yfoo)
 }
 
@@ -114,6 +116,7 @@ construct.3d.scales <-
              font = FALSE,
              fontfamily = FALSE,
              fontface = FALSE,
+             lineheight = FALSE,
              arrows = TRUE,
              relation = "same",
              format = NULL,
@@ -128,7 +131,8 @@ construct.3d.scales <-
                  lty = lty, lwd = lwd,
                  tick.number = tick.number,
                  cex = cex, rot = rot, font = font,
-                 fontfamily = fontfamily, fontface = fontface, 
+                 fontfamily = fontfamily, fontface = fontface,
+                 lineheight = lineheight,
                  at = at, labels = labels,
                  col = col, col.line = col.line,
                  alpha = alpha, alpha.line = alpha.line,
@@ -396,7 +400,7 @@ limitsFromLimitlist <-
 
 
 limits.and.aspect <-
-    function(prepanel.default.function,
+    function(prepanel.default,
              prepanel = NULL,
              have.xlim = FALSE, xlim = NULL,
              have.ylim = FALSE, ylim = NULL,
@@ -409,6 +413,8 @@ limits.and.aspect <-
              x.axs = "r", y.axs = "r",
              ...)  ## extra arguments for prepanel (for qqmathline)
 {
+    prepanel.default.function <- getFunctionOrName(prepanel.default)
+    prepanel <- getFunctionOrName(prepanel)
     if (npackets<1) stop("need at least one panel")
     x.limits <- vector("list", npackets)
     y.limits <- vector("list", npackets)
@@ -521,7 +527,7 @@ limits.and.aspect <-
          x.num.limit = x.limits$numlimitlist,
          y.num.limit = y.limits$numlimitlist,
          aspect.ratio = aspect,
-         prepanel.default = prepanel.default.function,
+         prepanel.default = prepanel.default,
          prepanel = prepanel)
 }
 

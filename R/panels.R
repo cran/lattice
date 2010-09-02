@@ -282,7 +282,8 @@ panel.grid <-
              col,
              col.line = reference.line$col,
              lty = reference.line$lty,
-             lwd = reference.line$lwd, ...)
+             lwd = reference.line$lwd,
+             x = NULL, y = NULL, ...)
 {
     reference.line <- trellis.par.get("reference.line")
     if (!missing(col) && missing(col.line)) col.line <- col
@@ -312,7 +313,14 @@ panel.grid <-
     {
         if (h == -1) n <- 5 else n <- -h
         scale <- limits$ylim
-        at <- pretty(scale, n = n)
+        if (!is.null(y)) {
+            ## class() <- "factor" is an error
+            if (inherits(y, "factor"))
+                y <- as.character(y)
+            mostattributes(scale) <- attributes(y)
+        }
+        #at <- pretty(scale, n = n) ## FIXME: use pretty eventually
+        at <- formattedTicksAndLabels(scale, n = n)$at
         at <- at[at > min(scale) & at < max(scale)]
         grid.segments(y0 = at,
                       y1 = at,
@@ -324,7 +332,14 @@ panel.grid <-
     {
         if (v == -1) n <- 5 else n <- -v
         scale <- limits$xlim
-        at <- pretty(scale, n = n)
+        if (!is.null(x)) {
+            ## class() <- "factor" is an error
+            if (inherits(x, "factor"))
+                x <- as.character(y)
+            mostattributes(scale) <- attributes(x)
+        }
+        #at <- pretty(scale, n = n) ## FIXME: use pretty eventually
+        at <- formattedTicksAndLabels(scale, n = n)$at
         at <- at[at > min(scale) & at < max(scale)]
         grid.segments(x0 = at,
                       x1 = at,
@@ -452,7 +467,7 @@ panel.superpose <-
     function(x, y = NULL, subscripts, groups,
              panel.groups = "panel.xyplot",
              ...,
-             col = NA,
+             col = "black",
              col.line = superpose.line$col,
              col.symbol = superpose.symbol$col,
              pch = superpose.symbol$pch,
@@ -464,7 +479,7 @@ panel.superpose <-
              lty = superpose.line$lty,
              lwd = superpose.line$lwd,
              alpha = superpose.symbol$alpha,
-             type = 'p',
+             type = "p", grid = FALSE,
              distribute.type = FALSE)
 {
     if (distribute.type)
@@ -495,11 +510,12 @@ panel.superpose <-
         wg <- match('g', type, nomatch = NA_character_)
         if (!is.na(wg))
         {
-            panel.grid(h = -1, v = -1)
+            if (missing(grid)) grid <- TRUE
             type <- type[-wg]
         }
         type <- list(type)
     }
+    if (grid) panel.grid(h = -1, v = -1, x = x, y = y)
     x <- as.numeric(x)
     if (!is.null(y)) y <- as.numeric(y)
     if (length(x) > 0)
@@ -529,10 +545,7 @@ panel.superpose <-
         fontfamily <- rep(fontfamily, length.out = nvals)
         type <- rep(type, length.out = nvals)
 
-        panel.groups <-
-            if (is.function(panel.groups)) panel.groups
-            else if (is.character(panel.groups)) get(panel.groups)
-            else eval(panel.groups)
+        panel.groups <- getFunctionOrName(panel.groups)
 
         subg <- groups[subscripts]
         ok <- !is.na(subg)
@@ -545,17 +558,17 @@ panel.superpose <-
                     list(x = x[id],
                          ## groups = groups,
                          subscripts = subscripts[id],
-                         pch = pch[i], cex = cex[i],
-                         font = font[i],
-                         fontface = fontface[i],
-                         fontfamily = fontfamily[i],
-                         col = col[i],
-                         col.line = col.line[i],
-                         col.symbol = col.symbol[i],
-                         fill = fill[i],
-                         lty = lty[i],
-                         lwd = lwd[i],
-                         alpha = alpha[i],
+                         pch = pch[[i]], cex = cex[[i]],
+                         font = font[[i]],
+                         fontface = fontface[[i]],
+                         fontfamily = fontfamily[[i]],
+                         col = col[[i]],
+                         col.line = col.line[[i]],
+                         col.symbol = col.symbol[[i]],
+                         fill = fill[[i]],
+                         lty = lty[[i]],
+                         lwd = lwd[[i]],
+                         alpha = alpha[[i]],
                          type = type[[i]],
                          group.number = i,
                          group.value = vals[i],

@@ -88,7 +88,7 @@ fast.quantile <-
     if (names && np > 0) {
         dig <- max(2, getOption("digits"))
         names(qs) <- paste(if (np < 100) 
-            formatC(100 * probs, format = "fg", wid = 1, digits = dig)
+            formatC(100 * probs, format = "fg", width = 1, digits = dig)
         else format(100 * probs, trim = TRUE, digits = dig), 
             "%", sep = "")
     }
@@ -115,10 +115,7 @@ prepanel.default.qqmath <-
              tails.n = 0)
 {
     if (!is.numeric(x)) x <- as.numeric(x) # FIXME: dates?
-    distribution <-
-        if (is.function(distribution)) distribution 
-        else if (is.character(distribution)) get(distribution)
-        else eval(distribution)
+    distribution <- getFunctionOrName(distribution)
     nobs <- sum(!is.na(x))
     ## if plotting tails, do prepanel as for raw data:
     if (tails.n > 0)
@@ -185,10 +182,7 @@ panel.qqmath <-
              tails.n = 0)
 {
     x <- as.numeric(x)
-    distribution <-
-        if (is.function(distribution)) distribution 
-        else if (is.character(distribution)) get(distribution)
-        else eval(distribution)
+    distribution <- getFunctionOrName(distribution)
     nobs <- sum(!is.na(x))
     if (!is.null(groups))
         panel.superpose(x, y = NULL,
@@ -280,6 +274,7 @@ qqmath.formula <-
              ...,
              lattice.options = NULL,
              default.scales = list(),
+             default.prepanel = lattice.getOption("prepanel.default.qqmath"),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -307,12 +302,6 @@ qqmath.formula <-
 
     if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
     if (subscripts) subscr <- form$subscr
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
     cond <- form$condition
     ## number.of.cond <- length(cond)
     x <- form$right
@@ -356,16 +345,16 @@ qqmath.formula <-
     ## Step 3: Decide if limits were specified in call:
     
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit))
+    if (!is.null(foo$x.scales$limits))
     {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit))
+    if (!is.null(foo$y.scales$limits))
     {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
 
     ## Step 4: Decide if log scales are being used:
@@ -440,7 +429,7 @@ qqmath.formula <-
     }
 
     more.comp <-
-        c(limits.and.aspect(prepanel.default.qqmath,
+        c(limits.and.aspect(default.prepanel,
                             prepanel = prepanel, 
                             have.xlim = have.xlim, xlim = xlim, 
                             have.ylim = have.ylim, ylim = ylim, 
@@ -507,10 +496,7 @@ panel.qqmathline <-
 {
     y <- as.numeric(y)
     stopifnot(length(probs) == 2)
-    distribution <-
-        if (is.function(distribution)) distribution 
-        else if (is.character(distribution)) get(distribution)
-        else eval(distribution)
+    distribution <- getFunctionOrName(distribution)
     nobs <- sum(!is.na(y))
     if (!is.null(groups))
         panel.superpose(x = y, y = NULL,
@@ -520,7 +506,7 @@ panel.qqmathline <-
                         groups = groups,
                         panel.groups = panel.qqmathline,
                         ...)
-    else if (nobs)
+    else if (nobs > 0)
     {
         yy <-
             quantile(y, probs, names = FALSE, # was fast.quantile 
@@ -550,11 +536,7 @@ prepanel.qqmathline <-
                                 ...)
     y <- as.numeric(y)
     stopifnot(length(probs) == 2)
-    distribution <-
-        if (is.function(distribution)) distribution 
-        else if (is.character(distribution)) get(distribution)
-        else eval(distribution)
-    nobs <- sum(!is.na(y))
+    distribution <- getFunctionOrName(distribution)
     getdy <- function(x)
     {
         diff(quantile(x, probs, names = FALSE, # was fast.quantile 

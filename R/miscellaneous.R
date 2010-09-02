@@ -19,6 +19,33 @@
 
 
 
+## For historical reasons (i.e., S-compatibility) there are several
+## places in lattice where an argument that is supposed to be a
+## function may be specified as a character string.  It is not
+## entirely clear how namespace ambiguity is resolved, but it appears
+## that bindings in the lattice namespace are preferred over the
+## global environment.
+
+
+getFunctionOrName <- function(FUN)
+     ## Try lattice namespace first? Does that happens automatically?
+{
+    if (is.function(FUN)) FUN
+    else if (is.character(FUN)) get(FUN)
+    else eval(FUN)
+}
+
+
+checkArgsAndCall <- function(FUN, args) ## unnames arguments not allowed
+{
+    if (!("..." %in% names(formals(FUN))))
+        args <- args[intersect(names(args), names(formals(FUN)))]
+    do.call(FUN, args)
+}
+
+
+    
+
 logLimits <- function(lim, base)
 {
     if (is.list(lim))
@@ -324,7 +351,7 @@ larrows <-
     grid.segments(x0 = x0, x1 = x1,
                   y0 = y0, y1 = y1,
                   gp = gp,
-                  arrow =
+                  arrow = if (is.null(ends)) NULL else 
                   arrow(angle = angle,
                         length = unit(length, unit),
                         ends = ends,

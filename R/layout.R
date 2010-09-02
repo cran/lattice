@@ -55,13 +55,14 @@ calculateGridLayout <-
              panel.height = NULL, panel.width = NULL,
 
              main, sub,
-             xlab, ylab,
+             xlab, ylab, xlab.top, ylab.right,
 
              x.alternating, y.alternating,
              x.relation.same, y.relation.same,
 
              xaxis.rot, yaxis.rot,
              xaxis.cex, yaxis.cex,
+             xaxis.lineheight, yaxis.lineheight,
 
              par.strip.text,
 
@@ -107,7 +108,7 @@ calculateGridLayout <-
 
     ## list giving positions (for indexing) of various components
 
-    last.panel <- (rows.per.page - 1) * 4 + 9
+    last.panel <- (rows.per.page - 1) * 4 + 10
     between.seq <- seq_len(rows.per.page-1)
     panel.seq <- seq_len(rows.per.page)
 
@@ -121,12 +122,13 @@ calculateGridLayout <-
              main              = 2,
              main.key.padding  = 3,
              key.top           = 4,
-             key.axis.padding  = 5,
-             axis.top          = 6,
-             strip             = (panel.seq - 1) * 4 + 7,
-             panel             = (panel.seq - 1) * 4 + 8,
-             axis.panel        = (panel.seq - 1) * 4 + 9,
-             between           = (between.seq - 1) * 4 + 10,
+             xlab.top          = 5, #new
+             key.axis.padding  = 6,
+             axis.top          = 7,
+             strip             = (panel.seq - 1) * 4 + 8,
+             panel             = (panel.seq - 1) * 4 + 9,
+             axis.panel        = (panel.seq - 1) * 4 + 10,
+             between           = (between.seq - 1) * 4 + 11,
              axis.bottom       = last.panel + 1,
              axis.xlab.padding = last.panel + 2,
              xlab              = last.panel + 3,
@@ -135,7 +137,6 @@ calculateGridLayout <-
              key.sub.padding   = last.panel + 6,
              sub               = last.panel + 7,
              bottom.padding    = last.panel + 8)
-
 
     last.panel <- (cols.per.page - 1) * 4 + 9
     pos.widths <-
@@ -151,8 +152,9 @@ calculateGridLayout <-
              between           = (seq_len(cols.per.page-1) - 1) * 4 + 10,
              axis.right        = last.panel + 1,
              axis.key.padding  = last.panel + 2,
-             key.right         = last.panel + 3,
-             right.padding     = last.panel + 4)
+             ylab.right        = last.panel + 3, # new
+             key.right         = last.panel + 4,
+             right.padding     = last.panel + 5)
 
     n.row <- sum(sapply(pos.heights, length))
     n.col <- sum(sapply(pos.widths, length))
@@ -269,6 +271,16 @@ calculateGridLayout <-
         widths.x[pos.widths[["ylab"]]] <- widths.settings[["ylab"]]
         widths.data[[ pos.widths[["ylab"]]  ]] <- ylab
     }
+    if (!is.null(xlab.top))
+    {
+        heights.x[pos.heights[["xlab.top"]]] <- heights.settings[["xlab.top"]]
+        heights.data[[ pos.heights[["xlab.top"]]  ]] <- xlab.top
+    }
+    if (!is.null(ylab.right))
+    {
+        widths.x[pos.widths[["ylab.right"]]] <- widths.settings[["ylab.right"]]
+        widths.data[[ pos.widths[["ylab.right"]]  ]] <- ylab.right
+    }
 
     if (!is.null(legend))
     {
@@ -345,10 +357,10 @@ calculateGridLayout <-
                                     at = x$x.scales$at,
                                     used.at = x$x.used.at,
                                     num.limit = x$x.num.limit,
-                                    labels = x$x.scales$lab,
+                                    labels = x$x.scales$labels,
                                     logsc = x$x.scales$log,
-                                    abbreviate = x$x.scales$abbr,
-                                    minlength = x$x.scales$minl,
+                                    abbreviate = x$x.scales$abbreviate,
+                                    minlength = x$x.scales$minlength,
                                     format.posixt = x$x.scales$format,
                                     n = x$x.scales$tick.number)
 
@@ -386,7 +398,8 @@ calculateGridLayout <-
                                  x = rep(0.5, length(lab)),
                                  y = rep(0.5, length(lab)),
                                  rot = xaxis.rot[2],
-                                 gp = gpar(cex = xaxis.cex[2]))
+                                 gp = gpar(cex = xaxis.cex[2],
+                                           lineheight = xaxis.lineheight))
                     else textGrob("")
 
                 ## FIXME: this is slightly inefficient (refer to email
@@ -422,7 +435,8 @@ calculateGridLayout <-
                              x = rep(0.5, length(lab)),
                              y = rep(0.5, length(lab)),
                              rot = xaxis.rot[1],
-                             gp = gpar(cex = xaxis.cex[1]))
+                             gp = gpar(cex = xaxis.cex[1],
+                                       lineheight = xaxis.lineheight))
                 else textGrob("")
 
             axis.bottom.unit <- heights.settings[["axis.bottom"]] *
@@ -481,11 +495,11 @@ calculateGridLayout <-
                                         at = if (is.list(x$x.scales$at)) x$x.scales$at[[i]] else x$x.scales$at,
                                         used.at = x$x.used.at[[i]],
                                         num.limit = x$x.num.limit[[i]],
-                                        labels = if (is.list(x$x.scales$lab))
-                                        x$x.scales$lab[[i]] else x$x.scales$lab,
+                                        labels = if (is.list(x$x.scales$labels))
+                                        x$x.scales$labels[[i]] else x$x.scales$labels,
                                         logsc = x$x.scales$log,
-                                        abbreviate = x$x.scales$abbr,
-                                        minlength = x$x.scales$minl,
+                                        abbreviate = x$x.scales$abbreviate,
+                                        minlength = x$x.scales$minlength,
                                         n = x$x.scales$tick.number,
                                         format.posixt = x$x.scales$format)
 
@@ -496,7 +510,8 @@ calculateGridLayout <-
                                  x = rep(0.5, length(lab)),
                                  y = rep(0.5, length(lab)),
                                  rot = xaxis.rot[1],
-                                 gp = gpar(cex = xaxis.cex[1]))
+                                 gp = gpar(cex = xaxis.cex[1],
+                                           lineheight = xaxis.lineheight))
                     else textGrob("")
             }
             xaxis.panel.unit <-
@@ -537,10 +552,10 @@ calculateGridLayout <-
                                     at = x$y.scales$at,
                                     used.at = x$y.used.at,
                                     num.limit = x$y.num.limit,
-                                    labels = x$y.scales$lab,
+                                    labels = x$y.scales$labels,
                                     logsc = x$y.scales$log,
-                                    abbreviate = x$y.scales$abbr,
-                                    minlength = x$y.scales$minl,
+                                    abbreviate = x$y.scales$abbreviate,
+                                    minlength = x$y.scales$minlength,
                                     format.posixt = x$y.scales$format,
                                     n = x$y.scales$tick.number)
 
@@ -576,7 +591,8 @@ calculateGridLayout <-
                                  x = rep(0.5, length(lab)),
                                  y = rep(0.5, length(lab)),
                                  rot = yaxis.rot[2],
-                                 gp = gpar(cex = yaxis.cex[2]))
+                                 gp = gpar(cex = yaxis.cex[2],
+                                           lineheight = yaxis.lineheight))
                     else textGrob("")
 
                 axis.right.unit <- widths.settings[["axis.right"]] *
@@ -607,7 +623,8 @@ calculateGridLayout <-
                              x = rep(0.5, length(lab)),
                              y = rep(0.5, length(lab)),
                              rot = yaxis.rot[1],
-                             gp = gpar(cex = yaxis.cex[1]))
+                             gp = gpar(cex = yaxis.cex[1],
+                                       lineheight = yaxis.lineheight))
                 else textGrob("")
 
             axis.left.unit <- widths.settings[["axis.left"]] *
@@ -665,11 +682,11 @@ calculateGridLayout <-
                                         at = if (is.list(x$y.scales$at)) x$y.scales$at[[i]] else x$y.scales$at,
                                         used.at = x$y.used.at[[i]],
                                         num.limit = x$y.num.limit[[i]],
-                                        labels = if (is.list(x$y.scales$lab))
-                                        x$y.scales$lab[[i]] else x$y.scales$lab,
+                                        labels = if (is.list(x$y.scales$labels))
+                                        x$y.scales$labels[[i]] else x$y.scales$labels,
                                         logsc = x$y.scales$log,
-                                        abbreviate = x$y.scales$abbr,
-                                        minlength = x$y.scales$minl,
+                                        abbreviate = x$y.scales$abbreviate,
+                                        minlength = x$y.scales$minlength,
                                         n = x$y.scales$tick.number,
                                         format.posixt = x$y.scales$format)
 
@@ -680,7 +697,8 @@ calculateGridLayout <-
                                  x = rep(0.5, length(lab)),
                                  y = rep(0.5, length(lab)),
                                  rot = yaxis.rot[1],
-                                 gp = gpar(cex = yaxis.cex[1]))
+                                 gp = gpar(cex = yaxis.cex[1],
+                                           lineheight = yaxis.lineheight))
                     else textGrob("")
             }
             yaxis.panel.unit <-

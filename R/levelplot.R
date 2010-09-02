@@ -451,6 +451,7 @@ contourplot.formula <-
     function(x,
              data = NULL,
              panel = lattice.getOption("panel.contourplot"),
+             default.prepanel = lattice.getOption("prepanel.default.contourplot"),
              cuts = 7,
              labels = TRUE,
              contour = TRUE,
@@ -582,6 +583,7 @@ levelplot.formula <-
              ...,
              lattice.options = NULL,
              default.scales = list(),
+             default.prepanel = lattice.getOption("prepanel.default.levelplot"),
              colorkey = region,
              col.regions,
              alpha.regions,
@@ -623,12 +625,6 @@ levelplot.formula <-
 
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
     cond <- form$condition
     z <- form$left
     x <- form$right.x
@@ -679,16 +675,16 @@ levelplot.formula <-
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit))
+    if (!is.null(foo$x.scales$limits))
     {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit))
+    if (!is.null(foo$y.scales$limits))
     {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
 
     ## Step 4: Decide if log scales are being used:
@@ -834,7 +830,7 @@ levelplot.formula <-
     }
 
     more.comp <-
-        c(limits.and.aspect(prepanel.default.levelplot,
+        c(limits.and.aspect(default.prepanel,
                             prepanel = prepanel, 
                             have.xlim = have.xlim, xlim = xlim, 
                             have.ylim = have.ylim, ylim = ylim, 

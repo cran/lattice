@@ -71,6 +71,7 @@ qq.formula <-
              lattice.options = NULL,
              qtype = 7,
              default.scales = list(),
+             default.prepanel = lattice.getOption("prepanel.default.qq"),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -98,12 +99,6 @@ qq.formula <-
 
     if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
     if(subscripts) subscr <- form$subscr
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
     cond <- form$condition
     y <- form$left
     x <- form$right
@@ -162,16 +157,16 @@ qq.formula <-
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit))
+    if (!is.null(foo$x.scales$limits))
     {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit))
+    if (!is.null(foo$y.scales$limits))
     {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
 
     ## Step 4: Decide if log scales are being used: completed later
@@ -272,7 +267,7 @@ qq.formula <-
     }
 
     more.comp <-
-        c(limits.and.aspect(prepanel.default.qq,
+        c(limits.and.aspect(default.prepanel,
                             prepanel = prepanel, 
                             have.xlim = have.xlim, xlim = xlim, 
                             have.ylim = have.ylim, ylim = ylim, 

@@ -845,8 +845,8 @@ panel.bwplot <-
                       xright - notch.frac * blist.height / 2,
                       xright, xright, xleft, xleft,
                       xleft + notch.frac * blist.height / 2)
-        xs <- matrix(NA_real_, nr = nrow(xbnd) * 2, ncol = ncol(xbnd))
-        ys <- matrix(NA_real_, nr = nrow(xbnd) * 2, ncol = ncol(xbnd))
+        xs <- matrix(NA_real_, nrow = nrow(xbnd) * 2, ncol = ncol(xbnd))
+        ys <- matrix(NA_real_, nrow = nrow(xbnd) * 2, ncol = ncol(xbnd))
         xs[seq(along.with = levels.fos, by = 2), ] <- xbnd[seq(along.with = levels.fos), ]
         ys[seq(along.with = levels.fos, by = 2), ] <- ybnd[seq(along.with = levels.fos), ]
 
@@ -1091,6 +1091,7 @@ dotplot.table <-
     function(x, data = NULL, groups = TRUE,
              ..., horizontal = TRUE)
 {
+    ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(barchart)
     if (!is.null(data)) warning("explicit 'data' specification ignored")
     data <- as.data.frame(x)
     nms <- names(data)
@@ -1112,9 +1113,10 @@ dotplot.table <-
         rest <- paste(nms, collapse = "+")
         form <- paste(form, rest, sep = "|")
     }
-    dotplot(as.formula(form), data,
-            groups = eval(groups),
-            ...)
+    modifyList(dotplot(as.formula(form), data,
+                       groups = eval(groups),
+                       ...), 
+               list(call = ocall))
 }
 
 
@@ -1127,12 +1129,14 @@ dotplot.formula <-
     function(x,
              data = NULL,
              panel = lattice.getOption("panel.dotplot"),
+             default.prepanel = lattice.getOption("prepanel.default.dotplot"),
              ...)
 {
     ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(dotplot)
     ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
+    ccall$default.prepanel <- default.prepanel
     ccall[[1]] <- quote(lattice::bwplot)
     ans <- eval.parent(ccall)
     ans$call <- ocall
@@ -1166,6 +1170,7 @@ barchart.table <-
     function(x, data = NULL, groups = TRUE,
              origin = 0, stack = TRUE, ..., horizontal = TRUE)
 {
+    ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(barchart)
     if (!is.null(data)) warning("explicit 'data' specification ignored")
     data <- as.data.frame(x)
     nms <- names(data)
@@ -1187,11 +1192,12 @@ barchart.table <-
         rest <- paste(nms, collapse = "+")
         form <- paste(form, rest, sep = "|")
     }
-    barchart(as.formula(form), data,
-             groups = eval(groups),
-             ##groups = groups,
-             origin = origin, stack = stack, 
-             ...)
+    modifyList(barchart(as.formula(form), data,
+                        groups = eval(groups),
+                        ##groups = groups,
+                        origin = origin, stack = stack, 
+                        ...),
+               list(ocall = ocall))
 }
 
 barchart.default <- function(x, data = NULL, ...) barchart(table(x), data, ...)
@@ -1203,6 +1209,7 @@ barchart.formula <-
     function(x,
              data = NULL,
              panel = lattice.getOption("panel.barchart"),
+             default.prepanel = lattice.getOption("prepanel.default.barchart"),
              box.ratio = 2, 
              ...)
 {
@@ -1210,6 +1217,7 @@ barchart.formula <-
     ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
+    ccall$default.prepanel <- default.prepanel
     ccall$box.ratio <- box.ratio
     ccall[[1]] <- quote(lattice::bwplot)
     ans <- eval.parent(ccall)
@@ -1243,12 +1251,14 @@ stripplot.formula <-
     function(x,
              data = NULL,
              panel = lattice.getOption("panel.stripplot"),
+             default.prepanel = lattice.getOption("prepanel.default.stripplot"),
              ...)
 {
     ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(stripplot)
     ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
+    ccall$default.prepanel <- default.prepanel
     ccall[[1]] <- quote(lattice::bwplot)
     ans <- eval.parent(ccall)
     ans$call <- ocall
@@ -1281,8 +1291,6 @@ bwplot.numeric <-
 }
 
 
-
-
 bwplot.formula <-
     function(x,
              data = NULL,
@@ -1305,8 +1313,9 @@ bwplot.formula <-
              ...,
              lattice.options = NULL,
              default.scales =
-             if (horizontal) list(y = list(tck = 0, alternating = FALSE, rot = 0))
-             else list(x = list(tck = 0, alternating = FALSE)),
+                 if (horizontal) list(y = list(tck = 0, alternating = FALSE, rot = 0))
+                 else list(x = list(tck = 0, alternating = FALSE)),
+             default.prepanel = lattice.getOption("prepanel.default.bwplot"),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
@@ -1341,12 +1350,6 @@ bwplot.formula <-
 
     if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
     if (subscripts) subscr <- form$subscr
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
     cond <- form$condition
     x <- form$right
     y <- form$left
@@ -1420,16 +1423,16 @@ bwplot.formula <-
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit))
+    if (!is.null(foo$x.scales$limits))
     {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit))
+    if (!is.null(foo$y.scales$limits))
     {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
 
     ## Step 4: Decide if log scales are being used:
@@ -1570,7 +1573,7 @@ bwplot.formula <-
     }
 
     more.comp <-
-        c(limits.and.aspect(prepanel.default.bwplot,
+        c(limits.and.aspect(default.prepanel,
                             prepanel = prepanel, 
                             have.xlim = have.xlim, xlim = xlim, 
                             have.ylim = have.ylim, ylim = ylim, 

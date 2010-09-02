@@ -11,16 +11,17 @@
 \usage{
 trellis.par.set(name, value, \dots, theme, warn = TRUE, strict = FALSE)
 trellis.par.get(name = NULL)
+show.settings(x = NULL)
+}
 % trellis.par.set(name, value, warn)
 % trellis.par.set(theme)
 % trellis.par.set(\dots)
-show.settings(x = NULL)
-}
 \arguments{
-  \item{name}{ character giving the name of a component. If unspecified,
-    \code{names(trellis.par.get())} returns a list containing all the
-    current settings (this can be used to get the valid values for
-    \code{name})
+  \item{name}{
+    A character string giving the name of a component.  If unspecified
+    in \code{trellis.par.get()}, the return value is a named list
+    containing all the current settings (this can be used to get the
+    valid values for \code{name}).
   }
   \item{value}{
     a list giving the desired value of the component. Components that
@@ -44,15 +45,21 @@ show.settings(x = NULL)
     Equivalent to calling with \code{theme = list(\dots)}
   }
   \item{warn}{
-    logical, indicating whether a warning should be issued when
-    \code{trellis.par.get} is called when no graphics device is open
+    A logical flag, indicating whether a warning should be issued when
+    \code{trellis.par.get} is called when no graphics device is open.
   }
   \item{strict}{
-    logical, indicating whether the \code{value} should be interpreted
-    strictly.  Usually, assignment of value to the corresponding named
-    component is fuzzy in the sense that sub-components that are absent
-    from \code{value} but not currently \code{NULL} are retained.  By
-    specifying \code{strict = TRUE}, the assignment will be exact.
+    Usually a logical flag, indicating whether the \code{value} should
+    be interpreted strictly.  Usually, assignment of value to the
+    corresponding named component is fuzzy in the sense that
+    sub-components that are absent from \code{value} but not currently
+    \code{NULL} are retained.  By specifying \code{strict = TRUE}, such
+    values will be removed.
+
+    An even stricter interpretation is allowed by specifying
+    \code{strict} as a numeric value larger than \code{1}.  In that
+    case, top-level components not specified in the call will also be
+    removed.  This is primarily for internal use.
   }
   \item{x}{
     optional list of components that change the settings (any valid
@@ -138,17 +145,6 @@ show.settings(x = NULL)
   Such parameters can be specified as part of a lattice theme by
   including them in the \code{grid.pars} component (see
   \code{\link[grid:gpar]{gpar}} for a list of valid parameter names).
-
-
-  One of the uses of \code{par} is to set \code{par(ask = TRUE)} making
-  R wait for user input before starting a new graphics page.  For Grid
-  graphics, this is done using
-  \code{\link[grid:grid.prompt]{grid.prompt}}.  Lattice has no separate
-  interface for this, and the user must call \code{grid.prompt}
-  directly.  If the grid package is not attached (lattice itself
-  only loads the grid namespace), this may be done using
-  \code{grid::grid.prompt(TRUE)}.
-  
 }
 
 \value{
@@ -158,7 +154,6 @@ show.settings(x = NULL)
 \author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
 \seealso{
   \code{\link{trellis.device}}, \code{\link{Lattice}},
-  \code{\link[grid:grid.prompt]{grid.prompt}},
   \code{\link[grid:gpar]{gpar}}
 }
 

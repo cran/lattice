@@ -120,6 +120,7 @@ panel.3dscatter <-
     function(x, y, z, rot.mat = diag(4), distance,
              groups = NULL,
              type = "p",
+             xlim, ylim, zlim,
              xlim.scaled,
              ylim.scaled,
              zlim.scaled,
@@ -134,8 +135,19 @@ panel.3dscatter <-
              pch = if (is.null(groups)) "+" else superpose.symbol$pch,
              cross,
              ...,
+             .scale = FALSE,
              subscripts = TRUE)
 {
+    if (.scale)
+    {
+        ## x, y, z, are usually already scaled to lie within a
+        ## bounding box.  However, setting .scale=TRUE will do the
+        ## scaling here; this may be helpful for calls to
+        ## panel.3dscatter() in user-supplied panel functions.
+        x <- xlim.scaled[1] + diff(xlim.scaled) * (x-xlim[1])/diff(xlim)
+        y <- ylim.scaled[1] + diff(ylim.scaled) * (y-ylim[1])/diff(ylim)
+        z <- zlim.scaled[1] + diff(zlim.scaled) * (z-zlim[1])/diff(zlim)
+    }
 
     ##cloud.3d <- list(col=1, cex=1, lty=1, lwd=1, pch=1)
     plot.symbol <- trellis.par.get("plot.symbol")
@@ -244,7 +256,9 @@ panel.3dscatter <-
             ord <- sort.list(pmax(m0[3,], m1[3,]))
             lsegments(x0 = m0[1, ord], y0 = m0[2, ord],
                       x1 = m1[1, ord], y1 = m1[2, ord],
-                      col = tmpcol0[ord])
+                      col = tmpcol0[ord],
+                      lwd = lwd[ord],
+                      lty = lty[ord])
         }
 
 
@@ -302,6 +316,7 @@ panel.3dwire <-
              shade = FALSE,
              shade.colors.palette = trellis.par.get("shade.colors")$palette,
              light.source = c(0, 0, 1000),
+             xlim, ylim, zlim,
              xlim.scaled,
              ylim.scaled,
              zlim.scaled,
@@ -311,6 +326,7 @@ panel.3dwire <-
              col.groups = superpose.polygon$col,
              polynum = 100,
              ...,
+             .scale = FALSE,
              drape = FALSE,
              at,
              col.regions = regions$col,
@@ -337,6 +353,16 @@ panel.3dwire <-
     ## time. The difference is mostly in C code, but some distinctions
     ## need to be made here as well
 
+    if (.scale)
+    {
+        ## x, y, z, are usually already scaled to lie within a
+        ## bounding box.  However, setting .scale=TRUE will do the
+        ## scaling here; this may be helpful for calls to
+        ## panel.3dscatter() in user-supplied panel functions.
+        x[] <- xlim.scaled[1] + diff(xlim.scaled) * (x-xlim[1])/diff(xlim)
+        y[] <- ylim.scaled[1] + diff(ylim.scaled) * (y-ylim[1])/diff(ylim)
+        z[] <- zlim.scaled[1] + diff(zlim.scaled) * (z-zlim[1])/diff(zlim)
+    }
 
 
 
@@ -403,11 +429,7 @@ panel.3dwire <-
 
     if (shade)
     {
-
-        shade.colors.palette <-
-            if (is.character(shade.colors.palette)) get(shade.colors.palette)
-            else eval(shade.colors.palette)
-
+        shade.colors.palette <- getFunctionOrName(shade.colors.palette)
         pol.x <- numeric(polynum * 3)
         pol.y <- numeric(polynum * 3)
 
@@ -685,47 +707,47 @@ panel.cloud <-
 
         xlabelinfo <-
             calculateAxisComponents(xlim,
-                                    at = scales.3d$x$at,
+                                    at = scales.3d$x.scales$at,
                                     num.limit = NULL,
-                                    labels = scales.3d$x$labels,
-                                    logsc = scales.3d$x$log,
-                                    abbreviate = scales.3d$x$abbreviate,
-                                    minlength = scales.3d$x$minlength,
-                                    format.posixt = scales.3d$x$format,
-                                    n = scales.3d$x$tick.number)
+                                    labels = scales.3d$x.scales$labels,
+                                    logsc = scales.3d$x.scales$log,
+                                    abbreviate = scales.3d$x.scales$abbreviate,
+                                    minlength = scales.3d$x.scales$minlength,
+                                    format.posixt = scales.3d$x.scales$format,
+                                    n = scales.3d$x.scales$tick.number)
 
 
         ylabelinfo <-
             calculateAxisComponents(ylim,
-                                    at = scales.3d$y$at,
+                                    at = scales.3d$y.scales$at,
                                     num.limit = NULL,
-                                    labels = scales.3d$y$labels,
-                                    logsc = scales.3d$y$log,
-                                    abbreviate = scales.3d$y$abbreviate,
-                                    minlength = scales.3d$y$minlength,
-                                    format.posixt = scales.3d$y$format,
-                                    n = scales.3d$y$tick.number)
+                                    labels = scales.3d$y.scales$labels,
+                                    logsc = scales.3d$y.scales$log,
+                                    abbreviate = scales.3d$y.scales$abbreviate,
+                                    minlength = scales.3d$y.scales$minlength,
+                                    format.posixt = scales.3d$y.scales$format,
+                                    n = scales.3d$y.scales$tick.number)
 
 
         zlabelinfo <-
             calculateAxisComponents(zlim,
-                                    at = scales.3d$z$at,
+                                    at = scales.3d$z.scales$at,
                                     num.limit = NULL,
-                                    labels = scales.3d$z$labels,
-                                    logsc = scales.3d$z$log,
-                                    abbreviate = scales.3d$z$abbreviate,
-                                    minlength = scales.3d$z$minlength,
-                                    format.posixt = scales.3d$z$format,
-                                    n = scales.3d$z$tick.number)
+                                    labels = scales.3d$z.scales$labels,
+                                    logsc = scales.3d$z.scales$log,
+                                    abbreviate = scales.3d$z.scales$abbreviate,
+                                    minlength = scales.3d$z.scales$minlength,
+                                    format.posixt = scales.3d$z.scales$format,
+                                    n = scales.3d$z.scales$tick.number)
 
 
         x.at <- xlabelinfo$at
         y.at <- ylabelinfo$at
         z.at <- zlabelinfo$at
 
-        x.at.lab <- xlabelinfo$lab
-        y.at.lab <- ylabelinfo$lab
-        z.at.lab <- zlabelinfo$lab
+        x.at.lab <- xlabelinfo$labels
+        y.at.lab <- ylabelinfo$labels
+        z.at.lab <- zlabelinfo$labels
 
         xlim <- xlabelinfo$num.limit
         ylim <- ylabelinfo$num.limit
@@ -1073,12 +1095,8 @@ panel.cloud <-
                 x <- sort(unique(x))
                 y <- sort(unique(y))
             }
-
             z <- list(NULL) ## hopefully becomes garbage, collected if necessary
-
-            panel.3d.wireframe <-
-                if (is.character(panel.3d.wireframe)) get(panel.3d.wireframe)
-                else eval(panel.3d.wireframe)
+            panel.3d.wireframe <- getFunctionOrName(panel.3d.wireframe)
 
             pargs <- list(x = x, y = y, z = tmp,
                           rot.mat = rot.mat,
@@ -1094,18 +1112,13 @@ panel.cloud <-
                           zero.scaled = zero.scaled,
                           ...)
 
-
             if (!("..." %in% names(formals(panel.3d.wireframe))))
                 pargs <- pargs[intersect(names(pargs), names(formals(panel.3d.wireframe)))]
             do.call("panel.3d.wireframe", pargs)
-
         }
-        else {
-
-            panel.3d.cloud <-
-                if (is.character(panel.3d.cloud)) get(panel.3d.cloud)
-                else eval(panel.3d.cloud)
-
+        else
+        {
+            panel.3d.cloud <- getFunctionOrName(panel.3d.cloud)
             pargs <- list(x = x, y = y, z = z,
                           rot.mat = rot.mat,
                           distance = distance,
@@ -1119,7 +1132,6 @@ panel.cloud <-
                           zlim.scaled = zlim.scaled,
                           zero.scaled = zero.scaled,
                           ...)
-
             if (!("..." %in% names(formals(panel.3d.cloud))))
                 pargs <- pargs[intersect(names(pargs), names(formals(panel.3d.cloud)))]
             do.call("panel.3d.cloud", pargs)
@@ -1139,7 +1151,8 @@ panel.cloud <-
                   lty = par.box.final$lty,
                   lwd = par.box.final$lwd)
 
-        ## Next part for axes
+        ## Next part for axes. FIXME: ignoring axis.text$lineheight
+        ## because seems overkill, but could add that too.
 
         axis.text <- trellis.par.get("axis.text")
         axis.line <- trellis.par.get("axis.line")
@@ -1393,12 +1406,14 @@ wireframe.formula <-
     function(x,
              data = NULL,
              panel = lattice.getOption("panel.wireframe"),
+             default.prepanel = lattice.getOption("prepanel.default.wireframe"),
              ...)
 {
     ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(wireframe)
     ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
+    ccall$default.prepanel <- default.prepanel
     ccall[[1]] <- quote(lattice::cloud)
     ans <- eval.parent(ccall)
     ans$call <- ocall
@@ -1515,6 +1530,7 @@ cloud.formula <-
              ...,
              lattice.options = NULL,
              default.scales = list(distance = c(1, 1, 1), arrows = TRUE, axs = axs.default),
+             default.prepanel = lattice.getOption("prepanel.default.cloud"),
              colorkey = any(drape),
              col.regions,
              alpha.regions,
@@ -1564,13 +1580,6 @@ cloud.formula <-
 
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
-
     cond <- form$condition
     z <- form$left
     x <- form$right.x
@@ -1828,7 +1837,7 @@ cloud.formula <-
 
 
     more.comp <-
-        c(limits.and.aspect(prepanel.default.cloud,
+        c(limits.and.aspect(default.prepanel,
                             prepanel = prepanel,
                             have.xlim = have.xlim, xlim = xlim,
                             have.ylim = have.ylim, ylim = ylim,

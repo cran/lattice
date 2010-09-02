@@ -31,28 +31,15 @@ prepanel.default.splom <-
          dy = 1)
 }
 
-
-
-
 panel.splom <-
     function(...)
     panel.xyplot(...)
 
 
-
-
-
-
-
-
-
-
-
 diag.panel.splom <-
     function(x = NULL,
-
-             varname = NULL, limits, at = NULL, lab = NULL,
-             draw = TRUE,
+             varname = NULL, limits, at = NULL, labels = NULL,
+             draw = TRUE, tick.number = 5,
 
              varname.col = add.text$col,
              varname.cex = add.text$cex,
@@ -67,6 +54,7 @@ diag.panel.splom <-
              axis.text.font = axis.text$font,
              axis.text.fontfamily = axis.text$fontfamily,
              axis.text.fontface = axis.text$fontface,
+             axis.text.lineheight = axis.text$lineheight,
 
              axis.line.col = axis.line$col,
              axis.line.alpha = axis.line$alpha,
@@ -78,7 +66,6 @@ diag.panel.splom <-
     add.text <- trellis.par.get("add.text")
     axis.line <- trellis.par.get("axis.line")
     axis.text <- trellis.par.get("axis.text")
-
     if (!is.null(varname))
         grid.text(varname,
                   gp =
@@ -87,29 +74,20 @@ diag.panel.splom <-
                        lineheight = varname.lineheight,
                        fontface = chooseFace(varname.fontface, varname.font),
                        fontfamily = varname.fontfamily))
-
     if (draw) ## plot axes
     {
-        rot <- c(90, 0)
-        if (is.null(at))
-        {
-            at <- 
-                if (is.character(limits)) seq_along(limits)
-                else pretty(limits)
-        }
-        if (is.null(lab))
-        {
-            lab <- 
-                if (is.character(limits)) limits
-                else {
-                    rot <- 0
-                    format(at, trim = TRUE)
-                }
-        }
+        rot <- if (is.numeric(limits)) 0 else c(90, 0)
+        axis.details <-
+            formattedTicksAndLabels(limits,
+                                    at = if (is.null(at)) TRUE else at,
+                                    labels = if (is.null(labels)) TRUE else labels,
+                                    logsc = FALSE,
+                                    ..., n = tick.number)
         for (side in c("left", "top", "right", "bottom"))
             panel.axis(side = side,
-                       at = at,
-                       labels = lab,
+                       at = axis.details$at,
+                       labels = axis.details$labels,
+                       check.overlap = axis.details$check.overlap,
                        ticks = TRUE,
                        half = TRUE,
 
@@ -122,6 +100,7 @@ diag.panel.splom <-
                        text.font = axis.text.font,
                        text.fontfamily = axis.text.fontfamily,
                        text.fontface = axis.text.fontface,
+                       text.lineheight = axis.text.lineheight,
 
                        line.col = axis.line.col,
                        line.alpha = axis.line.alpha,
@@ -150,12 +129,11 @@ panel.pairs <-
              subscripts,
              pscales = 5,
 
-##              packet.number = 0,  ## should always be supplied
-##              panel.number = 0,  ## should always be supplied
+             ## prepanel.limits = function(x) if (is.factor(x)) levels(x) else
+             ## extend.limits(range(as.numeric(x), finite = TRUE)),
+             prepanel.limits = scale.limits,
 
-             prepanel.limits = function(x) if (is.factor(x)) levels(x) else
-             extend.limits(range(as.numeric(x), finite = TRUE)),
-
+             varnames = colnames(z),
              varname.col = add.text$col,
              varname.cex = add.text$cex,
              varname.font = add.text$font,
@@ -167,6 +145,7 @@ panel.pairs <-
              axis.text.font = axis.text$font,
              axis.text.fontfamily = axis.text$fontfamily,
              axis.text.fontface = axis.text$fontface,
+             axis.text.lineheight = axis.text$lineheight,
 
              axis.line.col = axis.line$col,
              axis.line.lty = axis.line$lty,
@@ -175,34 +154,21 @@ panel.pairs <-
              axis.line.tck = 1,
              ...)
 {
-    lower.panel <- 
-        if (is.function(lower.panel)) lower.panel 
-        else if (is.character(lower.panel)) get(lower.panel)
-        else eval(lower.panel)
-
-    upper.panel <- 
-        if (is.function(upper.panel)) upper.panel 
-        else if (is.character(upper.panel)) get(upper.panel)
-        else eval(upper.panel)
-
-    diag.panel <- 
-        if (is.function(diag.panel)) diag.panel 
-        else if (is.character(diag.panel)) get(diag.panel)
-        else eval(diag.panel)
-
+    lower.panel <- getFunctionOrName(lower.panel)
+    upper.panel <- getFunctionOrName(upper.panel)
+    diag.panel <- getFunctionOrName(diag.panel)
     add.text <- trellis.par.get("add.text")
     axis.line <- trellis.par.get("axis.line")
     axis.text <- trellis.par.get("axis.text")
-
     n.var <- ncol(z)
-
     if (n.var == 0) return()
 
     lim <- vector("list", length = n.var)
-    for(i in seq_len(n.var)) lim[[i]] <-
-        if (is.list(pscales) && !is.null(pscales[[i]]$lim))
-            pscales[[i]]$lim
-        else prepanel.limits(z[,i])
+    for (i in seq_len(n.var))
+        lim[[i]] <-
+            if (is.list(pscales) && !is.null(pscales[[i]]$lim))
+                pscales[[i]]$lim
+            else prepanel.limits(z[,i])
     
     ## maybe (ideally) this should be affected by scales
 
@@ -220,55 +186,59 @@ panel.pairs <-
                                           layout.pos.col = j,
                                           name = paste("subpanel", j, i, sep = "."),
                                           clip = trellis.par.get("clip")$panel,
-                                          xscale = if (is.character(lim[[j]]))
-                                          c(0, length(lim[[j]]) + 1) else lim[[j]],
-                                          yscale = if (is.character(lim[[i]]))
-                                          c(0, length(lim[[i]]) + 1) else lim[[i]]))
+                                          xscale = as.numeric(extend.limits(lim[[j]])),
+                                          yscale = as.numeric(extend.limits(lim[[i]]))))
+                                          ## xscale = if (is.character(lim[[j]])) c(0, length(lim[[j]]) + 1)
+                                          ## else as.numeric(extend.limits(lim[[j]])),
+                                          ## yscale = if (is.character(lim[[i]])) c(0, length(lim[[i]]) + 1)
+                                          ## else as.numeric(extend.limits(lim[[i]])) ))
                 else
                     pushViewport(viewport(layout.pos.row = n.var - i + 1,
                                           layout.pos.col = j,
                                           name = paste("subpanel", j, i, sep = "."),
                                           clip = trellis.par.get("clip")$panel,
-                                          xscale = if (is.character(lim[[j]]))
-                                          c(0, length(lim[[j]]) + 1) else lim[[j]],
-                                          yscale = if (is.character(lim[[i]]))
-                                          c(0, length(lim[[i]]) + 1) else lim[[i]]))
-                if(i == j)
+                                          xscale = as.numeric(extend.limits(lim[[j]])),
+                                          yscale = as.numeric(extend.limits(lim[[i]]))))
+                                          
+                                          ## xscale = if (is.character(lim[[j]]))
+                                          ## c(0, length(lim[[j]]) + 1) else lim[[j]],
+                                          ## yscale = if (is.character(lim[[i]]))
+                                          ## c(0, length(lim[[i]]) + 1) else lim[[i]]))
+                if (i == j)
                 {
-                    axls <-
-                        if (is.list(pscales) && !is.null(pscales[[i]]$at))
-                            pscales[[i]]$at
-                        else if (is.character(lim[[i]]))
-                            seq_along(lim[[i]])
-                        else
-                            pretty(lim[[i]],
-                                   n = if (is.numeric(pscales))
-                                   pscales else 5)
+                    ## axls <-
+                    ##     if (is.list(pscales) && !is.null(pscales[[i]]$at))
+                    ##         pscales[[i]]$at
+                    ##     else if (is.character(lim[[i]]))
+                    ##         seq_along(lim[[i]])
+                    ##     else
+                    ##         pretty(lim[[i]],
+                    ##                n = if (is.numeric(pscales))
+                    ##                pscales else 5)
 
-                    labels <-
-                        if (is.list(pscales) && !is.null(pscales[[i]]$lab))
-                            pscales[[i]]$lab
-                        else if (is.character(lim[[i]]))
-                            lim[[i]]
-                        else
-                            NULL
+                    ## labels <-
+                    ##     if (is.list(pscales) && !is.null(pscales[[i]]$lab))
+                    ##         pscales[[i]]$lab
+                    ##     else if (is.character(lim[[i]]))
+                    ##         lim[[i]]
+                    ##     else
+                    ##         NULL
 
-                    if (is.numeric(lim[[i]]))
-                    {
-                        axlims <- range(lim[[i]])
-                        axid <- axls > axlims[1] & axls < axlims[2]
-                        axls <- axls[axid]
-                        labels <- labels[axid]
-                    }
-                        
+                    ## if (is.numeric(lim[[i]]))
+                    ## {
+                    ##     axlims <- range(lim[[i]])
+                    ##     axid <- axls > axlims[1] & axls < axlims[2]
+                    ##     axls <- axls[axid]
+                    ##     labels <- labels[axid]
+                    ## }
 
                     diag.panel(x = z[subscripts, j],
-                               varname = colnames(z)[i],
+                               varname = varnames[i],
                                limits = lim[[i]],
-                               at = axls, lab = labels,
+                               at = if (is.list(pscales)) pscales[[i]]$at else NULL, 
+                               labels = if (is.list(pscales)) pscales[[i]]$lab else NULL,
                                draw = draw,
-##                                panel.number = panel.number,
-##                                packet.number = packet.number,
+                               tick.number = if (is.numeric(pscales)) pscales else 5,
 
                                varname.col = varname.col,
                                varname.cex = varname.cex,
@@ -281,6 +251,7 @@ panel.pairs <-
                                axis.text.font = axis.text.font,
                                axis.text.fontfamily = axis.text.fontfamily,
                                axis.text.fontface = axis.text.fontface,
+                               axis.text.lineheight = axis.text.lineheight,
 
                                axis.line.col = axis.line.col,
                                axis.line.lty = axis.line.lty,
@@ -288,6 +259,7 @@ panel.pairs <-
                                axis.line.alpha = axis.line.alpha,
                                axis.line.tck = axis.line.tck,
 
+                               i = i, j= j,
                                ...)
 
                     grid.rect(gp =
@@ -303,28 +275,31 @@ panel.pairs <-
                         if (!panel.subscripts)
                             c(list(x = z[subscripts, j],
                                    y = z[subscripts, i]),
-##                                    panel.number = panel.number,
-##                                    packet.number = packet.number),
-                              list(...))
+                              list(...),
+                              list(i = i, j = j))
                         else
                             c(list(x = z[subscripts, j],
                                    y = z[subscripts, i],
                                    groups = groups,
                                    subscripts = subscripts),
-##                                    panel.number = panel.number,
-##                                    packet.number = packet.number),
-                              list(...))
+                              list(...),
+                              list(i = i, j = j))
 
-                    if (!("..." %in% names(formals(panel))))
-                        pargs <- pargs[intersect(names(pargs), names(formals(panel)))]
+                    ## if (!("..." %in% names(formals(panel))))
+                    ##     pargs <- pargs[intersect(names(pargs), names(formals(panel)))]
+
+                    ## if (as.matrix)
+                    ##     do.call(if (i > j) lower.panel else upper.panel,
+                    ##             pargs)
+                    ## else
+                    ##     do.call(if (i < j) lower.panel else upper.panel,
+                    ##             pargs)
 
                     if (as.matrix)
-                        do.call(if (i > j) "lower.panel" else "upper.panel",
-                                pargs)
+                        checkArgsAndCall(if (i > j) lower.panel else upper.panel, pargs)
                     else
-                        do.call(if (i < j) "lower.panel" else "upper.panel",
-                                pargs)
-
+                        checkArgsAndCall(if (i < j) lower.panel else upper.panel, pargs)
+                    
                     grid.rect(gp =
                               gpar(col = axis.line.col,
                                    lty = axis.line.lty,
@@ -380,11 +355,12 @@ splom.formula <-
              ylim,
              superpanel = lattice.getOption("panel.pairs"),
              pscales = 5,
-             varnames,
+             varnames = NULL,
              drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
              lattice.options = NULL,
              default.scales = list(draw = FALSE, relation = "same", axs = "i"),
+             default.prepanel = lattice.getOption("prepanel.default.splom"),
              subset = TRUE)
 {
     formula <- x
@@ -422,12 +398,6 @@ splom.formula <-
 
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
     cond <- form$condition
     x <- as.data.frame(form$right)
 
@@ -437,8 +407,12 @@ splom.formula <-
         cond <- list(as.factor(rep(1, nrow(x))))
     }
 
-    if (!missing(varnames)) colnames(x) <-
-        eval(substitute(varnames), data, environment(formula))
+    varnames <-
+        if (is.null(varnames)) colnames(x)
+        else varnames
+    ## WAS eval(substitute(varnames), data, environment(formula)), but
+    ## not sure why non-standard evaluation would be useful here
+    if (length(varnames) != ncol(x)) stop("'varnames' has wrong length.")
 
     ## create a skeleton trellis object with the
     ## less complicated components:
@@ -476,16 +450,16 @@ splom.formula <-
     ## Step 3: Decide if limits were specified in call:
 
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit))
+    if (!is.null(foo$x.scales$limits))
     {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit))
+    if (!is.null(foo$y.scales$limits))
     {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
     
     ## Step 4: Decide if log scales are being used (has to be NO):
@@ -504,6 +478,7 @@ splom.formula <-
                panel = panel,
                panel.subscripts = TRUE,
                groups = groups, # xscales = foo$x.scales, yscales = foo$y.scales,
+               varnames = varnames,
                pscales = pscales),
           dots)
 
@@ -537,7 +512,7 @@ splom.formula <-
     }
 
     more.comp <-
-        c(limits.and.aspect(prepanel.default.splom,
+        c(limits.and.aspect(default.prepanel,
                             prepanel = prepanel, 
                             have.xlim = have.xlim, xlim = xlim, 
                             have.ylim = have.ylim, ylim = ylim, 

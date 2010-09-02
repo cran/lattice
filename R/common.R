@@ -53,15 +53,6 @@ cupdate <- function(index, maxim)
 
 
 
-# generateNewName <- function(names.current, new.prefix="gvar")
-# {
-#     names.current <- as.character(names.current)
-#     new.prefix <- as.character(new.prefix)
-#     newnames <- c(new.prefix,
-#                   paste(gvar, seq_along(names.current), sep=""))
-#     newnames[!(newnames %in% names.current)][1]
-# }
-
 
 ## a function similar to (but with much less bells and whistles than)
 ## interaction, with exactly 2 factors, and levels ordered like that
@@ -568,6 +559,9 @@ trellis.skeleton <-
              ylab.default = NULL,
              xlab = NULL, # argument in xyplot
              ylab = NULL, # argument in xyplot
+             xlab.top = NULL,
+             ylab.right = NULL,
+
              panel,       # argument in xyplot
 
              xscale.components = default.args$xscale.components,
@@ -606,6 +600,8 @@ trellis.skeleton <-
              ylab = ylab,
              xlab.default = xlab.default,
              ylab.default = ylab.default,
+             xlab.top = xlab.top,
+             ylab.right = ylab.right,
              main = main,
              sub = sub,
              x.between = 0,

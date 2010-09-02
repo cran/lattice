@@ -6,7 +6,6 @@
   This is the default superpanel function for \code{splom}.
 }
 \usage{
-
 panel.pairs(z,
             panel = lattice.getOption("panel.splom"),
             lower.panel = panel,
@@ -17,26 +16,26 @@ panel.pairs(z,
             panel.subscripts,
             subscripts,
             pscales = 5,
-%             packet.number, panel.number,
-            prepanel.limits = function(x) if (is.factor(x)) levels(x) else
-            extend.limits(range(as.numeric(x), finite = TRUE)),
-
+            prepanel.limits = scale.limits,
+            varnames = colnames(z),
             varname.col, varname.cex, varname.font,
             varname.fontfamily, varname.fontface,
             axis.text.col, axis.text.cex, axis.text.font,
             axis.text.fontfamily, axis.text.fontface,
+            axis.text.lineheight,
             axis.line.col, axis.line.lty, axis.line.lwd,
             axis.line.alpha, axis.line.tck,
             \dots)
 diag.panel.splom(x = NULL,
-                 varname = NULL, limits, at = NULL, lab = NULL,
-                 draw = TRUE,
+                 varname = NULL, limits, at = NULL, labels = NULL,
+                 draw = TRUE, tick.number = 5,
                  varname.col, varname.cex,
                  varname.lineheight, varname.font,
                  varname.fontfamily, varname.fontface,
                  axis.text.col, axis.text.alpha,
                  axis.text.cex, axis.text.font, 
                  axis.text.fontfamily, axis.text.fontface,
+                 axis.text.lineheight, 
                  axis.line.col, axis.line.alpha,
                  axis.line.lty, axis.line.lwd,
                  axis.line.tck,
@@ -48,6 +47,11 @@ diag.panel.splom(x = NULL,
     The panel function used to display each pair of variables. If
     specified, \code{lower.panel} and \code{upper.panel} are used for
     panels below and above the diagonal respectively.
+
+    In addition to extra arguments not recognized by \code{panel.pairs},
+    the list of arguments passed to the panel function also includes
+    arguments named \code{i} and \code{j}, with values indicating the
+    row and column of the scatterplot matrix being plotted.
   }
   \item{diag.panel}{
     The panel function used for the diagonals. See arguments to
@@ -87,12 +91,19 @@ diag.panel.splom(x = NULL,
     variables are labelled with the factor names.  Use \code{pscales=0}
     to supress the axes entirely.
   }
-  \item{prepanel.limits}{ The \sQuote{regular} high level lattice plots
-    such as \code{xyplot} use the \code{prepanel} function for deciding
-    on axis limits from data.  This function serves a similar function,
-    and works on a per-variable basis, by calculating the limits, which
-    can be overridden by the corresponding \code{limits} component in
-    the \code{pscales} list.
+  \item{prepanel.limits}{
+    A function to calculate suitable axis limits given a single argument
+    \code{x} containing a data vector. The return value of the function
+    should be similar to the \code{xlim} or \code{ylim} argument
+    documented in \code{\link{xyplot}}; that is, it should be a numeric
+    or DateTime vector of length 2 defining a range, or a character
+    vector representing levels of a factor.
+
+    Most high-level lattice plots (such as \code{xyplot}) use the
+    \code{prepanel} function for deciding on axis limits from data.
+    This function serves a similar function by calculating the
+    per-variable limits.  These limits can be overridden by the
+    corresponding \code{limits} component in the \code{pscales} list.
   }
   \item{x}{
     data vector corresponding to that row / column (which will be the
@@ -106,36 +117,69 @@ diag.panel.splom(x = NULL,
     for that panel (used to calculate tick locations when missing)
   }
   \item{at}{ locations of tick marks}
-  \item{lab}{ optional labels for tick marks}
+  \item{labels}{ optional labels for tick marks}
   \item{draw}{
-    logical, specifying whether to draw the tick marks and labels. If
-    \code{FALSE}, only variable names are written
+    A logical flag specifying whether to draw the tick marks and labels.
+    If \code{FALSE}, variable names are shown but axis annotation is
+    omitted. 
   }
-%   \item{panel.number, packet.number}{ integer indices for panel and
-%     packet number (see \code{\link{xyplot}}).  Passed on to
-%     \code{panel}, \code{lower.panel}, \code{upper.panel} and
-%     \code{diag.panel}. }
-  \item{varname.col, varname.cex, varname.lineheight, varname.font,
-    varname.fontfamily, varname.fontface}{ graphical parameters for the
-    variable name in each diagonal panel }
-  \item{axis.text.col, axis.text.cex, axis.text.font,
-    axis.text.fontfamily, axis.text.fontface, axis.line.col,
-    axis.line.lty, axis.line.lwd, axis.text.alpha, axis.line.alpha}{
-    graphical parameters for axis tick marks and labels }
-  \item{axis.line.tck}{ length of tick marks in diagonal panels }
-  \item{\dots}{ extra arguments passed on to \code{panel},
-    \code{lower.panel}, \code{upper.panel} and \code{diag.panel} from
-    \code{panel.pairs}.  Currently ignored by \code{diag.panel.splom}. }
+  \item{tick.number}{
+    A Numeric scalar giving the suggested number of tick marks.
+  }
+  \item{varnames}{ 
+    A character or expression vector or giving names to be used for the
+    variables in \code{x}. By default, the column names of \code{x}.
+  }
+  \item{varname.col}{ Color for the variable name in each diagonal
+    panel.  See \code{\link[grid]{gpar}} for details on this and the
+    other graphical parameters listed below. }
+  \item{varname.cex}{
+    Size multiplier for the variable name in each diagonal panel.
+  } 
+  \item{varname.lineheight}{
+    Line height for the variable name in each diagonal panel.
+  }
+  \item{varname.font, varname.fontfamily, varname.fontface}{
+    Font specification for the variable name in each diagonal panel.
+  }
+  \item{axis.text.col}{ Color for axis label text. } 
+  \item{axis.text.cex}{ Size multiplier for axis label text. } 
+  \item{axis.text.font, axis.text.fontfamily, axis.text.fontface}{
+    Font specification for axis label text.
+  } 
+  \item{axis.text.lineheight}{ Line height for axis label text. } 
+  \item{axis.text.alpha}{ Alpha-transparency for axis label text. } 
+  \item{axis.line.col}{ Color for the axes. } 
+  \item{axis.line.lty}{ Line type for the axes. } 
+  \item{axis.line.lwd}{ Line width for the axes. } 
+  \item{axis.line.alpha}{ Alpha-transparency for the axes. } 
+  \item{axis.line.tck}{
+    A numeric multiplier for the length of tick marks in diagonal
+    panels.
+  }
+  \item{\dots}{
+    Further arguments, passed on to \code{panel}, \code{lower.panel},
+    \code{upper.panel}, and \code{diag.panel} from \code{panel.pairs}.
+    Currently ignored by \code{diag.panel.splom}.
+  }
 
 }
 
 \details{
-  \code{panel.pairs} is the function that is actually passed in as the
-  \code{panel} function in a trellis object produced by splom (taking
-  the \code{panel} function as its argument).
+  \code{panel.pairs} is the function that is actually used as the panel
+  function in a \code{"trellis"} object produced by \code{splom}.
+}
 
-  Note that the axis labeling does not support date-time classes at
-  present.
+\examples{
+
+Cmat <- outer(1:6,1:6,
+              function(i,j) rainbow(11, start=.12, end=.5)[i+j-1])
+
+splom(~diag(6), as.matrix = TRUE,
+      panel = function(x, y, i, j, ...) {
+          panel.fill(Cmat[i,j])
+          panel.text(.5,.5, paste("(",i,",",j,")",sep=""))
+      })
 
 }
 

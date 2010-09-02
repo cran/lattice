@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: R 2.11.0\n"
+"Project-Id-Version: R 2.12.0\n"
 "Report-Msgid-Bugs-To: bugs@r-project.org\n"
-"POT-Creation-Date: 2010-01-17 02:43\n"
+"POT-Creation-Date: 2010-09-02 05:05\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10,6 +10,9 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+
+msgid "range too small for min.n"
+msgstr ""
 
 msgid "'at' missing or incompatible with 'labels'"
 msgstr ""
@@ -77,10 +80,10 @@ msgstr ""
 msgid "layout must have at least 2 elements"
 msgstr ""
 
-msgid "at least one element of layout must be positive"
+msgid "inadmissible value of layout"
 msgstr ""
 
-msgid "inadmissible value of layout"
+msgid "at least one element of layout must be positive"
 msgstr ""
 
 msgid "invalid value for layout"
@@ -122,13 +125,16 @@ msgstr ""
 msgid "panel position unspecified or invalid"
 msgstr ""
 
-msgid "plot spans multiple pages, only last page can be updated"
+msgid "'trellis.switchFocus' cannot be used to switch to a different 'prefix'.  Use 'trellis.focus' first"
 msgstr ""
 
-msgid "current plot was not saved, can't retrieve panel data"
+msgid "Plot object was not saved, cannot retrieve panel data"
 msgstr ""
 
-msgid "you have to first select a panel using trellis.focus()"
+msgid "Plot spans multiple pages, only last page can be updated"
+msgstr ""
+
+msgid "You have to first select a panel using trellis.focus()"
 msgstr ""
 
 msgid "Selecting panel at position (%g, %g)"
@@ -179,6 +185,12 @@ msgstr ""
 msgid "Invalid label.style"
 msgstr ""
 
+msgid "'x' values are not equispaced; output may be wrong"
+msgstr ""
+
+msgid "'y' values are not equispaced; output may be wrong"
+msgstr ""
+
 msgid "x must be (coercible to be) a factor"
 msgstr ""
 
@@ -218,6 +230,9 @@ msgstr ""
 msgid "'expr' must be a function or an expression containing 'x'"
 msgstr ""
 
+msgid "'varnames' has wrong length."
+msgstr ""
+
 msgid "Parallel Coordinate Plot"
 msgstr ""
 
@@ -225,9 +240,6 @@ msgid "cannot have log y-scale"
 msgstr ""
 
 msgid "Error using packet %g\n%s"
-msgstr ""
-
-msgid "'packet.number' and 'panel.number' are no longer supplied to the panel function.  See ?packet.number"
 msgstr ""
 
 msgid "y must have exactly 2 levels"
@@ -248,7 +260,7 @@ msgstr ""
 msgid "Residuals"
 msgstr ""
 
-msgid "the at and labels components of scales may not be lists when relation = same"
+msgid "the 'at' and 'labels' components of 'scales' may not be lists when 'relation = \"same\"'"
 msgstr ""
 
 msgid "limits cannot be a list when relation = same"
@@ -323,10 +335,7 @@ msgstr ""
 msgid "difference"
 msgstr ""
 
-msgid "No trellis object currently saved"
-msgstr ""
-
-msgid "currently saved object is not the last one plotted"
+msgid "Requested 'trellis' object was not saved"
 msgstr ""
 
 msgid "Inappropriate value of 'as.table'"
@@ -351,6 +360,9 @@ msgid "Note: 'auto.key' ignored since legend already present.\nUse 'update(..., 
 msgstr ""
 
 msgid "log scales cannot be changed via 'update'"
+msgstr ""
+
+msgid "the at and labels components of scales may not be lists when relation = same"
 msgstr ""
 
 msgid "Unrecognized value of 'aspect': '%s'"

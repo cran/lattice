@@ -31,33 +31,33 @@ col.whitebg <- function()
          ##gamma = .6)))
          regions = list(col = heat.colors(100)),
          strip.shingle = list(col = c("#ff7f00", "#00ff00", "#00ffff",
-                                 "#0080ff", "#ff00ff", "#ff0000", "#ffff00")),
+                                      "#0080ff", "#ff00ff", "#ff0000", "#ffff00")),
          strip.background = list(col = c("#ffe5cc", "#ccffcc", "#ccffff",
-                                 "#cce6ff", "#ffccff", "#ffcccc", "#ffffcc")),
+                                         "#cce6ff", "#ffccff", "#ffcccc", "#ffffcc")),
          reference.line = list(col="#e8e8e8"),
          superpose.line = list(col = c("darkgreen","red","royalblue",
-                               "brown","orange","turquoise", "orchid"),
-         lty = 1:7),
+                                       "brown","orange","turquoise", "orchid"),
+                               lty = 1:7),
          superpose.symbol = list(pch = c(1,3,6,0,5,16,17), cex = rep(.7, 7),
-         col = c("darkgreen","red","royalblue",
-         "brown","orange","turquoise", "orchid")))
+                                 col = c("darkgreen","red","royalblue",
+                                         "brown","orange","turquoise", "orchid")))
 
 
 
 
-## this function is used to make the superpose.plygon colors less
+## this function is used to make the superpose.polygon colors less
 ## saturated versions of the symbol and line colors
 
 lower.saturation <-
     function(x, f = 0.2)
 {
-    rgb <- col2rgb(x)
-    rgb[] <- 255 - rgb
-    rgb[] <- round(f * rgb)
-    rgb[] <- 255 - rgb
-    rgb(rgb["red", ],
-        rgb["green", ],
-        rgb["blue", ],
+    RGB <- col2rgb(x)
+    RGB[] <- 255 - RGB
+    RGB[] <- round(f * RGB)
+    RGB[] <- 255 - RGB
+    rgb(RGB["red", ],
+        RGB["green", ],
+        RGB["blue", ],
         maxColorValue = 255)
 }
 
@@ -103,15 +103,20 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
               "#0A0A0A", "#0D0D0D", "#0F0F0F", "#121212", "#151515",
               "#AAAAAA", "transparent")
 
-    ## The following definition is the basis for what elements are
+    ## The following is the canonical definition of what elements are
     ## valid in any setting. Adding something here should be necessary
     ## and sufficient.
+
+    ## Note: For any component with a $font entry, more general
+    ## specifications using $fontfamily and $fontface is also allowed
+    ## (see ?grid::gpar for details).
 
     ## color settings, modified later if postscript or color = FALSE
     ans <-
         list(grid.pars        = list(), ## set globally at the beginning
              fontsize         = list(text = 12, points = 8),
              background       = list(alpha = 1, col = can.col[17]),
+             panel.background = list(col = "transparent"),
              clip             = list(panel = "on", strip = "on"),
              add.line         = list(alpha = 1, col = can.col[1], lty = 1, lwd = 1),
              add.text         = list(alpha = 1, cex = 1, col = can.col[1], font = 1, lineheight = 1.2),
@@ -140,7 +145,7 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
                  hsv(h = height, s = 1 - saturation * (1 - (1-ref)^0.5), v = irr)
              }),
              axis.line        = list(alpha = 1, col = can.col[1], lty = 1, lwd = 1),
-             axis.text        = list(alpha = 1, cex = .8, col = can.col[1], font = 1),
+             axis.text        = list(alpha = 1, cex = .8, col = can.col[1], font = 1, lineheight = 1),
 
              ## NEW: controls widths of tick marks and padding of labels
              axis.components  = list(left = list(tck = 1, pad1 = 1, pad2 = 1),
@@ -152,6 +157,7 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
                                      main = 1,
                                      main.key.padding = 1,
                                      key.top = 1,
+                                     xlab.top = 1,
                                      key.axis.padding = 1,
                                      axis.top = 1,
                                      strip = 1,
@@ -161,14 +167,14 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
                                      axis.bottom = 1,
                                      axis.xlab.padding = 1,
                                      xlab = 1,
-                                     xlab.key.padding = 1,
+                                     xlab.key.padding = 0,
                                      key.bottom = 1,
                                      key.sub.padding = 1,
                                      sub = 1,
                                      bottom.padding = 1),
              layout.widths    = list(left.padding = 1,
                                      key.left = 1,
-                                     key.ylab.padding = 1,
+                                     key.ylab.padding = 0,
                                      ylab = 1,
                                      ylab.axis.padding = 1,
                                      axis.left = 1,
@@ -178,6 +184,7 @@ canonical.theme <- function(name = .Device, color = name != "postscript")
                                      between = 1,
                                      axis.right = 1,
                                      axis.key.padding = 1,
+                                     ylab.right = 1,
                                      key.right = 1,
                                      right.padding = 1),
 
@@ -339,7 +346,10 @@ trellis.par.set <-
     }
 
     if (strict)
-        lattice.theme[[.Device]][names(theme)] <- theme
+    {
+        if (strict > 1L) lattice.theme[[.Device]] <- theme
+        else lattice.theme[[.Device]][names(theme)] <- theme
+    }
     else
         lattice.theme[[.Device]] <- updateList(lattice.theme[[.Device]], theme)
     assign("lattice.theme", lattice.theme, envir = .LatticeEnv)
@@ -821,8 +831,27 @@ lattice.options <- function(...)
          panel.cloud = "panel.cloud",
          panel.pairs = "panel.pairs",
 
+         ## default prepanel functions
 
-         ## axis units.  Usually not a good idea for users to manipulate
+         prepanel.default.bwplot = "prepanel.default.bwplot",
+         prepanel.default.cloud = "prepanel.default.cloud",
+         prepanel.default.densityplot = "prepanel.default.densityplot",
+         prepanel.default.histogram = "prepanel.default.histogram",
+         prepanel.default.levelplot = "prepanel.default.levelplot",
+         prepanel.default.parallel = "prepanel.default.parallel",
+         prepanel.default.qq = "prepanel.default.qq",
+         prepanel.default.qqmath = "prepanel.default.qqmath",
+         prepanel.default.splom = "prepanel.default.splom",
+         prepanel.default.xyplot = "prepanel.default.xyplot",
+
+         prepanel.default.dotplot = "prepanel.default.bwplot",
+         prepanel.default.barchart = "prepanel.default.bwplot",
+         prepanel.default.wireframe = "prepanel.default.cloud",
+         prepanel.default.contourplot = "prepanel.default.levelplot",
+         
+         ## Axis units.  Rather than messing with these, end-users
+         ## should manipulate corresponding settings via
+         ## trellis.par.set()
 
          axis.units =
          list(outer =
@@ -947,6 +976,7 @@ lattice.options <- function(...)
               main = list(x = 0, units = "grobheight", data = textGrob(label="")),
               main.key.padding = list(x = 0.01, units = "snpc", data = NULL),
               key.top = list(x = 0, units = "grobheight", data = textGrob(label="")),
+              xlab.top = list(x = 0, units = "grobheight", data = textGrob(label="")),
               key.axis.padding = list(x = 0.01, units = "snpc", data = NULL),
               axis.top = list(x = 0, units = "mm", data = NULL),
               strip = list(x = 1, units = "lines", data = NULL),
@@ -974,6 +1004,7 @@ lattice.options <- function(...)
               between = list(x = 5, units = "mm", data = NULL),
               axis.right = list(x = 0, units = "mm", data = NULL),
               axis.key.padding = list(x = 0.01, units = "snpc", data = NULL),
+              ylab.right = list(x = 0, units = "grobwidth", data = textGrob(label="")),
               key.right = list(x = 0, units = "grobwidth", data = textGrob(label="")),
               right.padding = list(x = 0.01, units = "snpc", data = NULL)),
 
@@ -984,36 +1015,46 @@ lattice.options <- function(...)
 
 
 
+## Interface to internal storage for use by plot.trellis,
+## trellis.focus, etc.  The optional argument prefix allows one level
+## of nesting for storing plot-specific settings (for example,
+## multiple plots in a page, or the panel function of one plot calling
+## plot.trellis() again).
 
+lattice.getStatus <- function(name, prefix = NULL)
+{
+    if (is.null(prefix))
+        get("lattice.status", envir = .LatticeEnv)[[name]]
+    else
+        get("lattice.status", envir = .LatticeEnv)[[prefix]][[name]]
+}
 
-lattice.getStatus <- function(name)
-    get("lattice.status", envir = .LatticeEnv)[[name]]
-
-lattice.setStatus <- function (...)
+lattice.setStatus <- function (..., prefix = NULL)
 {
     dots <- list(...)
     if (is.null(names(dots)) && length(dots) == 1 && is.list(dots[[1]]))
         dots <- dots[[1]]
-    if (length(dots) == 0)
-        return()
+    if (length(dots) == 0) return()
     lattice.status <- get("lattice.status", envir = .LatticeEnv)
-    lattice.status[names(dots)] <- dots
+    if (is.null(prefix))
+        lattice.status[names(dots)] <- dots
+    else
+        lattice.status[[prefix]][names(dots)] <- dots
     assign("lattice.status", lattice.status, envir = .LatticeEnv)
     invisible()
 }
 
 
-
-
 .defaultLatticeStatus <- function()
     list(print.more = FALSE,
-         current.plot.saved = FALSE,
+         plot.index = 1) ## keeps track of multiple plots in a page
+
+.defaultLatticePrefixStatus <- function()
+    list(current.plot.saved = FALSE,
          current.plot.multipage = FALSE,
          current.focus.row = 0,
          current.focus.column = 0,
-         vp.highlighted = FALSE,
-         plot.index = 1) ## keeps track of multiple plots in a page
-
+         vp.highlighted = FALSE) ## keeps track of multiple plots in a page
 
 
 simpleTheme <-

@@ -49,16 +49,17 @@ panel.brush.splom(threshold = 18, verbose = getOption("verbose"), \dots)
 
 
 trellis.vpname(name = c("position", "split", "split.location", "toplevel",
-               "figure", "panel", "strip", "strip.left", "legend",
-               "main", "sub", "xlab", "ylab", "page"),
+                        "figure", "panel", "strip", "strip.left",
+                        "legend", "main", "sub", "xlab", "ylab",
+                        "xlab.top", "ylab.right", "page"),
                column, row,
                side = c("left", "top", "right", "bottom", "inside"),
                clip.off = FALSE, prefix)
 trellis.grobname(name, prefix)
 trellis.focus(name, column, row, side, clip.off,
-              highlight = interactive(), \dots,
+              highlight = interactive(), \dots, prefix,
               guess = TRUE, verbose = getOption("verbose"))
-trellis.switchFocus(name, side, clip.off, highlight, \dots)
+trellis.switchFocus(name, side, clip.off, highlight, \dots, prefix)
 trellis.unfocus()
 trellis.panelArgs(x, packet.number)
 }
@@ -111,10 +112,11 @@ trellis.panelArgs(x, packet.number)
     used.
   }
   \item{name}{
-    character string indicating which viewport or grob we are looking
+
+    A character string indicating which viewport or grob we are looking
     for.  Although these do not necessarily provide access to all
-    viewports and grobs created by a lattice plot, they cover most that
-    users might find interesting.
+    viewports and grobs created by a lattice plot, they cover most of
+    the ones that end-users may find interesting.
 
     \code{trellis.vpname} and \code{trellis.focus} deal with viewport
     names only, and only accept the values explicitly listed above.
@@ -158,16 +160,20 @@ trellis.panelArgs(x, packet.number)
 
   }
   \item{prefix}{
-    character string acting as a prefix, meant to distinguish otherwise
+    A character string acting as a prefix identifying the plot of a
+    \code{"trellis"} object, primarily used to distinguish otherwise
     equivalent viewports in different plots. This only becomes relevant
     when a particular page is occupied by more than one plot.  Defaults
-    to the value appropriate for the last \code{"trellis"} object printed, as
-    determined by the \code{prefix} argument in
-    \code{\link{print.trellis}}.  Users should not usually need to
-    supply a value for this argument (see note below), however, if
-    supplied explicitly, this has to be a valid R symbol name (briefly,
-    it must start with a letter or a period followed by a letter) and
-    must not contain the grid path separator (currently \code{"::"})
+    to the value appropriate for the last \code{"trellis"} object
+    printed, as determined by the \code{prefix} argument in
+    \code{\link{print.trellis}}.
+
+    Users should not usually need to supply a value for this argument
+    except to interact with an existing plot other than the one plotted
+    last.
+
+    For \code{switchFocus}, ignored except when it does not match the
+    prefix of the currently active plot, in which case an error occurs.
   }
   \item{highlight}{
     logical, whether the viewport being assigned focus should be
@@ -316,19 +322,16 @@ trellis.panelArgs(x, packet.number)
   
 \note{
 
-  The viewports created by lattice is accessible to the user only up to a
-  certain extent, as described above.  In particular,
-  \code{trellis.focus} can only be used to manipulate the last plot
-  drawn.  For full flexibility, use appropriate functions from the grid
-  package directly.  For example,
+  The viewports created by lattice are accessible to the user through
+  \code{trellis.focus} as described above.  Functions from the grid
+  package can also be used directly.  For example,
   \code{\link[grid:current.viewport]{current.vpTree}} can be used to
   inspect the current viewport tree and
   \code{\link[grid:viewports]{seekViewport}} or
   \code{\link[grid:viewports]{downViewport}} can be used to navigate to
   these viewports.  For such usage, \code{trellis.vpname} and
-  \code{trellis.grobname} (with a non-default \code{prefix} argument)
-  provides a portable way to access the appropriate viewports and grobs
-  by name.
+  \code{trellis.grobname} provides a portable way to access the
+  appropriate viewports and grobs by name.
 
 }
 
