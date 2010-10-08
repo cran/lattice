@@ -352,13 +352,14 @@ formattedTicksAndLabels.default <-
     {
         at <- checkArgsAndCall(pretty, list(x = x[is.finite(x)], ...))
     }
-    else if (have.log)  ## and at specified
+    else if (have.log && (length(at) > 0))  ## 'at' specified but not NULL
     {
         if (is.logical(labels)) labels <- as.character(at)
         at <- log(at, base = logbase)
     }
-    list(at = at, labels = if (is.logical(labels))
-         paste(logpaste, format(at, trim = TRUE), sep = "") else labels,
+    list(at = at,
+         labels = if (is.logical(labels)) paste(logpaste, format(at, trim = TRUE), sep = "")
+                  else labels,
          check.overlap = check.overlap,
          num.limit = rng)
 }
@@ -397,7 +398,7 @@ formattedTicksAndLabels.date <-
         class(at) <- "date"
         datelabels <- as.character(at)
     }
-    else if (have.log) ## and at specified
+    else if (have.log && (length(at) > 0))
     {
         if (is.logical(labels)) labels <- as.character(at)
         at <- log(at, base = logbase)
@@ -426,12 +427,23 @@ formattedTicksAndLabels.character <-
               format.posixt = NULL)
 {
     retain <- if (is.null(used.at) || any(is.na(used.at))) TRUE else used.at
-    ans <- list(at = if (is.logical(at)) seq_along(x)[retain] else at,
-                labels = if (is.logical(labels)) x[retain] else labels,
-                check.overlap = FALSE)
-    ans$num.limit <- c(-1, 1) * lattice.getOption("axis.padding")$factor + 
-        if (is.null(num.limit) || any(is.na(num.limit))) range(ans$at)
-        else num.limit
+    ## OLD: ans <- list(at = if (is.logical(at)) seq_along(x)[retain] else at,
+    ##             labels = if (is.logical(labels)) x[retain] else labels,
+    ##             check.overlap = FALSE)
+    ans <- list()
+    ans$at <- if (is.logical(at)) seq_along(x)[retain] else at
+    ans$labels <- if (is.logical(labels)) {
+        if (all(ans$at %in% seq_along(x)))
+            x[ans$at]
+        else ## meaningless at, since not corresponding to values
+            as.character(ans$at) # best guess
+    } else labels
+    ans$check.overlap <- FALSE
+    ans$num.limit <-
+        c(-1, 1) * lattice.getOption("axis.padding")$factor + 
+            if (is.null(num.limit) || any(is.na(num.limit)))
+                c(1, length(x)) ## WAS range(ans$at), not sure why
+            else num.limit
     ans
 }
 
@@ -448,11 +460,17 @@ formattedTicksAndLabels.expression <-
              format.posixt = NULL)
 {
     retain <- if (is.null(used.at) || any(is.na(used.at))) TRUE else used.at
-    ans <- list(at = if (is.logical(at)) seq_along(x)[retain] else at,
-                labels = if (is.logical(labels)) x[retain] else labels,
-                check.overlap = FALSE)
+    ans <- list()
+    ans$at <- if (is.logical(at)) seq_along(x)[retain] else at
+    ans$labels <- if (is.logical(labels)) {
+        if (all(ans$at %in% seq_along(x)))
+            x[ans$at]
+        else ## meaningless at, since not corresponding to values
+            as.character(ans$at) # best guess
+    } else labels
     ans$num.limit <- c(-1, 1) * lattice.getOption("axis.padding")$factor + 
-        if (is.null(num.limit) || any(is.na(num.limit))) range(ans$at)
+        if (is.null(num.limit) || any(is.na(num.limit))) ## range(ans$at)
+            c(1, length(x))
         else num.limit
     ans
 }
