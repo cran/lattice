@@ -166,21 +166,26 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                  fill = "transparent",
                  adj = 0,
                  type = "l", 
-                 size = 5, 
+                 size = 5,
+                 height = 1,
                  angle = 0, 
                  density = -1,
-                 ...,
                  reverse.rows = FALSE, ## invert rows (e.g. for barchart, stack = FALSE)
                  between = 2,
                  between.columns = 3,
                  columns = 1,
                  cex = 1,
-                 cex.title = 1.5 * max(cex),
-                 lines.title = 2,
+                 cex.title = 1.5 * max(cex),                 
                  padding.text = 1,
                  lineheight = 1,
                  fontface = NULL, 
-                 fontfamily = NULL)
+                 fontfamily = NULL,
+                 
+                 ## to avoid partial matching, anything starting with
+                 ## lines, points, rect, text must come after ...
+
+                 ...,
+                 lines.title = 2)
         {
             list(reverse.rows = reverse.rows,
                  between = between,
@@ -196,7 +201,6 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                  between.columns = between.columns,
                  cex = cex,
                  cex.title = cex.title,
-                 lines.title = lines.title,
                  padding.text = padding.text,
                  col = col,
                  alpha = alpha,
@@ -209,9 +213,11 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                  pch = pch,
                  adj = adj,
                  type = type, 
-                 size = size, 
+                 size = size,
+                 height = height,
                  angle = angle, 
                  density = density,
+                 lines.title = lines.title,
                  ...)
         }
 
@@ -238,7 +244,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
         else if (curname == 1) # "text"
         {
             if (!(is.characterOrExpression(key[[i]][[1]])))
-                stop("first component of text has to be vector of labels")
+                stop("first component of text must be vector of labels")
             pars <-
                 list(labels = key[[i]][[1]],
                      col = key$col,
@@ -250,6 +256,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                      fontface = key$fontface,
                      fontfamily = key$fontfamily)
             key[[i]][[1]] <- NULL
+            key[[i]] <- complete_names(key[[i]], pars, allow.invalid = TRUE)
             pars[names(key[[i]])] <- key[[i]]
             tmplen <- length(pars$labels)
             for (j in 1:length(pars))
@@ -266,8 +273,10 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                      border = "black",
                      alpha = key$alpha,
                      size = key$size,
+                     height = key$height,
                      angle = key$angle,
                      density = key$density)
+            key[[i]] <- complete_names(key[[i]], pars, allow.invalid = TRUE)
             pars[names(key[[i]])] <- key[[i]]
             tmplen <- max(unlist(lapply(pars,length)))
             max.length <- max(max.length, tmplen)
@@ -286,6 +295,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                      fill = key$fill,
                      lwd = key$lwd,
                      type = key$type)
+            key[[i]] <- complete_names(key[[i]], pars, allow.invalid = TRUE)
             pars[names(key[[i]])] <- key[[i]]
             tmplen <- max(unlist(lapply(pars,length)))
             max.length <- max(max.length, tmplen)
@@ -298,10 +308,12 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                          alpha = key$alpha,
                          cex = key$cex,
                          pch = key$pch,
+                         lwd = key$lwd,
                          fill = key$fill,
                          font = key$font,
                          fontface = key$fontface,
                          fontfamily = key$fontfamily)
+            key[[i]] <- complete_names(key[[i]], pars, allow.invalid = TRUE)
             pars[names(key[[i]])] <- key[[i]]
             tmplen <- max(unlist(lapply(pars,length)))
             max.length <- max(max.length, tmplen)
@@ -310,8 +322,6 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
         }
     }
 
-
-    
     number.of.components <- length(components)
     ## number of components named one of "text",
     ## "lines", "rectangles" or "points"
@@ -329,7 +339,6 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
     ## argument to the key list, which controls whether each column
     ## will be repeated as necessary to have the same length.
 
-    
     for (i in seq_len(number.of.components))
     {
         if (key$rep && (components[[i]]$type != "text"))
@@ -564,7 +573,9 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                 {
                     key.gf <-
                         placeGrob(key.gf, 
-                                  rectGrob(width = cur$pars$size[j] / max(cur$pars$size),
+                                  rectGrob(height = cur$pars$height[j],
+                                           width = cur$pars$size[j] / max(cur$pars$size),
+                                           default.units = "npc",
                                            ## centred, unlike S-PLUS, due to aesthetic reasons !
                                            gp = gpar(alpha = cur$pars$alpha[j],
                                                      fill = cur$pars$col[j],
@@ -684,6 +695,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
                                              gpar(col = cur$pars$col[j],
                                                   alpha = cur$pars$alpha[j],
                                                   cex = cur$pars$cex[j],
+                                                  lwd = cur$pars$lwd[j],
                                                   fill = cur$pars$fill[j],
                                                   fontfamily = cur$pars$fontfamily[j],
                                                   fontface = chooseFace(cur$pars$fontface[j], cur$pars$font[j]),
@@ -694,7 +706,7 @@ draw.key <- function(key, draw = FALSE, vp = NULL, ...)
             }
         }
     }
-    else stop("sorry, align=F not supported (yet ?)")
+    else stop("Sorry, align=FALSE is not supported")
     if (draw) grid.draw(key.gf)
     key.gf
 }
@@ -719,6 +731,8 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                  width = 2,
                  height = 1,
                  space = "right",
+                 raster = FALSE,
+                 interpolate = FALSE,
                  ...)
         {
             regions <- trellis.par.get("regions")
@@ -729,13 +743,15 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
                  width = width,
                  height = height,
                  space = space,
+                 raster = raster,
+                 interpolate = interpolate,
                  ...)
         }
 
     axis.line <- trellis.par.get("axis.line")
     axis.text <- trellis.par.get("axis.text")
 
-    key <- do.call("process.key", key)
+    key <- do.call(process.key, key)
 
 ## FIXME: delete later
 #str(key)
@@ -773,6 +789,10 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
     atrange <- range(key$at, finite = TRUE)
     scat <- as.numeric(key$at) ## problems otherwise with DateTime objects (?)
 
+    if (key$raster && !isTRUE(all.equal(diff(range(diff(scat))), 0)))
+        warning("'at' values are not equispaced; output may be wrong")
+
+    
     ## recnum <- length(scat)-1
     reccentre <- (scat[-1] + scat[-length(scat)]) / 2
     recdim <- diff(scat)
@@ -851,17 +871,29 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
 
         key.gf <- frameGrob(layout = key.layout, vp = vp)
 
-        key.gf <- placeGrob(key.gf,
-                            rectGrob(x = rep(.5, length(reccentre)), 
-                                     y = reccentre,
-                                     default.units = "native",
-                                     vp = viewport(yscale = atrange),
-                                     height = recdim, 
-                                     gp =
-                                     gpar(fill = key$col,
-                                          col = "transparent",
-                                          alpha = key$alpha)),
-                            row = 2, col = 1)
+        if (key$raster)
+        {
+            key.gf <- placeGrob(key.gf,
+                                rasterGrob(matrix(rev(key$col), ncol = 1),
+                                           width = 1, height = 1,
+                                           vp = viewport(clip = "on"),
+                                           interpolate = key$interpolate),
+                                row = 2, col = 1)
+        }
+        else
+        {
+            key.gf <- placeGrob(key.gf,
+                                rectGrob(x = rep(.5, length(reccentre)), 
+                                         y = reccentre,
+                                         default.units = "native",
+                                         vp = viewport(yscale = atrange),
+                                         height = recdim, 
+                                         gp =
+                                         gpar(fill = key$col,
+                                              col = "transparent",
+                                              alpha = key$alpha)),
+                                row = 2, col = 1)
+        }
         
         key.gf <- placeGrob(frame = key.gf, 
                             rectGrob(gp =
@@ -927,17 +959,29 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
         
         key.gf <- frameGrob(layout = key.layout, vp = vp)
 
-        key.gf <- placeGrob(key.gf,
-                            rectGrob(x = rep(.5, length(reccentre)), 
-                                     y = reccentre,
-                                     default.units = "native",
-                                     vp = viewport(yscale = atrange),
-                                     height = recdim, 
-                                     gp =
-                                     gpar(fill = key$col,
-                                          col = "transparent",
-                                          alpha = key$alpha)),
-                            row = 2, col = 3)
+        if (key$raster)
+        {
+            key.gf <- placeGrob(key.gf,
+                                rasterGrob(matrix(rev(key$col), ncol = 1),
+                                           width = 1, height = 1,
+                                           vp = viewport(clip = "on"),
+                                           interpolate = key$interpolate),
+                                row = 2, col = 3)
+        }
+        else
+        {
+            key.gf <- placeGrob(key.gf,
+                                rectGrob(x = rep(.5, length(reccentre)), 
+                                         y = reccentre,
+                                         default.units = "native",
+                                         vp = viewport(yscale = atrange),
+                                         height = recdim, 
+                                         gp =
+                                         gpar(fill = key$col,
+                                              col = "transparent",
+                                              alpha = key$alpha)),
+                                row = 2, col = 3)
+        }
         
         key.gf <- placeGrob(frame = key.gf, 
                             rectGrob(gp =
@@ -1000,17 +1044,29 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
         
         key.gf <- frameGrob(layout = key.layout, vp = vp)
 
-        key.gf <- placeGrob(key.gf,
-                            rectGrob(y = rep(.5, length(reccentre)), 
-                                     x = reccentre,
-                                     default.units = "native",
-                                     vp = viewport(xscale = atrange),
-                                     width = recdim, 
-                                     gp =
-                                     gpar(fill = key$col,
-                                          col = "transparent",
-                                          alpha = key$alpha)),
-                            row = 3, col = 2)
+        if (key$raster)
+        {
+            key.gf <- placeGrob(key.gf,
+                                rasterGrob(matrix(key$col, nrow = 1),
+                                           width = 1, height = 1,
+                                           vp = viewport(clip = "on"),
+                                           interpolate = key$interpolate),
+                                row = 3, col = 2)
+        }
+        else
+        {
+            key.gf <- placeGrob(key.gf,
+                                rectGrob(y = rep(.5, length(reccentre)), 
+                                         x = reccentre,
+                                         default.units = "native",
+                                         vp = viewport(xscale = atrange),
+                                         width = recdim, 
+                                         gp =
+                                         gpar(fill = key$col,
+                                              col = "transparent",
+                                              alpha = key$alpha)),
+                                row = 3, col = 2)
+        }
         
         key.gf <- placeGrob(frame = key.gf, 
                             rectGrob(gp =
@@ -1074,18 +1130,30 @@ draw.colorkey <- function(key, draw = FALSE, vp = NULL)
         
         key.gf <- frameGrob(layout = key.layout, vp = vp)
 
-        key.gf <- placeGrob(key.gf,
-                            rectGrob(y = rep(.5, length(reccentre)), 
-                                     x = reccentre,
-                                     default.units = "native",
-                                     vp = viewport(xscale = atrange),
-                                     width = recdim, 
-                                     gp =
-                                     gpar(fill = key$col,
-                                          col = "transparent",
-                                          alpha = key$alpha)),
-                            row = 1, col = 2)
-
+        if (key$raster)
+        {
+            key.gf <- placeGrob(key.gf,
+                                rasterGrob(matrix(key$col, nrow = 1),
+                                           width = 1, height = 1,
+                                           vp = viewport(clip = "on"),
+                                           interpolate = key$interpolate),
+                                row = 1, col = 2)
+        }
+        else
+        {
+            key.gf <- placeGrob(key.gf,
+                                rectGrob(y = rep(.5, length(reccentre)), 
+                                         x = reccentre,
+                                         default.units = "native",
+                                         vp = viewport(xscale = atrange),
+                                         width = recdim, 
+                                         gp =
+                                         gpar(fill = key$col,
+                                              col = "transparent",
+                                              alpha = key$alpha)),
+                                row = 1, col = 2)
+        }
+        
         key.gf <- placeGrob(frame = key.gf, 
                             rectGrob(gp =
                                      gpar(col = axis.line$col,
