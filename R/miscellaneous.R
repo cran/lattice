@@ -271,7 +271,11 @@ lsegments <-
              col = add.line$col,
              alpha = add.line$alpha,
              lty = add.line$lty,
-             lwd = add.line$lwd, ...)
+             lwd = add.line$lwd,
+
+             font, fontface, ## gpar() doesn't like these
+
+             ...)
 {
     if (missing(x0)) x0 <- x2
     if (missing(y0)) y0 <- y2
@@ -288,9 +292,6 @@ lsegments <-
                        alpha = alpha, ...),
                   default.units = "native")
 }
-
-
-
 
 
 lrect <-
