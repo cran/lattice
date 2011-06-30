@@ -3,6 +3,8 @@ useDynLib(lattice, .registration = TRUE)
 
 import(grid)
 
+importFrom(methods, hasArg)
+
 importFrom(grDevices,
 
            dev.list, cm.colors, gray, col2rgb, rgb,
@@ -18,7 +20,7 @@ importFrom(stats,
 
            as.formula, density, fitted.values, loess.smooth, median,
            ppoints, qnorm, residuals, update, var, coef, quantile, lm,
-           dnorm, qunif, uniroot)
+           dnorm, qunif, uniroot, smooth.spline)
 
 
 export(
@@ -84,6 +86,7 @@ export(
        panel.linejoin,
        panel.lmline,
        panel.loess,
+       panel.spline,
        panel.qqmathline,
 
        ## decorative / adds reference
@@ -122,6 +125,7 @@ export(
        prepanel.tmd.default, prepanel.tmd.qqmath,
        prepanel.lmline,
        prepanel.loess,
+       prepanel.spline,
        prepanel.qqmathline,
 
 

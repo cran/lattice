@@ -1,6 +1,6 @@
 Package: lattice
-Version: 0.19-26
-Date: 2011/04/19
+Version: 0.19-30
+Date: 2011/06/30
 Priority: recommended
 Title: Lattice Graphics
 Author: Deepayan Sarkar <deepayan.sarkar@r-project.org>
@@ -12,12 +12,12 @@ Description: Lattice is a powerful and elegant high-level data
         ?Lattice for an introduction.
 Depends: R (>= 2.11.0)
 Suggests: grid, KernSmooth, MASS
-Imports: grid, grDevices, graphics, stats, utils
+Imports: grid, grDevices, graphics, stats, utils, methods
 Enhances: chron
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
 URL: http://r-forge.r-project.org/projects/lattice/
-Packaged: 2011-04-19 04:48:44 UTC; deepayan
+Packaged: 2011-06-30 10:16:30 UTC; deepayan
 Repository: CRAN
-Date/Publication: 2011-04-24 06:55:43
+Date/Publication: 2011-06-30 17:01:14

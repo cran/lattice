@@ -50,14 +50,19 @@ panel.brush.splom(threshold = 18, verbose = getOption("verbose"), \dots)
 
 trellis.vpname(name = c("position", "split", "split.location", "toplevel",
                         "figure", "panel", "strip", "strip.left",
-                        "legend", "main", "sub", "xlab", "ylab",
-                        "xlab.top", "ylab.right", "page"),
+                        "legend", "legend.region", "main", "sub",
+                        "xlab", "ylab", "xlab.top", "ylab.right", "page"),
                column, row,
                side = c("left", "top", "right", "bottom", "inside"),
                clip.off = FALSE, prefix)
 trellis.grobname(name,
-                 type = c("", "panel", "strip", "strip.left"),
+                 type = c("", "panel", "strip", "strip.left",
+                          "key", "colorkey"),
                  group = 0,
+                 which.given = lattice.getStatus("current.which.given",
+                                                 prefix = prefix),
+                 which.panel = lattice.getStatus("current.which.panel",
+                                                 prefix = prefix),
                  column = lattice.getStatus("current.focus.column",
                                             prefix = prefix),
                  row = lattice.getStatus("current.focus.row",
@@ -180,6 +185,16 @@ trellis.panelArgs(x, packet.number)
 
     When \code{group} is greater than zero, information about the
     group is added to the grob name.
+  }
+  \item{which.given, which.panel}{
+    integers, indicating which conditional variable is being
+    represented (within a strip) and the current levels of
+    the conditional variables.
+
+    When \code{which.panel} has length greater than 1,
+    and the \code{type} is \code{"strip"} or \code{"strip.left"},
+    information about the conditional variable is added to
+    the grob name.
   }
   \item{prefix}{
     A character string acting as a prefix identifying the plot of a

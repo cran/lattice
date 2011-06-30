@@ -1243,8 +1243,17 @@ plot.trellis <-
                                 ## in the original order, not the
                                 ## permuted order
 
-                                strip(which.given = x$perm.cond[i],
-                                      which.panel = which.packet,
+                                which.given <- x$perm.cond[i]
+                                which.panel <- which.packet
+                                
+                                lattice.setStatus(current.which.given =
+                                                  which.given,
+                                                  current.which.panel =
+                                                  which.panel,
+                                                  prefix = prefix)
+                                
+                                strip(which.given = which.given,
+                                      which.panel = which.panel,
 ##                                       panel.number = panel.number,
 ##                                       packet.number = packet.number,
 
@@ -1289,8 +1298,17 @@ plot.trellis <-
                                 ## in the original packet order, not
                                 ## the permuted order
 
-                                strip.left(which.given = x$perm.cond[i],
-                                           which.panel = which.packet,
+                                which.given <- x$perm.cond[i]
+                                which.panel <- which.packet
+                                
+                                lattice.setStatus(current.which.given =
+                                                  which.given,
+                                                  current.which.panel =
+                                                  which.panel,
+                                                  prefix = prefix)
+                                
+                                strip.left(which.given = which.given,
+                                           which.panel = which.panel,
 ##                                            panel.number = panel.number,
 ##                                            packet.number = packet.number,
 
@@ -1356,11 +1374,11 @@ plot.trellis <-
                                       full = 
                                       pushViewport(viewport(layout.pos.row = c(1, n.row),
                                                             layout.pos.col = c(1, n.col),
-                                                            name = trellis.vpname("legend", side = "inside", prefix = prefix))),
+                                                            name = trellis.vpname("legend.region", prefix = prefix))),
                                       panel =
                                       pushViewport(viewport(layout.pos.row = range(pos.heights$panel, pos.heights$strip),
                                                             layout.pos.col = range(pos.widths$panel, pos.widths$strip.left),
-                                                            name = trellis.vpname("legend", side = "inside", prefix = prefix))))
+                                                            name = trellis.vpname("legend.region", prefix = prefix))))
                                key.corner <-
                                    if (is.null(legend[[i]]$corner)) c(0,1)
                                    else legend[[i]]$corner
@@ -1372,7 +1390,8 @@ plot.trellis <-
                                    else legend[[i]]$y
                                drawInViewport(key.gf,
                                               viewport(x = unit(key.x, "npc") + unit(0.5 - key.corner[1], "grobwidth", list(key.gf)),
-                                                       y = unit(key.y, "npc") + unit(0.5 - key.corner[2], "grobheight", list(key.gf))))
+                                                       y = unit(key.y, "npc") + unit(0.5 - key.corner[2], "grobheight", list(key.gf)),
+                                                       name = trellis.vpname("legend", side = "inside", prefix = prefix)))
                                upViewport(1)
                            })
                        }
