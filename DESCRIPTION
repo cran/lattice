@@ -1,6 +1,6 @@
 Package: lattice
-Version: 0.20-0
-Date: 2011/10/19
+Version: 0.20-5
+Date: 2012/03/06
 Priority: recommended
 Title: Lattice Graphics
 Author: Deepayan Sarkar <deepayan.sarkar@r-project.org>
@@ -17,7 +17,7 @@ Enhances: chron
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
-URL: http://r-forge.r-project.org/projects/lattice/
-Packaged: 2011-10-19 09:28:18 UTC; deepayan
+URL: http://lattice.r-forge.r-project.org/
+Packaged: 2012-03-09 12:42:47 UTC; deepayan
 Repository: CRAN
-Date/Publication: 2011-11-02 17:39:33
+Date/Publication: 2012-03-09 14:09:23
