@@ -1,10 +1,10 @@
 d72779236b0673f784313dc100ca16d1 *ChangeLog
-d17c303f8dad086b7cc1c19cdceb4641 *DESCRIPTION
+dd8f12d520a6bdcbf17eb494e545e8df *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *GPL-2
 d32239bcb673463ab874e80d47fae504 *GPL-3
 82da699a39ddc36665f053c7482a1da6 *LICENSE.note
 a4ae9351bedaa9b243796159c7d48315 *NAMESPACE
-d59571d83cfd2834e6e667167f93378e *NEWS
+42364b62ff702d39971d181f2ff62235 *NEWS
 3c3ae89755a19a2b50b5b778b61ac4ff *R/axis.R
 760e9f7b86ec0a9f9b77e811e428371c *R/bwplot.R
 3b7ace6c593439ff204e0b0e4a39e4d5 *R/cloud.R
@@ -13,7 +13,7 @@ d59571d83cfd2834e6e667167f93378e *NEWS
 865bbaa8d40d48008d26c53ba8595e36 *R/histogram.R
 931ae3ba194ad9419046da32d10d2a09 *R/interaction.R
 cb96b5a6311fc29491cc03bee7693e8b *R/layout.R
-56df69ddd258cb0e860bacddf2ffe9e0 *R/legend.R
+3fe267c655c6088b5650429becdec695 *R/legend.R
 369f04b17001e302cecf6117b2f29bd1 *R/levelplot.R
 aec90deb3db94f65c3f0977d69339995 *R/make.groups.R
 bbd6d8dda8247875f4e57aeca4e415ab *R/miscellaneous.R
@@ -37,7 +37,7 @@ aed71c041b25e9a280624999689ab277 *R/update.trellis.R
 42960cf459b4342aa24f6f523158715f *R/xyplot.R
 fecef98420b0413f537082f840c307b9 *R/xyplot.ts.R
 7dab32f13ada41b4296f2d68615dbb73 *R/zzz.R
-9ce5227a11a1f8c9b9ff11c0b9447efd *SvnLog
+28649b67e9dc6a5e3b7e32f5516a3310 *SvnLog
 4d3a14d26cd774d8a7cdae0b615ed458 *data/barley.rda
 e0ca5719637eb8a05fea5845b674854b *data/environmental.rda
 1c7ba7045cb41f1e2ce6e1defbda7f52 *data/ethanol.rda
@@ -119,7 +119,7 @@ bb1565a3c0f5f1e253adb38c25a05505 *man/utilities.3d.Rd
 bc1a0664548adfab6cb5d5daa5faffb0 *po/R-de.po
 c61eadaaee6e90ddab036ca4c57c17a6 *po/R-en@quot.po
 47e05dac042e78b8de96ffce0dc1d55b *po/R-fr.po
-56f6b5d37924a919682998684d4fadd8 *po/R-lattice.pot
+2d99571563756c7f63985ceebbe84f07 *po/R-lattice.pot
 18bd7b090ba44bc60232050b632207f1 *po/R-pl_PL.po
 e92972db59c6aa30de492fc63d8a332f *src/init.c
 918025909f36306797291250b5360243 *src/threeDplot.c
