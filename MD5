@@ -1,5 +1,5 @@
 d72779236b0673f784313dc100ca16d1 *ChangeLog
-ebfcb648af8919c4d7d750e6f20d0394 *DESCRIPTION
+726a785b3523a484704cbaf9bb9f6c4f *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *GPL-2
 d32239bcb673463ab874e80d47fae504 *GPL-3
 82da699a39ddc36665f053c7482a1da6 *LICENSE.note
@@ -10,7 +10,7 @@ a4ae9351bedaa9b243796159c7d48315 *NAMESPACE
 3b7ace6c593439ff204e0b0e4a39e4d5 *R/cloud.R
 61951b849dc60405014d91484b17f361 *R/common.R
 22fdffa248a2908510383494faba0cee *R/densityplot.R
-168d894697813d8b34fdf83a1261581c *R/histogram.R
+be87a3178e27b1eda95a3251bdc149ee *R/histogram.R
 931ae3ba194ad9419046da32d10d2a09 *R/interaction.R
 cb96b5a6311fc29491cc03bee7693e8b *R/layout.R
 3fe267c655c6088b5650429becdec695 *R/legend.R
@@ -58,13 +58,13 @@ fb9b608c62d5c0d75a58c2bfcb03dc14 *inst/po/en@quot/LC_MESSAGES/R-lattice.mo
 e7dbcdefba98238488eaf82d37f3e915 *man/axis.default.Rd
 d32fef9c6d91a0f11bfbbf748e285688 *man/banking.Rd
 5a8fe5da32d284aa737ab5bb68672b46 *man/barchart.table.Rd
-068ee2d25482864029c5b3a09adcefe7 *man/barley.Rd
+50a56d80344353513a894f655ca399df *man/barley.Rd
 444c6597d7ac5b939b4454b1066d7cf1 *man/cloud.Rd
 7093617da723db4cd9ac70bde546083d *man/draw.colorkey.Rd
 7a9f48a2dd425c447df410a2a8403f16 *man/draw.key.Rd
 23d5aa6ada174889c7ad6998304c67e1 *man/environmental.Rd
 a0837df59d69a24d7472c27b9dd4c68b *man/ethanol.Rd
-1bce3eae9a4884cd59980301587539c7 *man/histogram.Rd
+9f5c4373d5dc6609bf2e8ac58b330c65 *man/histogram.Rd
 36639924a81841f411a0413d5ace3146 *man/interaction.Rd
 8df41b0a79c9f43941f70e280e3594eb *man/lattice.options.Rd
 7852ba42b1bed6da21746fde616c5043 *man/latticeParseFormula.Rd
