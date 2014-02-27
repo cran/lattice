@@ -1,13 +1,13 @@
 d72779236b0673f784313dc100ca16d1 *ChangeLog
-726a785b3523a484704cbaf9bb9f6c4f *DESCRIPTION
+c0be7ab396191c593e882710bbe58447 *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *GPL-2
 d32239bcb673463ab874e80d47fae504 *GPL-3
 82da699a39ddc36665f053c7482a1da6 *LICENSE.note
-a4ae9351bedaa9b243796159c7d48315 *NAMESPACE
+aa8a32567ff45d890e62587ff52fcdac *NAMESPACE
 42364b62ff702d39971d181f2ff62235 *NEWS
-3c3ae89755a19a2b50b5b778b61ac4ff *R/axis.R
+fb0337e258c14ed33df4df46ffa7fc9e *R/axis.R
 2241fac82e2812709aa82c81f322b113 *R/bwplot.R
-3b7ace6c593439ff204e0b0e4a39e4d5 *R/cloud.R
+bdf3b9c05fa3670bac5636879d67f8ac *R/cloud.R
 61951b849dc60405014d91484b17f361 *R/common.R
 22fdffa248a2908510383494faba0cee *R/densityplot.R
 be87a3178e27b1eda95a3251bdc149ee *R/histogram.R
@@ -86,7 +86,7 @@ bf40296deef9af580ee4abec70d6936c *man/panel.dotplot.Rd
 33c161933e0244b34d759135c89d48e9 *man/panel.histogram.Rd
 a16cdf0220dff68378f1c5196f0f8f19 *man/panel.levelplot.Rd
 ee3d36a61d0f15ce54a121a092551882 *man/panel.loess.Rd
-de9bad52e6104a1926cdd545e6693b85 *man/panel.number.Rd
+3c2625a2c55b6e4c81b6edb147772585 *man/panel.number.Rd
 97ca7ea8dec6108233ac3c193a23cf88 *man/panel.pairs.Rd
 2b8ee171e54ec9c5c1e3d081987d2692 *man/panel.parallel.Rd
 9c2e5de40b02248dc031e1583dafd217 *man/panel.qqmath.Rd
