@@ -74,23 +74,6 @@ getLabelList <- function(label, text.settings, default.label = NULL)
     if (!is.null(label))
     {
         if (inherits(label, "grob")) return(label)
-        ## ans <-
-        ##     list(label = 
-        ##          if (is.characterOrExpression(label)) label
-        ##          else if (is.list(label) && (is.null(names(label)) ||
-        ##                                      names(label)[1] == "")) label[[1]]
-        ##          else default.label,
-        ##          col = text.settings$col, cex = text.settings$cex,
-        ##          fontfamily = text.settings$fontfamily,
-        ##          fontface = text.settings$fontface,
-        ##          font = text.settings$font,
-        ##          alpha = text.settings$alpha,
-        ##          lineheight = text.settings$lineheight)
-        ## if (is.list(label) && !is.null(names(label)))
-        ## {
-        ##     if (names(label)[1] == "") label <- label[-1]
-        ##     ans[names(label)] <- label
-        ## }
         ans <-
             list(label = 
                  if (is.characterOrExpression(label)) label
@@ -106,8 +89,8 @@ getLabelList <- function(label, text.settings, default.label = NULL)
         }
     }
     else ans <- NULL
-    if (is.null(ans$label) ||
-        (is.character(ans) && ans$label == "")) ans <- NULL
+    if (is.null(ans$label) || (is.character(ans) && ans$label == "")) ans <- NULL
+    else if (is.call(ans$label) || is.symbol(ans$label)) ans$label <- as.expression(ans$label)
     ans
 }
 
@@ -187,7 +170,7 @@ evaluate.legend <- function(legend)
     {
         fun <- legend[[i]]$fun
         fun <- getFunctionOrName(fun) ## OK in case fun is a grob?
-        if (is.function(fun)) fun <- do.call("fun", legend[[i]]$args)
+        if (is.function(fun)) fun <- do.call("fun", legend[[i]]$args, quote = TRUE)
         legend[[i]]$obj <- fun
         legend[[i]]$args <- NULL
         legend[[i]]$fun <- NULL
@@ -592,9 +575,10 @@ plot.trellis <-
     strip.col.default.fg <-
         rep(trellis.par.get("strip.shingle")$col,
             length.out = number.of.cond)
-    strip.border <-
-        lapply(trellis.par.get("strip.border"),
-               function(x) rep(x, length.out = number.of.cond))
+    ## border is common (see strip.default)
+    ## strip.border <-
+    ##     lapply(trellis.par.get("strip.border"),
+    ##            function(x) rep(x, length.out = number.of.cond))
 
 
     ## Start layout calculations when only number of panels per page
@@ -712,19 +696,6 @@ plot.trellis <-
 
     ## commence actual plotting
 
-    
-    cond.current.level <- rep(1, number.of.cond)
-
-    ## this vector represents the combination of levels of the
-    ## conditioning variables for the current panel.  We're changing
-    ## to a new scheme which should make this unnecessary, but we need
-    ## to keep it for now to ensure the first page is drawn (kinda
-    ## stupid, but that part of the code was there to ensure that an
-    ## `empty' trellis object doesn't waste a page.  Actually, it
-    ## might be redundant, since in that case number.of.pages should
-    ## be 0.  FIXME: Check it out)
-
-    
     panel.counter <- 0
 
     ## panel.number is available as an optional argument to the panel
@@ -815,7 +786,7 @@ plot.trellis <-
                                         name= trellis.vpname("ylab.right", prefix = prefix)))
             }
 
-            last.panel <- prod(sapply(x$index.cond, length))
+            ## last.panel <- prod(sapply(x$index.cond, length))
 
             ## Create a viewport encompassing all panels and strips,
             ## but don't do anything in it.  This is useful later for
@@ -900,9 +871,9 @@ plot.trellis <-
                         packet.number <- packet.number(prefix = prefix)
                         panel.number <- panel.number(prefix = prefix) ## needed? FIXME
 
-                        ## this gives the row position from the bottom
-                        actual.row <- if (x$as.table)
-                            (rows.per.page-row+1) else row
+                        ## ## this gives the row position from the bottom
+                        ## actual.row <- if (x$as.table)
+                        ##     (rows.per.page-row+1) else row
 
                         pos.row <- pos.heights$panel[row]
                         pos.col <- pos.widths$panel[column]

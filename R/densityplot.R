@@ -62,7 +62,7 @@ prepanel.default.densityplot <-
     else
     {
         vals <- sort(unique(groups))
-        nvals <- length(vals)
+        ## nvals <- length(vals)
         xl <- range(x, finite = TRUE)
         yl <- 0
         dxl <- numeric(0) # bad names !!
@@ -304,7 +304,8 @@ densityplot.formula <-
                        ylab = ylab,
                        xlab.default = form$right.name,
                        ylab.default = gettext("Density"),
-                       lattice.options = lattice.options), dots))
+                       lattice.options = lattice.options), dots),
+                quote = TRUE)
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
