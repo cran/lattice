@@ -1,5 +1,5 @@
 d72779236b0673f784313dc100ca16d1 *ChangeLog
-54d5fbe00bcaf92d07643c8bc8efc62f *DESCRIPTION
+88867fb61d446f8f38ae017b777f1809 *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *GPL-2
 d32239bcb673463ab874e80d47fae504 *GPL-3
 82da699a39ddc36665f053c7482a1da6 *LICENSE.note
@@ -48,7 +48,7 @@ a9489062ee32830252e4ccc2110f68b7 *data/melanoma.rda
 aeb8a42c24baed6f0918691449a49681 *demo/lattice.R
 f5e96e30c746b6c4e1dc57d13218b9e7 *demo/panel.R
 a6a64750f8d29e22e7abaf210b1dded4 *inst/CITATION
-a0c18aaedcebf36ec4a0ff0dd85e14aa *inst/po/de/LC_MESSAGES/R-lattice.mo
+2b442bb4a1806ee9d71b4edbc6d8bdc5 *inst/po/de/LC_MESSAGES/R-lattice.mo
 77b1a0bd4f6d755bf46b19eb3795131c *inst/po/en@quot/LC_MESSAGES/R-lattice.mo
 eec1e6212e5255c76c7213e11fdf457c *inst/po/fr/LC_MESSAGES/R-lattice.mo
 3679ea51468619749499d4fdfa21258d *inst/po/ko/LC_MESSAGES/R-lattice.mo
@@ -117,11 +117,11 @@ ce115caa3b4039ee31736e6944b6215e *man/update.trellis.Rd
 bb1565a3c0f5f1e253adb38c25a05505 *man/utilities.3d.Rd
 99b91044de9334f44d66b6c4c09ae0fd *man/xyplot.Rd
 61bc7d9f2cec3ca64a4f4c413fd31fef *man/xyplot.ts.Rd
-20c88235dbe3671e57bcab09de46889c *po/R-de.po
+c173e398cfd671dd862294a86fad0a40 *po/R-de.po
 e6fd46bf32639ef705d1c776df95e27c *po/R-en@quot.po
 d0142a77ff4b63f331093c2626223263 *po/R-fr.po
 3ad6a2617b138a820b2a7b12172323c3 *po/R-ko.po
-f31e1f7fbce6fe0040b296037693fd99 *po/R-lattice.pot
+2652c2b714f03fefdd52d94907565568 *po/R-lattice.pot
 fe4f01c840dec7524804ae645f329b07 *po/R-pl.po
 e92972db59c6aa30de492fc63d8a332f *src/init.c
 918025909f36306797291250b5360243 *src/threeDplot.c
