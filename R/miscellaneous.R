@@ -273,22 +273,27 @@ lpolygon <-
         group <- list(...)$group.number
     else
         group <- 0
-
-    with(xy,
-     {
-         n <- length(x)
-         w <- which(is.na(x) | is.na(y))
-         id.lengths <- diff(c(0, w, n))
-         grid.polygon(x = x,
-                      y = y,
-                      id.lengths = id.lengths,
-                      default.units = "native",
-                      name = primName("polygon", identifier, name.type, group),
-                      gp =
-                      gpar(fill = col,
-                           col = border,
-                           ...))
-     })
+    ## with(xy,  # CMD check complains
+    ##  {
+    ##      n <- length(x)
+    ##      w <- which(is.na(x) | is.na(y))
+    ##      id.lengths <- diff(c(0, w, n))
+    ##      grid.polygon(x = x,
+    ##                   y = y,
+    ##                   id.lengths = id.lengths,
+    ##                   default.units = "native",
+    ##                   name = primName("polygon", identifier, name.type, group),
+    ##                   gp = gpar(fill = col, col = border, ...))
+    ##  })
+    n <- length(xy$x)
+    w <- which(is.na(xy$x) | is.na(xy$y))
+    id.lengths <- diff(c(0, w, n))
+    grid.polygon(x = xy$x,
+                 y = xy$y,
+                 id.lengths = id.lengths,
+                 default.units = "native",
+                 name = primName("polygon", identifier, name.type, group),
+                 gp = gpar(fill = col, col = border, ...))
 }
 
 
