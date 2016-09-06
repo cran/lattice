@@ -1,12 +1,12 @@
 d72779236b0673f784313dc100ca16d1 *ChangeLog
-50f2b06efb3bddf0b0a473ec231e2b26 *DESCRIPTION
+455609b40886c3507e99e8c53ff2ab97 *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *GPL-2
 d32239bcb673463ab874e80d47fae504 *GPL-3
 82da699a39ddc36665f053c7482a1da6 *LICENSE.note
 23d895116e9dcd18d41dff4f06921d8d *NAMESPACE
 42364b62ff702d39971d181f2ff62235 *NEWS
 fb0337e258c14ed33df4df46ffa7fc9e *R/axis.R
-1885a279cff6225ef29a40d7df63a9ee *R/bwplot.R
+ee82a6320adb6de9196958d84f06a4f5 *R/bwplot.R
 a0beefa00618d40429a20ac3e53d8c7a *R/cloud.R
 61951b849dc60405014d91484b17f361 *R/common.R
 2551de9cb475e757227946c41c957f4a *R/densityplot.R
@@ -16,7 +16,7 @@ cb852d7489d74ea862e77df0ab108dcd *R/layout.R
 c01fb10311bebb04855b98a1c40abd22 *R/legend.R
 c09309a40c089077d283ea7d02d28dfa *R/levelplot.R
 aec90deb3db94f65c3f0977d69339995 *R/make.groups.R
-cb9f6e1c7a41ff70602b199e3cee06e4 *R/miscellaneous.R
+8cf78e7d9050f28353d5721cbb40e32d *R/miscellaneous.R
 448c1c26d3b587a76c58836df8b2e666 *R/panel.smooth.R
 14a775d0aa3f7ae30fb8aba5c93c1484 *R/panel.smoothscatter.R
 0380714a5a5a4ec9535b3501efba4cc4 *R/panel.superpose.R
@@ -29,7 +29,7 @@ dd13ac0b5cd89c616fdc062af3bdadeb *R/parallel.R
 11d54fd77425f5d6785587c8f42bcbaa *R/scales.R
 3b55658afd9461a8dc20a5df24d42d35 *R/settings.R
 67127adfdac085f007e8f7c1202e08a6 *R/shingle.R
-4676d3795c64e474864498fbe9d14c67 *R/splom.R
+502ee22754ee1806d2448e2ab8d36311 *R/splom.R
 ec462e00ed4ed6f06ef6c3d7415d3137 *R/strip.R
 f5c8c7178bb827879815060218696269 *R/summary.trellis.R
 776bced283973b7544d7ad0b4db0064d *R/tmd.R
@@ -53,7 +53,7 @@ a6a64750f8d29e22e7abaf210b1dded4 *inst/CITATION
 eec1e6212e5255c76c7213e11fdf457c *inst/po/fr/LC_MESSAGES/R-lattice.mo
 3679ea51468619749499d4fdfa21258d *inst/po/ko/LC_MESSAGES/R-lattice.mo
 7e0980c816ea1fa9e5dc4651bfa00842 *inst/po/pl/LC_MESSAGES/R-lattice.mo
-896d206a49b9eec26bb0d04b80a9a27b *man/Lattice.Rd
+355d2d5a8463af6c670b017a3d9e8411 *man/Lattice.Rd
 40f3906db75059b7b0c73f544e5bd671 *man/Rows.Rd
 e7dbcdefba98238488eaf82d37f3e915 *man/axis.default.Rd
 d32fef9c6d91a0f11bfbbf748e285688 *man/banking.Rd
@@ -87,7 +87,7 @@ bf40296deef9af580ee4abec70d6936c *man/panel.dotplot.Rd
 a16cdf0220dff68378f1c5196f0f8f19 *man/panel.levelplot.Rd
 ee3d36a61d0f15ce54a121a092551882 *man/panel.loess.Rd
 3c2625a2c55b6e4c81b6edb147772585 *man/panel.number.Rd
-97ca7ea8dec6108233ac3c193a23cf88 *man/panel.pairs.Rd
+13b62f3f41a62e55b73e04d38ac4a24c *man/panel.pairs.Rd
 2b8ee171e54ec9c5c1e3d081987d2692 *man/panel.parallel.Rd
 9c2e5de40b02248dc031e1583dafd217 *man/panel.qqmath.Rd
 305b47447420e35545366145464d132b *man/panel.qqmathline.Rd
@@ -121,7 +121,7 @@ c173e398cfd671dd862294a86fad0a40 *po/R-de.po
 e6fd46bf32639ef705d1c776df95e27c *po/R-en@quot.po
 d0142a77ff4b63f331093c2626223263 *po/R-fr.po
 3ad6a2617b138a820b2a7b12172323c3 *po/R-ko.po
-9786a4391c2a30de28d1d43b5843c209 *po/R-lattice.pot
+505aa82d1a31d4bf1604ffef9d19973b *po/R-lattice.pot
 fe4f01c840dec7524804ae645f329b07 *po/R-pl.po
 e92972db59c6aa30de492fc63d8a332f *src/init.c
 918025909f36306797291250b5360243 *src/threeDplot.c

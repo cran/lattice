@@ -38,9 +38,11 @@ getFunctionOrName <- function(FUN)
 
 checkArgsAndCall <- function(FUN, args) ## unnamed arguments not allowed
 {
-    if (!("..." %in% names(formals(FUN))))
-        args <- args[intersect(names(args), names(formals(FUN)))]
-    do.call(FUN, args)
+    if (!is.null(FUN)) {
+        if (!("..." %in% names(formals(FUN))))
+            args <- args[intersect(names(args), names(formals(FUN)))]
+        do.call(FUN, args)
+    }
 }
 
 
@@ -244,31 +246,13 @@ lpolygon <-
 {
     if (sum(!is.na(x)) < 1) return()
     border <- 
-        if (all(is.na(border)))
-            "transparent"
+        if (all(is.na(border))) "transparent"
         else if (is.logical(border))
         {
-            if (border) "black"
-            else "transparent"
+            if (border) "black" else "transparent"
         }
         else border
     xy <- xy.coords(x, y, recycle = TRUE)
-
-    ## Old version (doesn't honor color recycling)
-    
-    ##     if (with(xy, sum(!is.na(x) & !is.na(y))) > 0)
-    ##     {
-    ##         grid.polygon(x = xy$x,
-    ##                      y = xy$y,
-    ##                      default.units = "native",
-    ##                      gp =
-    ##                      gpar(fill = col,
-    ##                           col = border,
-    ##                           ...))
-    ##     }
-
-    ## new version (uses grid.polygon concept of id)
-
     if (hasGroupNumber())
         group <- list(...)$group.number
     else
