@@ -41,7 +41,7 @@ checkArgsAndCall <- function(FUN, args) ## unnamed arguments not allowed
     if (!is.null(FUN)) {
         if (!("..." %in% names(formals(FUN))))
             args <- args[intersect(names(args), names(formals(FUN)))]
-        do.call(FUN, args)
+        do.call(FUN, args, quote = TRUE) ## FIXME: Is this risky?
     }
 }
 
@@ -330,6 +330,9 @@ lrect <-
              lty = 1, lwd = 1, alpha = 1,
              just = "center",
              hjust = NULL, vjust = NULL,
+
+             font, fontface, ## gpar() doesn't like these
+
              ...,
              identifier = NULL,
              name.type = "panel")
@@ -370,7 +373,11 @@ larrows <-
              alpha = add.line$alpha,
              lty = add.line$lty,
              lwd = add.line$lwd,
-             fill = NULL, ...,
+             fill = NULL,
+
+             font, fontface, ## gpar() doesn't like these
+
+             ...,
              identifier = NULL,
              name.type = "panel")
 {
@@ -382,7 +389,7 @@ larrows <-
     x1 <- rep(x1, length.out = ml)
     y0 <- rep(y0, length.out = ml)
     y1 <- rep(y1, length.out = ml)
-    gp <- gpar(col = col, lty=lty, lwd = lwd, alpha = alpha, fill = fill, ...)
+    gp <- gpar(col = col, lty = lty, lwd = lwd, alpha = alpha, fill = fill, ...)
     if (hasGroupNumber())
         group <- list(...)$group.number
     else
