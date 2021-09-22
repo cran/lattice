@@ -1,5 +1,5 @@
 61f0cbe1d3b98afa10c9f854fd675840 *ChangeLog
-ee6a46b661239ae957f2a7e019a3826e *DESCRIPTION
+4a3f1e12dd5b8e242ac314550e8bfa3a *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *GPL-2
 d32239bcb673463ab874e80d47fae504 *GPL-3
 82da699a39ddc36665f053c7482a1da6 *LICENSE.note
@@ -60,7 +60,7 @@ d82d08bf160cde0c737ea7133ecd8810 *inst/po/pl/LC_MESSAGES/R-lattice.mo
 a0814a0c5c6bf3f099ff3752a75a8b54 *man/Lattice.Rd
 40f3906db75059b7b0c73f544e5bd671 *man/Rows.Rd
 7f9e6d0bea5d8524c0a05343efcfcc41 *man/USMortality.Rd
-e7dbcdefba98238488eaf82d37f3e915 *man/axis.default.Rd
+abff15820149230efbbf7dc291d16dbb *man/axis.default.Rd
 d32fef9c6d91a0f11bfbbf748e285688 *man/banking.Rd
 5a8fe5da32d284aa737ab5bb68672b46 *man/barchart.table.Rd
 50a56d80344353513a894f655ca399df *man/barley.Rd
@@ -72,14 +72,14 @@ a0837df59d69a24d7472c27b9dd4c68b *man/ethanol.Rd
 eac3d6949848823828088ef0a704ea3d *man/histogram.Rd
 36639924a81841f411a0413d5ace3146 *man/interaction.Rd
 8df41b0a79c9f43941f70e280e3594eb *man/lattice.options.Rd
-7852ba42b1bed6da21746fde616c5043 *man/latticeParseFormula.Rd
+513cbd02cf89f0b3b010c18aa24ec957 *man/latticeParseFormula.Rd
 06643aee5ed33e7164ee08bf33c92fec *man/level.colors.Rd
 17429a96cb6bef3f25857a1ffa18e110 *man/levelplot.Rd
 e051c256d6ca1726928940255a38f613 *man/llines.Rd
 637c4d16ebc7d78a3d198bb02f94bc30 *man/lset.Rd
-475808636848df6ceb845270fd3aa402 *man/make.groups.Rd
+6daec9a9f39ed0fe486f929e66b5957f *man/make.groups.Rd
 5e89fce7ef15b4ab47d0f720c9d41120 *man/melanoma.Rd
-28f95db01779fb88e18fd9bc757ac4e1 *man/oneway.Rd
+a8738eee6c1c65628bf83b8202b18489 *man/oneway.Rd
 44e4c575f0412e87fd81e6cd43e8f274 *man/packet.panel.default.Rd
 2b4dc3cf2fd4956d684507e3461fec9a *man/panel.axis.Rd
 ad572c902c1a8f150869a3545d3c5ef8 *man/panel.barchart.Rd
@@ -117,7 +117,7 @@ d1c1ec8933b2ecb035a9f7f15a7295e6 *man/strip.default.Rd
 54ed035586251f4c7f2a6e5380f376c1 *man/tmd.Rd
 e3670b8d4712b257630826ec79254e69 *man/trellis.device.Rd
 ac5a0b9ec9158bacc9eebc737f61c215 *man/trellis.object.Rd
-7b400f4b371b389a89e8c236bfaea761 *man/trellis.par.get.Rd
+1f0b3c7e87442ba01eaa4de984928aad *man/trellis.par.get.Rd
 ce115caa3b4039ee31736e6944b6215e *man/update.trellis.Rd
 bb1565a3c0f5f1e253adb38c25a05505 *man/utilities.3d.Rd
 99b91044de9334f44d66b6c4c09ae0fd *man/xyplot.Rd
