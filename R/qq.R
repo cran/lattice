@@ -26,8 +26,8 @@ prepanel.default.qq <-
 {
     ## if (!is.numeric(x)) x <- as.numeric(x)
     ## if (!is.numeric(y)) y <- as.numeric(y)
-    list(xlim = scale.limits(c(x, y)), # range(x, y),
-         ylim = scale.limits(c(x, y)), # range(x, y),
+    list(xlim = scale_limits(c(x, y)), # range(x, y),
+         ylim = scale_limits(c(x, y)), # range(x, y),
          dx = 1,
          dy = 1)
 }
@@ -149,7 +149,7 @@ qq.formula <-
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- sys.call(sys.parent()); foo$call[[1]] <- quote(qq)
+    foo$call <- sys.call(); foo$call[[1]] <- quote(qq)
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 

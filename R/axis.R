@@ -505,8 +505,364 @@ formattedTicksAndLabels.expression <-
 
 
 
+
+## method for "Date" (using pretty.Date)
+## and POXIXct (using pretty.POSIXt)
+formattedTicksAndLabels.Date <-
+formattedTicksAndLabels.POSIXct <-
+    function(x,
+             at = FALSE,
+             used.at = NULL,
+             labels = FALSE,
+             logsc = FALSE,
+             ...,
+             num.limit = NULL,
+             abbreviate = NULL,
+             minlength = 4,
+             format.posixt = NULL)
+{
+    num.lim <- 
+        if (length(x) == 2) as.numeric(x)
+        else range(as.numeric(x), na.rm = TRUE)
+    if (!is.logical(labels)) ## no need to do anything
+    {
+        if (missing(at) || length(at) != length(labels))
+            stop("'at' missing or incompatible with 'labels'")
+        return(list(at = at,
+                    labels = labels,
+                    check.overlap = FALSE,
+                    num.limit = num.lim))
+    }
+
+    mat <- is.logical(at)
+    if (mat) ## at not explicitly specified
+    {
+        ## at <- prettyDate_TMP(x, ...) ## FIXME: should be pretty() eventually
+        at <- pretty(x, ...) ## FIXME: should be pretty() eventually
+        if (is.null(format.posixt))
+            labels <- attr(at, "labels")
+        else
+            labels <- format(at, format = format.posixt)
+    }
+    else
+    {
+        if (is.null(format.posixt))
+            format.posixt <- ""
+        labels <- format(at, format = format.posixt)
+    }
+    list(at = as.numeric(at),
+         labels = labels,
+         check.overlap = mat,
+         num.limit = num.lim)
+}
+
+## chron 'chron' objects: dates and times
+
+formattedTicksAndLabels.chron <-
+    function(x, at = FALSE, ...) 
+{
+    if (!inherits(x, "times")) 
+        x <- chron::chron(x)
+    x <- as.POSIXct(x)
+    attr(x, "tzone") <- "GMT"
+    if (!is.logical(at)) { ## at was explicitly specified
+        at <- as.POSIXct(at)
+        attr(at, "tzone") <- "GMT"
+    }
+    ans <- formattedTicksAndLabels(x, at = at, ...)
+    ans$at <- ans$at / 86400
+    ans$num.limit <- ans$num.limit / 86400
+    ans
+}
+
+## chron 'dates' objects: only dates (no times here because caught by 'chron' method)
+
+formattedTicksAndLabels.dates <-
+    function(x, ...) 
+{
+    if (!inherits(x, "times")) 
+        x <- chron::chron(x)
+    formattedTicksAndLabels(as.Date(x), ...)
+}
+
+## chron 'times' objects: only times (no dates here because caught by 'dates' method)
+
+formattedTicksAndLabels.times <-
+    function(x, labels = FALSE, ..., format.posixt = NULL, simplify = TRUE) 
+{
+    ans <- formattedTicksAndLabels(chron::chron(dates = x), labels = labels,
+                                   format.posixt = format.posixt, ...)
+    if (is.logical(labels)) { ## labels not specified
+        if (is.null(format.posixt)) { ## format not specified
+            at <- chron::chron(times = ans$at)
+            ## format.times will revert to numeric format if any > 1
+            if (max(abs(at)) <= 1) ## 'x' might exceed 1
+                labels <- format(at - floor(at), simplify = simplify)
+            else labels <- format(at, simplify = simplify)
+            ans$labels <- labels
+        }
+    }
+    ans
+}
+
+
+OLD_formattedTicksAndLabels.times <-
+    function(x, at = FALSE, used.at = NULL,
+             num.limit = NULL, labels = FALSE, logsc = FALSE, 
+             abbreviate = NULL, minlength = 4, simplify = TRUE, 
+             ...,
+             format.posixt = NULL) 
+{
+    ## most arguments ignored for now
+
+    check.overlap <-
+        if (is.logical(at) && is.logical(labels)) TRUE
+        else FALSE
+
+    if (!inherits(x, "times")) 
+        x <- chron::chron(x)
+    bad <- is.na(x) | abs(as.vector(x)) == Inf
+    ## rng <- extend.limits(range(as.numeric(x[!bad])))
+    rng <- range(as.numeric(x[!bad]))
+    tmp <- pretty(rng, ...)
+    att <- attributes(x)
+    at <-
+        structure(tmp, # [tmp >= rng[1] & tmp <= rng[2]],
+                  format = att$format, 
+                  origin = att$origin,
+                  class = att$class)
+    if (inherits(at, "chron")) 
+        class(at) <- class(at)[-1]
+    if (is.logical(labels)) ## labels unspecified
+    {
+        if (!inherits(x, "dates"))
+        {
+            at[c(1, length(at))] <- range(x)
+            if (max(at) == 1) 
+                labels <- format(at - trunc(at), simplify = simplify)
+            else labels <- format(at, simplify = simplify)
+        }
+        else labels <- format(at, simplify = simplify)
+    }
+    ## invisible(list(n = n, at = at, labels = labels))
+
+    list(at = as.numeric(at), labels = labels, 
+         check.overlap = check.overlap,
+         num.limit = if (length(x) == 2) as.numeric(x) else rng)
+}
+
+
+
+panel.axis <-
+    function(side = c("bottom", "left", "top", "right"),
+             at = pretty(scale.range),
+             labels = TRUE,
+             draw.labels = TRUE,
+             check.overlap = FALSE,
+             outside = FALSE,
+             ticks = TRUE,
+             half = !outside, ## whether only half of the ticks will be labeled
+             which.half = switch(side, bottom = "lower", left = "upper", top = "upper", right = "lower"),
+
+             tck = as.numeric(ticks),
+             rot = if (is.logical(labels)) 0 else c(90, 0),
+
+             text.col = axis.text$col,
+             text.alpha = axis.text$alpha,
+             text.cex = axis.text$cex,
+             text.font = axis.text$font,
+             text.fontfamily = axis.text$fontfamily,
+             text.fontface = axis.text$fontface,
+             text.lineheight = axis.text$lineheight,
+
+             line.col = axis.line$col,
+             line.lty = axis.line$lty,
+             line.lwd = axis.line$lwd,
+             line.alpha = axis.line$alpha)
+{
+    side <- match.arg(side)
+    at.missing <- missing(at)
+    orientation <- if (outside) "outer" else "inner"
+    cpl <- current.panel.limits()
+    scale.range <-
+        range(switch(side,
+                     left = cpl$ylim,
+                     top = cpl$xlim,
+                     right = cpl$ylim,
+                     bottom = cpl$xlim))
+
+    axis.line <- trellis.par.get("axis.line")
+    axis.text <- trellis.par.get("axis.text")
+    rot <- rep(rot, length.out = 2) ## for x- and y-axes respectively
+
+    if (is.null(at) || length(at) == 0) return()
+
+    ## get labels from at if unspecified
+    if (is.logical(labels))
+        labels <-
+            if (labels) format(at, trim = TRUE)
+            else NULL
+    else if (at.missing)
+        warning("specifying 'labels' but not 'at' may lead to unexpected results")
+
+    if (check.overlap) ## remove ticks close to limits
+    {
+        pad <- lattice.getOption("skip.boundary.labels")
+        scale.range <- extend.limits(scale.range, prop = -pad)
+    }
+
+    ## skip ticks outside (or close to) axis limits
+    keep.at <- at >= scale.range[1] & at <= scale.range[2]
+    at <- at[keep.at]
+    labels <- labels[keep.at]
+
+    nal <- length(at) / 2 + 0.5
+    all.id <- seq_along(at)
+    lower.id <- all.id <= nal
+    upper.id <- all.id >= nal
+    axid <-
+        if (half)
+        {
+            if (which.half == "lower") lower.id else upper.id
+        }
+        else rep(TRUE, length(all.id))
+    if (!any(axid)) return(invisible())
+
+    gp.line <- gpar(col = line.col, alpha = line.alpha,
+                    lty = line.lty, lwd = line.lwd)
+    gp.text <- gpar(col = text.col, cex = text.cex, alpha = text.alpha,
+                    fontface = chooseFace(text.fontface, text.font),
+                    fontfamily = text.fontfamily, lineheight = text.lineheight)
+
+    ## We now compute some spacing information based on settings
+    ## (combining trellis settings and the (newer) lattice.options).
+    ## These can only be controlled via these settings and not by
+    ## arguments to this function, for convenience for one thing, and
+    ## also because the same settings will be used elsewhere to leave
+    ## appropriate space.
+
+
+    ## unit representing tick marks
+
+    axis.units <- lattice.getOption("axis.units")[[orientation]][[side]]
+    ## axis.units is of the form:
+    ##     list(outer = list(left = list(tick=, pad1=, pad2=), top = list(...), ...),
+    ##          inner = list(...) )
+    axis.settings <- trellis.par.get("axis.components")[[side]]
+
+    tck.unit.x <- tck * axis.settings$tck * axis.units$tick$x
+    tck.unit <- unit(x = tck.unit.x, units = axis.units$tick$units)
+    lab.unit <-
+        if (any(tck.unit.x > 0)) tck.unit + unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
+        else unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
+    orient.factor <- if (outside) -1 else 1
+
+    if (ticks && any(tck.unit.x != 0))
+        switch(side, 
+               bottom = 
+               grid.segments(x0 = unit(at[axid], "native"),
+                             x1 = unit(at[axid], "native"),
+                             y0 = unit(0, "npc"),
+                             y1 = orient.factor * tck.unit,
+                             name = trellis.grobname("ticks.bottom",
+                               type="panel"),
+                             gp = gp.line),
+               top = 
+               grid.segments(x0 = unit(at[axid], "native"),
+                             x1 = unit(at[axid], "native"),
+                             y0 = unit(1, "npc"),
+                             y1 = unit(1, "npc") - orient.factor * tck.unit,
+                             name = trellis.grobname("ticks.top",
+                               type="panel"),
+                             gp = gp.line),
+               left = 
+               grid.segments(y0 = unit(at[axid], "native"),
+                             y1 = unit(at[axid], "native"),
+                             x0 = unit(0, "npc"),
+                             x1 = orient.factor * tck.unit,
+                             name = trellis.grobname("ticks.left",
+                               type="panel"),
+                             gp = gp.line),
+               right =
+               grid.segments(y0 = unit(at[axid], "native"),
+                             y1 = unit(at[axid], "native"),
+                             x0 = unit(1, "npc"),
+                             x1 = unit(1, "npc") - orient.factor * tck.unit,
+                             name = trellis.grobname("ticks.right",
+                               type="panel"),
+                             gp = gp.line))
+
+    if (draw.labels && !is.null(labels))
+    {
+        {
+            just <-
+                if (outside)
+                    switch(side,
+                           bottom = if (rot[1] == 0) c("centre", "top") else c("right", "centre"),
+                           top = if (rot[1] == 0) c("centre", "bottom") else c("left", "centre"),
+                           left = if (rot[2] == 90) c("centre", "bottom") else c("right", "centre"),
+                           right = if (rot[2] == 90) c("centre", "top") else c("left", "centre"))
+                else
+                    switch(side,
+                           bottom = if (rot[1] == 0) c("centre", "bottom") else c("left", "centre"),
+                           top = if (rot[1] == 0) c("centre", "top") else c("right", "centre"),
+                           left = if (rot[2] == 90) c("centre", "top") else c("left", "centre"),
+                           right = if (rot[2] == 90) c("centre", "bottom") else c("right", "centre"))
+        }
+        switch(side,
+               bottom =
+               grid.text(label = labels[axid],
+                         x = unit(at[axid], "native"),
+                         y = orient.factor * lab.unit,
+                         rot = rot[1],
+                         check.overlap = check.overlap,
+                         just = just,
+                         name = trellis.grobname("ticklabels.bottom",
+                                                 type="panel"),
+                         gp = gp.text),
+               top =
+               grid.text(label = labels[axid],
+                         x = unit(at[axid], "native"),
+                         y = unit(1, "npc") - orient.factor * lab.unit,
+                         rot = rot[1],
+                         check.overlap = check.overlap,
+                         just = just,
+                         name = trellis.grobname("ticklabels.top",
+                                                 type="panel"),
+                         gp = gp.text),
+               left =
+               grid.text(label = labels[axid],
+                         y = unit(at[axid], "native"),
+                         x = orient.factor * lab.unit,
+                         rot = rot[2],
+                         check.overlap = check.overlap,
+                         just = just,
+                         name = trellis.grobname("ticklabels.left",
+                                                 type="panel"),
+                         gp = gp.text),
+               right =
+               grid.text(label = labels[axid],
+                         y = unit(at[axid], "native"),
+                         x = unit(1, "npc") - orient.factor * lab.unit,
+                         rot = rot[2],
+                         check.overlap = check.overlap,
+                         just = just,
+                         name = trellis.grobname("ticklabels.right",
+                                                 type="panel"),
+                         gp = gp.text))
+    }
+    invisible()
+}
+
+
+
+## Temporary hacks that should be removed
+
 ## prettyDate copied here temporarily.
 ## remove after it appears in R 2.12 ?
+
+if (FALSE)
+{
 
 prettyDate_TMP <-
     function(x, n = 5, min.n = n %/% 2, ...)
@@ -663,348 +1019,4 @@ trunc_POSIXt_TMP <-
     x
 }
 
-
-## method for "Date" (using pretty.Date)
-## and POXIXct (using pretty.POSIXt)
-formattedTicksAndLabels.Date <-
-formattedTicksAndLabels.POSIXct <-
-    function(x,
-             at = FALSE,
-             used.at = NULL,
-             labels = FALSE,
-             logsc = FALSE,
-             ...,
-             num.limit = NULL,
-             abbreviate = NULL,
-             minlength = 4,
-             format.posixt = NULL)
-{
-    num.lim <- 
-        if (length(x) == 2) as.numeric(x)
-        else range(as.numeric(x), na.rm = TRUE)
-    if (!is.logical(labels)) ## no need to do anything
-    {
-        if (missing(at) || length(at) != length(labels))
-            stop("'at' missing or incompatible with 'labels'")
-        return(list(at = at,
-                    labels = labels,
-                    check.overlap = FALSE,
-                    num.limit = num.lim))
-    }
-
-    mat <- is.logical(at)
-    if (mat) ## at not explicitly specified
-    {
-        at <- prettyDate_TMP(x, ...) ## FIXME: should be pretty() eventually
-        if (is.null(format.posixt))
-            labels <- attr(at, "labels")
-        else
-            labels <- format(at, format = format.posixt)
-    }
-    else
-    {
-        if (is.null(format.posixt))
-            format.posixt <- ""
-        labels <- format(at, format = format.posixt)
-    }
-    list(at = as.numeric(at),
-         labels = labels,
-         check.overlap = mat,
-         num.limit = num.lim)
 }
-
-## chron 'chron' objects: dates and times
-
-formattedTicksAndLabels.chron <-
-    function(x, at = FALSE, ...) 
-{
-    if (!inherits(x, "times")) 
-        x <- chron::chron(x)
-    x <- as.POSIXct(x)
-    attr(x, "tzone") <- "GMT"
-    if (!is.logical(at)) { ## at was explicitly specified
-        at <- as.POSIXct(at)
-        attr(at, "tzone") <- "GMT"
-    }
-    ans <- formattedTicksAndLabels(x, at = at, ...)
-    ans$at <- ans$at / 86400
-    ans$num.limit <- ans$num.limit / 86400
-    ans
-}
-
-## chron 'dates' objects: only dates (no times here because caught by 'chron' method)
-
-formattedTicksAndLabels.dates <-
-    function(x, ...) 
-{
-    if (!inherits(x, "times")) 
-        x <- chron::chron(x)
-    formattedTicksAndLabels(as.Date(x), ...)
-}
-
-## chron 'times' objects: only times (no dates here because caught by 'dates' method)
-
-formattedTicksAndLabels.times <-
-    function(x, labels = FALSE, ..., format.posixt = NULL, simplify = TRUE) 
-{
-    ans <- formattedTicksAndLabels(chron::chron(dates = x), labels = labels,
-                                   format.posixt = format.posixt, ...)
-    if (is.logical(labels)) { ## labels not specified
-        if (is.null(format.posixt)) { ## format not specified
-            at <- chron::chron(times = ans$at)
-            ## format.times will revert to numeric format if any > 1
-            if (max(abs(at)) <= 1) ## 'x' might exceed 1
-                labels <- format(at - floor(at), simplify = simplify)
-            else labels <- format(at, simplify = simplify)
-            ans$labels <- labels
-        }
-    }
-    ans
-}
-
-
-OLD_formattedTicksAndLabels.times <-
-    function(x, at = FALSE, used.at = NULL,
-             num.limit = NULL, labels = FALSE, logsc = FALSE, 
-             abbreviate = NULL, minlength = 4, simplify = TRUE, 
-             ...,
-             format.posixt = NULL) 
-{
-    ## most arguments ignored for now
-
-    check.overlap <-
-        if (is.logical(at) && is.logical(labels)) TRUE
-        else FALSE
-
-    if (!inherits(x, "times")) 
-        x <- chron::chron(x)
-    bad <- is.na(x) | abs(as.vector(x)) == Inf
-    ## rng <- extend.limits(range(as.numeric(x[!bad])))
-    rng <- range(as.numeric(x[!bad]))
-    tmp <- pretty(rng, ...)
-    att <- attributes(x)
-    at <-
-        structure(tmp, # [tmp >= rng[1] & tmp <= rng[2]],
-                  format = att$format, 
-                  origin = att$origin,
-                  class = att$class)
-    if (inherits(at, "chron")) 
-        class(at) <- class(at)[-1]
-    if (is.logical(labels)) ## labels unspecified
-    {
-        if (!inherits(x, "dates"))
-        {
-            at[c(1, length(at))] <- range(x)
-            if (max(at) == 1) 
-                labels <- format(at - trunc(at), simplify = simplify)
-            else labels <- format(at, simplify = simplify)
-        }
-        else labels <- format(at, simplify = simplify)
-    }
-    ## invisible(list(n = n, at = at, labels = labels))
-
-    list(at = as.numeric(at), labels = labels, 
-         check.overlap = check.overlap,
-         num.limit = if (length(x) == 2) as.numeric(x) else rng)
-}
-
-
-
-panel.axis <-
-    function(side = c("bottom", "left", "top", "right"),
-             at = pretty(scale.range),
-             labels = TRUE,
-             draw.labels = TRUE,
-             check.overlap = FALSE,
-             outside = FALSE,
-             ticks = TRUE,
-             half = !outside, ## whether only half of the ticks will be labeled
-             which.half = switch(side, bottom = "lower", left = "upper", top = "upper", right = "lower"),
-
-             tck = as.numeric(ticks),
-             rot = if (is.logical(labels)) 0 else c(90, 0),
-
-             text.col = axis.text$col,
-             text.alpha = axis.text$alpha,
-             text.cex = axis.text$cex,
-             text.font = axis.text$font,
-             text.fontfamily = axis.text$fontfamily,
-             text.fontface = axis.text$fontface,
-             text.lineheight = axis.text$lineheight,
-
-             line.col = axis.line$col,
-             line.lty = axis.line$lty,
-             line.lwd = axis.line$lwd,
-             line.alpha = axis.line$alpha)
-{
-    side <- match.arg(side)
-    orientation <- if (outside) "outer" else "inner"
-    cpl <- current.panel.limits()
-    scale.range <-
-        range(switch(side,
-                     left = cpl$ylim,
-                     top = cpl$xlim,
-                     right = cpl$ylim,
-                     bottom = cpl$xlim))
-
-    axis.line <- trellis.par.get("axis.line")
-    axis.text <- trellis.par.get("axis.text")
-    rot <- rep(rot, length.out = 2) ## for x- and y-axes respectively
-
-    if (is.null(at) || length(at) == 0) return()
-
-    ## get labels from at if unspecified
-    if (is.logical(labels))
-        labels <-
-            if (labels) format(at, trim = TRUE)
-            else NULL
-
-    if (check.overlap) ## remove ticks close to limits
-    {
-        pad <- lattice.getOption("skip.boundary.labels")
-        scale.range <- extend.limits(scale.range, prop = -pad)
-    }
-
-    ## skip ticks outside (or close to) axis limits
-    keep.at <- at >= scale.range[1] & at <= scale.range[2]
-    at <- at[keep.at]
-    labels <- labels[keep.at]
-
-    nal <- length(at) / 2 + 0.5
-    all.id <- seq_along(at)
-    lower.id <- all.id <= nal
-    upper.id <- all.id >= nal
-    axid <-
-        if (half)
-        {
-            if (which.half == "lower") lower.id else upper.id
-        }
-        else rep(TRUE, length(all.id))
-    if (!any(axid)) return(invisible())
-
-    gp.line <- gpar(col = line.col, alpha = line.alpha,
-                    lty = line.lty, lwd = line.lwd)
-    gp.text <- gpar(col = text.col, cex = text.cex, alpha = text.alpha,
-                    fontface = chooseFace(text.fontface, text.font),
-                    fontfamily = text.fontfamily, lineheight = text.lineheight)
-
-    ## We now compute some spacing information based on settings
-    ## (combining trellis settings and the (newer) lattice.options).
-    ## These can only be controlled via these settings and not by
-    ## arguments to this function, for convenience for one thing, and
-    ## also because the same settings will be used elsewhere to leave
-    ## appropriate space.
-
-
-    ## unit representing tick marks
-
-    axis.units <- lattice.getOption("axis.units")[[orientation]][[side]]
-    ## axis.units is of the form:
-    ##     list(outer = list(left = list(tick=, pad1=, pad2=), top = list(...), ...),
-    ##          inner = list(...) )
-    axis.settings <- trellis.par.get("axis.components")[[side]]
-
-    tck.unit.x <- tck * axis.settings$tck * axis.units$tick$x
-    tck.unit <- unit(x = tck.unit.x, units = axis.units$tick$units)
-    lab.unit <-
-        if (any(tck.unit.x > 0)) tck.unit + unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
-        else unit(x = axis.settings$pad1 * axis.units$pad1$x, units = axis.units$pad1$units)
-    orient.factor <- if (outside) -1 else 1
-
-    if (ticks && any(tck.unit.x != 0))
-        switch(side, 
-               bottom = 
-               grid.segments(x0 = unit(at[axid], "native"),
-                             x1 = unit(at[axid], "native"),
-                             y0 = unit(0, "npc"),
-                             y1 = orient.factor * tck.unit,
-                             name = trellis.grobname("ticks.bottom",
-                               type="panel"),
-                             gp = gp.line),
-               top = 
-               grid.segments(x0 = unit(at[axid], "native"),
-                             x1 = unit(at[axid], "native"),
-                             y0 = unit(1, "npc"),
-                             y1 = unit(1, "npc") - orient.factor * tck.unit,
-                             name = trellis.grobname("ticks.top",
-                               type="panel"),
-                             gp = gp.line),
-               left = 
-               grid.segments(y0 = unit(at[axid], "native"),
-                             y1 = unit(at[axid], "native"),
-                             x0 = unit(0, "npc"),
-                             x1 = orient.factor * tck.unit,
-                             name = trellis.grobname("ticks.left",
-                               type="panel"),
-                             gp = gp.line),
-               right =
-               grid.segments(y0 = unit(at[axid], "native"),
-                             y1 = unit(at[axid], "native"),
-                             x0 = unit(1, "npc"),
-                             x1 = unit(1, "npc") - orient.factor * tck.unit,
-                             name = trellis.grobname("ticks.right",
-                               type="panel"),
-                             gp = gp.line))
-
-    if (draw.labels && !is.null(labels))
-    {
-        {
-            just <-
-                if (outside)
-                    switch(side,
-                           bottom = if (rot[1] == 0) c("centre", "top") else c("right", "centre"),
-                           top = if (rot[1] == 0) c("centre", "bottom") else c("left", "centre"),
-                           left = if (rot[2] == 90) c("centre", "bottom") else c("right", "centre"),
-                           right = if (rot[2] == 90) c("centre", "top") else c("left", "centre"))
-                else
-                    switch(side,
-                           bottom = if (rot[1] == 0) c("centre", "bottom") else c("left", "centre"),
-                           top = if (rot[1] == 0) c("centre", "top") else c("right", "centre"),
-                           left = if (rot[2] == 90) c("centre", "top") else c("left", "centre"),
-                           right = if (rot[2] == 90) c("centre", "bottom") else c("right", "centre"))
-        }
-        switch(side,
-               bottom =
-               grid.text(label = labels[axid],
-                         x = unit(at[axid], "native"),
-                         y = orient.factor * lab.unit,
-                         rot = rot[1],
-                         check.overlap = check.overlap,
-                         just = just,
-                         name = trellis.grobname("ticklabels.bottom",
-                                                 type="panel"),
-                         gp = gp.text),
-               top =
-               grid.text(label = labels[axid],
-                         x = unit(at[axid], "native"),
-                         y = unit(1, "npc") - orient.factor * lab.unit,
-                         rot = rot[1],
-                         check.overlap = check.overlap,
-                         just = just,
-                         name = trellis.grobname("ticklabels.top",
-                                                 type="panel"),
-                         gp = gp.text),
-               left =
-               grid.text(label = labels[axid],
-                         y = unit(at[axid], "native"),
-                         x = orient.factor * lab.unit,
-                         rot = rot[2],
-                         check.overlap = check.overlap,
-                         just = just,
-                         name = trellis.grobname("ticklabels.left",
-                                                 type="panel"),
-                         gp = gp.text),
-               right =
-               grid.text(label = labels[axid],
-                         y = unit(at[axid], "native"),
-                         x = unit(1, "npc") - orient.factor * lab.unit,
-                         rot = rot[2],
-                         check.overlap = check.overlap,
-                         just = just,
-                         name = trellis.grobname("ticklabels.right",
-                                                 type="panel"),
-                         gp = gp.text))
-    }
-    invisible()
-}
-

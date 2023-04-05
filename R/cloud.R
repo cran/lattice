@@ -1420,6 +1420,7 @@ wireframe.matrix <-
 {
     stopifnot(length(row.values) == nrow(x),
               length(column.values) == ncol(x))
+    ocall <- sys.call(); ocall[[1]] <- quote(wireframe)
     if (!is.null(data)) warning("explicit 'data' specification ignored")
     form <- eval(z ~ row * column)
     if (missing(aspect)) aspect <- pmin(ncol(x) / nrow(x), c(Inf, 1))
@@ -1434,9 +1435,9 @@ wireframe.matrix <-
         ylim <-
             if (!is.null(colnames(x))) colnames(x)
             else range(column.values, finite = TRUE)
-    wireframe(form, data, zlab = zlab, aspect = aspect,
-              xlim = xlim, ylim = ylim,
-              ...)
+    modifyList(wireframe(form, data, zlab = zlab, aspect = aspect,
+                         xlim = xlim, ylim = ylim, ...),
+               list(call = ocall))
 }
 
 
@@ -1448,7 +1449,7 @@ wireframe.formula <-
              default.prepanel = lattice.getOption("prepanel.default.wireframe"),
              ...)
 {
-    ocall <- sys.call(sys.parent()); ocall[[1]] <- quote(wireframe)
+    ocall <- sys.call(); ocall[[1]] <- quote(wireframe)
     ccall <- match.call()
     ccall$data <- data
     ccall$panel <- panel
@@ -1479,6 +1480,7 @@ cloud.matrix <-
              row.values = seq_len(nrow(x)),
              column.values = seq_len(ncol(x)))
 {
+    ocall <- sys.call(); ocall[[1]] <- quote(cloud)
     stopifnot(length(row.values) == nrow(x),
               length(column.values) == ncol(x))
     if (!is.null(data)) warning("explicit 'data' specification ignored")
@@ -1497,9 +1499,9 @@ cloud.matrix <-
         ylim <-
             if (!is.null(colnames(x))) colnames(x)
             else range(column.values, finite = TRUE)
-    cloud(form, data, type = type, zlab = zlab, aspect = aspect, 
-          xlim = xlim, ylim = ylim,
-          ...)
+    modifyList(cloud(form, data, type = type, zlab = zlab, aspect = aspect, 
+                     xlim = xlim, ylim = ylim, ...),
+               list(call = ocall))
 }
 
 
@@ -1510,6 +1512,7 @@ cloud.table <-
              type = "h", ...)
 {
     stopifnot(length(dim(x)) > 1)
+    ocall <- sys.call(); ocall[[1]] <- quote(cloud)
     data <- as.data.frame(x)
     nms <- names(data)
     freq <- which(nms == "Freq")
@@ -1529,13 +1532,14 @@ cloud.table <-
         rest <- paste(nms, collapse = "+")
         form <- paste(form, rest, sep = "|")
     }
-    cloud(as.formula(form), data,
-          groups = eval(groups),
-          zlab = zlab,
-          type = type, ...,
-          default.scales =
-          list(x = list(arrows = FALSE),
-               y = list(arrows = FALSE)))
+    modifyList(cloud(as.formula(form), data,
+                     groups = eval(groups),
+                     zlab = zlab,
+                     type = type, ...,
+                     default.scales =
+                         list(x = list(arrows = FALSE),
+                              y = list(arrows = FALSE))),
+               list(call = ocall))
 }
 
 
@@ -1547,7 +1551,7 @@ cloud.formula <-
              data = NULL,
              allow.multiple = is.null(groups) || outer,
              outer = FALSE,
-             auto.key = FALSE,
+             auto.key = lattice.getOption("default.args")$auto.key,
              aspect = c(1,1),
              panel.aspect = 1,
              panel = lattice.getOption("panel.cloud"),
@@ -1681,7 +1685,7 @@ cloud.formula <-
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- sys.call(sys.parent()); foo$call[[1]] <- quote(cloud)
+    foo$call <- sys.call(); foo$call[[1]] <- quote(cloud)
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
@@ -1890,30 +1894,15 @@ cloud.formula <-
           cond.orders(foo))
     foo[names(more.comp)] <- more.comp
 
-
     if (is.null(foo$legend) && needAutoKey(auto.key, groups))
     {
         foo$legend <-
-            list(list(fun = "drawSimpleKey",
-                      args =
-                      updateList(list(text = levels(as.factor(groups)),
-                                      points = TRUE,
-                                      rectangles = FALSE,
-                                      lines = FALSE), 
-                                 if (is.list(auto.key)) auto.key else list())))
-        foo$legend[[1]]$x <- foo$legend[[1]]$args$x
-        foo$legend[[1]]$y <- foo$legend[[1]]$args$y
-        foo$legend[[1]]$corner <- foo$legend[[1]]$args$corner
-
-        names(foo$legend) <-
-            if (any(c("x", "y", "corner") %in% names(foo$legend[[1]]$args)))
-                "inside"
-            else
-                "top"
-        if (!is.null(foo$legend[[1]]$args$space))
-            names(foo$legend) <- foo$legend[[1]]$args$space
+            autoKeyLegend(list(text = levels(as.factor(groups)),
+                               points = TRUE,
+                               rectangles = FALSE,
+                               lines = FALSE),
+                          auto.key)
     }
-
     class(foo) <- "trellis"
     foo
 }

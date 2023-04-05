@@ -40,14 +40,6 @@ rearrangeUnit <- function(x, pos, u)
 
 
 
-
-
-
-
-
-
-
-
 calculateGridLayout <-
     function(x,
              rows.per.page, cols.per.page,
@@ -517,14 +509,11 @@ calculateGridLayout <-
                                            lineheight = xaxis.lineheight))
                     else textGrob("")
             }
-            xaxis.panel.unit <-
-### widthDetails(
-                max(unit(rep(1, length(lab.groblist)), "grobheight", data = lab.groblist)) +
-                    tick.unit + pad1.unit + pad2.unit
-### )
+            xaxis.panel.unit <- max(unit(rep(1, length(lab.groblist)), "grobheight", data = lab.groblist))
+            if (lattice.getOption("optimize.grid")) xaxis.panel.unit <- convertHeight(xaxis.panel.unit, "inches")
+            xaxis.panel.unit <- xaxis.panel.unit + tick.unit + pad1.unit + pad2.unit
         }
     }
-
 
     ## same for y-axes now
 
@@ -706,11 +695,9 @@ calculateGridLayout <-
                                            lineheight = yaxis.lineheight))
                     else textGrob("")
             }
-            yaxis.panel.unit <-
-### widthDetails(
-                max(unit(rep(1, length(lab.groblist)), "grobwidth", data = lab.groblist)) +
-                    tick.unit + pad1.unit + pad2.unit
-###)
+            yaxis.panel.unit <- max(unit(rep(1, length(lab.groblist)), "grobwidth", data = lab.groblist))
+            if (lattice.getOption("optimize.grid")) yaxis.panel.unit <- convertWidth(yaxis.panel.unit, "inches")
+            yaxis.panel.unit <- yaxis.panel.unit + tick.unit + pad1.unit + pad2.unit
         }
     }
 
