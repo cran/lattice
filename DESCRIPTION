@@ -1,6 +1,6 @@
 Package: lattice
-Version: 0.21-8
-Date: 2023-04-05
+Version: 0.21-9
+Date: 2023-09-30
 Priority: recommended
 Title: Trellis Graphics for R
 Authors@R: c(person("Deepayan", "Sarkar", role = c("aut", "cre"),
@@ -30,7 +30,7 @@ License: GPL (>= 2)
 URL: https://lattice.r-forge.r-project.org/
 BugReports: https://github.com/deepayan/lattice/issues
 NeedsCompilation: yes
-Packaged: 2023-04-05 15:31:40 UTC; deepayan
+Packaged: 2023-09-30 22:29:13 UTC; deepayan
 Author: Deepayan Sarkar [aut, cre] (<https://orcid.org/0000-0003-4107-1553>),
   Felix Andrews [ctb],
   Kevin Wright [ctb] (documentation),
@@ -42,4 +42,4 @@ Author: Deepayan Sarkar [aut, cre] (<https://orcid.org/0000-0003-4107-1553>),
   Achim Zeileis [ctb] (modern colors)
 Maintainer: Deepayan Sarkar <deepayan.sarkar@r-project.org>
 Repository: CRAN
-Date/Publication: 2023-04-05 17:43:19 UTC
+Date/Publication: 2023-10-01 04:40:07 UTC
