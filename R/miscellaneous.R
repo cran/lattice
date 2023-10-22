@@ -201,15 +201,16 @@ Rows <- function(x, which)
 
 
 
-## panel functions corresponding to standard base functions
+## panel functions corresponding to standard low-level graphics functions
 
-panel.points <- function(...) lpoints(...)
+panel.arrows <- function(...) larrows(...)
 panel.lines <- function(...) llines(...)
+panel.points <- function(...) lpoints(...)
+panel.polygon <- function(...) lpolygon(...)
+panel.polypath <- function(...) lpolypath(...)
+panel.rect <- function(...) lrect(...)
 panel.segments <- function(...) lsegments(...)
 panel.text <- function(...) ltext(...)
-panel.arrows <- function(...) larrows(...)
-panel.rect <- function(...) lrect(...)
-panel.polygon <- function(...) lpolygon(...)
 
 
 
@@ -228,8 +229,9 @@ primName <- function(name, identifier = NULL, name.type = "panel", group = 0) {
 ## panel.points, panel.lines, etc.
 
 
+lpolygon <- function(x, ...) UseMethod("lpolygon")
 
-lpolygon <-
+lpolygon.default <-
     function(x, y = NULL,
              ## density = NULL,
              ## angle = 45,
@@ -240,10 +242,12 @@ lpolygon <-
 
              font, fontface, ## gpar() doesn't like these
              ...,
+             rule = c("none", "winding", "evenodd"),
              identifier = NULL,
              name.type = "panel") 
 {
     if (sum(!is.na(x)) < 1) return()
+    rule <- match.arg(rule)
     border <- 
         if (all(is.na(border))) "transparent"
         else if (is.logical(border))
@@ -256,33 +260,85 @@ lpolygon <-
         group <- list(...)$group.number
     else
         group <- 0
-    ## with(xy,  # CMD check complains
-    ##  {
-    ##      n <- length(x)
-    ##      w <- which(is.na(x) | is.na(y))
-    ##      id.lengths <- diff(c(0, w, n))
-    ##      grid.polygon(x = x,
-    ##                   y = y,
-    ##                   id.lengths = id.lengths,
-    ##                   default.units = "native",
-    ##                   name = primName("polygon", identifier, name.type, group),
-    ##                   gp = gpar(fill = col, col = border, ...))
-    ##  })
     n <- length(xy$x)
-    w <- which(is.na(xy$x) | is.na(xy$y))
-    id.lengths <- diff(c(0, w, n))
-    grid.polygon(x = xy$x,
-                 y = xy$y,
-                 id.lengths = id.lengths,
-                 default.units = "native",
-                 name = primName("polygon", identifier, name.type, group),
-                 gp = gpar(fill = col, col = border, ...))
+    breaks <- which(is.na(xy$x) | is.na(xy$y))
+    nb <- length(breaks)
+    id.lengths <- diff(c(0, breaks, n))
+    if (rule == "none" || nb == 0)
+        grid.polygon(x = xy$x,
+                     y = xy$y,
+                     id.lengths = id.lengths,
+                     default.units = "native",
+                     name = primName("polygon", identifier, name.type, group),
+                     gp = gpar(fill = col, col = border, ...))
+    else {
+        ## grid.polygon() can handle NAs but grid.path() cannot. So we
+        ## use a strategy copied from polypath() in lpolypath(). This
+        ## should work equally well with grid.polygon(), so eventually
+        ## we should change that too.
+
+        ## if (nb == 0) {
+        ##      any difference between grid.polygon() and grid.path() ?
+        ## }
+        lengths <- c(breaks[1] - 1, diff(breaks) - 1, n - breaks[nb])
+        grid.path(x = xy$x[-breaks],
+                  y = xy$y[-breaks],
+                  id.lengths = lengths,
+                  rule = rule,
+                  default.units = "native",
+                  name = primName("path", identifier, name.type, group),
+                  gp = gpar(fill = col, col = border, ...))
+    }
+}
+
+
+lpolypath <- function(x, ...) UseMethod("lpolypath")
+
+lpolypath.default <-
+    function(x, y = NULL,
+             border = "black",
+             col = "transparent",
+             ## lty = NULL,
+             fill = NULL, # capture so that doesn't overload 'fill=col' in gpar()
+
+             font, fontface, ## gpar() doesn't like these
+             ...,
+             rule = c("winding", "evenodd"),
+             identifier = NULL,
+             name.type = "panel") 
+{
+    if (sum(!is.na(x)) < 1) return()
+    rule <- match.arg(rule)
+    border <- 
+        if (all(is.na(border))) "transparent"
+        else if (is.logical(border))
+        {
+            if (border) "black" else "transparent"
+        }
+        else border
+    xy <- xy.coords(x, y, recycle = TRUE)
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
+    n <- length(xy$x)
+    breaks <- which(is.na(xy$x) | is.na(xy$y))
+    nb <- length(breaks)
+    lengths <- c(breaks[1] - 1, diff(breaks) - 1, n - breaks[nb])
+    grid.path(x = xy$x[-breaks],
+              y = xy$y[-breaks],
+              id.lengths = lengths,
+              rule = rule,
+              default.units = "native",
+              name = primName("path", identifier, name.type, group),
+              gp = gpar(fill = col, col = border, ...))
 }
 
 
 
+lsegments <- function(...) UseMethod("lsegments")
 
-lsegments <-
+lsegments.default <-
     function(x0 = NULL, y0 = NULL, x1, y1,
              x2 = NULL, y2 = NULL,
              col = add.line$col,
@@ -318,7 +374,10 @@ lsegments <-
 }
 
 
-lrect <-
+
+lrect <- function(...) UseMethod("lrect")
+
+lrect.default <-
     function(xleft, ybottom, xright, ytop,
              x = (xleft + xright) / 2,
              y = (ybottom + ytop) / 2,
@@ -362,8 +421,9 @@ lrect <-
 
 
 
+larrows <- function(...) UseMethod("larrows")
 
-larrows <-
+larrows.default <-
     function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
              angle = 30, code = 2, length = 0.25, unit = "inches",
              ends = switch(code, "first", "last", "both"),

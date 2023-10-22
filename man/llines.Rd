@@ -1,22 +1,30 @@
 \name{F_2_llines}
+\alias{larrows}
 \alias{llines}
 \alias{lpoints}
+\alias{lpolygon}
+\alias{lpolypath}
+\alias{lrect}
+\alias{lsegments}
 \alias{ltext}
+\alias{larrows.default}
 \alias{llines.default}
 \alias{lpoints.default}
+\alias{lpolygon.default}
+\alias{lpolypath.default}
+\alias{lrect.default}
+\alias{lsegments.default}
 \alias{ltext.default}
 \alias{lplot.xy}
-\alias{larrows}
-\alias{lsegments}
-\alias{lrect}
-\alias{lpolygon}
 \alias{panel.arrows}
 \alias{panel.lines}
 \alias{panel.points}
+\alias{panel.polygon}
+\alias{panel.polypath}
+\alias{panel.rect}
 \alias{panel.segments}
 \alias{panel.text}
-\alias{panel.rect}
-\alias{panel.polygon}
+
 \title{Replacements of traditional graphics functions}
 
 \description{
@@ -34,37 +42,18 @@
 lplot.xy(xy, type, pch, lty, col, cex, lwd,
          font, fontfamily, fontface,
          col.line, col.symbol, alpha, fill,
-         origin = 0, \dots, identifier, name.type)
+         origin = 0, ..., identifier, name.type)
 
+larrows(...)
 llines(x, ...)
 lpoints(x, ...)
+lpolygon(x, ...)
+lpolypath(x, ...)
+lrect(...)
+lsegments(...)
 ltext(x, ...)
 
-\method{llines}{default}(x, y = NULL, type = "l",
-       col, alpha, lty, lwd, \dots, identifier, name.type)
-\method{lpoints}{default}(x, y = NULL, type = "p", col, pch, alpha, fill,
-        font, fontfamily, fontface, cex, \dots, identifier, name.type)  
-\method{ltext}{default}(x, y = NULL, labels = seq_along(x),
-      col, alpha, cex, srt = 0,
-      lineheight, font, fontfamily, fontface,
-      adj = c(0.5, 0.5), pos = NULL, offset = 0.5, \dots, identifier, name.type)  
-
-lsegments(x0, y0, x1, y1, x2, y2,
-          col, alpha, lty, lwd,
-          font, fontface, \dots, identifier, name.type)
-lrect(xleft, ybottom, xright, ytop,
-      x = (xleft + xright) / 2,
-      y = (ybottom + ytop) / 2,
-      width = xright - xleft,
-      height = ytop - ybottom,
-      col = "transparent",
-      border = "black",
-      lty = 1, lwd = 1, alpha = 1,
-      just = "center",
-      hjust = NULL, vjust = NULL,
-      font, fontface,
-      \dots, identifier, name.type)
-larrows(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
+\method{larrows}{default}(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
         angle = 30, code = 2, length = 0.25, unit = "inches",
         ends = switch(code, "first", "last", "both"),
         type = "open",
@@ -74,18 +63,50 @@ larrows(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
         lwd = add.line$lwd,
         fill = NULL, 
         font, fontface,
-        \dots, identifier, name.type)
-lpolygon(x, y = NULL,
+        ..., identifier, name.type)
+\method{llines}{default}(x, y = NULL, type = "l",
+        col, alpha, lty, lwd, ..., identifier, name.type)
+\method{lpoints}{default}(x, y = NULL, type = "p", col, pch, alpha, fill,
+        font, fontfamily, fontface, cex, ..., identifier, name.type) 
+\method{lpolygon}{default}(x, y = NULL,
+        border = "black", col = "transparent", fill = NULL, 
+        font, fontface,
+        ...,
+        rule = c("none", "winding", "evenodd"),
+        identifier, name.type)        
+\method{lpolypath}{default}(x, y = NULL,
          border = "black", col = "transparent", fill = NULL, 
-         font, fontface, \dots, identifier, name.type)
+         font, fontface,
+         ...,
+         rule = c("winding", "evenodd"),
+         identifier, name.type)        
+\method{ltext}{default}(x, y = NULL, labels = seq_along(x),
+        col, alpha, cex, srt = 0,
+        lineheight, font, fontfamily, fontface,
+        adj = c(0.5, 0.5), pos = NULL, offset = 0.5, ..., identifier, name.type)  
+\method{lrect}{default}(xleft, ybottom, xright, ytop,
+        x = (xleft + xright) / 2,
+        y = (ybottom + ytop) / 2,
+        width = xright - xleft,
+        height = ytop - ybottom,
+        col = "transparent",
+        border = "black",
+        lty = 1, lwd = 1, alpha = 1,
+        just = "center",
+        hjust = NULL, vjust = NULL,
+        font, fontface,
+        ..., identifier, name.type)
+\method{lsegments}{default}(x0, y0, x1, y1, x2, y2,
+        col, alpha, lty, lwd,
+        font, fontface, ..., identifier, name.type)
 
-panel.lines(\dots)
-panel.points(\dots)
-panel.segments(\dots)
-panel.text(\dots)
-panel.rect(\dots)
-panel.arrows(\dots)
-panel.polygon(\dots)
+panel.arrows(...)
+panel.lines(...)
+panel.points(...)
+panel.polygon(...)
+panel.rect(...)
+panel.segments(...)
+panel.text(...)
 }
 \arguments{
 
@@ -126,8 +147,23 @@ panel.polygon(\dots)
   \item{xleft, ybottom, xright, ytop}{ see \code{\link{rect}}}
   \item{width, height, just, hjust, vjust}{ finer control over
     rectangles, see \code{\link[grid:grid.rect]{grid.rect}} }
-  \item{\dots}{ extra arguments, passed on to lower level functions as
+  \item{...}{ extra arguments, passed on to lower level functions as
     appropriate.  }
+
+  \item{rule}{ character string specifying how \code{NA} values are
+    interpreted for polygons and paths. This is mainly intended for
+    paths (via \code{\link{grid.path}}), but can also be specified for
+    polygons for convenience.
+
+    For polygons, the default rule is \code{"none"}, which treats
+    \code{NA}-separated segments as separate polygons. This value is
+    only valid for polygons. For the other rules (\code{"winding"} or
+    \code{"evenodd"}) these segments are interpreted as subpaths,
+    possibly representing holes, of a single path, and are rendered
+    using \code{\link{grid.path}}. Support and rendering speed may
+    depend on the device being used.
+  }
+
   \item{identifier}{
     A character string that is prepended to the name of the grob
     that is created.
@@ -164,6 +200,36 @@ panel.polygon(\dots)
   \code{\link{text}}, \code{\link{segments}}, \code{\link{arrows}},
   \code{\link{Lattice}}
 }
+
+\examples{
+
+SD <- 0.1
+t <- seq(0, 2*pi, length.out = 50) + rnorm(50, sd = SD)
+d <- list(x = c(cos(t), NA, rev(0.5 * cos(t))) + rnorm(101, sd = SD),
+          y = c(sin(t), NA, rev(0.5 * sin(t))) + rnorm(101, sd = SD))
+
+
+## rectangles
+xyplot(y ~ x, d, panel = panel.rect, col = 4, alpha = 0.5, width = 0.1, height = 0.1)
+
+## points and lines
+xyplot(y ~ x, d, panel = panel.lines, col = 4, alpha = 0.5,
+       type = "o", pch = 16)
+
+## polygons and paths (with holes)
+xyplot(y ~ x, d, panel = panel.polygon, col = 4, alpha = 0.5, rule = "evenodd")
+
+## Example adapted from https://journal.r-project.org/articles/RJ-2012-017/
+x <- c(.1, .5, .9, NA, .4, .5, .6, NA, .4, .6, .5)
+y <- c(.1, .8, .1, NA, .5, .4, .5, NA, .3, .3, .2)
+d <- data.frame(x = x, y = y)
+xyplot(y ~ x, data = d, panel = panel.polygon,  rule = "none", col = "grey")
+xyplot(y ~ x, data = d, panel = panel.polypath, rule = "winding", col = "grey")
+xyplot(y ~ x, data = d, panel = panel.polypath, rule = "evenodd", col = "grey")
+
+}
+
+
 
 \author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
 \keyword{dplot}
