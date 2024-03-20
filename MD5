@@ -1,5 +1,5 @@
 97a38ed3eb515d5e0a604d17c00f1c5c *ChangeLog
-718c59300c79d831007caba8bfdf6348 *DESCRIPTION
+88a5c72e2dd66d696a9c773e237bf74f *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *GPL-2
 d32239bcb673463ab874e80d47fae504 *GPL-3
 82da699a39ddc36665f053c7482a1da6 *LICENSE.note
@@ -30,7 +30,7 @@ ba62cd24bc2d417d4f1f40d6bb5d623b *R/qqmath.R
 bcf2022d27241a1c5e14fa9fb2244169 *R/rfs.R
 11d54fd77425f5d6785587c8f42bcbaa *R/scales.R
 51e562ee87167f7c4136f7cf7efc29fd *R/settings.R
-6f9f01465e2e384fdf0b9059dbb7e9cc *R/shingle.R
+e166fa0e56cdf53ff35d0d027c720f57 *R/shingle.R
 5838c8c9f9ddf52ab493c555104f43b7 *R/splom.R
 ec462e00ed4ed6f06ef6c3d7415d3137 *R/strip.R
 f5c8c7178bb827879815060218696269 *R/summary.trellis.R
@@ -56,7 +56,7 @@ f5e96e30c746b6c4e1dc57d13218b9e7 *demo/panel.R
 f320410deb7000e178c2511dc230d4e8 *inst/CITATION
 ef9e47d4ac451c27026d87a50188d4ba *inst/doc/grid.R
 8a20458a8a55c1bfe485e95472a6fbda *inst/doc/grid.Rnw
-69cc59cf41508d7d74eaaba723d1dee6 *inst/doc/grid.pdf
+dca7bc3874d5c872d544bfdb07a6c4b0 *inst/doc/grid.pdf
 108f2f7f64244970cadbf4a193312961 *inst/po/de/LC_MESSAGES/R-lattice.mo
 9d5766ccc359b90a4eefb7e41aaeb0d9 *inst/po/en@quot/LC_MESSAGES/R-lattice.mo
 c1ac665c6f52d285a3687870a97376de *inst/po/fr/LC_MESSAGES/R-lattice.mo
