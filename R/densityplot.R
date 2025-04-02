@@ -1,8 +1,8 @@
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
 ###
-### This file is part of the lattice library for R.
+### This file is part of the lattice package for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -15,57 +15,73 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-### MA 02111-1307, USA
-
-
-
-
-
-
-
-
+### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+### MA 02110-1301, USA
 
 prepanel.default.densityplot <-
     function(x,
              darg,
              groups = NULL,
+             weights = NULL,
              subscripts = TRUE,
              ...)
 {
     if (!is.numeric(x)) x <- as.numeric(x)
-
-    if (length(x)<1)
-        list(xlim = NA,
-             ylim = NA,
-             dx = NA,
-             dy = NA)
+    if (sum(!is.na(x)) < 1)
+        prepanel.null()
+    else if (sum(!is.na(x)) == 1)
+    {
+        list(xlim = rep(x, 2),
+             ylim = rep(0, 2),
+             dx = 1,
+             dy = 1)
+    }
     else if (is.null(groups))
     {
-        h <- do.call("density", c(list(x=x), darg))
+        h <- do.call(density,
+                     c(list(x = x, weights = weights[subscripts]),
+                       darg))
+        ## for banking calculations, include only middle 70% values
+        quants <-
+            quantile(x, c(0.15, 0.85),
+                     names = FALSE, na.rm = TRUE)
+        ok <- h$x > quants[1] & h$x < quants[2]
         list(xlim = range(h$x),
              ylim = range(h$y),
-             dx = diff(h$x), dy = diff(h$y))
+             dx = diff(h$x[ok]),
+             dy = diff(h$y[ok]))
     }
     else
     {
         vals <- sort(unique(groups))
-        nvals <- length(vals)
-        xl <- numeric(0)
-        yl <- numeric(0)
+        ## nvals <- length(vals)
+        xl <- range(x, finite = TRUE)
+        yl <- 0
         dxl <- numeric(0) # bad names !!
         dyl <- numeric(0) 
-        for (i in seq(along=vals)) {
+        for (i in seq_along(vals))
+        {
             id <- (groups[subscripts] == vals[i])
-            if (any(id)) {
-                h <- do.call("density", c(list(x=x[id]), darg))
+            if (sum(id, na.rm = TRUE) > 1) ## need at least 2
+            {
+                h <- do.call(density,
+                             c(list(x = x[id],
+                                    weights = weights[subscripts][id]),
+                               darg))
                 xl <- c(xl, h$x)
                 yl <- c(yl, h$y)
-                dxl <- c(dxl, diff(h$x))
-                dyl <- c(dyl, diff(h$y))
+                ## for banking calculations, include only middle 70% values
+                quants <-
+                    quantile(x[id], c(0.15, 0.85),
+                             names = FALSE, na.rm = TRUE)
+                ok <- h$x > quants[1] & h$x < quants[2]
+                dxl <- c(dxl, diff(h$x[ok]))
+                dyl <- c(dyl, diff(h$y[ok]))
             }
         }
-        list(xlim = range(xl), ylim = range(yl), dx = dxl, dy = dyl)
+        list(xlim = range(xl, finite = TRUE),
+             ylim = range(yl, finite = TRUE),
+             dx = dxl, dy = dyl)
     }
 }
 
@@ -74,51 +90,133 @@ prepanel.default.densityplot <-
 
 panel.densityplot <-
     function(x,
-             darg = list(n = 30),
-             plot.points = TRUE,
+             darg = list(n = 512),
+             plot.points = "jitter",
              ref = FALSE,
-             cex = 0.5,
-             col = plot.line$col,
-             col.line,
-             ...)
+             groups = NULL,
+             weights = NULL,
+##              col = if (is.null(groups)) plot.symbol$col else superpose.symbol$col,
+##              lty = if (is.null(groups)) plot.line$lty else superpose.line$lty,
+##              lwd = if (is.null(groups)) plot.line$lwd else superpose.line$lwd,
+##              alpha = if (is.null(groups)) plot.line$alpha else superpose.line$alpha,
+##              col.line = if (is.null(groups)) plot.line$col else superpose.line$col,
+             jitter.amount = 0.01 * diff(current.panel.limits()$ylim),
+             type = "p",
+             ...,
+             grid = lattice.getOption("default.args")$grid,
+             identifier = "density")
 {
-    x <- as.numeric(x)
-
-    if (ref) {
+    if (!isFALSE(grid))
+    {
+        if (!is.list(grid))
+            grid <- switch(as.character(grid),
+                           "TRUE" = list(h = -1, v = -1, x = x),
+                           "h" = list(h = -1, v = 0),
+                           "v" = list(h = 0, v = -1, x = x),
+                           list(h = 0, v = 0))
+        do.call(panel.grid, grid)
+    }
+    if (ref)
+    {
         reference.line <- trellis.par.get("reference.line")
-        panel.abline(h=0,
+        panel.abline(h = 0,
                      col = reference.line$col,
                      lty = reference.line$lty,
-                     lwd = reference.line$lwd)
+                     lwd = reference.line$lwd,
+                     identifier = paste(identifier, "abline"))
     }
-    if (length(x)>1) {
-        plot.line <- trellis.par.get("plot.line")
-        if (missing(col.line)) col.line <- col
-        h <- do.call("density", c(list(x=x), darg))
-        lim <- current.viewport()$xscale
-        id <- (h$x>=lim[1] & h$x<=lim[2])
-        llines(x = h$x[id], y = h$y[id], col = col.line, ...)
-        if (plot.points) panel.xyplot(x = x, y = rep(0, length(x)), cex = cex, col = col, ...) 
+    ## plot.line <- trellis.par.get("plot.line")
+    ## superpose.line <- trellis.par.get("superpose.line")
+    if (!is.null(groups))
+    {
+        panel.superpose(x, darg = darg,
+                        plot.points = plot.points, ref = FALSE,
+                        groups = groups,
+                        weights = weights,
+                        panel.groups = panel.densityplot,
+                        jitter.amount = jitter.amount,
+                        type = type,
+                        ...)
+    }
+    else
+    {
+        switch(as.character(plot.points),
+               "TRUE" =
+               panel.xyplot(x = x, y = rep(0, length(x)), type = type, ...,
+                            identifier = identifier),
+               "rug" =
+               panel.rug(x = x, 
+                         start = 0, end = 0,
+                         x.units = c("npc", "native"),
+                         type = type,
+                         ...,
+                         identifier = paste(identifier, "rug")),
+               "jitter" =
+               panel.xyplot(x = x,
+                            y = jitter(rep(0, length(x)), amount = jitter.amount),
+                            type = type,
+                            ...,
+                            identifier = identifier))
+        density.fun <- function(x, weights, subscripts = TRUE, darg, ...)
+            ## wrapper to handle 'subscripts' without actually making
+            ## it a formal argument to panel.densityplot
+        {
+            do.call("density",
+                    c(list(x = x,
+                           weights = weights[subscripts]),
+                      darg))
+        }
+        if (sum(!is.na(x)) > 1)
+        {
+            h <- density.fun(x = x, weights = weights, ..., darg = darg)
+            lim <- current.panel.limits()$xlim
+            id <- h$x > min(lim) & h$x < max(lim)
+            panel.lines(x = h$x[id], y = h$y[id], ...,
+                        identifier = identifier)
+        }
     }
 }
 
 
 
+densityplot <- function(x, data, ...) UseMethod("densityplot")
 
 
-densityplot <-
-    function(formula,
-             data = parent.frame(),
-             allow.multiple = FALSE,
-             outer = FALSE,
-             auto.key = FALSE,
+densityplot.numeric <-
+    function(x, data = NULL, xlab = deparse(substitute(x)), ...)
+{
+    ocall <- sys.call(); ocall[[1]] <- quote(densityplot)
+    ccall <- match.call()
+    if (!is.null(ccall$data)) 
+        warning("explicit 'data' specification ignored")
+    ccall$data <- environment() # list(x = x)
+    ccall$xlab <- xlab
+    ccall$x <- ~x
+    ccall[[1]] <- quote(lattice::densityplot)
+    ans <- eval.parent(ccall)
+    ans$call <- ocall
+    ans
+}
+
+
+
+## FIXME: weights will not currently work with the extended formula
+## interface.  The fix is to pass it to latticeParseFormula and
+## replicate it there, but I'll postpone that for now.
+
+densityplot.formula <-
+    function(x,
+             data = NULL,
+             allow.multiple = is.null(groups) || outer,
+             outer = !is.null(groups),
+             auto.key = lattice.getOption("default.args")$auto.key,
              aspect = "fill",
-             layout = NULL,
-             panel = if (is.null(groups)) "panel.densityplot" else "panel.superpose",
+             panel = lattice.getOption("panel.densityplot"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
              groups = NULL,
+             weights = NULL,
              xlab,
              xlim,
              ylab,
@@ -129,19 +227,29 @@ densityplot <-
              window = NULL,
              width = NULL,
              give.Rkern = FALSE,
-             n = 50,
+             n = 512,
              from = NULL,
              to = NULL,
              cut = NULL,
-             na.rm = NULL,
+             na.rm = TRUE,
+             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
-             panel.groups = "panel.densityplot",
-             subscripts = !is.null(groups),
+             lattice.options = NULL,
+             default.scales = list(),
+             default.prepanel = lattice.getOption("prepanel.default.densityplot"),
+             subscripts = !is.null(groups) || !is.null(weights),
              subset = TRUE)
 {
-
-    ## dots <- eval(substitute(list(...)), data, parent.frame())
+    formula <- x
     dots <- list(...)
+    groups <- eval(substitute(groups), data, environment(formula))
+    weights <- eval(substitute(weights), data, environment(formula))
+    subset <- eval(substitute(subset), data, environment(formula))
+    if (!is.null(lattice.options))
+    {
+        oopt <- lattice.options(lattice.options)
+        on.exit(lattice.options(oopt), add = TRUE)
+    }
 
     ## darg is a list that gives arguments to density()
     darg <- list()
@@ -159,19 +267,11 @@ densityplot <-
     
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
     
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-
-    formname <- deparse(substitute(formula))
-    formula <- eval(substitute(formula), data, parent.frame())
-
-    if (!inherits(formula, "formula"))
-        formula <- as.formula(paste("~", formname))
-    
     form <-
         latticeParseFormula(formula, data, subset = subset,
                             groups = groups, multiple = allow.multiple,
-                            outer = outer, subscripts = TRUE)
+                            outer = outer, subscripts = TRUE,
+                            drop = drop.unused.levels)
 
     groups <- form$groups
 
@@ -180,76 +280,65 @@ densityplot <-
 
     if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
     if (subscripts) subscr <- form$subscr
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
     cond <- form$condition
-    number.of.cond <- length(cond)
     x <- form$right
-    if (number.of.cond == 0) {
+    if (length(cond) == 0) {
         strip <- FALSE
-        cond <- list(as.factor(rep(1, length(x))))
-        layout <- c(1,1,1)
-        number.of.cond <- 1
+        cond <- list(gl(1, length(x)))
     }
 
     if (missing(xlab)) xlab <- form$right.name
-    if (missing(ylab)) ylab <- "Density"
+    if (missing(ylab)) ylab <- gettext("Density")
 
-    ##if (!is.numeric(x))
-    ##    warning("x should be numeric")
-    ##x <- as.numeric(x)
+    ## if (!is.numeric(x))
+    ##     warning("x should be numeric")
+    ## x <- as.numeric(x)
 
     ## create a skeleton trellis object with the
     ## less complicated components:
-    foo <- do.call("trellis.skeleton",
-                   c(list(aspect = aspect,
-                          strip = strip,
-                          panel = panel,
-                          xlab = xlab,
-                          ylab = ylab), dots))
+    foo <-
+        do.call("trellis.skeleton",
+                c(list(formula = formula, 
+                       cond = cond,
+                       aspect = aspect,
+                       strip = strip,
+                       panel = panel,
+                       xlab = xlab,
+                       ylab = ylab,
+                       xlab.default = form$right.name,
+                       ylab.default = gettext("Density"),
+                       lattice.options = lattice.options), dots),
+                quote = TRUE)
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
-
-    ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
-        foo$xlab$label <- form$right.name
-    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
-        foo$ylab$label <- "Density"
+    foo$call <- sys.call(); foo$call[[1]] <- quote(densityplot)
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
-    ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
-    foo <- c(foo,
-             do.call("construct.scales", scales))
-
+    scales <- updateList(default.scales, scales)
+    foo <- c(foo, do.call("construct.scales", scales))
 
     ## Step 3: Decide if limits were specified in call:
     
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit)) {
+    if (!is.null(foo$x.scales$limits)) {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit)) {
+    if (!is.null(foo$y.scales$limits)) {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
 
     ## Step 4: Decide if log scales are being used:
 
     have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
     have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
-    if (have.xlog) {
+    if (have.xlog)
+    {
         xlog <- foo$x.scales$log
         xbase <-
             if (is.logical(xlog)) 10
@@ -257,9 +346,10 @@ densityplot <-
             else if (xlog == "e") exp(1)
         
         x <- log(x, xbase)
-        if (have.xlim) xlim <- log(xlim, xbase)
+        if (have.xlim) xlim <- logLimits(xlim, xbase)
     }
-    if (have.ylog) {
+    if (have.ylog)
+    {
         warning("Can't have log Y-scale")
         have.ylog <- FALSE
         foo$y.scales$log <- FALSE
@@ -269,88 +359,71 @@ densityplot <-
 
     cond.max.level <- unlist(lapply(cond, nlevels))
 
-
-    id.na <- is.na(x)
-    for (var in cond)
-        id.na <- id.na | is.na(var)
-    if (!any(!id.na)) stop("nothing to draw")
-    ## Nothing simpler ?
-
-    foo$condlevels <- lapply(cond, levels)
-
-    ## Step 6: Evaluate layout, panel.args.common and panel.args
+    ## Step 6: Determine packets
 
     foo$panel.args.common <- c(dots, list(darg = darg))
-    if (subscripts) {
+    if (subscripts)
+    {
         foo$panel.args.common$groups <- groups
-        foo$panel.args.common$panel.groups <- panel.groups
+        foo$panel.args.common$weights <- weights
     }
 
-    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
-    plots.per.page <- max(layout[1] * layout[2], layout[2])
-    number.of.pages <- layout[3]
-    foo$skip <- rep(foo$skip, length = plots.per.page)
-    foo$layout <- layout
-    nplots <- plots.per.page * number.of.pages
+    npackets <- prod(cond.max.level)
+    if (npackets != prod(sapply(foo$condlevels, length))) 
+        stop("mismatch in number of packets")
+    foo$panel.args <- vector(mode = "list", length = npackets)
 
-    foo$panel.args <- as.list(1:nplots)
-    cond.current.level <- rep(1,number.of.cond)
-    panel.number <- 1 # this is a counter for panel number
-    for (page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0))
-            for (plot in 1:plots.per.page) {
+    foo$packet.sizes <- numeric(npackets)
+    if (npackets > 1)
+    {
+        dim(foo$packet.sizes) <- sapply(foo$condlevels, length)
+        dimnames(foo$packet.sizes) <- lapply(foo$condlevels, as.character)
+    }
 
-                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                else if(!any(cond.max.level-cond.current.level<0)) {
+    cond.current.level <- rep(1, length(cond))
 
-                    id <- !id.na
-                    for(i in 1:number.of.cond)
-                    {
-                        var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
-                            ((var >=
-                              levels(var)[[cond.current.level[i]]][1])
-                             & (var <=
-                                levels(var)[[cond.current.level[i]]][2]))
-                        else (as.numeric(var) == cond.current.level[i])
-                    }
+    for (packet.number in seq_len(npackets))
+    {
+        id <- compute.packet(cond, cond.current.level)
+        foo$packet.sizes[packet.number] <- sum(id)
 
-                    foo$panel.args[[panel.number]] <-
-                        list(x = x[id])
-                    if (subscripts)
-                        foo$panel.args[[panel.number]]$subscripts <-
-                            subscr[id]
+        foo$panel.args[[packet.number]] <- list(x = x[id])
+        if (subscripts)
+            foo$panel.args[[packet.number]]$subscripts <-
+                subscr[id]
 
-                    cond.current.level <-
-                        cupdate(cond.current.level,
-                                cond.max.level)
-                }
+        cond.current.level <-
+            cupdate(cond.current.level,
+                    cond.max.level)
+    }
 
-                panel.number <- panel.number + 1
-            }
+    more.comp <-
+        c(limits.and.aspect(default.prepanel,
+                            prepanel = prepanel, 
+                            have.xlim = have.xlim, xlim = xlim, 
+                            have.ylim = have.ylim, ylim = ylim, 
+                            x.relation = foo$x.scales$relation,
+                            y.relation = foo$y.scales$relation,
+                            panel.args.common = foo$panel.args.common,
+                            panel.args = foo$panel.args,
+                            aspect = aspect,
+                            npackets = npackets,
+                            x.axs = foo$x.scales$axs,
+                            y.axs = foo$y.scales$axs),
+          cond.orders(foo))
+    foo[names(more.comp)] <- more.comp
 
-    foo <- c(foo,
-             limits.and.aspect(prepanel.default.densityplot,
-                               prepanel = prepanel, 
-                               have.xlim = have.xlim, xlim = xlim, 
-                               have.ylim = have.ylim, ylim = ylim, 
-                               x.relation = foo$x.scales$relation,
-                               y.relation = foo$y.scales$relation,
-                               panel.args.common = foo$panel.args.common,
-                               panel.args = foo$panel.args,
-                               aspect = aspect,
-                               nplots = nplots,
-                               x.axs = foo$x.scales$axs,
-                               y.axs = foo$y.scales$axs))
-
-
-    if (is.null(foo$key) && !is.null(groups) &&
-        (is.list(auto.key) || (is.logical(auto.key) && auto.key)))
-        foo$key <- do.call("simpleKey",
-                           c(list(levels(as.factor(groups))),
-                             if (is.list(auto.key)) auto.key else list()))
-
+    if (is.null(foo$legend) && needAutoKey(auto.key, groups))
+    {
+        foo$legend <-
+            autoKeyLegend(list(text = levels(as.factor(groups)),
+                               points = FALSE,
+                               rectangles = FALSE,
+                               lines = TRUE),
+                          auto.key)
+    }
     class(foo) <- "trellis"
     foo
 }
+
+

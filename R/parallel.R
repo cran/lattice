@@ -1,8 +1,8 @@
 
 
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
 ###
-### This file is part of the lattice library for R.
+### This file is part of the lattice package for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -15,76 +15,150 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-### MA 02111-1307, USA
+### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+### MA 02110-1301, USA
 
 
 
 prepanel.default.parallel <-
-    function(x, y, type, ...)
+    function(x, y, z, ..., horizontal.axis = TRUE)
 {
-    list(xlim = c(0,1),
-         ylim = c(0,1),
-         dx = 1,
-         dy = 1)
+    if (horizontal.axis)
+        list(xlim = c(0,1),
+             ylim = extend.limits(c(1, ncol(as.data.frame(z))), prop = 0.03), 
+             ##ylim = colnames(as.data.frame(z)),
+             dx = 1,
+             dy = 1)
+    else
+        list(xlim = extend.limits(c(1, ncol(as.data.frame(z))), prop = 0.03), 
+             ylim = c(0,1),
+             dx = 1,
+             dy = 1)
 }
 
 
 
-panel.parallel <- function(z, subscripts,
-                           col=superpose.line$col,
-                           lwd=superpose.line$lwd,
-                           lty=superpose.line$lty, ...)
+panel.parallel <-
+    function(x, y, z, subscripts,
+             groups = NULL,
+             col = superpose.line$col,
+             lwd = superpose.line$lwd,
+             lty = superpose.line$lty,
+             alpha = superpose.line$alpha,
+             common.scale = FALSE,
+             lower = sapply(z, function(x) min(as.numeric(x), na.rm = TRUE)),
+             upper = sapply(z, function(x) max(as.numeric(x), na.rm = TRUE)),
+             ..., horizontal.axis = TRUE,
+             identifier = "parallel")
 {
-
     superpose.line <- trellis.par.get("superpose.line")
     reference.line <- trellis.par.get("reference.line")
 
     n.r <- ncol(z)
     n.c <- length(subscripts)
-    col <- rep(col, length=n.c)
-    lty <- rep(lty, length=n.c)
-    lwd <- rep(lwd, length=n.c)
-
-    llim <- numeric(n.r)
-    ulim <- numeric(n.r)
-    dif <- numeric(n.r)
-    if (n.r > 0)
-        for(i in 1:n.r) {
-            grid.lines(x = c(0,1), y = c(i,i),
-                       default.units = "native",
-                       gp = gpar(col = reference.line$col,
-                       lwd = reference.line$lwd,
-                       lty = reference.line$lty))
-            llim[i] <- range(as.numeric(z[,i]))[1]
-            ulim[i] <- range(as.numeric(z[,i]))[2]
-            dif[i] <- ulim[i] - llim[i]
-        }
-   
-
-    for (i in seq(along=subscripts))
+    if (is.null(groups))
     {
-        x <- (as.numeric(z[subscripts[i],,])-llim)/dif
-        grid.lines(x = x,
-                   y=1:n.r, 
-                   gp = gpar(col=col[i], lty=lty[i], lwd=lwd[i]),
-                   default.units="native")
+        col <- rep(col, length.out = n.c)
+        lty <- rep(lty, length.out = n.c)
+        lwd <- rep(lwd, length.out = n.c)
+        alpha <- rep(alpha, length.out = n.c)
     }
-    
+    else
+    {
+        groups <- as.factor(groups)[subscripts]
+        n.g <- nlevels(groups)
+        gnum <- as.numeric(groups) ## probably unnecessary
+        col <- rep(col, length.out = n.g)[gnum]
+        lty <- rep(lty, length.out = n.g)[gnum]
+        lwd <- rep(lwd, length.out = n.g)[gnum]
+        alpha <- rep(alpha, length.out = n.g)[gnum]
+    }
+
+    if (is.function(lower)) lower <- sapply(z, lower)
+    if (is.function(upper)) upper <- sapply(z, upper)
+    if (common.scale)
+    {
+        lower <- min(lower)
+        upper <- max(upper)
+    }
+    lower <- rep(lower, length.out = n.r)
+    upper <- rep(upper, length.out = n.r)
+    dif <- upper - lower
+
+    if (n.r > 1)
+        if (horizontal.axis)
+            panel.segments(x0 = 0, x1 = 1,
+                           y0 = seq_len(n.r),
+                           y1 = seq_len(n.r),
+                           col = reference.line$col,
+                           lwd = reference.line$lwd,
+                           lty = reference.line$lty,
+                           identifier = paste(identifier, "reference",
+                             sep = "."))
+        else
+            panel.segments(x0 = seq_len(n.r),
+                           x1 = seq_len(n.r),
+                           y0 = 0, y1 = 1,
+                           col = reference.line$col,
+                           lwd = reference.line$lwd,
+                           lty = reference.line$lty,
+                           identifier = paste(identifier, "reference",
+                             sep = "."))
+    else return(invisible())
+
+    for (i in seq_len(n.r-1))
+    {
+        z0 <- (as.numeric(z[subscripts, i]) - lower[i])/dif[i]
+        z1 <- (as.numeric(z[subscripts, i+1]) - lower[i+1])/dif[i+1]
+        if (horizontal.axis)
+            panel.segments(x0 = z0, y0 = i, x1 = z1, y1 = i + 1,
+                           col = col,
+                           lty = lty,
+                           lwd = lwd,
+                           alpha = alpha,
+                           ...,
+                           identifier = paste(identifier, i, sep = "."))
+        else
+            panel.segments(x0 = i, y0 = z0, x1 = i + 1, y1 = z1,
+                           col = col,
+                           lty = lty,
+                           lwd = lwd,
+                           alpha = alpha,
+                           ...,
+                           identifier = paste(identifier, i, sep = "."))
+    }
+    invisible()
 }
 
 
+parallelplot <- function(x, data, ...) UseMethod("parallelplot")
+
+parallelplot.matrix <-
+parallelplot.data.frame <-
+    function(x, data = NULL, ..., groups = NULL, subset = TRUE)
+{
+    ocall <- sys.call(); ocall[[1]] <- quote(parallelplot)
+    ccall <- match.call()
+    if (!is.null(ccall$data)) 
+        warning("explicit 'data' specification ignored")
+    ccall$x <- ~x
+    ccall$data <- environment()
+    ##     ccall$data <-
+    ##         list(x = x, groups = groups, subset = subset)
+    ##     ccall$groups <- groups
+    ##     ccall$subset <- subset
+    ccall[[1]] <- quote(lattice::parallelplot)
+    modifyList(eval.parent(ccall), list(call = ocall))
+}
 
 
-
-
-parallel <-
-    function(formula,
-             data = parent.frame(),
+parallelplot.formula <-
+    function(x,
+             data = NULL,
+             auto.key = lattice.getOption("default.args")$auto.key,
              aspect = "fill",
              between = list(x = 0.5, y = 0.5),
-             layout = NULL,
-             panel = "panel.parallel",
+             panel = lattice.getOption("panel.parallel"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -93,106 +167,119 @@ parallel <-
              xlim,
              ylab = NULL,
              ylim,
-             varnames,
+             varnames = NULL,
+             horizontal.axis = TRUE,
+             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
-             subscripts = !is.null(groups),
+             lattice.options = NULL,
+             default.scales = list(),
+             default.prepanel = lattice.getOption("prepanel.default.parallel"),
              subset = TRUE)
 {
-
-    ## dots <- eval(substitute(list(...)), data, parent.frame())
+    formula <- x
     dots <- list(...)
-
-    if (!is.function(panel)) panel <- eval(panel)
-    if (!is.function(strip)) strip <- eval(strip)
-
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
+    groups <- eval(substitute(groups), data, environment(formula))
+    subset <- eval(substitute(subset), data, environment(formula))
+    if (!is.null(lattice.options))
+    {
+        oopt <- lattice.options(lattice.options)
+        on.exit(lattice.options(oopt), add = TRUE)
+    }
 
     ## Step 1: Evaluate x, y, etc. and do some preprocessing
     
-    form <- latticeParseFormula(formula, data)
+    ## right.name <- deparse(substitute(x))
+    ## x <- eval(substitute(x), data, environment(formula))
+    form <-
+        latticeParseFormula(formula, data,
+                            subset = subset, groups = groups,
+                            multiple = FALSE,
+                            outer = FALSE, subscripts = TRUE,
+                            drop = drop.unused.levels)
+
+
+    ## We need to be careful with subscripts here. It HAS to be there,
+    ## and it's to be used to index x, y, z (and not only groups,
+    ## unlike in xyplot etc). This means we have to subset groups as
+    ## well, which is about the only use for the subscripts calculated
+    ## in latticeParseFormula, after which subscripts is regenerated
+    ## as a straight sequence indexing the variables
+
+    if (!is.null(form$groups)) groups <-  form$groups[form$subscr]
+    subscr <- seq_len(nrow(form$right))
+
+    if (!is.function(panel)) panel <- eval(panel)
+    if (!is.function(strip)) strip <- eval(strip)
     cond <- form$condition
-    number.of.cond <- length(cond)
     x <- as.data.frame(form$right)
-    if (number.of.cond == 0) {
+
+    if (length(cond) == 0) {
         strip <- FALSE
         cond <- list(as.factor(rep(1, nrow(x))))
-        layout <- c(1,1,1)
-        number.of.cond <- 1
     }
-    if (!missing(varnames)) colnames(x) <-
-        eval(substitute(varnames), data, parent.frame())
 
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
-    subscr <- seq(along=x[,1])
-    x <- x[subset,, drop = TRUE]
-    subscr <- subscr[subset, drop = TRUE]
-    
-    ##if(!(is.numeric(x) && is.numeric(y)))
-    ##    warning("Both x and y should be numeric")    WHAT ?
-
+    varnames <-
+        if (is.null(varnames)) colnames(x)
+        else varnames
+    ## WAS eval(substitute(varnames), data, environment(formula)), but
+    ## not sure why non-standard evaluation would be useful here
+    if (length(varnames) != ncol(x)) stop("'varnames' has wrong length.")
 
     ## create a skeleton trellis object with the
     ## less complicated components:
 
-    foo <- do.call("trellis.skeleton",
-                   c(list(aspect = aspect,
-                          between = between,
-                          strip = strip,
-                          panel = panel,
-                          xlab = xlab,
-                          ylab = ylab), dots))
+    foo <-
+        do.call("trellis.skeleton",
+                c(list(formula = formula, 
+                       cond = cond,
+                       aspect = aspect,
+                       between = between,
+                       strip = strip,
+                       panel = panel,
+                       xlab = xlab,
+                       ylab = ylab,
+                       xlab.default = gettext("Parallel Coordinate Plot"),
+                       lattice.options = lattice.options,
+                       horizontal.axis = horizontal.axis), dots),
+                quote = TRUE)
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
-
-    ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
-        foo$xlab$label <- "Parallel Coordinate Plot"
-    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
-        foo$ylab <- NULL
+    foo$call <- sys.call(); foo$call[[1]] <- quote(parallelplot)
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
     ## overriding at and labels, maybe not necessary
-    
-    ## scales <- eval(substitute(scales), data, parent.frame())
-    if (is.character(scales)) scales <- list(relation = scales)
-    if (is.null(scales$alternating)) {
-        if (is.null(scales$y)) scales$y <- list(alternating = FALSE)
-        else if (is.null(scales$y$alternating)) scales$y$alternating <- FALSE
-        ## bug if y="free" but who cares
-    }
-    foo <- c(foo, 
-             do.call("construct.scales", scales))
-    foo$x.scales$at <- c(0,1)
-    foo$x.scales$labels <- c("Min","Max")
-    foo$y.scales$at <- 1:ncol(x)
-    foo$y.scales$labels <- colnames(x)
-    
 
+    if (missing(default.scales))
+    {
+        default.scales <- 
+            list(x = list(at = c(0, 1), labels = c("Min", "Max")),
+                 y =
+                 list(alternating = FALSE, axs = "i", tck = 0,
+                      at = seq_len(ncol(x)), labels = varnames))
+        if (!horizontal.axis) names(default.scales) <- c("y", "x")
+    }
+    
+    if (is.character(scales)) scales <- list(relation = scales)
+    scales <- updateList(default.scales, scales)
+    foo <- c(foo, do.call("construct.scales", scales))
+    
     ## Step 3: Decide if limits were specified in call:
 
-    if (missing(xlim)) xlim <- extend.limits(c(0,1))
-    if (missing(ylim)) ylim <- extend.limits(c(1,ncol(x)), prop = 0.03) 
-    have.xlim <- TRUE
-    if (!is.null(foo$x.scales$limit)) {
+    have.xlim <- !missing(xlim)
+    if (!is.null(foo$x.scales$limits))
+    {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
-    have.ylim <- TRUE
-    if (!is.null(foo$y.scales$limit)) {
+    have.ylim <- !missing(ylim)
+    if (!is.null(foo$y.scales$limits))
+    {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
-    
+
     ## Step 4: Decide if log scales are being used:
 
     have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
@@ -217,94 +304,85 @@ parallel <-
     
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
-
-    id.na <- FALSE
-    for (j in 1:ncol(x))
-        id.na <- id.na | is.na(x[,j])
-    for (var in cond)
-        id.na <- id.na | is.na(var)
-    if (!any(!id.na)) stop("nothing to draw")
-    ## Nothing simpler ?
-
-    foo$condlevels <- lapply(cond, levels)
-
-    ## Step 6: Evaluate layout, panel.args.common and panel.args
-
+    ## Step 6: Determine packets
 
     foo$panel.args.common <-
-        c(list(z = x, groups = groups), dots)
+        c(list(z = x, groups = groups, varnames = varnames), dots)
 
-    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
-    plots.per.page <- max(layout[1] * layout[2], layout[2])
-    number.of.pages <- layout[3]
-    foo$skip <- rep(foo$skip, length = plots.per.page)
-    foo$layout <- layout
-    nplots <- plots.per.page * number.of.pages
 
-    foo$panel.args <- as.list(1:nplots)
-    cond.current.level <- rep(1,number.of.cond)
-    panel.number <- 1 # this is a counter for panel number
-    for (page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0))
-            for (plot in 1:plots.per.page) {
+    npackets <- prod(cond.max.level)
+    if (npackets != prod(sapply(foo$condlevels, length))) 
+        stop("mismatch in number of packets")
+    foo$panel.args <- vector(mode = "list", length = npackets)
 
-                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                else if(!any(cond.max.level-cond.current.level<0)) {
 
-                    id <- !id.na
-                    for(i in 1:number.of.cond)
-                    {
-                        var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
-                            ((var >=
-                              levels(var)[[cond.current.level[i]]][1])
-                             & (var <=
-                                levels(var)[[cond.current.level[i]]][2]))
-                        else (as.numeric(var) == cond.current.level[i])
-                    }
+    foo$packet.sizes <- numeric(npackets)
+    if (npackets > 1)
+    {
+        dim(foo$packet.sizes) <- sapply(foo$condlevels, length)
+        dimnames(foo$packet.sizes) <- lapply(foo$condlevels, as.character)
+    }
 
-                    foo$panel.args[[panel.number]] <-
-                        list(subscripts = subscr[id])
+    cond.current.level <- rep(1, length(cond))
 
-                    cond.current.level <-
-                        cupdate(cond.current.level,
-                                cond.max.level)
-                }
 
-                panel.number <- panel.number + 1
-            }
+    for (packet.number in seq_len(npackets))
+    {
+        id <- compute.packet(cond, cond.current.level)
+        foo$packet.sizes[packet.number] <- sum(id)
 
-    foo <- c(foo,
-             limits.and.aspect(prepanel.default.parallel,
-                               prepanel = prepanel, 
-                               have.xlim = have.xlim, xlim = xlim, 
-                               have.ylim = have.ylim, ylim = ylim, 
-                               x.relation = foo$x.scales$relation,
-                               y.relation = foo$y.scales$relation,
-                               panel.args.common = foo$panel.args.common,
-                               panel.args = foo$panel.args,
-                               aspect = aspect,
-                               nplots = nplots,
-                               x.axs = foo$x.scales$axs,
-                               y.axs = foo$y.scales$axs))
+        foo$panel.args[[packet.number]] <-
+            list(subscripts = subscr[id])
 
+        cond.current.level <-
+            cupdate(cond.current.level,
+                    cond.max.level)
+    }
+
+    more.comp <-
+        c(limits.and.aspect(default.prepanel,
+                            prepanel = prepanel, 
+                            have.xlim = have.xlim, xlim = xlim, 
+                            have.ylim = have.ylim, ylim = ylim, 
+                            x.relation = foo$x.scales$relation,
+                            y.relation = foo$y.scales$relation,
+                            panel.args.common = foo$panel.args.common,
+                            panel.args = foo$panel.args,
+                            aspect = aspect,
+                            npackets = npackets,
+                            x.axs = foo$x.scales$axs,
+                            y.axs = foo$y.scales$axs),
+          cond.orders(foo))
+    foo[names(more.comp)] <- more.comp
+
+    if (is.null(foo$legend) && needAutoKey(auto.key, groups))
+    {
+        foo$legend <-
+            autoKeyLegend(list(text = levels(as.factor(groups)),
+                               points = FALSE,
+                               rectangles = FALSE,
+                               lines = TRUE),
+                          auto.key)
+    }
     class(foo) <- "trellis"
     foo
 }
 
 
+parallel <- function(x, data, ...)
+{
+    .Defunct("parallelplot")
+    ## ccall <- match.call()
+    ## ccall[[1]] <- quote(lattice::parallelplot)
+    ## eval.parent(ccall)
+    UseMethod("parallel")
+}
 
 
-
-
-
-
-
-
-
+parallel.formula <- parallelplot.formula
+parallel.matrix <- parallelplot.matrix
+parallel.data.frame <- parallelplot.data.frame
 
 

@@ -1,7 +1,7 @@
 
-### Copyright 2000-2003 Deepayan Sarkar <deepayan@stat.wisc.edu>,
+### Copyright (C) 2000-2006 Deepayan Sarkar <Deepayan.Sarkar@R-project.org>,
 ###
-### This file is part of the lattice library for R.  It is made
+### This file is part of the lattice package for R.  It is made
 ### available under the terms of the GNU General Public License,
 ### version 2, or at your option, any later version, incorporated
 ### herein by reference.
@@ -14,47 +14,50 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-### MA 02111-1307, USA
+### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+### MA 02110-1301, USA
 
 
-
-.onLoad <- function(lib, pkg) {
-  library.dynam(pkg, pkg, lib )
-  #import(grid) # will this do ?  apparently not
-  ## do we want grid functions visible
-  ##if (!require(grid))
-  ##    stop("lattice requires grid, but grid couldn't be loaded")
-}
 
 .LatticeEnv <- new.env()
+assign("lattice.status",  list(), envir = .LatticeEnv)
+assign("lattice.theme",   list(), envir = .LatticeEnv)
+assign("lattice.options", list(), envir = .LatticeEnv)
+## assign("last.object",     NULL,   envir = .LatticeEnv)
 
-## Need global variable to handle more in print.trellis
-assign(".lattice.print.more", FALSE, env = .LatticeEnv)
-assign("lattice.theme", list(), env = .LatticeEnv)
+
+
+experimentalOptions <- function()
+    list(layout.heights =
+         list(top.padding = list(x = 0.5, units = "char", data = NULL),
+              main.key.padding = list(x = 0.5, units = "char", data = NULL),
+              key.axis.padding = list(x = 0.5, units = "char", data = NULL),
+              axis.xlab.padding = list(x = 0.5, units = "char", data = NULL),
+              xlab.key.padding = list(x = 0.5, units = "char", data = NULL),
+              key.sub.padding = list(x = 0.5, units = "char", data = NULL),
+              bottom.padding = list(x = 0.5, units = "char", data = NULL)),
+         layout.widths =
+         list(left.padding = list(x = 0.5, units = "char", data = NULL),
+              key.ylab.padding = list(x = 0.5, units = "char", data = NULL),
+              ylab.axis.padding = list(x = 0.5, units = "char", data = NULL),
+              axis.key.padding = list(x = 0.5, units = "char", data = NULL),
+              right.padding = list(x = 0.5, units = "char", data = NULL))
+         )
+
+
+
+.onLoad <- function(libname, pkgname) 
+{
+    ## library.dynam("lattice", pkgname, libname )
+    lattice.options(.defaultLatticeOptions())
+    lattice.options(experimentalOptions())
+    lattice.setStatus(.defaultLatticeStatus(), clean.first = TRUE)
+}
 
 .noGenerics <- TRUE
 
 .onUnload <- function(libpath)
     library.dynam.unload("lattice", libpath)
-
-
-
-
-
-
-
-
-
-# old (pre NAMESPACE version)
-#.First.lib <- function(lib, pkg) {
-#  library.dynam(pkg, pkg, lib )
-#  if (!require(grid))
-#      stop("lattice requires grid, but grid couldn't be loaded")
-#}
-
-## Need global variable to handle more in print.trellis
-#.lattice.print.more <- FALSE
 
 
 

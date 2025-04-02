@@ -1,9 +1,7 @@
 
-
-
-### Copyright 2001-2003 Deepayan Sarkar <deepayan@stat.wisc.edu> and 
+### Copyright (C) 2001-2009 Deepayan Sarkar <Deepayan.Sarkar@R-project.org> 
 ###
-### This file is part of the lattice library for R.
+### This file is part of the lattice package for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -16,14 +14,74 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-### MA 02111-1307, USA
+### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+### MA 02110-1301, USA
 
 
-lpretty <- function(x, ...) { 
+## For historical reasons (i.e., S-compatibility) there are several
+## places in lattice where an argument that is supposed to be a
+## function may be specified as a character string.  It is not
+## entirely clear how namespace ambiguity is resolved, but it appears
+## that bindings in the lattice namespace are preferred over the
+## global environment.
+
+
+getFunctionOrName <- function(FUN)
+     ## Try lattice namespace first? Does that happen automatically?
+{
+    if (is.function(FUN)) FUN
+    else if (is.character(FUN)) get(FUN)
+    else eval(FUN)
+}
+
+
+checkArgsAndCall <- function(FUN, args) ## unnamed arguments not allowed
+{
+    if (!is.null(FUN)) {
+        if (!("..." %in% names(formals(FUN))))
+            args <- args[intersect(names(args), names(formals(FUN)))]
+        do.call(FUN, args, quote = TRUE) ## FIXME: Is this risky?
+    }
+}
+
+
+## Modified from methods::hasArg.
+hasGroupNumber <- function()
+{
+    aname <- "group.number"
+    fnames <- names(formals(sys.function(sys.parent())))
+    if (is.na(match(aname, fnames))) {
+        if (is.na(match("...", fnames)))
+            FALSE
+        else {
+            dotsCall <- eval(quote(substitute(list(...))), sys.parent())
+            !is.na(match(aname, names(dotsCall)))
+        }
+    }
+    else FALSE
+}
+
+
+
+logLimits <- function(lim, base)
+{
+    if (is.list(lim))
+        lapply(lim, log, base)
+    else log(lim, base)
+}
+
+
+chooseFace <- function(fontface = NULL, font = 1)
+{
+    if (is.null(fontface)) font else fontface
+}
+
+
+lpretty <- function(x, ...)
+{
     eps <- 1e-10
     at <- pretty(x[is.finite(x)], ...)
-    at <- ifelse(abs(at-round(at, 3))<eps, round(at, 3), at)
+    ifelse(abs(at-round(at, 3))<eps, round(at, 3), at)
 }
 
 
@@ -48,7 +106,7 @@ oneway <-
             else rep(spread, num.l.x)
         foo$fitted.values <- numeric(length(y))
         sc <- numeric(length(y))
-        for (i in seq(along = y)){
+        for (i in seq_along(y)){
             foo$fitted.values[i] <- foo$location[as.numeric(x)[i]]
             sc[i] <- foo$spread[as.numeric(x)[i]]
         }
@@ -60,15 +118,9 @@ oneway <-
 }
 
 
-do.breaks  <- function(endpoints, nint)
-{
-    if (length(endpoints)!=2) stop("error")
-    endpoints[1] + diff(endpoints) * 0:nint / nint
-}
-
 
 is.characterOrExpression <- function(x)
-    is.character(x) || is.expression(x)
+    is.character(x) || is.expression(x) || is.call(x) || is.symbol(x)
 
 
 
@@ -87,368 +139,482 @@ as.factorOrShingle <- function(x, subset = TRUE, drop = FALSE)
 
 
 
-"[.shingle" <-
-    function(x, subset, drop = FALSE)
+## this is a generalization of range(x), used as the xlim/ylim
+## components of prepanel functions.  It should deals with factors,
+## numerics, and date-time classes.
+scale_limits <- function(x)
 {
-    if (!is.shingle(x)) stop("x must be a shingle")
-    ans <- as.numeric(x)[subset]
-    attr(ans, "levels") <- levels(x)
-    class(attr(ans, "levels")) <- "shingleLevel"
-    if (drop) {
-        xlvs <- levels(ans)
-        dl <- logical(nlevels(ans))
-        for (i in seq(along=dl))
-            dl[i] <- any( ans >= xlvs[[i]][1] & ans <= xlvs[[i]][2] )
-        attr(ans, "levels") <- xlvs[dl]
-        class(attr(ans, "levels")) <- "shingleLevel"
-    }
-    class(ans) <- "shingle"
-    ans
+    if (is.factor(x)) levels(x)
+    else if (is.numeric(x)) range(x, finite = TRUE)
+    else range(x, na.rm = TRUE)
 }
 
+
+
+
+## update elements of a list recursively. Used in updating trellis or
+## lattice settings using trellis.par.set and lattice.options
+## respectively
+
+updateList <- function(x, val)
+{
+    if (is.null(x)) x <- list()
+    modifyList(x, val)
+}
+
+
+##     function(x, val)
+## {
+##     if (is.null(x)) x <- list()
+##     if (!is.list(x)) stop("x must be NULL or a list")
+##     if (!is.list(val)) stop("val must be a list")
+##     xnames <- names(x)
+##     for (v in names(val))
+##     {
+##         existing <- v %in% xnames
+##         if (existing && is.list(x[[v]]) && is.list(val[[v]]))
+##             x[[v]] <- updateList(x[[v]], val[[v]])
+##         else 
+##             x[[v]] <- val[[v]]
+##     }
+##     x
+## }
+
+
+## Next 3 are convenience functions following those available in Trellis
+
+do.breaks  <- function(endpoints, nint)
+{
+    if (length(endpoints)!=2) stop("error")
+    endpoints[1] + diff(endpoints) * 0:nint / nint
+}
 
 
 Rows <- function(x, which)
 {
-    for (i in seq(along = x)) x[[i]] <-
-        rep(x[[i]], length = max(which, length(which)))[which]
+    for (i in seq_along(x)) x[[i]] <-
+        rep(x[[i]], length.out = max(which, length(which)))[which]
     x
 }
 
 
 
 
-make.list.from.intervals <- function(x)
-{
-    if (ncol(x)!=2) stop("x must be matrix with 2 columns")
-    if (nrow(x)<1) stop("x must be matrix with at least 1 row")
-    ans <- as.list(1:nrow(x))
-    for (i in 1:nrow(x))
-        ans[[i]] <- x[i,]
-    ans
+
+## panel functions corresponding to standard low-level graphics functions
+
+panel.arrows <- function(...) larrows(...)
+panel.lines <- function(...) llines(...)
+panel.points <- function(...) lpoints(...)
+panel.polygon <- function(...) lpolygon(...)
+panel.polypath <- function(...) lpolypath(...)
+panel.rect <- function(...) lrect(...)
+panel.segments <- function(...) lsegments(...)
+panel.text <- function(...) ltext(...)
+
+
+
+
+primName <- function(name, identifier = NULL, name.type = "panel", group = 0) {
+    trellis.grobname(name = ifelse(is.null(identifier), name,
+                       paste(identifier, name, sep=".")),
+                     type = name.type,
+                     group = group)
 }
 
 
 
-equal.count <-
-  function(x, ...)
+## The rest are grid-ified versions of standard base 'incremental
+## graphics' functions.  Maybe it's better to push wrappers like
+## panel.points, panel.lines, etc.
+
+
+lpolygon <- function(x, ...) UseMethod("lpolygon")
+
+lpolygon.default <-
+    function(x, y = NULL,
+             ## density = NULL,
+             ## angle = 45,
+             border = "black",
+             col = "transparent",
+             ## lty = NULL,
+             fill = NULL, # capture so that doesn't overload 'fill=col' in gpar()
+
+             font, fontface, ## gpar() doesn't like these
+             ...,
+             rule = c("none", "winding", "evenodd"),
+             identifier = NULL,
+             name.type = "panel") 
 {
-    attr(x, "levels") <- make.list.from.intervals(co.intervals(x,...))
-    class(attr(x, "levels")) <- "shingleLevel"
-    class(x) <- "shingle"
-    x
-}
-
-
-
-shingle <-
-    function(x, intervals=sort(unique(x)))
-{
-    if (ncol(as.matrix(intervals))==1)
-        intervals <- cbind(intervals, intervals)
-    else if (ncol(as.matrix(intervals)) > 2)
-        stop("bad value of 'intervals'")
-    attr(x, "levels") <- make.list.from.intervals(intervals)
-    class(attr(x, "levels")) <- "shingleLevel"
-    class(x) <- "shingle"
-    x
-}
-
-
-as.data.frame.shingle <- as.data.frame.factor
-
-is.shingle <-
-    function(x) inherits(x, "shingle")
-
-
-as.shingle <-
-    function(x) if (is.shingle(x)) x else shingle(x)
-
-
-
-summary.shingle <- function(object, ...) print.shingle(object, ...)
-
-
-print.shingleLevel <-
-    function(x, ...) {
-        print(do.call("rbind", x))
-        invisible(x)
-    }
-
-print.shingle <- function(x, showValues = TRUE, ...) {
-    cat("\nData:\n")
-    if (showValues) print(as.numeric(x))
-    l <- levels(x)
-    n <- nlevels(x)
-    if (n<1) cat("\nno intervals\n")
+    if (sum(!is.na(x)) < 1) return()
+    rule <- match.arg(rule)
+    border <- 
+        if (all(is.na(border))) "transparent"
+        else if (is.logical(border))
+        {
+            if (border) "black" else "transparent"
+        }
+        else border
+    xy <- xy.coords(x, y, recycle = TRUE)
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
+    n <- length(xy$x)
+    breaks <- which(is.na(xy$x) | is.na(xy$y))
+    nb <- length(breaks)
+    id.lengths <- diff(c(0, breaks, n))
+    if (rule == "none" || nb == 0)
+        grid.polygon(x = xy$x,
+                     y = xy$y,
+                     id.lengths = id.lengths,
+                     default.units = "native",
+                     name = primName("polygon", identifier, name.type, group),
+                     gp = gpar(fill = col, col = border, ...))
     else {
-        int <- data.frame(min = numeric(n), max = numeric(n), count = numeric(n))
-        for (i in 1:n) {
-            int$min[i] <- l[[i]][1]
-            int$max[i] <- l[[i]][2]
-            int$count[i] <- length(x[x>=l[[i]][1] & x<=l[[i]][2]])
-        }
-        cat("\nIntervals:\n")
-        print(int)
-        olap <- numeric(n-1)
-        if (n>2)
-            for (i in 1:(n-1))
-                olap[i] <- length(x[ x>=l[[i]][1] & x<=l[[i]][2] &
-                                    x>=l[[i+1]][1] & x<=l[[i+1]][2]])
-        cat("\nOvrlap between adjacent intervals:\n")
-        print(olap)
+        ## grid.polygon() can handle NAs but grid.path() cannot. So we
+        ## use a strategy copied from polypath() in lpolypath(). This
+        ## should work equally well with grid.polygon(), so eventually
+        ## we should change that too.
+
+        ## if (nb == 0) {
+        ##      any difference between grid.polygon() and grid.path() ?
+        ## }
+        lengths <- c(breaks[1] - 1, diff(breaks) - 1, n - breaks[nb])
+        grid.path(x = xy$x[-breaks],
+                  y = xy$y[-breaks],
+                  id.lengths = lengths,
+                  rule = rule,
+                  default.units = "native",
+                  name = primName("path", identifier, name.type, group),
+                  gp = gpar(fill = col, col = border, ...))
     }
-    invisible(x)
 }
 
 
+lpolypath <- function(x, ...) UseMethod("lpolypath")
 
+lpolypath.default <-
+    function(x, y = NULL,
+             border = "black",
+             col = "transparent",
+             ## lty = NULL,
+             fill = NULL, # capture so that doesn't overload 'fill=col' in gpar()
 
-
-strip.default <-
-    function(which.given,
-             which.panel,
-             var.name,
-             factor.levels,
-             shingle.intervals,
-             strip.names = c(FALSE, TRUE),
-             style = 1,
-             bg = trellis.par.get("strip.background")$col[which.given],
-             fg = trellis.par.get("strip.shingle")$col[which.given],
-             par.strip.text = trellis.par.get("add.text"))
+             font, fontface, ## gpar() doesn't like these
+             ...,
+             rule = c("winding", "evenodd"),
+             identifier = NULL,
+             name.type = "panel") 
 {
-    default.fontsize <- trellis.par.get("fontsize")$default
-    name <- var.name[which.given]
-    level <- which.panel[which.given]
-    strip.names <- rep(strip.names, length = 2)
-    
-    if (is.null(factor.levels)) { # means this is a  shingle, as opposed to a factor
-        if (is.null(shingle.intervals)) stop("both factor.levels and shingle.intervals cannot be NULL")
-        strip.names <- strip.names[2]
-        grid.rect(gp = gpar(fill=bg))
-        t <- range(shingle.intervals)
-        r <- (range(shingle.intervals[level,])-t[1])/diff(t)
-        grid.rect(x = unit(r%*%c(.5,.5),"npc"), width = max(unit( c(diff(r), 1), c("npc", "mm"))),
-                  gp = gpar(col=fg, fill=fg))
-        if (strip.names)
-            grid.text(label = name,
-                      gp = gpar(col = par.strip.text$col,
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-        grid.rect()
-    }
-    else if (is.null(shingle.intervals)) { # factor
-        strip.names <- strip.names[1]
-        x <- factor.levels
-        num <- length(x)
-        if (style == 1) {
-            grid.rect(gp = gpar(fill=bg))
-            if (strip.names) {
-                grid.text(name,
-                          x=unit(0.5, "npc") - unit(1, "mm"),
-                          gp = gpar(col = par.strip.text$col,
-                          font = par.strip.text$font,
-                          fontsize = par.strip.text$cex *
-                          default.fontsize),
-                          just="right")
-                grid.text(":",
-                          x=unit(0.5, "npc"),
-                          gp = gpar(col = par.strip.text$col,
-                          font = par.strip.text$font,
-                          fontsize = par.strip.text$cex *
-                          default.fontsize))
-                grid.text(x[level],
-                          x=unit(0.5, "npc") + unit(1, "mm"),
-                          gp = gpar(col = par.strip.text$col,
-                          font = par.strip.text$font,
-                          fontsize = par.strip.text$cex *
-                          default.fontsize),
-                          just="left")
-            }
-            else grid.text(label = x[level],
-                           gp = gpar(col = par.strip.text$col,
-                           font = par.strip.text$font,
-                           fontsize = par.strip.text$cex *
-                           default.fontsize))
-            grid.rect()
+    if (sum(!is.na(x)) < 1) return()
+    rule <- match.arg(rule)
+    border <- 
+        if (all(is.na(border))) "transparent"
+        else if (is.logical(border))
+        {
+            if (border) "black" else "transparent"
         }
-        else if (style == 2) {
-            grid.rect(x = unit((2*level-1)/(2*num), "npc"),
-                      width = unit(1/num, "npc"),
-                      gp = gpar(fill=fg, col = NULL))
-            grid.text(label=x,
-                      x = (2*1:num-1)/(2*num),
-                      gp = gpar(col = par.strip.text$col,
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
-        }
-        else if (style == 3){
-            grid.rect(gp = gpar(fill=bg))
-            grid.rect(x = unit((2*level-1)/(2*num), "npc"),
-                      width = unit(1/num, "npc"),
-                      gp = gpar(fill=fg, col = NULL))
-            grid.text(label =
-                      if (strip.names) paste(name, x[level], sep = ": ")
-                      else x[level],
-                      gp = gpar(col = par.strip.text$col, 
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
-        }
-        else if(style == 4){
-            grid.rect(gp = gpar(fill=bg))
-            grid.rect(x = unit((2*level-1)/(2*num), "npc"),
-                      width = unit(1/num, "npc"),
-                      gp = gpar(col=NULL, fill=fg))
-            grid.text(label=x,
-                      x = (2* 1:num - 1)/(2*num),   #using default.units
-                      gp = gpar(col = par.strip.text$col, 
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
-        }
-        else if(style >= 5){
-            grid.rect(gp = gpar(fill=bg))
-            grid.text(label=x[level],
-                      x = (2* level - 1)/(2*num),   #using default.units
-                      gp = gpar(col = par.strip.text$col, 
-                      font = par.strip.text$font,
-                      fontsize = par.strip.text$cex *
-                      default.fontsize))
-            grid.rect()
-        }
-    }
+        else border
+    xy <- xy.coords(x, y, recycle = TRUE)
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
+    n <- length(xy$x)
+    breaks <- which(is.na(xy$x) | is.na(xy$y))
+    nb <- length(breaks)
+    lengths <- c(breaks[1] - 1, diff(breaks) - 1, n - breaks[nb])
+    grid.path(x = xy$x[-breaks],
+              y = xy$y[-breaks],
+              id.lengths = lengths,
+              rule = rule,
+              default.units = "native",
+              name = primName("path", identifier, name.type, group),
+              gp = gpar(fill = col, col = border, ...))
 }
 
 
 
+lsegments <- function(...) UseMethod("lsegments")
 
-
-
-
-lsegments <-
-    function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
+lsegments.default <-
+    function(x0 = NULL, y0 = NULL, x1, y1,
+             x2 = NULL, y2 = NULL,
              col = add.line$col,
+             alpha = add.line$alpha,
              lty = add.line$lty,
-             lwd = add.line$lwd, ...)
+             lwd = add.line$lwd,
+
+             font, fontface, ## gpar() doesn't like these
+
+             ...,
+             identifier = NULL,
+             name.type = "panel")
 {
     if (missing(x0)) x0 <- x2
     if (missing(y0)) y0 <- y2
     add.line <- trellis.par.get("add.line")
     ml <- max(length(x0), length(x1), length(y0), length(y1))
-    x0 <- rep(x0, length = ml)
-    x1 <- rep(x1, length = ml)
-    y0 <- rep(y0, length = ml)
-    y1 <- rep(y1, length = ml)
-
+    x0 <- rep(x0, length.out = ml)
+    x1 <- rep(x1, length.out = ml)
+    y0 <- rep(y0, length.out = ml)
+    y1 <- rep(y1, length.out = ml)
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
     grid.segments(x0 = x0, x1 = x1,
                   y0 = y0, y1 = y1,
-                  gp = gpar(lty=lty,
-                  col=col, lwd=lwd),
-                  default.units="native")
+                  name = primName("segments", identifier, name.type, group),
+                  gp =
+                  gpar(lty=lty, col = col, lwd = lwd,
+                       alpha = alpha, ...),
+                  default.units = "native")
 }
 
 
-larrows <-
-    function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
-             angle = 30, code = 2, length = NULL, proportion = .05, ...) 
+
+lrect <- function(...) UseMethod("lrect")
+
+lrect.default <-
+    function(xleft, ybottom, xright, ytop,
+             x = (xleft + xright) / 2,
+             y = (ybottom + ytop) / 2,
+             width = xright - xleft,
+             height = ytop - ybottom,
+             col = "transparent",
+             border = "black",
+             lty = 1, lwd = 1, alpha = 1,
+             just = "center",
+             hjust = NULL, vjust = NULL,
+
+             font, fontface, ## gpar() doesn't like these
+
+             ...,
+             identifier = NULL,
+             name.type = "panel")
 {
-
-    if (missing(x0)) {x0 <- x1; x1 <- x2}
-    if (missing(y0)) {y0 <- y1; y1 <- y2}
-    if (!is.null(length)) warning("length not implemented in larrows, use proportion instead")
-
-    angle <- angle / 180 * pi
-    start <- rbind(x0, y0)
-    end <- rbind(x1, y1)
-    v.forward <- end - start
-    v.backward <- start - end
-    lsegments(x0, y0, x1, y1, ...)
-    
-    if (code %in% c(1,3)) { # arrow at starting point
-        edge.1 <- proportion * 
-            matrix( c(cos(angle), -sin(angle), sin(angle), cos(angle)), 2, 2) %*% v.forward
-        edge.2 <- proportion *
-            matrix( c(cos(-angle), -sin(-angle), sin(-angle), cos(-angle)), 2, 2) %*% v.forward
-        lsegments(x0, y0, x0 + edge.1[1,], y0 + edge.1[2,], ...)
-        lsegments(x0, y0, x0 + edge.2[1,], y0 + edge.2[2,], ...)
-    }
-    if (code %in% c(2,3)) { # arrow at ending point
-        edge.1 <- proportion * 
-            matrix( c(cos(angle), -sin(angle), sin(angle), cos(angle)), 2, 2) %*% v.backward
-        edge.2 <- proportion *
-            matrix( c(cos(-angle), -sin(-angle), sin(-angle), cos(-angle)), 2, 2) %*% v.backward
-        lsegments(x1, y1, x1 + edge.1[1,], y1 + edge.1[2,], ...)
-        lsegments(x1, y1, x1 + edge.2[1,], y1 + edge.2[2,], ...)
-    }
+    border <- 
+        if (all(is.na(border)))
+            "transparent"
+        else if (is.logical(border))
+        {
+            if (border) "black"
+            else "transparent"
+        }
+        else border
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
+    grid.rect(x = x, y = y,
+              width = width, height = height,
+              default.units = "native",
+              just = just, hjust = hjust, vjust = vjust,
+              name = primName("rect", identifier, name.type, group),
+              gp =
+              gpar(fill = col, col = border,
+                   lty = lty, lwd = lwd,
+                   alpha = alpha, ...))
 }
 
 
 
-ltext <-
-    function(x, y = NULL, labels = seq(along = x),
+larrows <- function(...) UseMethod("larrows")
+
+larrows.default <-
+    function(x0 = NULL, y0 = NULL, x1, y1, x2 = NULL, y2 = NULL,
+             angle = 30, code = 2, length = 0.25, unit = "inches",
+             ends = switch(code, "first", "last", "both"),
+             type = "open",
+             col = add.line$col,
+             alpha = add.line$alpha,
+             lty = add.line$lty,
+             lwd = add.line$lwd,
+             fill = NULL,
+
+             font, fontface, ## gpar() doesn't like these
+
+             ...,
+             identifier = NULL,
+             name.type = "panel")
+{
+    if (missing(x0)) x0 <- x2
+    if (missing(y0)) y0 <- y2
+    add.line <- trellis.par.get("add.line")
+    ml <- max(length(x0), length(x1), length(y0), length(y1))
+    x0 <- rep(x0, length.out = ml)
+    x1 <- rep(x1, length.out = ml)
+    y0 <- rep(y0, length.out = ml)
+    y1 <- rep(y1, length.out = ml)
+    gp <- gpar(col = col, lty = lty, lwd = lwd, alpha = alpha, fill = fill, ...)
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
+    grid.segments(x0 = x0, x1 = x1,
+                  y0 = y0, y1 = y1,
+                  name = primName("arrows", identifier, name.type, group),
+                  gp = gp,
+                  arrow = if (is.null(ends)) NULL else 
+                  arrow(angle = angle,
+                        length = unit(length, unit),
+                        ends = ends,
+                        type = type),
+                  default.units = "native")
+}
+
+
+
+ltext <- function(x, ...) UseMethod("ltext")
+
+ltext.default <-
+    function(x, y = NULL, labels = seq_along(x),
              col = add.text$col,
+             alpha = add.text$alpha,
              cex = add.text$cex,
              srt = 0,
-             font = 1,
+             lineheight = add.text$lineheight,
+             font = add.text$font,
+             fontfamily = add.text$fontfamily,
+             fontface = add.text$fontface,
              adj = c(.5, .5),
-             pos,
-             ...)
+             pos = NULL,
+             offset = 0.5,
+             ...,
+             identifier = NULL,
+             name.type = "panel")
 {
     add.text <- trellis.par.get("add.text")
-    xy <- xy.coords(x, y)
-    if (!missing(pos))
-        adj <-
-            if (pos == 1) c(.5, 1)
-            else if (pos == 2) c(1, .5)
-            else if (pos == 3) c(.5, 0)
-            else if (pos == 4) c(0, .5)
+    xy <- xy.coords(x, y, recycle = TRUE)
+    n <- length(xy$x)
+    if (n == 0) return()
+    ux <- unit(xy$x, "native")
+    uy <- unit(xy$y, "native")
     if (length(adj) == 1) adj <- c(adj, .5)
-    grid.text(label = labels, x = xy$x, y = xy$y,
-              gp = gpar(col = col, font = font,
-              fontsize = cex * trellis.par.get("fontsize")$default),
-              just = c(if (adj[1] == 0) "left"
-              else if (adj[1] == 1) c("right")
-              else "centre",
-              if (adj[2] == 0) "bottom"
-              else if (adj[2] == 1) c("top")
-              else "centre"),
-              rot = srt,
-              default.units = "native")
+    hjust <- adj[1]
+    vjust <- adj[2]
+    if (!is.null(pos))
+    {
+        if (length(pos) == 1) # 'pos' scalar
+        {
+            hjust <- vjust <- 0.5
+            if (pos == 1) {
+                uy <- uy - unit(offset, "char")
+                vjust <- 1
+            }
+            else if (pos == 2) {
+                ux <- ux - unit(offset, "char")
+                hjust <- 1
+            }
+            else if (pos == 3) {
+                uy <- uy + unit(offset, "char")
+                vjust <- 0
+            }
+            else if (pos == 4) {
+                ux <- ux + unit(offset, "char")
+                hjust <- 0
+            }
+            else warning("Invalid value of 'pos' ignored.")
+        }
+        else # 'pos' vector
+        {
+            ## Note, replacements like x[i] <- something don't work
+            ## for "unit" objects, so we have to do full updates.
+            pos <- rep(pos, length.out = n)
+            hjust <- vjust <- rep(0.5, n)
+            if (any(i <- (pos == 1)))
+            {
+                ## uy[i] <- uy[i] - unit(offset, "char") # no good
+                uy <- uy - unit(ifelse(i, offset, 0), "char")
+                vjust[i] <- 1
+            }
+            if (any(i <- (pos == 2)))
+            {
+                ux <- ux - unit(ifelse(i, offset, 0), "char")
+                hjust[i] <- 1
+            }
+            if (any(i <- (pos == 3)))
+            {
+                uy <- uy + unit(ifelse(i, offset, 0), "char")
+                vjust[i] <- 0
+            }
+            if (any(i <- (pos == 4)))
+            {
+                ux <- ux + unit(ifelse(i, offset, 0), "char")
+                hjust[i] <- 0
+            }
+        }
+    }
+    ## replace non-finite srt by 0
+    srt[!is.finite(srt)] <- 0
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
+    grid.text(label = labels, x = ux, y = uy,
+              name = primName("text", identifier, name.type, group),
+              gp =
+              gpar(col = col, alpha = alpha,
+                   lineheight = lineheight,
+                   fontfamily = fontfamily,
+                   fontface = chooseFace(fontface, font),
+                   cex = cex, ...),
+              hjust = hjust, vjust = vjust,
+              rot = srt)
 }
 
 
 
+llines <- function (x, ...) UseMethod("llines")
 
 
-llines <-
+llines.default <-
     function(x, y = NULL, type = "l",
              col = plot.line$col,
+             alpha = plot.line$alpha,
              lty = plot.line$lty,
-             lwd = plot.line$lwd, ...)
+             lwd = plot.line$lwd, ...,
+             identifier = NULL,
+             name.type = "panel")
 {
     plot.line <- trellis.par.get("plot.line")
-    lplot.xy(xy.coords(x, y), type = type,
-             col = col, lty = lty, lwd = lwd, ...)
+    lplot.xy(xy.coords(x, y, recycle = TRUE), type = type,
+             col = col, lty = lty, lwd = lwd, alpha = alpha, ...,
+             identifier = identifier, name.type = name.type)
 }
 
 
+lpoints <- function (x, ...) UseMethod("lpoints")
 
-
-lpoints <-
+lpoints.default <-
     function(x, y = NULL, type = "p",
              col = plot.symbol$col,
              pch = plot.symbol$pch,
-             cex = plot.symbol$cex, ...)
+             alpha = plot.symbol$alpha,
+             fill = plot.symbol$fill,
+             font = plot.symbol$font,
+             fontfamily = plot.symbol$fontfamily,
+             fontface = plot.symbol$fontface,
+             cex = plot.symbol$cex, ...,
+             identifier = NULL,
+             name.type = "panel")
 {
     plot.symbol <- trellis.par.get("plot.symbol")
-    lplot.xy(xy.coords(x, y), type = type,
-             col = col, pch = pch, cex = cex, ...)
+    lplot.xy(xy.coords(x, y, recycle = TRUE),
+             type = type,
+             col = col,
+             pch = pch,
+             alpha = alpha,
+             fill = fill,
+             font = font,
+             fontfamily = fontfamily,
+             fontface = fontface,
+             cex = cex,
+             ...,
+             identifier = identifier,
+             name.type = name.type)
 }
 
 
@@ -457,75 +623,170 @@ lpoints <-
 
 
 lplot.xy <-
-    function(xy, type, pch = 1, lty = 1, col = 1, cex = 1, lwd = 1, font = 1, ...)
-
-    ## currently uses grid.text for non-numeric pch. This would allow
-    ## pch like pch = 'string' or pch = expression(sigma). This
-    ## feature would disappear in the future.
-
+    function(xy,
+             type = c("p", "l", "o", "b", "c", "s", "S", "h", "H"),
+             pch = 1, lty = 1, col = 1, cex = 1, lwd = 1,
+             font = 1, fontfamily = NULL, fontface = NULL,
+             col.line = col, col.symbol = col, alpha = 1, fill = NULL,
+             origin = 0,
+             ...,
+             identifier = NULL,
+             name.type = "panel")
 {
     x <- xy$x
     y <- xy$y
+    fontsize.points <- trellis.par.get("fontsize")$points
+    if (length(x) == 0) return()
 
-    if (type %in% c("l", "o", "b", "c"))
-        grid.lines(x=x, y=y, gp = gpar(lty=lty, col=col, lwd=lwd),
-                   default.units="native")
-    
-    if (type %in% c("p", "o", "b", "c"))
+    ## the main difference between this and panel.xyplot is that the
+    ## latter allows vector 'type', this doesn't
 
-        if (is.numeric(pch))
-            grid.points(x = x, y = y, size = unit(cex * 2.5, "mm"),
-                    gp = gpar(col = col), #, cex = cex),
-                    pch = pch, 
-                    default.units="native")
-        else
-            grid.points(x = x, y = y, 
-                    gp = gpar(col = col, cex = cex),
-                    pch = pch, 
-                    default.units="native")
+    if (hasGroupNumber())
+        group <- list(...)$group.number
+    else
+        group <- 0
 
-
-            #grid.text(label = pch, x = x, y = y,
-            #          gp = gpar(col = col, fontsize = cex * trellis.par.get("fontsize")$default),
-            #          default.units = "native")
-
-    if (type %in% c("s", "S")) {
-        ord <- sort.list(x)
-        n <- length(x)
-        xx <- numeric(2*n-1)
-        yy <- numeric(2*n-1)
-
-        xx[2*1:n-1] <- x[ord]
-        yy[2*1:n-1] <- y[ord]
-        xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
-        yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
-        grid.lines(x=xx, y=yy,
-                   gp = gpar(lty=lty, col=col, lwd=lwd),
-                   default.units="native")
-    }
-
-    if (type == "h") {
-
-        ylim <- current.viewport()$yscale
-
-        zero <-
-            if (ylim[1] > 0) ylim[1]
-            else if (ylim[2] < 0) ylim[2]
-            else 0
-
-        ##print(zero) ?
-        ##print(x) 
-        for (i in seq(along=x))
-            grid.lines(x=rep(x[i],2), y=c(y[i], zero),
-                       gp = gpar(lty=lty, col=col, lwd=lwd),
-                       default.units="native")
-    }
+    type <- match.arg(type)
+    switch(type,
+           p = {
+               grid.points(x = x, y = y, 
+                           name = primName("points", identifier, name.type, group),
+                           gp =
+                           gpar(col = col.symbol, cex = cex, lwd = lwd,
+                                alpha = alpha, fill = fill,
+                                fontsize = fontsize.points,
+                                fontfamily = fontfamily,
+                                fontface = chooseFace(fontface, font), ...),
+                           pch = pch, 
+                           default.units = "native")
+           },
+           c = ,
+           l = {
+               grid.lines(x = x, y = y,
+                          name = primName("lines", identifier, name.type, group),
+                          gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha, ...),
+                          default.units = "native")
+           },
+           o = ,
+           b = {
+               grid.points(x = x, y = y, 
+                           name = primName("points", identifier, name.type, group),
+                           gp =
+                           gpar(col = col.symbol, cex = cex, lwd = lwd,
+                                alpha = alpha, fill = fill,
+                                fontsize = fontsize.points,
+                                fontfamily = fontfamily,
+                                fontface = chooseFace(fontface, font), ...),
+                           pch = pch, 
+                           default.units = "native")
+               grid.lines(x = x, y = y,
+                          name = primName("lines", identifier, name.type, group),
+                          gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha, ...),
+                          default.units = "native")
+           },
+           s = ,
+           S = {
+               ord <- seq_along(x) ## sort.list(x)
+               if ((n <- length(x)) > 1)
+               {
+                   xx <- numeric(2*n-1)
+                   yy <- numeric(2*n-1)
+                   xx[2*1:n-1] <- x[ord]
+                   yy[2*1:n-1] <- y[ord]
+                   xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
+                   yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
+                   grid.lines(x = xx, y = yy,
+                              name = primName("lines", identifier, name.type, group),
+                              gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha, ...),
+                              default.units="native")
+               }
+           },
+           h = {
+               ylim <- current.viewport()$yscale
+               zero <-
+                   if (min(ylim) > origin) min(ylim)
+                   else if (max(ylim) < origin) max(ylim)
+                   else origin
+               grid.segments(x0 = x, x1 = x,
+                             y0 = y, y1 = zero,
+                             name = primName("segments", identifier, name.type, group),
+                             gp =
+                             gpar(lty = lty, col = col.line,
+                                  lwd = lwd, alpha = alpha, ...),
+                             default.units="native")
+           },
+           H = {
+               xlim <- current.viewport()$xscale
+               zero <-
+                   if (min(xlim) > origin) min(xlim)
+                   else if (max(xlim) < origin) max(xlim)
+                   else origin
+               grid.segments(x0 = x, x1 = zero,
+                             y0 = y, y1 = y,
+                             name = primName("segments", identifier, name.type, group),
+                             gp =
+                             gpar(lty = lty, col = col.line,
+                                  lwd = lwd, alpha = alpha, ...),
+                             default.units="native")
+           })
+##     if (type %in% c("l", "o", "b", "c"))
+##         grid.lines(x = x, y = y,
+##                    gp = gpar(lty = lty, col = col.line, lwd = lwd, alpha = alpha),
+##                    default.units = "native")
+##     else if (type %in% c("p", "o", "b", "c"))
+##         grid.points(x = x, y = y, 
+##                     gp =
+##                     gpar(col = col, cex = cex,
+##                          alpha = alpha, fill = fill,
+##                          fontsize = fontsize.points,
+##                          fontfamily = fontfamily,
+##                          fontface = chooseFace(fontface, font)),
+##                     pch = pch, 
+##                     default.units = "native")
+##     else if (type %in% c("s", "S"))
+##     {
+##         ord <- sort.list(x)
+##         n <- length(x)
+##         xx <- numeric(2*n-1)
+##         yy <- numeric(2*n-1)
+##         xx[2*1:n-1] <- x[ord]
+##         yy[2*1:n-1] <- y[ord]
+##         xx[2*1:(n-1)] <- x[ord][if (type=="s") -1 else -n]
+##         yy[2*1:(n-1)] <- y[ord][if (type=="s") -n else -1]
+##         grid.lines(x=xx, y=yy,
+##                    gp = gpar(lty=lty, col=col.line, lwd=lwd, alpha = alpha),
+##                    default.units="native")
+##     }
+##     else if (type == "h")
+##     {
+##         ylim <- current.viewport()$yscale
+##         zero <-
+##             if (ylim[1] > 0) ylim[1]
+##             else if (ylim[2] < 0) ylim[2]
+##             else 0
+##         grid.segments(x0 = x, x1 = x,
+##                       y0 = y, y1 = zero,
+##                       gp =
+##                       gpar(lty = lty, col = col.line,
+##                            lwd = lwd, alpha = alpha),
+##                       default.units="native")
+##     }
+##     else if (type == "H")
+##     {
+##         xlim <- current.viewport()$xscale
+##         zero <-
+##             if (xlim[1] > 0) xlim[1]
+##             else if (xlim[2] < 0) xlim[2]
+##             else 0
+##         grid.segments(x0 = x, x1 = zero,
+##                       y0 = y, y1 = y,
+##                       gp =
+##                       gpar(lty = lty, col = col.line,
+##                            lwd = lwd, alpha = alpha),
+##                       default.units="native")
+##     }
+    return()
 }
-
-
-
-
-
 
 
 

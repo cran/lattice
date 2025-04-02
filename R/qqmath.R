@@ -1,10 +1,7 @@
 
-
-
-
-### Copyright 2001  Deepayan Sarkar <deepayan@stat.wisc.edu>
+### Copyright (C) 2001-2006  Deepayan Sarkar <Deepayan.Sarkar@R-project.org>
 ###
-### This file is part of the lattice library for R.
+### This file is part of the lattice package for R.
 ### It is made available under the terms of the GNU General Public
 ### License, version 2, or at your option, any later version,
 ### incorporated herein by reference.
@@ -17,54 +14,173 @@
 ###
 ### You should have received a copy of the GNU General Public
 ### License along with this program; if not, write to the Free
-### Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-### MA 02111-1307, USA
+### Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+### MA 02110-1301, USA
 
 
 
 
-panel.qqmathline <-
-    function(y, distribution, ...)
+
+prepanel.default.qqmath <-
+    function(x,
+             f.value = NULL,
+             distribution = qnorm,
+             qtype = 7,
+             groups = NULL,
+             subscripts, ...,
+             tails.n = 0)
 {
-    y <- as.numeric(y)
-
-    if (length(y) > 0) {
-        yy <- quantile(y, c(0.25, 0.75))
-        xx <- distribution(c(0.25, 0.75))
-        r <- diff(yy)/diff(xx)
-        panel.abline(c( yy[1]-xx[1]*r , r), ...)
+    if (!is.numeric(x)) x <- as.numeric(x) # FIXME: dates?
+    distribution <- getFunctionOrName(distribution)
+    nobs <- sum(!is.na(x))
+    ## if plotting tails, do prepanel as for raw data:
+    if (tails.n > 0)
+        f.value <- NULL
+    getxx <- function(x, f.value = NULL,
+                      nobs = sum(!is.na(x)))
+    {
+        if (is.null(f.value))
+            distribution(ppoints(nobs))
+        else if (is.numeric(f.value))
+            distribution(f.value)
+        else
+            distribution(f.value(nobs))
+    }
+    getyy <- function(x, f.value = NULL,
+                      nobs = sum(!is.na(x)))
+    {
+        if (is.null(f.value))
+            sort(x)
+        else if (is.numeric(f.value))
+            quantile(x, f.value,       # was fast.quantile 
+                     names = FALSE,
+                     type = qtype,
+                     na.rm = TRUE)
+        else
+            quantile(x, f.value(nobs), # was fast.quantile
+                     names = FALSE,
+                     type = qtype,
+                     na.rm = TRUE)
+    }
+    if (!nobs)
+        prepanel.null()
+    else if (!is.null(groups))
+    {
+        sx <- split(x, groups[subscripts])
+        xxlist <- lapply(sx, getxx, f.value = f.value)
+        yylist <- lapply(sx, getyy, f.value = f.value)
+        list(xlim = range(unlist(xxlist), finite = TRUE),
+             ylim = range(unlist(yylist), finite = TRUE),
+             dx = unlist(lapply(xxlist, diff)),
+             dy = unlist(lapply(yylist, diff)))
+    }
+    else 
+    {
+        xx <- getxx(x, f.value, nobs)
+        yy <- getyy(x, f.value, nobs)
+        list(xlim = scale_limits(xx), # range(xx, finite = TRUE),
+             ylim = scale_limits(yy), # range(yy, finite = TRUE),
+             dx = diff(xx),
+             dy = diff(yy))
     }
 }
 
 
-prepanel.qqmathline <-
-    function(y, distribution, f.value = ppoints, ...)
-{
-    if (!is.numeric(y)) y <- as.numeric(y)
 
-    yy <- quantile(y, c(0.25, 0.75))
-    xx <- distribution(c(0.25, 0.75))
-    n <- length(y)
-    list(ylim = range(y), xlim = range(distribution(f.value(n))),
-         dx = diff(xx), dy = diff(yy))
-}
-
-
-prepanel.default.qqmath <-
-    function(...)
-    prepanel.default.xyplot(...)
 
 
 panel.qqmath <-
-    function(...) panel.xyplot(...)
+    function(x,
+             f.value = NULL,
+             distribution = qnorm,
+             qtype = 7,
+             groups = NULL, ...,
+             tails.n = 0,
+             identifier = "qqmath")
+{
+    x <- as.numeric(x)
+    distribution <- getFunctionOrName(distribution)
+    nobs <- sum(!is.na(x))
+    if (!is.null(groups))
+        panel.superpose(x, y = NULL,
+                        f.value = f.value,
+                        distribution = distribution,
+                        qtype = qtype,
+                        groups = groups,
+                        panel.groups = panel.qqmath,
+                        ...,
+                        tails.n = tails.n)
+    else if (nobs)
+    {
+        if (is.null(f.value)) # exact data instead of quantiles
+        {
+            panel.xyplot(x = distribution(ppoints(nobs)),
+                         y = sort(x),
+                         ...,
+                         identifier = identifier)
+        }
+        else
+        {
+            pp <- if (is.numeric(f.value)) f.value else f.value(nobs)
+            if (tails.n > 0)
+            {
+                ## use exact data for tails of distribution
+                tails.n <- min(tails.n, nobs %/% 2)
+                ppd <- ppoints(nobs)
+                ## omit probabilities within the exact tails
+                pp <- pp[(pp > ppd[tails.n] &
+                          pp < ppd[nobs + 1 - tails.n])]
+                ## add on probs corresponding to exact tails
+                pp <- c(head(ppd, tails.n), pp, tail(ppd, tails.n))
+                ## must use a quantile type that recovers exact values:
+                qtype <- 1
+            }
+            xx <- distribution(pp)
+            yy <- quantile(x, pp, 
+                                  names = FALSE,
+                                  type = qtype,
+                                  na.rm = TRUE)
+            panel.xyplot(x = xx, y = yy, ...,
+                         identifier = identifier)
+        }
+    }
+}
 
 
-qqmath <-
-    function(formula,
-             data = parent.frame(),
+
+
+qqmath <- function(x, data, ...) UseMethod("qqmath")
+
+
+
+qqmath.numeric <-
+    function(x, data = NULL, ylab = deparse(substitute(x)), ...)
+{
+    ocall <- sys.call(); ocall[[1]] <- quote(qqmath)
+    ccall <- match.call()
+    if (!is.null(ccall$data)) 
+        warning("explicit 'data' specification ignored")
+    ccall$data <- environment() # list(x = x)
+    ccall$ylab <- ylab
+    ccall$x <- ~x
+    ccall[[1]] <- quote(lattice::qqmath)
+    ans <- eval.parent(ccall)
+    ans$call <- ocall
+    ans
+}
+
+
+
+qqmath.formula <-
+    function(x,
+             data = NULL,
+             allow.multiple = is.null(groups) || outer,
+             outer = !is.null(groups),
+             distribution = qnorm,
+             f.value = NULL,
+             auto.key = lattice.getOption("default.args")$auto.key,
              aspect = "fill",
-             layout = NULL,
-             panel = "panel.qqmath",
+             panel = lattice.getOption("panel.qqmath"),
              prepanel = NULL,
              scales = list(),
              strip = TRUE,
@@ -73,204 +189,281 @@ qqmath <-
              xlim,
              ylab,
              ylim,
-             f.value = ppoints,
-             distribution = qnorm,
+             drop.unused.levels = lattice.getOption("drop.unused.levels"),
              ...,
+             lattice.options = NULL,
+             default.scales = list(),
+             default.prepanel = lattice.getOption("prepanel.default.qqmath"),
              subscripts = !is.null(groups),
              subset = TRUE)
 {
-
-    ## dots <- eval(substitute(list(...)), data, parent.frame())
+    formula <- x
     dots <- list(...)
+    groups <- eval(substitute(groups), data, environment(formula))
+    subset <- eval(substitute(subset), data, environment(formula))
+    if (!is.null(lattice.options))
+    {
+        oopt <- lattice.options(lattice.options)
+        on.exit(lattice.options(oopt), add = TRUE)
+    }
+    
+    ## Step 1: Evaluate x, y, etc. and do some preprocessing
+    
+    form <-
+        latticeParseFormula(formula, data, subset = subset,
+                            groups = groups, multiple = allow.multiple,
+                            outer = outer, subscripts = TRUE,
+                            drop = drop.unused.levels)
+    groups <- form$groups
 
     if (!is.function(panel)) panel <- eval(panel)
     if (!is.function(strip)) strip <- eval(strip)
 
-    prepanel <-
-        if (is.function(prepanel)) prepanel 
-        else if (is.character(prepanel)) get(prepanel)
-        else eval(prepanel)
-
-    distribution.name <- deparse(substitute(distribution))
-    distribution <-
-        if (is.function(distribution)) distribution 
-        else if (is.character(distribution)) get(distribution)
-        else eval(distribution)
-
-    ## Step 1: Evaluate x, y, etc. and do some preprocessing
-    
-    form <- latticeParseFormula(formula, data)
+    if ("subscripts" %in% names(formals(panel))) subscripts <- TRUE
+    if (subscripts) subscr <- form$subscr
     cond <- form$condition
-    number.of.cond <- length(cond)
+    ## number.of.cond <- length(cond)
     x <- form$right
-    if (number.of.cond == 0) {
+    if (length(cond) == 0)
+    {
         strip <- FALSE
-        cond <- list(as.factor(rep(1, length(x))))
-        layout <- c(1,1,1)
-        number.of.cond <- 1
+        cond <- list(gl(1, length(x)))
+        ## number.of.cond <- 1
     }
 
-    groups <- eval(substitute(groups), data, parent.frame())
-    subset <- eval(substitute(subset), data, parent.frame())
-    if ("subscripts" %in% names(formals(eval(panel)))) subscripts <- TRUE
-    if(subscripts) subscr <- seq(along=x)
-    x <- x[subset, drop = TRUE]
-    if (subscripts) subscr <- subscr[subset, drop = TRUE]
-
-    if(missing(ylab)) ylab <- form$right.name
-    if(missing(xlab)) xlab <- distribution.name
-    if (is.shingle(x)) stop("x cannot be a shingle")
-    ##x <- as.numeric(x)
+    dist.name <- paste(deparse(substitute(distribution)), collapse = "")
+    if (missing(xlab)) xlab <- dist.name
+    if (missing(ylab)) ylab <- form$right.name
 
     ## create a skeleton trellis object with the
     ## less complicated components:
-
-    foo <- do.call("trellis.skeleton",
-                   c(list(aspect = aspect,
-                          strip = strip,
-                          panel = panel,
-                          xlab = xlab,
-                          ylab = ylab), dots))
+    foo <-
+        do.call("trellis.skeleton",
+                c(list(formula = formula, 
+                       cond = cond,
+                       aspect = aspect,
+                       strip = strip,
+                       panel = panel,
+                       xlab = xlab,
+                       ylab = ylab,
+                       xlab.default = dist.name,
+                       ylab.default = form$right.name,
+                       lattice.options = lattice.options), dots),
+                quote = TRUE)
 
     dots <- foo$dots # arguments not processed by trellis.skeleton
     foo <- foo$foo
-    foo$call <- match.call()
-    foo$fontsize.normal <- 10
-    foo$fontsize.small <- 8
-
-    ## This is for cases like xlab/ylab = list(cex=2)
-    if (is.list(foo$xlab) && !is.characterOrExpression(foo$xlab$label))
-        foo$xlab$label <- deparse(substitute(distribution))
-    if (is.list(foo$ylab) && !is.characterOrExpression(foo$ylab$label))
-        foo$ylab$label <- form$right.name
+    foo$call <- sys.call(); foo$call[[1]] <- quote(qqmath)
 
     ## Step 2: Compute scales.common (leaving out limits for now)
 
-    ## scales <- eval(substitute(scales), data, parent.frame())
     if (is.character(scales)) scales <- list(relation = scales)
-    foo <- c(foo, 
-             do.call("construct.scales", scales))
-
+    scales <- updateList(default.scales, scales)
+    foo <- c(foo, do.call("construct.scales", scales))
 
     ## Step 3: Decide if limits were specified in call:
-
+    
     have.xlim <- !missing(xlim)
-    if (!is.null(foo$x.scales$limit)) {
+    if (!is.null(foo$x.scales$limits))
+    {
         have.xlim <- TRUE
-        xlim <- foo$x.scales$limit
+        xlim <- foo$x.scales$limits
     }
     have.ylim <- !missing(ylim)
-    if (!is.null(foo$y.scales$limit)) {
+    if (!is.null(foo$y.scales$limits))
+    {
         have.ylim <- TRUE
-        ylim <- foo$y.scales$limit
+        ylim <- foo$y.scales$limits
     }
 
     ## Step 4: Decide if log scales are being used:
 
     have.xlog <- !is.logical(foo$x.scales$log) || foo$x.scales$log
     have.ylog <- !is.logical(foo$y.scales$log) || foo$y.scales$log
-    if (have.xlog) {
-        xlog <- foo$x.scales$log
-        xbase <-
-            if (is.logical(xlog)) 10
-            else if (is.numeric(xlog)) xlog
-            else if (xlog == "e") exp(1)
 
-        x <- log(x, xbase)
-        if (have.xlim) xlim <- log(xlim, xbase)
+    ## This is slightly weird because 'x' is eventually plotted in the
+    ## Y-axis
+    if (have.xlog)
+    {
+        warning("Can't have log X-scale")
+        have.xlog <- FALSE
+        foo$x.scales$log <- FALSE
     }
-    if (have.ylog) {
-        warning("cannot use log scale for y, use different distribution")
-        foo$y.scales$log <- FALSE
+    if (have.ylog)
+    {
+        ylog <- foo$y.scales$log
+        ybase <-
+            if (is.logical(ylog)) 10
+            else if (is.numeric(ylog)) ylog
+            else if (ylog == "e") exp(1)
+        
+        x <- log(x, ybase)
+        if (have.ylim) ylim <- logLimits(ylim, ybase)
     }
-    
+
+
     ## Step 5: Process cond
 
-    cond <- lapply(cond, as.factorOrShingle, subset, drop = TRUE)
     cond.max.level <- unlist(lapply(cond, nlevels))
 
+    ## Step 6: Determine packets
 
-    id.na <- is.na(x)
-    for (var in cond)
-        id.na <- id.na | is.na(var)
-    if (!any(!id.na)) stop("nothing to draw")
-    ## Nothing simpler ?
+    foo$panel.args.common <-
+        c(list(distribution = distribution,
+               f.value = f.value),
+          dots)
 
-    foo$condlevels <- lapply(cond, levels)
+    if (subscripts)
+    {
+        foo$panel.args.common$groups <- groups
+    }
 
-    ## Step 6: Evaluate layout, panel.args.common and panel.args
+    npackets <- prod(cond.max.level)
+    if (npackets != prod(sapply(foo$condlevels, length))) 
+        stop("mismatch in number of packets")
+    foo$panel.args <- vector(mode = "list", length = npackets)
 
-    foo$panel.args.common <- dots
-    if (subscripts) foo$panel.args.common$groups <- groups
 
-    layout <- compute.layout(layout, cond.max.level, skip = foo$skip)
-    plots.per.page <- max(layout[1] * layout[2], layout[2])
-    number.of.pages <- layout[3]
-    foo$skip <- rep(foo$skip, length = plots.per.page)
-    foo$layout <- layout
-    nplots <- plots.per.page * number.of.pages
+    foo$packet.sizes <- numeric(npackets)
+    if (npackets > 1)
+    {
+        dim(foo$packet.sizes) <- sapply(foo$condlevels, length)
+        dimnames(foo$packet.sizes) <- lapply(foo$condlevels, as.character)
+    }
+    cond.current.level <- rep(1, length(cond))
+    for (packet.number in seq_len(npackets))
+    {
+        id <- compute.packet(cond, cond.current.level)
+        foo$packet.sizes[packet.number] <- sum(id)
 
-    foo$panel.args <- as.list(1:nplots)
-    cond.current.level <- rep(1,number.of.cond)
-    panel.number <- 1 # this is a counter for panel number
-    for (page.number in 1:number.of.pages)
-        if (!any(cond.max.level-cond.current.level<0))
-            for (plot in 1:plots.per.page) {
+        foo$panel.args[[packet.number]] <-
+            list(x = x[id])
+        if (subscripts)
+            foo$panel.args[[packet.number]]$subscripts <-
+                subscr[id]
 
-                if (foo$skip[plot]) foo$panel.args[[panel.number]] <- FALSE
-                else if(!any(cond.max.level-cond.current.level<0)) {
+        cond.current.level <-
+            cupdate(cond.current.level,
+                    cond.max.level)
+    }
 
-                    id <- !id.na
-                    for(i in 1:number.of.cond)
-                    {
-                        var <- cond[[i]]
-                        id <- id &
-                        if (is.shingle(var))
-                            ((var >=
-                              levels(var)[[cond.current.level[i]]][1])
-                             & (var <=
-                                levels(var)[[cond.current.level[i]]][2]))
-                        else (as.numeric(var) == cond.current.level[i])
-                    }
-                    if (any(id)) {
-                        foo$panel.args[[panel.number]] <-
-                            list(x = distribution(f.value(length(x[id]))), 
-                                 y = quantile(x[id], f.value(length(x[id]))))
-                    }
-                    else
-                        foo$panel.args[[panel.number]] <-
-                            list(x = numeric(0), y = numeric(0))
+    more.comp <-
+        c(limits.and.aspect(default.prepanel,
+                            prepanel = prepanel, 
+                            have.xlim = have.xlim, xlim = xlim, 
+                            have.ylim = have.ylim, ylim = ylim, 
+                            x.relation = foo$x.scales$relation,
+                            y.relation = foo$y.scales$relation,
+                            panel.args.common = foo$panel.args.common,
+                            panel.args = foo$panel.args,
+                            aspect = aspect,
+                            npackets = npackets,
+                            x.axs = foo$x.scales$axs,
+                            y.axs = foo$y.scales$axs),
+          cond.orders(foo))
+    foo[names(more.comp)] <- more.comp
 
-                    if (subscripts)
-                        foo$panel.args[[panel.number]]$subscripts <-
-                            subscr[id]
-
-                    cond.current.level <-
-                        cupdate(cond.current.level,
-                                cond.max.level)
-                }
-
-                panel.number <- panel.number + 1
-            }
-
-    foo <- c(foo,
-             limits.and.aspect(prepanel.default.qqmath,
-                               prepanel = prepanel, 
-                               have.xlim = have.xlim, xlim = xlim, 
-                               have.ylim = have.ylim, ylim = ylim, 
-                               x.relation = foo$x.scales$relation,
-                               y.relation = foo$y.scales$relation,
-                               panel.args.common = foo$panel.args.common,
-                               panel.args = foo$panel.args,
-                               aspect = aspect,
-                               nplots = nplots,
-                               x.axs = foo$x.scales$axs,
-                               y.axs = foo$y.scales$axs,
-                               distribution = distribution))
-
+    if (is.null(foo$legend) && needAutoKey(auto.key, groups))
+    {
+        foo$legend <-
+            autoKeyLegend(list(text = levels(as.factor(groups)),
+                               points = TRUE,
+                               rectangles = FALSE,
+                               lines = FALSE),
+                          auto.key)
+    }
     class(foo) <- "trellis"
     foo
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################
+
+
+panel.qqmathline <-
+    function(x, y = x,
+             distribution = qnorm,
+             probs = c(0.25, 0.75),
+             qtype = 7,
+             groups = NULL, 
+             ...,
+             identifier = "qqmathline")
+{
+    y <- as.numeric(y)
+    stopifnot(length(probs) == 2)
+    distribution <- getFunctionOrName(distribution)
+    nobs <- sum(!is.na(y))
+    if (!is.null(groups))
+        panel.superpose(x = y, y = NULL,
+                        distribution = distribution,
+                        probs = probs,
+                        qtype = qtype,
+                        groups = groups,
+                        panel.groups = panel.qqmathline,
+                        ...)
+    else if (nobs > 0)
+    {
+        yy <-
+            quantile(y, probs, names = FALSE, # was fast.quantile 
+                     type = qtype, na.rm = TRUE)
+        xx <- distribution(probs)
+        r <- diff(yy)/diff(xx)
+        panel.abline(c( yy[1]-xx[1]*r , r), ...,
+                     identifier = identifier)
+    }
+}
+
+
+prepanel.qqmathline <-
+    function(x, y = x,
+             distribution = qnorm,
+             probs = c(0.25, 0.75),
+             qtype = 7,
+             groups = NULL,
+             subscripts = TRUE,
+             ...)
+{
+    ans <-
+        prepanel.default.qqmath(x,
+                                distribution = distribution,
+                                qtype = qtype,
+                                groups = groups,
+                                subscripts = subscripts,
+                                ...)
+    y <- as.numeric(y)
+    stopifnot(length(probs) == 2)
+    distribution <- getFunctionOrName(distribution)
+    getdy <- function(x)
+    {
+        diff(quantile(x, probs, names = FALSE, # was fast.quantile 
+                      type = qtype,
+                      na.rm = TRUE))
+    }
+    dy <- 
+        if (!is.null(groups)) sapply(split(y, groups[subscripts]), getdy)
+        else getdy(y)
+    if (!all(is.na(dy)))
+    {
+        ans$dy <- dy[!is.na(dy)]
+        ans$dx <- rep(diff(distribution(probs)), length(ans$dy))
+    }
+    ans
+}
+
+
+
 
 
 

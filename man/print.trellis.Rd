@@ -1,18 +1,46 @@
-\name{print.trellis}
-\title{Print Trellis Objects}
+\name{C_05_print.trellis}
+\alias{print.trellis}
+\alias{plot.trellis}
+\alias{summary.trellis}
+\alias{dim.trellis}
+\alias{dimnames.trellis}
+\alias{panel.error}
+\title{Plot and Summarize Trellis Objects}
 \usage{
-\method{print}{trellis}(x, position, split,
+\method{plot}{trellis}(x, position, split,
      more = FALSE, newpage = TRUE,
-     panel.height = list(1, "null"),
-     panel.width = list(1, "null"),
-     ...)
+     packet.panel = packet.panel.default, 
+     draw.in = NULL,
+     panel.height = lattice.getOption("layout.heights")$panel,
+     panel.width = lattice.getOption("layout.widths")$panel,
+     save.object = lattice.getOption("save.object"),
+     panel.error = lattice.getOption("panel.error"),
+     prefix,
+     \dots)
+\method{print}{trellis}(x, \dots)
+
+\method{summary}{trellis}(object, \dots)
+
+\method{dim}{trellis}(x)
+\method{dimnames}{trellis}(x)
+
+panel.error(e)
+
 }
 \description{
-  Print (plot) a trellis object.
+  The \code{print} and \code{plot} methods produce a graph from a
+  \code{"trellis"} object.  The \code{print} method is necessary for
+  automatic plotting.  \code{plot} method is essentially
+  an alias, provided for convenience.  The \code{summary} method
+  gives a textual summary of the object.  \code{dim} and \code{dimnames}
+  describe the cross-tabulation induced by conditioning.
+  \code{panel.error} is the default handler used when an error occurs
+  while executing the panel function.
 }
-\alias{print.trellis}
+
+
 \arguments{
-  \item{x}{ The object to be plotted, of class ``trellis''}
+  \item{x, object}{ an object of class \code{"trellis"}}
   \item{position}{ a vector of 4 numbers, typically c(xmin, ymin, xmax,
     ymax) that give the lower-left and upper-right corners of a
     rectangle in which the Trellis plot of x is to be positioned. The
@@ -31,42 +59,127 @@
     including lattice plots in an arbitrary grid viewport (see the
     details section).
   }
-  \item{panel.width, panel.height}{ lists with 2 components, that should
-    be valid \code{x} and \code{units} arguments to \code{unit()} (the
-    \code{data} argument cannot be specified currently, but can be
-    considered for addition). The resulting \code{unit} object will be
-    the width/height of each panel in the Lattice plot. These arguments
-    can be used to explicitly control the dimensions of the panel,
-    rather than letting them expand to maximize available space.
+  \item{packet.panel}{ a function that determines which packet (data
+    subset) is plotted in which panel.  Panels are always drawn in an
+    order such that columns vary the fastest, then rows and then pages.
+    This function determines, given the column, row and page and other
+    relevant information, the packet (if any) which should be used in
+    that panel.  By default, the association is determnined by matching
+    panel order with packet order, which is determined by varying the
+    first conditioning variable the fastest, then the second, and so
+    on.  This association rule is encoded in the default, namely the
+    function \code{\link{packet.panel.default}}, whose help page details
+    the arguments supplied to whichever function is specified as the
+    \code{packet.panel} argument.
   }
-  \item{\dots}{extra arguments, ignored}
+  \item{draw.in}{
+    An optional (grid) viewport (used as the \code{name} argument in
+    \code{downViewport}) in which the plot is to be drawn.  If
+    specified, the \code{newpage} argument is ignored.  This feature is
+    not well-tested.
+  }
+  \item{panel.width, panel.height}{
+    lists with 2 components, that should be valid \code{x} and
+    \code{units} arguments to \code{unit()} (the \code{data} argument
+    cannot be specified currently, but can be considered for addition if
+    needed).  The resulting \code{unit} object will be the width/height
+    of each panel in the Lattice plot. These arguments can be used to
+    explicitly control the dimensions of the panel, rather than letting
+    them expand to maximize available space.  Vector widths are allowed,
+    and can specify unequal lengths across rows or columns.
+
+    Note that this option should not be used in conjunction with
+    non-default values of the \code{aspect} argument in the original
+    high level call (no error will be produced, but the resulting
+    behaviour is undefined).
+  }
+  \item{save.object}{
+    logical, specifying whether the object being printed is to be
+    saved.  The last object thus saved can be subsequently retrieved.
+    This is an experimental feature that should allow access to a
+    panel's data after the plot is done, making it possible to enhance
+    the plot after the fact.  This also allows the user to invoke the
+    \code{update} method on the current plot, even if it was not
+    assigned to a variable explicitly.  For more details, see
+    \code{\link{trellis.focus}}.
+  }
+  \item{panel.error}{
+    a function, or a character string naming a function, that is to be
+    executed when an error occurs during the execution of the panel
+    function.  The error is caught (using \code{\link{tryCatch}}) and
+    supplied as the only argument to \code{panel.error}.  The default
+    behaviour (implemented as the \code{panel.error} function) is to
+    print the corresponding error message in the panel and continue.  To
+    stop execution on error, use \code{panel.error = stop}.
+
+    Normal error recovery and debugging tools are unhelpful when
+    \code{tryCatch} is used.  \code{tryCatch} can be completely bypassed
+    by setting \code{panel.error} to NULL.
+  }
+  \item{prefix}{
+    A character string acting as a prefix identifying the plot of a
+    \code{"trellis"} object, primarily used in constructing viewport and
+    grob names, to distinguish similar viewports if a page contains
+    multiple plots.  The default is based on the serial number of the
+    current plot on the current page (specifically, \code{"plot_01"},
+    \code{"plot_02"}, etc.).  If supplied explicitly, this must be a
+    valid \R symbol name (briefly, it must start with a letter or a
+    period followed by a letter) and must not contain the grid path
+    separator (currently \code{"::"}).
+  }
+  \item{e}{ an error condition caught by \code{\link{tryCatch}}}
+  \item{\dots}{
+    extra arguments, ignored by the \code{print} method.  All arguments
+    to the \code{plot} method are passed on to the \code{print} method.
+  }
 }
+
 \details{
   This is the default print method for objects of class
-  \code{"trellis"}, produced by calls to functions like \code{xyplot,
-    bwplot} etc. It is usually called automatically when a trellis
+  \code{"trellis"}, produced by calls to functions like \code{xyplot},
+  \code{bwplot} etc. It is usually called automatically when a trellis
   object is produced. It can also be called explicitly to control plot
   positioning by means of the arguments \code{split} and
-  \code{position}. When \code{newpage = FALSE}, the current grid
-  viewport is treated as the plotting area, making it possible to embed
-  a Lattice plot inside an arbitrary grid viewport.
+  \code{position}.
+
+  When \code{newpage = FALSE}, the current grid viewport is treated as
+  the plotting area, making it possible to embed a Lattice plot inside
+  an arbitrary grid viewport.  The \code{draw.in} argument provides an
+  alternative mechanism that may be simpler to use.
+
+  The print method uses the information in \code{x} (the object to be
+  printed) to produce a display using the Grid graphics engine. At the
+  heart of the plot is a grid layout, of which the entries of most
+  interest to the user are the ones containing the display panels.
+
+  Unlike in older versions of Lattice (and Grid), the grid display tree
+  is retained after the plot is produced, making it possible to access
+  individual viewport locations and make additions to the plot.  For
+  more details and a lattice level interface to these viewports, see
+  \code{\link{trellis.focus}}.
+
 }
 
 \note{
-  Trying to position multipage displays will mess things up.
+  Unlike S-PLUS, trying to position a multipage display (using
+  \code{position} and/or \code{split}) will mess things up.
 }
 
 \seealso{
-  \code{\link{Lattice}}, \code{\link[grid]{unit}}
+  \code{\link{Lattice}}, \code{\link[grid:unit]{unit}},
+  \code{\link{update.trellis}}, \code{\link{trellis.focus}},
+  \code{\link{packet.panel.default}}
 }
-\author{ Deepayan Sarkar \email{deepayan@stat.wisc.edu}}
+
+\author{ Deepayan Sarkar \email{Deepayan.Sarkar@R-project.org}}
+
 \examples{
-data(singer)
+
 p11 <- histogram( ~ height | voice.part, data = singer, xlab="Height")
 p12 <- densityplot( ~ height | voice.part, data = singer, xlab = "Height")
 p2 <- histogram( ~ height, data = singer, xlab = "Height")
-data(sunspot)
-p3 <- xyplot(sunspot~1:37, aspect="xy", type = "l")
+
+
 ## simple positioning by split
 print(p11, split=c(1,1,1,2), more=TRUE)
 print(p2, split=c(1,2,1,2))
@@ -74,49 +187,43 @@ print(p2, split=c(1,2,1,2))
 ## Combining split and position:
 print(p11, position = c(0,0,.75,.75), split=c(1,1,1,2), more=TRUE)
 print(p12, position = c(0,0,.75,.75), split=c(1,2,1,2), more=TRUE)
-print(p3, position = c(.5,.75,1,1), more=FALSE)
+print(p2, position = c(.5,.75,1,1), more=FALSE)
 
-## Embedding lattice plots inside a grid viewport
-## Note: this is lattice specific, won't work in S-Plus
+## Using seekViewport
 
+## repeat same plot, with different polynomial fits in each panel
+xyplot(Armed.Forces ~ Year, longley, index.cond = list(rep(1, 6)),
+       layout = c(3, 2),
+       panel = function(x, y, ...)
+       {
+           panel.xyplot(x, y, ...)
+           fm <- lm(y ~ poly(x, panel.number()))
+           llines(x, predict(fm))
+       })
 
-# data(iris)
-# cur.settings <- trellis.par.get()
+\dontrun{
+grid::seekViewport(trellis.vpname("panel", 1, 1))
+cat("Click somewhere inside the first panel:\n")
+ltext(grid::grid.locator(), lab = "linear")
+}
 
-# grid.newpage()
-# lset(list(background = list(col = "transparent")))
+grid::seekViewport(trellis.vpname("panel", 1, 1))
+grid::grid.text("linear")
 
-# grid.rect(gp = gpar(fill = "#fffff0"))
+grid::seekViewport(trellis.vpname("panel", 2, 1))
+grid::grid.text("quadratic")
 
-# push.viewport(viewport(x = .6, y = .8, h = .25, w = .8, angle = 5))
-# print(densityplot(~ Petal.Length | Species, iris, plot.p = FALSE, col = 4,
-#       layout = c(3, 1)), newpage = FALSE)
-# pop.viewport()
+grid::seekViewport(trellis.vpname("panel", 3, 1))
+grid::grid.text("cubic")
 
-# push.viewport(viewport(x = .6, y = .6, h = .25, w = .75, angle = 25))
-# print(densityplot(~ Petal.Width | Species, iris, plot.p = FALSE, col = 3,
-#       layout = c(3, 1)), newpage = FALSE)
-# pop.viewport()
+grid::seekViewport(trellis.vpname("panel", 1, 2))
+grid::grid.text("degree 4")
 
-# push.viewport(viewport(x = .6, y = .3, h = .25, w = .7, angle = -5))
-# print(densityplot(~ Sepal.Length | Species, iris, plot.p = FALSE,  col = 2,
-#       layout = c(3, 1)), newpage = FALSE)
-# pop.viewport()
+grid::seekViewport(trellis.vpname("panel", 2, 2))
+grid::grid.text("degree 5")
 
-# push.viewport(viewport(x = .15, y = .5, h = .8, w = .25, angle = 10))
-# lset(list(background = list(col = "#f0ffff")))
-# print(densityplot(~ Sepal.Width | Species, iris, plot.p = FALSE, col = 1,
-#       layout = c(1, 3)), newpage = FALSE)
-# grid.rect()
-# pop.viewport()
-
-# grid.text(lab = "Densities by Species in the Iris Data",
-#           vp = viewport(x = .6, y = .1))
-
-
-
-# lset(cur.settings)
-
+grid::seekViewport(trellis.vpname("panel", 3, 2))
+grid::grid.text("degree 6")
 }
 \keyword{hplot}
 
